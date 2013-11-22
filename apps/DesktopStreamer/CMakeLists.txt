@@ -6,10 +6,9 @@ if(WIN32)
 endif()
 
 # libjpeg-turbo
-set(DESKTOP_STREAMER_LIBS ${DESKTOP_STREAMER_LIBS} ${LibJpegTurbo_LIBRARIES})
+set(DESKTOP_STREAMER_LIBS ${DESKTOP_STREAMER_LIBS} ${LibJpegTurbo_LIBRARIES} DisplayClusterLibrary)
 
 set(DESKTOP_STREAMER_SRCS ${DESKTOP_STREAMER_SRCS}
-    ../../src/log.cpp
     src/DesktopSelectionRectangle.cpp
     src/DesktopSelectionWindow.cpp
     src/DesktopSelectionView.cpp
@@ -19,6 +18,8 @@ set(DESKTOP_STREAMER_SRCS ${DESKTOP_STREAMER_SRCS}
 
 set(DESKTOP_STREAMER_MOC_HEADERS
     src/MainWindow.h
+    src/DesktopSelectionWindow.h
+    src/DesktopSelectionRectangle.h
 )
 
 qt4_wrap_cpp(DESKTOP_STREAMER_MOC_OUTFILES ${DESKTOP_STREAMER_MOC_HEADERS})
