@@ -108,7 +108,9 @@ list(APPEND SRCS
     globals.cpp
     ../log.cpp
     LocalPixelStreamer.cpp
+    LocalPixelStreamerFactory.cpp
     LocalPixelStreamerManager.cpp
+    LocalPixelStreamerType.cpp
     MainWindow.cpp
     Movie.cpp
     MovieContent.cpp
