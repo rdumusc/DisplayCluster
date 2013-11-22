@@ -146,7 +146,7 @@ int main(int argc, char * argv[])
     NetworkListener* networkListener = 0;
     if(g_mpiRank == 0)
     {
-        networkListener = new NetworkListener();
+        networkListener = new NetworkListener(*(g_displayGroupManager.get()));
         g_localPixelStreamers = new LocalPixelStreamerManager(g_displayGroupManager.get());
     }
 
@@ -179,8 +179,8 @@ int main(int argc, char * argv[])
     if(g_mpiRank == 0)
     {
         g_displayGroupManager->sendQuit();
-        delete networkListener;
         delete g_localPixelStreamers;
+        delete networkListener;
     }
 
     delete g_configuration;
