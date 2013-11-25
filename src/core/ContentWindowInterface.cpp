@@ -45,7 +45,7 @@
 
 ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWindowManager)
     : windowState_(UNSELECTED)
-    , boundInteractions_( 0 )
+    , eventReceiversCount_( 0 )
 {
     contentWindowManager_ = contentWindowManager;
 
@@ -64,7 +64,7 @@ ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWi
         sizeState_ = contentWindowManager->sizeState_;
         controlState_ = contentWindowManager->controlState_;
         windowState_ = contentWindowManager->windowState_;
-        interactionState_ = contentWindowManager->interactionState_;
+        event_ = contentWindowManager->event_;
     }
 
     // register WindowState in Qt
@@ -79,7 +79,7 @@ ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWi
     connect(this, SIGNAL(centerChanged(double, double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setCenter(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(zoomChanged(double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(interactionStateChanged(InteractionState, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setInteractionState(InteractionState, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(eventChanged(Event, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(highlighted(ContentWindowInterface *)), contentWindowManager.get(), SLOT(highlight(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(movedToFront(ContentWindowInterface *)), contentWindowManager.get(), SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(closed(ContentWindowInterface *)), contentWindowManager.get(), SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
@@ -93,7 +93,7 @@ ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWi
     connect(contentWindowManager.get(), SIGNAL(centerChanged(double, double, ContentWindowInterface *)), this, SLOT(setCenter(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(zoomChanged(double, ContentWindowInterface *)), this, SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), this, SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(interactionStateChanged(InteractionState, ContentWindowInterface *)), this, SLOT(setInteractionState(InteractionState, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindowManager.get(), SIGNAL(eventChanged(Event, ContentWindowInterface *)), this, SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(highlighted(ContentWindowInterface *)), this, SLOT(highlight(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(movedToFront(ContentWindowInterface *)), this, SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(closed(ContentWindowInterface *)), this, SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
@@ -159,9 +159,9 @@ ContentWindowInterface::WindowState ContentWindowInterface::getWindowState()
     return windowState_;
 }
 
-InteractionState ContentWindowInterface::getInteractionState()
+Event ContentWindowInterface::getEvent()
 {
-    return interactionState_;
+    return event_;
 }
 
 bool ContentWindowInterface::getHighlighted()
@@ -341,7 +341,7 @@ void ContentWindowInterface::setCoordinates(double x, double y, double w, double
 
         emit(coordinatesChanged(x_, y_, w_, h_, source));
 
-        setInteractionStateToNewDimensions();
+        setEventToNewDimensions();
     }
 }
 
@@ -391,7 +391,7 @@ void ContentWindowInterface::setSize(double w, double h, ContentWindowInterface 
 
         emit(sizeChanged(w_, h_, source));
 
-        setInteractionStateToNewDimensions();
+        setEventToNewDimensions();
     }
 }
 
@@ -548,14 +548,14 @@ void ContentWindowInterface::setWindowState(ContentWindowInterface::WindowState 
     }
 }
 
-void ContentWindowInterface::setInteractionState(InteractionState interactionState, ContentWindowInterface * source)
+void ContentWindowInterface::setEvent(Event event, ContentWindowInterface * source)
 {
     if(source == this)
     {
         return;
     }
 
-    interactionState_ = interactionState;
+    event_ = event;
 
     if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
     {
@@ -564,7 +564,7 @@ void ContentWindowInterface::setInteractionState(InteractionState interactionSta
             source = this;
         }
 
-        emit(interactionStateChanged(interactionState_, source));
+        emit(eventChanged(event_, source));
     }
 }
 
@@ -625,20 +625,19 @@ void ContentWindowInterface::close(ContentWindowInterface * source)
     }
 }
 
-void ContentWindowInterface::setInteractionStateToNewDimensions()
+void ContentWindowInterface::setEventToNewDimensions()
 {
-    InteractionState state;
-    state.type = InteractionState::EVT_VIEW_SIZE_CHANGED;
+    Event state;
+    state.type = Event::EVT_VIEW_SIZE_CHANGED;
     state.dx = w_ * g_configuration->getTotalWidth();
     state.dy = h_ * g_configuration->getTotalHeight();
-    setInteractionState(state);
+    setEvent(state);
 }
 
-void ContentWindowInterface::bindInteraction( const QObject* receiver,
+void ContentWindowInterface::bindEventsReceiver( const QObject* receiver,
                                               const char* slot )
 {
-    connect( this, SIGNAL(interactionStateChanged( InteractionState,
-                                                   ContentWindowInterface* )),
+    connect( this, SIGNAL(eventChanged( Event, ContentWindowInterface* )),
              receiver, slot, Qt::QueuedConnection );
-    ++boundInteractions_;
+    ++eventReceiversCount_;
 }

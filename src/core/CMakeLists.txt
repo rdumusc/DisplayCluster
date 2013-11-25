@@ -107,6 +107,7 @@ list(APPEND SRCS
     FpsCounter.cpp
     GLWindow.cpp
     globals.cpp
+    ../Event.cpp
     ../log.cpp
     ../MessageHeader.cpp
     LocalPixelStreamer.cpp
