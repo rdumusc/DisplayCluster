@@ -43,7 +43,7 @@
 #include "DisplayGroupManager.h"
 #include "MainWindow.h"
 
-ContentWindowInterface::ContentWindowInterface(boost::shared_ptr<ContentWindowManager> contentWindowManager)
+ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWindowManager)
     : windowState_(UNSELECTED)
     , boundInteractions_( 0 )
 {
@@ -102,7 +102,7 @@ ContentWindowInterface::ContentWindowInterface(boost::shared_ptr<ContentWindowMa
     connect(contentWindowManager.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
 }
 
-boost::shared_ptr<ContentWindowManager> ContentWindowInterface::getContentWindowManager()
+ContentWindowManagerPtr ContentWindowInterface::getContentWindowManager()
 {
     return contentWindowManager_.lock();
 }

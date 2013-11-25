@@ -108,6 +108,7 @@ list(APPEND SRCS
     GLWindow.cpp
     globals.cpp
     ../log.cpp
+    ../MessageHeader.cpp
     LocalPixelStreamer.cpp
     LocalPixelStreamerFactory.cpp
     LocalPixelStreamerManager.cpp

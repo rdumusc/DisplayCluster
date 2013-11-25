@@ -146,7 +146,7 @@ int main(int argc, char * argv[])
     NetworkListener* networkListener = 0;
     if(g_mpiRank == 0)
     {
-        networkListener = new NetworkListener(*(g_displayGroupManager.get()));
+        networkListener = new NetworkListener(*g_displayGroupManager);
         g_localPixelStreamers = new LocalPixelStreamerManager(g_displayGroupManager.get());
     }
 
@@ -169,9 +169,6 @@ int main(int argc, char * argv[])
 
     // wait for all threads to finish
     QThreadPool::globalInstance()->waitForDone();
-
-    // call finalize cleanup actions
-    g_mainWindow->finalize();
 
     // destruct the main window
     delete g_mainWindow;
