@@ -286,7 +286,7 @@ void MainWindow::shareDesktopUpdate()
     painter.drawImage( mousePos, cursor_ );
     painter.end(); // Make sure to release the QImage before using it to update the segements
 
-    // Stream image
+    // Stream image | Format_RGB32 (0xffRRGGBB)
     dc::ImageWrapper dcImage((const void*)image.constBits(), image.width(), image.height(), dc::ARGB);
     dcImage.compressionPolicy = dc::COMPRESSION_ON;
 

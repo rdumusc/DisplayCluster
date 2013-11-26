@@ -227,7 +227,7 @@ void GLWindow::renderBackgroundContent()
     if (backgroundContentWindowManager != NULL)
     {
         glPushMatrix();
-        glTranslatef(0.,0.,-0.999);
+        glTranslatef(0., 0., -1.f + std::numeric_limits<float>::epsilon());
 
         backgroundContentWindowManager->render();
 

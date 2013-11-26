@@ -83,7 +83,6 @@ QRectF PixelStreamSegmentRenderer::getRect() const
 }
 
 void PixelStreamSegmentRenderer::updateTexture(const QImage& image)
-
 {
     segmentStatistics->tick();
 

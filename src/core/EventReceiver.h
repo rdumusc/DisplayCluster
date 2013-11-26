@@ -37,105 +37,27 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXELSTREAMBUFFER_H
-#define PIXELSTREAMBUFFER_H
+#ifndef EVENTRECEIVER_H
+#define EVENTRECEIVER_H
 
-#include "PixelStreamSegment.h"
+#include "Event.h"
 
-#include <QSize>
+#include <QObject>
 
-#include <vector>
-#include <queue>
-#include <map>
-
-using dc::PixelStreamSegment;
-using dc::PixelStreamSegmentParameters;
-
-typedef int SourceIndex;
-typedef unsigned int FrameIndex;
-
-typedef std::vector<PixelStreamSegment> PixelStreamSegments;
+using dc::Event;
 
 /**
- * Buffer for a single source of segements.
+ * Interface for classes to register as receivers for events.
  */
-struct SourceBuffer
+class EventReceiver : public QObject
 {
-    SourceBuffer() : frameIndex(0) {}
+    Q_OBJECT
 
-    /** The current index of the frame for this source */
-    FrameIndex frameIndex;
-
-    /** The collection of segments */
-    std::queue<PixelStreamSegments> segments;
-};
-
-typedef std::map<SourceIndex, SourceBuffer> SourceBufferMap;
-
-/**
- * Buffer PixelStreamSegments from (multiple) sources
- *
- * The buffer agregates segments coming from different sources delivers complete frames.
- */
-class PixelStreamBuffer
-{
 public:
-    /** Construct a Buffer */
-    PixelStreamBuffer();
+    virtual ~EventReceiver() {}
 
-    /**
-     * Add a source of segments.
-     * @param sourceIndex Unique source identifier
-     */
-    void addSource(const SourceIndex sourceIndex);
-
-    /**
-     * Remove a source of segments.
-     * @param sourceIndex Unique source identifier
-     */
-    void removeSource(const SourceIndex sourceIndex);
-
-    /** Get the number of sources for this Stream */
-    size_t getSourceCount() const;
-
-    /**
-     * Insert a segement for the current frame and source.
-     * @param segment The segment to insert
-     * @param sourceIndex Unique source identifier
-     */
-    void insertSegment(const PixelStreamSegment& segment, const SourceIndex sourceIndex);
-
-    /**
-     * Notify that the given source has finished sending segment for the current frame.
-     * @param sourceIndex Unique source identifier
-     */
-    void finishFrameForSource(const SourceIndex sourceIndex);
-
-    /** Does the Buffer have a complete frame (from all sources) */
-    bool hasFrameComplete() const;
-
-    /** Is this the first frame */
-    bool isFirstFrame() const;
-
-    /** Get the size of the frame. Only meaningful if hasFrameComplete() is true */
-    QSize getFrameSize() const;
-
-    /**
-     * Get the finished frame.
-     * @return A collection of segments that form a frame
-     */
-    PixelStreamSegments getFrame();
-
-    /**
-     * Compute the overall dimensions of a frame
-     * @param segments A collection of segments that form a frame
-     * @return The dimensions of the frame
-     */
-    static QSize computeFrameDimensions(const PixelStreamSegments& segments);
-
-private:
-    FrameIndex lastFrameComplete_;
-    SourceBufferMap sourceBuffers_;
+public slots:
+    virtual void processEvent(Event event) = 0;
 };
 
-#endif // PIXELSTREAMBUFFER_H
+#endif // EVENTRECEIVER_H
