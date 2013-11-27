@@ -56,6 +56,7 @@ NetworkListener::NetworkListener(DisplayGroupManager& displayGroupManager, int p
     }
 
     pixelStreamDispatcher_ = new PixelStreamDispatcher();
+    qRegisterMetaType<size_t>("size_t");
 }
 
 NetworkListener::~NetworkListener()
@@ -79,15 +80,22 @@ void NetworkListener::incomingConnection(int socketDescriptor)
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
     // DisplayGroupManager
-    connect(&displayGroupManager_, SIGNAL(pixelStreamViewClosed(QString)), worker, SLOT(pixelStreamerClosed(QString)));
-    connect(&displayGroupManager_, SIGNAL(eventRegistrationReply(QString,bool)), worker, SLOT(eventRegistrationRepy(QString,bool)));
-    connect(worker, SIGNAL(registerToEvents(QString,bool,EventReceiver*)), &displayGroupManager_, SLOT(registerEventReceiver(QString,bool,EventReceiver*)));
+    connect(&displayGroupManager_, SIGNAL(pixelStreamViewClosed(QString)),
+            worker, SLOT(pixelStreamerClosed(QString)));
+    connect(&displayGroupManager_, SIGNAL(eventRegistrationReply(QString,bool)),
+            worker, SLOT(eventRegistrationRepy(QString,bool)));
+    connect(worker, SIGNAL(registerToEvents(QString,bool,EventReceiver*)),
+            &displayGroupManager_, SLOT(registerEventReceiver(QString,bool,EventReceiver*)));
 
     // PixelStreamDispatcher
-    connect(worker, SIGNAL(receivedAddPixelStreamSource(QString,int)), pixelStreamDispatcher_, SLOT(addSource(QString,int)));
-    connect(worker, SIGNAL(receivedPixelStreamSegement(QString,int,PixelStreamSegment)), pixelStreamDispatcher_, SLOT(processSegment(QString,int,PixelStreamSegment)));
-    connect(worker, SIGNAL(receivedPixelStreamFinishFrame(QString,int)), pixelStreamDispatcher_, SLOT(processFrameFinished(QString,int)));
-    connect(worker, SIGNAL(receivedRemovePixelStreamSource(QString,int)), pixelStreamDispatcher_, SLOT(removeSource(QString,int)));
+    connect(worker, SIGNAL(receivedAddPixelStreamSource(QString,size_t)),
+            pixelStreamDispatcher_, SLOT(addSource(QString,const size_t)));
+    connect(worker, SIGNAL(receivedPixelStreamSegment(QString,size_t,PixelStreamSegment)),
+            pixelStreamDispatcher_, SLOT(processSegment(QString,const size_t,PixelStreamSegment)));
+    connect(worker, SIGNAL(receivedPixelStreamFinishFrame(QString,size_t)),
+            pixelStreamDispatcher_, SLOT(processFrameFinished(QString,const size_t)));
+    connect(worker, SIGNAL(receivedRemovePixelStreamSource(QString,size_t)),
+            pixelStreamDispatcher_, SLOT(removeSource(QString,const size_t)));
 
     thread->start();
 }

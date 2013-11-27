@@ -406,7 +406,7 @@ GLWindowPtr MainWindow::getActiveGLWindow()
     return activeGLWindow_;
 }
 
-GLWindowPtrs MainWindow::getGLWindows()
+const GLWindowPtrs& MainWindow::getGLWindows() const
 {
     return glWindows_;
 }

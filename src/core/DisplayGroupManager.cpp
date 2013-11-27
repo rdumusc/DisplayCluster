@@ -99,7 +99,7 @@ MarkerPtr DisplayGroupManager::getNewMarker()
     return marker;
 }
 
-MarkerPtrs& DisplayGroupManager::getMarkers()
+const MarkerPtrs& DisplayGroupManager::getMarkers() const
 {
     return markers_;
 }

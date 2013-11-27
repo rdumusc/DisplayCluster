@@ -61,7 +61,7 @@ class MainWindow : public QMainWindow
 
         GLWindowPtr getGLWindow(int index=0);
         GLWindowPtr getActiveGLWindow();
-        GLWindowPtrs getGLWindows();
+        const GLWindowPtrs& getGLWindows() const;
 
         bool isRegionVisible(double x, double y, double w, double h) const;
 

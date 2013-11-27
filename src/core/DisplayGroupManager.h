@@ -76,7 +76,7 @@ class DisplayGroupManager : public DisplayGroupInterface, public boost::enable_s
         OptionsPtr getOptions() const;
 
         MarkerPtr getNewMarker();
-        MarkerPtrs& getMarkers();
+        const MarkerPtrs& getMarkers() const;
 
         boost::posix_time::ptime getTimestamp() const;
 

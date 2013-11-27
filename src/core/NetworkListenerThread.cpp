@@ -79,7 +79,7 @@ void NetworkListenerThread::initialize()
 
 void NetworkListenerThread::process()
 {
-    if(tcpSocket_->bytesAvailable() >= (int)MessageHeader::serializedSize)
+    if(tcpSocket_->bytesAvailable() >= qint64(MessageHeader::serializedSize))
     {
         socketReceiveMessage();
     }
@@ -97,13 +97,13 @@ void NetworkListenerThread::process()
     // Finish reading messages from the socket if connection closed
     if(tcpSocket_->state() != QAbstractSocket::ConnectedState)
     {
-        while (tcpSocket_->bytesAvailable() >= (int)MessageHeader::serializedSize)
+        while (tcpSocket_->bytesAvailable() >= qint64(MessageHeader::serializedSize))
         {
             socketReceiveMessage();
         }
         emit(finished());
     }
-    else if (tcpSocket_->bytesAvailable() >= (int)MessageHeader::serializedSize)
+    else if (tcpSocket_->bytesAvailable() >= qint64(MessageHeader::serializedSize))
     {
         emit dataAvailable();
     }
@@ -122,7 +122,7 @@ void NetworkListenerThread::socketReceiveMessage()
 }
 
 MessageHeader NetworkListenerThread::receiveMessageHeader()
-{    
+{
     MessageHeader messageHeader;
 
     QDataStream stream(tcpSocket_);
@@ -194,11 +194,11 @@ void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader, co
     case MESSAGE_TYPE_BIND_EVENTS_EX:
         if (registeredToEvents_)
         {
-            put_flog(LOG_DEBUG, "WE are already bound!!");
+            put_flog(LOG_DEBUG, "We are already bound!!");
         }
         else
         {
-            bool eventRegistrationExclusive = (messageHeader.type == MESSAGE_TYPE_BIND_EVENTS_EX);
+            const bool eventRegistrationExclusive = (messageHeader.type == MESSAGE_TYPE_BIND_EVENTS_EX);
             emit registerToEvents(pixelStreamUri_, eventRegistrationExclusive, this);
         }
         break;
@@ -222,7 +222,7 @@ void NetworkListenerThread::handlePixelStreamMessage(const QString& uri, const Q
 
     if (pixelStreamUri_ == uri)
     {
-        emit(receivedPixelStreamSegement(uri, socketDescriptor_, segment));
+        emit(receivedPixelStreamSegment(uri, socketDescriptor_, segment));
     }
     else
     {

@@ -70,10 +70,10 @@ signals:
 
     void finished();
 
-    void receivedAddPixelStreamSource(QString uri, int sourceIndex);
-    void receivedPixelStreamSegement(QString uri, int SourceIndex, PixelStreamSegment segment);
-    void receivedPixelStreamFinishFrame(QString uri, int SourceIndex);
-    void receivedRemovePixelStreamSource(QString uri, int sourceIndex);
+    void receivedAddPixelStreamSource(QString uri, size_t sourceIndex);
+    void receivedPixelStreamSegment(QString uri, size_t size_t, PixelStreamSegment segment);
+    void receivedPixelStreamFinishFrame(QString uri, size_t size_t);
+    void receivedRemovePixelStreamSource(QString uri, size_t sourceIndex);
 
     void registerToEvents(QString uri, bool exclusive, EventReceiver* receiver);
 

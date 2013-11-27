@@ -62,7 +62,7 @@ public:
      * @param hostname The target host (IP address or hostname)
      * @param port The target port
      */
-    Socket(const std::string& hostname, unsigned short port = defaultPortNumber_);
+    Socket(const std::string& hostname, const unsigned short port = defaultPortNumber_);
 
     /** Destruct a Socket, disconnecting from host. */
     ~Socket();
