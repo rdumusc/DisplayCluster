@@ -166,6 +166,10 @@ private:
     boost::posix_time::ptime timestamp_; // frame timing
     boost::posix_time::time_duration timestampOffset_; // rank1 - rank0 offset
 
+    void send(const MessageHeader& messageHeader, const int dest);
+    void send(const std::string& serializedData, const int dest);
+    void broadcast(const std::string& serializedData, const MPI_Comm mpiComm = MPI_COMM_WORLD);
+
     void sendFrameClockUpdate();
     void receiveFrameClockUpdate();
 

@@ -39,6 +39,7 @@
 
 #include "PixelStreamBuffer.h"
 
+#define FIRST_FRAME_INDEX 1
 
 PixelStreamBuffer::PixelStreamBuffer()
     : lastFrameComplete_(0)
@@ -78,7 +79,7 @@ void PixelStreamBuffer::finishFrameForSource(const size_t sourceIndex)
     sourceBuffers_[sourceIndex].segments.push(PixelStreamSegments());
 }
 
-bool PixelStreamBuffer::hasFrameComplete() const
+bool PixelStreamBuffer::hasCompleteFrame() const
 {
     assert(!sourceBuffers_.empty());
 
@@ -91,9 +92,14 @@ bool PixelStreamBuffer::hasFrameComplete() const
     return true;
 }
 
-bool PixelStreamBuffer::isFirstFrame() const
+bool PixelStreamBuffer::isFirstCompleteFrame() const
 {
-    return lastFrameComplete_ == 0;
+    for(SourceBufferMap::const_iterator it = sourceBuffers_.begin(); it != sourceBuffers_.end(); ++it)
+    {
+        if (it->second.frameIndex != FIRST_FRAME_INDEX)
+            return false;
+    }
+    return true;
 }
 
 PixelStreamSegments PixelStreamBuffer::getFrame()

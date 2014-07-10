@@ -25,6 +25,7 @@ set(TEST_LIBRARIES
 if(BUILD_CORE_LIBRARY)
   list(APPEND PERF_TEST_FILES
     dcStreamTests.cpp
+    dcBenchmarkStreamer.cpp
   )
 endif()
 

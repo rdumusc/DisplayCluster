@@ -110,13 +110,13 @@ public:
      */
     void finishFrameForSource(const size_t sourceIndex);
 
-    /** Does the Buffer have a complete frame (from all sources) */
-    bool hasFrameComplete() const;
+    /** Does the Buffer have a new complete frame (from all sources) */
+    bool hasCompleteFrame() const;
 
-    /** Is this the first frame */
-    bool isFirstFrame() const;
+    /** Is this the first frame to be finished by all sources */
+    bool isFirstCompleteFrame() const;
 
-    /** Get the size of the frame. Only meaningful if hasFrameComplete() is true */
+    /** Get the size of the frame. Only meaningful if hasCompleteFrame() is true */
     QSize getFrameSize() const;
 
     /**

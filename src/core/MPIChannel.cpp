@@ -56,6 +56,36 @@
 #include "Content.h"
 #include "Factories.h"
 
+template <typename T>
+inline std::string serialize(T& object)
+{
+    std::ostringstream oss(std::ostringstream::binary);
+    {
+        boost::archive::binary_oarchive oa(oss);
+        oa << object;
+    }
+    return oss.str();
+}
+
+template <typename T>
+void deserialize(T& object, std::vector<char>& buffer)
+{
+    std::istringstream iss(std::istringstream::binary);
+    iss.rdbuf()->pubsetbuf(buffer.data(), buffer.size());
+
+    boost::archive::binary_iarchive ia(iss);
+    ia >> object;
+}
+
+template <typename T>
+void receiveBroadcast(T& object, const size_t messageSize, const MPI_Comm mpiComm = MPI_COMM_WORLD)
+{
+    std::vector<char> buffer(messageSize);
+    MPI_Bcast((void *)buffer.data(), buffer.size(), MPI_BYTE, 0, mpiComm);
+
+    deserialize(object, buffer);
+}
+
 MPIChannel::MPIChannel(int argc, char * argv[])
     : mpiRank_(-1)
     , mpiSize_(-1)
@@ -116,25 +146,14 @@ void MPIChannel::calibrateTimestampOffset()
     // rank 1: send timestamp to rank 0
     if(mpiRank_ == 1)
     {
-        // serialize state
-        std::ostringstream oss(std::ostringstream::binary);
-
-        // brace this so destructor is called on archive before we use the stream
-        {
-            boost::archive::binary_oarchive oa(oss);
-            oa << timestamp;
-        }
-
-        // serialized data to string
-        std::string serializedString = oss.str();
-        int size = serializedString.size();
+        const std::string& serializedString = serialize(timestamp);
 
         // send the header and the message
         MessageHeader mh;
-        mh.size = size;
+        mh.size = serializedString.size();
 
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-        MPI_Send((void *)serializedString.data(), size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+        send(mh, 0);
+        send(serializedString, 0);
     }
     // rank 0: receive timestamp from rank 1
     else if(mpiRank_ == 0)
@@ -144,28 +163,12 @@ void MPIChannel::calibrateTimestampOffset()
         MPI_Status status;
         MPI_Recv((void *)&messageHeader, sizeof(MessageHeader), MPI_BYTE, 1, 0, MPI_COMM_WORLD, &status);
 
-        // receive serialized data
         std::vector<char> buffer(messageHeader.size);
+        MPI_Recv((void *)buffer.data(), buffer.size(), MPI_BYTE, 1, 0, MPI_COMM_WORLD, &status);
 
-        // read message into the buffer
-        MPI_Recv((void *)buffer.data(), messageHeader.size, MPI_BYTE, 1, 0, MPI_COMM_WORLD, &status);
-
-        // de-serialize...
-        std::istringstream iss(std::istringstream::binary);
-
-        if(iss.rdbuf()->pubsetbuf(buffer.data(), messageHeader.size) == NULL)
-        {
-            put_flog(LOG_FATAL, "rank %i: error setting stream buffer", mpiRank_);
-            return;
-        }
-
-        // read to a new timestamp
         boost::posix_time::ptime rank1Timestamp;
+        deserialize(rank1Timestamp, buffer);
 
-        boost::archive::binary_iarchive ia(iss);
-        ia >> rank1Timestamp;
-
-        // now, calculate and store the timestamp offset
         timestampOffset_ = rank1Timestamp - timestamp;
 
         put_flog(LOG_DEBUG, "timestamp offset = %s", (boost::posix_time::to_simple_string(timestampOffset_)).c_str());
@@ -237,50 +240,32 @@ void MPIChannel::receiveMessages()
 
 void MPIChannel::send(DisplayGroupManagerPtr displayGroup)
 {
-    std::ostringstream oss(std::ostringstream::binary);
-    {
-        // brace this so destructor is called on archive before we use the stream
-        boost::archive::binary_oarchive oa(oss);
-        oa << displayGroup;
-    }
-
-    const std::string serializedString = oss.str();
-    const int size = serializedString.size();
+    const std::string& serializedString = serialize(displayGroup);
 
     MessageHeader mh;
-    mh.size = size;
+    mh.size = serializedString.size();
     mh.type = MESSAGE_TYPE_CONTENTS;
 
     // Send header via a send so we can probe it on the render processes
     for(int i=1; i<mpiSize_; ++i)
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+        send(mh, i);
 
-    // Broadcast the message
-    MPI_Bcast((void *)serializedString.data(), size, MPI_BYTE, 0, MPI_COMM_WORLD);
+    broadcast(serializedString);
 }
 
 void MPIChannel::send(OptionsPtr options)
 {
-    std::ostringstream oss(std::ostringstream::binary);
-    {
-        // brace this so destructor is called on archive before we use the stream
-        boost::archive::binary_oarchive oa(oss);
-        oa << options;
-    }
-
-    const std::string serializedString = oss.str();
-    const int size = serializedString.size();
+    const std::string& serializedString = serialize(options);
 
     MessageHeader mh;
-    mh.size = size;
+    mh.size = serializedString.size();
     mh.type = MESSAGE_TYPE_OPTIONS;
 
     // Send header via a send so we can probe it on the render processes
     for(int i=1; i<mpiSize_; ++i)
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+        send(mh, i);
 
-    // Broadcast the message
-    MPI_Bcast((void *)serializedString.data(), size, MPI_BYTE, 0, MPI_COMM_WORLD);
+    broadcast(serializedString);
 }
 
 void MPIChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows)
@@ -303,7 +288,7 @@ void MPIChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentW
 
     // the header is sent via a send, so that we can probe it on the render processes
     for(int i=1; i<mpiSize_; i++)
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+        send(mh, i);
 
     // now, receive response from rank 1
     MPI_Status status;
@@ -311,24 +296,11 @@ void MPIChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentW
 
     // receive serialized data
     std::vector<char> buffer(mh.size);
-
-    // read message into the buffer
     MPI_Recv((void *)buffer.data(), mh.size, MPI_BYTE, 1, 0, MPI_COMM_WORLD, &status);
-
-    // de-serialize...
-    std::istringstream iss(std::istringstream::binary);
-
-    if(iss.rdbuf()->pubsetbuf(buffer.data(), mh.size) == NULL)
-    {
-        put_flog(LOG_FATAL, "rank %i: error setting stream buffer", mpiRank_);
-        return;
-    }
 
     // read to a new vector
     std::vector<std::pair<int, int> > dimensions;
-
-    boost::archive::binary_iarchive ia(iss);
-    ia >> dimensions;
+    deserialize(dimensions, buffer);
 
     // overwrite old dimensions
     for(size_t i=0; i<dimensions.size() && i<contentWindows.size(); ++i)
@@ -357,42 +329,25 @@ void MPIChannel::sendFrameClockUpdate()
         return;
     }
 
-    boost::posix_time::ptime timestamp(boost::posix_time::microsec_clock::universal_time());
+    timestamp_ = boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time());
 
-    // serialize state
-    std::ostringstream oss(std::ostringstream::binary);
-
-    // brace this so destructor is called on archive before we use the stream
-    {
-        boost::archive::binary_oarchive oa(oss);
-        oa << timestamp;
-    }
-
-    // serialized data to string
-    std::string serializedString = oss.str();
-    int size = serializedString.size();
+    const std::string& serializedString = serialize(timestamp_);
 
     // send the header and the message
     MessageHeader mh;
-    mh.size = size;
+    mh.size = serializedString.size();
     mh.type = MESSAGE_TYPE_FRAME_CLOCK;
 
     // the header is sent via a send, so that we can probe it on the render processes
     for(int i=2; i<mpiSize_; i++)
-    {
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, i, 0, MPI_COMM_WORLD);
-    }
+        send(mh, i);
 
-    // broadcast it
-    MPI_Bcast((void *)serializedString.data(), size, MPI_BYTE, 0, mpiRenderComm_);
-
-    // update timestamp
-    timestamp_ = timestamp;
+    broadcast(serializedString, mpiRenderComm_);
 }
 
 void MPIChannel::receiveFrameClockUpdate()
 {
-    // we shouldn't run the broadcast if we're rank 1
+    // we shouldn't receive the broadcast if we're rank 1
     if(mpiRank_ == 1)
         return;
 
@@ -407,23 +362,7 @@ void MPIChannel::receiveFrameClockUpdate()
         return;
     }
 
-    // receive serialized data
-    std::vector<char> buffer(messageHeader.size);
-
-    // read message into the buffer
-    MPI_Bcast((void *)buffer.data(), messageHeader.size, MPI_BYTE, 0, mpiRenderComm_);
-
-    // de-serialize...
-    std::istringstream iss(std::istringstream::binary);
-
-    if(iss.rdbuf()->pubsetbuf(buffer.data(), messageHeader.size) == NULL)
-    {
-        put_flog(LOG_FATAL, "rank %i: error setting stream buffer", mpiRank_);
-        return;
-    }
-
-    boost::archive::binary_iarchive ia(iss);
-    ia >> timestamp_;
+    receiveBroadcast(timestamp_, messageHeader.size, mpiRenderComm_);
 }
 
 void MPIChannel::sendQuit()
@@ -432,8 +371,8 @@ void MPIChannel::sendQuit()
     mh.type = MESSAGE_TYPE_QUIT;
 
     // Send header via a send so that we can probe it on the render processes
-    for(int i=1; i<mpiSize_; i++)
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, i, 0, MPI_COMM_WORLD);
+    for(int i=1; i<mpiSize_; ++i)
+        send(mh, i);
 }
 
 DisplayGroupManagerPtr MPIChannel::receiveDisplayGroup(const MessageHeader& messageHeader)
@@ -444,24 +383,8 @@ DisplayGroupManagerPtr MPIChannel::receiveDisplayGroup(const MessageHeader& mess
         return DisplayGroupManagerPtr();
     }
 
-    // receive serialized data
-    std::vector<char> buffer(messageHeader.size);
-
-    // read message into the buffer
-    MPI_Bcast((void *)buffer.data(), messageHeader.size, MPI_BYTE, 0, MPI_COMM_WORLD);
-
-    // de-serialize...
-    std::istringstream iss(std::istringstream::binary);
-
-    if(iss.rdbuf()->pubsetbuf(buffer.data(), messageHeader.size) == NULL)
-    {
-        put_flog(LOG_FATAL, "rank %i: error setting stream buffer", mpiRank_);
-        return DisplayGroupManagerPtr();
-    }
-
-    boost::archive::binary_iarchive ia(iss);
     DisplayGroupManagerPtr displayGroup;
-    ia >> displayGroup;
+    receiveBroadcast(displayGroup, messageHeader.size);
 
     return displayGroup;
 }
@@ -474,24 +397,8 @@ OptionsPtr MPIChannel::receiveOptions(const MessageHeader& messageHeader)
         return OptionsPtr();
     }
 
-    // receive serialized data
-    std::vector<char> buffer(messageHeader.size);
-
-    // read message into the buffer
-    MPI_Bcast((void *)buffer.data(), messageHeader.size, MPI_BYTE, 0, MPI_COMM_WORLD);
-
-    // de-serialize...
-    std::istringstream iss(std::istringstream::binary);
-
-    if(iss.rdbuf()->pubsetbuf(buffer.data(), messageHeader.size) == NULL)
-    {
-        put_flog(LOG_FATAL, "rank %i: error setting stream buffer", mpiRank_);
-        return OptionsPtr();
-    }
-
-    boost::archive::binary_iarchive ia(iss);
     OptionsPtr options;
-    ia >> options;
+    receiveBroadcast(options, messageHeader.size);
 
     return options;
 }
@@ -524,26 +431,15 @@ void MPIChannel::receiveContentsDimensionsRequest()
         dimensions.push_back(std::pair<int,int>(w,h));
     }
 
-    // serialize
-    std::ostringstream oss(std::ostringstream::binary);
-
-    // brace this so destructor is called on archive before we use the stream
-    {
-        boost::archive::binary_oarchive oa(oss);
-        oa << dimensions;
-    }
-
-    // serialized data to string
-    std::string serializedString = oss.str();
-    int size = serializedString.size();
+    const std::string& serializedString = serialize(dimensions);
 
     // send the header and the message
     MessageHeader mh;
-    mh.size = size;
+    mh.size = serializedString.size();
     mh.type = MESSAGE_TYPE_CONTENTS_DIMENSIONS;
 
-    MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, 0, 0, MPI_COMM_WORLD);
-    MPI_Send((void *)serializedString.data(), size, MPI_BYTE, 0, 0, MPI_COMM_WORLD);
+    send(mh, 0);
+    send(serializedString, 0);
 }
 
 void MPIChannel::send(PixelStreamFramePtr frame)
@@ -556,35 +452,21 @@ void MPIChannel::send(PixelStreamFramePtr frame)
 
     assert(!frame->segments.empty() && "sendPixelStreamSegments() received an empty vector");
 
-    // serialize the vector
-    std::ostringstream oss(std::ostringstream::binary);
-
-    // brace this so destructor is called on archive before we use the stream
-    {
-        boost::archive::binary_oarchive oa(oss);
-        oa << frame->segments;
-    }
-
-    // serialized data to string
-    std::string serializedString = oss.str();
-    int size = serializedString.size();
+    const std::string& serializedString = serialize(frame->segments);
 
     // send the header and the message
     MessageHeader mh;
-    mh.size = size;
+    mh.size = serializedString.size();
     mh.type = MESSAGE_TYPE_PIXELSTREAM;
 
     // add the truncated URI to the header
     strncpy(mh.uri, frame->uri.toLocal8Bit().constData(), MESSAGE_HEADER_URI_LENGTH-1);
 
     // the header is sent via a send, so that we can probe it on the render processes
-    for(int i=1; i<mpiSize_; i++)
-    {
-        MPI_Send((void *)&mh, sizeof(MessageHeader), MPI_BYTE, i, 0, MPI_COMM_WORLD);
-    }
+    for(int i=1; i<mpiSize_; ++i)
+        send(mh, i);
 
-    // broadcast the message
-    MPI_Bcast((void *)serializedString.data(), size, MPI_BYTE, 0, MPI_COMM_WORLD);
+    broadcast(serializedString);
 }
 
 void MPIChannel::receivePixelStreams(const MessageHeader& messageHeader)
@@ -595,30 +477,27 @@ void MPIChannel::receivePixelStreams(const MessageHeader& messageHeader)
         return;
     }
 
-    // receive serialized data
-    std::vector<char> buffer(messageHeader.size);
-
-    // read message into the buffer
-    MPI_Bcast((void *)buffer.data(), messageHeader.size, MPI_BYTE, 0, MPI_COMM_WORLD);
-
-    // URI
-    const QString uri(messageHeader.uri);
-
-    // de-serialize...
-    std::istringstream iss(std::istringstream::binary);
-
-    if(iss.rdbuf()->pubsetbuf(buffer.data(), messageHeader.size) == NULL)
-    {
-        put_flog(LOG_FATAL, "rank %i: error setting stream buffer", mpiRank_);
-        return;
-    }
-
-    // read to a new segments vector
     PixelStreamFramePtr frame(new PixelStreamFrame);
-    frame->uri = uri;
-
-    boost::archive::binary_iarchive ia(iss);
-    ia >> frame->segments;
+    frame->uri = QString(messageHeader.uri);
+    receiveBroadcast(frame->segments, messageHeader.size);
 
     emit received(frame);
+}
+
+void MPIChannel::send(const MessageHeader& messageHeader, const int dest)
+{
+    MPI_Send((void *)&messageHeader, sizeof(MessageHeader),
+             MPI_BYTE, dest, 0, MPI_COMM_WORLD);
+}
+
+void MPIChannel::send(const std::string& serializedData, const int dest)
+{
+    MPI_Send((void *)serializedData.data(), (int)serializedData.size(),
+             MPI_BYTE, dest, 0, MPI_COMM_WORLD);
+}
+
+void MPIChannel::broadcast(const std::string& serializedData, const MPI_Comm mpiComm)
+{
+    MPI_Bcast((void *)serializedData.data(), serializedData.size(),
+              MPI_BYTE, 0, mpiComm);
 }

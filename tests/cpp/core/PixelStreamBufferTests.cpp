@@ -80,22 +80,22 @@ BOOST_AUTO_TEST_CASE( TestCompleteAFrame )
     segment.parameters.height = 256;
 
     buffer.insertSegment(segment, sourceIndex);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
 
     buffer.finishFrameForSource(sourceIndex);
-    BOOST_CHECK( buffer.hasFrameComplete() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
 
     QSize frameSize = buffer.getFrameSize();
-    BOOST_CHECK( buffer.hasFrameComplete() );
-    BOOST_CHECK( buffer.isFirstFrame() );
     BOOST_CHECK_EQUAL( frameSize.width(), segment.parameters.width );
     BOOST_CHECK_EQUAL( frameSize.height(), segment.parameters.height );
 
     PixelStreamSegments segments = buffer.getFrame();
 
     BOOST_CHECK_EQUAL( segments.size(), 1 );
-    BOOST_CHECK( !buffer.hasFrameComplete() );
-    BOOST_CHECK( !buffer.isFirstFrame() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
 }
 
 
@@ -148,14 +148,14 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameSingleSource )
     buffer.insertSegment(testSegments[1], sourceIndex);
     buffer.insertSegment(testSegments[2], sourceIndex);
     buffer.insertSegment(testSegments[3], sourceIndex);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
 
     buffer.finishFrameForSource(sourceIndex);
-    BOOST_CHECK( buffer.hasFrameComplete() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
 
     QSize frameSize = buffer.getFrameSize();
-    BOOST_CHECK( buffer.hasFrameComplete() );
-    BOOST_CHECK( buffer.isFirstFrame() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
     BOOST_CHECK_EQUAL( frameSize.width(), 192 );
     BOOST_CHECK_EQUAL( frameSize.height(), 768 );
 
@@ -166,8 +166,8 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameSingleSource )
 
 
     BOOST_CHECK_EQUAL( segments.size(), 4 );
-    BOOST_CHECK( !buffer.hasFrameComplete() );
-    BOOST_CHECK( !buffer.isFirstFrame() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
 }
 
 
@@ -188,20 +188,20 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameMultipleSources )
     buffer.insertSegment(testSegments[0], sourceIndex1);
     buffer.insertSegment(testSegments[1], sourceIndex2);
     buffer.insertSegment(testSegments[2], sourceIndex3);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
 
     buffer.finishFrameForSource(sourceIndex1);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
 
     buffer.finishFrameForSource(sourceIndex2);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
 
     buffer.insertSegment(testSegments[3], sourceIndex3);
     buffer.finishFrameForSource(sourceIndex3);
-    BOOST_CHECK( buffer.hasFrameComplete() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
 
-    BOOST_CHECK( buffer.hasFrameComplete() );
-    BOOST_CHECK( buffer.isFirstFrame() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
     QSize frameSize = buffer.getFrameSize();
     BOOST_CHECK_EQUAL( frameSize.width(), 192 );
     BOOST_CHECK_EQUAL( frameSize.height(), 768 );
@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameMultipleSources )
     PixelStreamSegments segments = buffer.getFrame();
 
     BOOST_CHECK_EQUAL( segments.size(), 4 );
-    BOOST_CHECK( !buffer.hasFrameComplete() );
-    BOOST_CHECK( !buffer.isFirstFrame() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
 }
 
 
@@ -230,26 +230,28 @@ BOOST_AUTO_TEST_CASE( TestRemoveSourceWhileStreaming )
     buffer.insertSegment(testSegments[1], sourceIndex1);
     buffer.insertSegment(testSegments[2], sourceIndex2);
     buffer.insertSegment(testSegments[3], sourceIndex2);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
     buffer.finishFrameForSource(sourceIndex1);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
     buffer.finishFrameForSource(sourceIndex2);
-    BOOST_CHECK( buffer.hasFrameComplete() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
+    BOOST_CHECK( buffer.isFirstCompleteFrame() );
 
     PixelStreamSegments segments = buffer.getFrame();
 
     BOOST_CHECK_EQUAL( segments.size(), 4 );
-    BOOST_CHECK( !buffer.hasFrameComplete() );
-    BOOST_CHECK( !buffer.isFirstFrame() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
 
     // Second frame - 1 source
     buffer.removeSource(sourceIndex2);
 
     buffer.insertSegment(testSegments[0], sourceIndex1);
     buffer.insertSegment(testSegments[1], sourceIndex1);
-    BOOST_CHECK( !buffer.hasFrameComplete() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
     buffer.finishFrameForSource(sourceIndex1);
-    BOOST_CHECK( buffer.hasFrameComplete() );
+    BOOST_CHECK( buffer.hasCompleteFrame() );
 
     QSize frameSize = buffer.getFrameSize();
     BOOST_CHECK_EQUAL( frameSize.width(), 192 );
@@ -257,7 +259,7 @@ BOOST_AUTO_TEST_CASE( TestRemoveSourceWhileStreaming )
 
     segments = buffer.getFrame();
     BOOST_CHECK_EQUAL( segments.size(), 2 );
-    BOOST_CHECK( !buffer.hasFrameComplete() );
-    BOOST_CHECK( !buffer.isFirstFrame() );
+    BOOST_CHECK( !buffer.hasCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
 
 }

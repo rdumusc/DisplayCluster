@@ -95,7 +95,7 @@ void PixelStreamDispatcher::processFrameFinished(const QString uri, const size_t
     streamBuffers_[uri].finishFrameForSource(sourceIndex);
 
     // When the first frame is complete, notify that the stream is now open
-    if (streamBuffers_[uri].isFirstFrame() && streamBuffers_[uri].hasFrameComplete())
+    if (streamBuffers_[uri].isFirstCompleteFrame())
     {
         QSize size = streamBuffers_[uri].getFrameSize();
         emit openPixelStream(uri, size);
@@ -130,7 +130,7 @@ void PixelStreamDispatcher::dispatchFrames()
         frame->uri = it->first;
 
         // Only dispatch the lastest frame
-        while (it->second.hasFrameComplete())
+        while (it->second.hasCompleteFrame())
         {
             frame->segments = it->second.getFrame();
         }
