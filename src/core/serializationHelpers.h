@@ -99,6 +99,14 @@ void serialize( Archive& ar, QString& s, const unsigned int version )
 }
 
 template< class Archive >
+void serialize( Archive& ar, QPointF& point, const unsigned int )
+{
+    qreal t;
+    t = point.x(); ar & make_nvp("x", t); point.setX(t);
+    t = point.y(); ar & make_nvp("y", t); point.setY(t);
+}
+
+template< class Archive >
 void serialize( Archive& ar, QRectF& rect, const unsigned int )
 {
     qreal t;

@@ -54,25 +54,25 @@
 
 int main(int argc, char * argv[])
 {
-    g_mpiChannel.reset( new MPIChannel( argc, argv ) );
+    MPIChannelPtr mpiChannel(new MPIChannel(argc, argv));
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     // we need X multithreading support if we're running the
     // TouchListener thread and creating X events
-    if (g_mpiChannel->getRank() == 0)
+    if (mpiChannel->getRank() == 0)
         XInitThreads();
 #endif
 
     Application* app = 0;
-    if ( g_mpiChannel->getRank() == 0 )
-        app = new MasterApplication(argc, argv, g_mpiChannel);
+    if ( mpiChannel->getRank() == 0 )
+        app = new MasterApplication(argc, argv, mpiChannel);
     else
-        app = new WallApplication(argc, argv, g_mpiChannel);
+        app = new WallApplication(argc, argv, mpiChannel);
 
     // calibrate timestamp offset between rank 0 and rank 1 clocks
-    g_mpiChannel->calibrateTimestampOffset();
+    mpiChannel->calibrateTimestampOffset();
     // wait for render comms to be ready for receiving and rendering background
-    g_mpiChannel->globalBarrier(); // previously: MPI_COMM_WORLD
+    mpiChannel->globalBarrier(); // previously: MPI_COMM_WORLD
 
     app->exec(); // enter Qt event loop
 
@@ -80,8 +80,8 @@ int main(int argc, char * argv[])
 
     QThreadPool::globalInstance()->waitForDone();
 
-    if (g_mpiChannel->getRank() == 0)
-        g_mpiChannel->sendQuit();
+    if (mpiChannel->getRank() == 0)
+        mpiChannel->sendQuit();
 
     delete app;
 

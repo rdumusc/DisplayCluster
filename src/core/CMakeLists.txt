@@ -114,6 +114,7 @@ list(APPEND SRCS
     DisplayGroupListWidgetProxy.cpp
     DynamicTexture.cpp
     DynamicTextureContent.cpp
+    ElapsedTimer.cpp
     Factory.hpp
     Factories.cpp
     FactoryObject.cpp
@@ -135,6 +136,7 @@ list(APPEND SRCS
     ../MessageHeader.cpp
     ImageJpegDecompressor.cpp
     Marker.cpp
+    Markers.cpp
     MarkerRenderer.cpp
     MetaTypeRegistration.cpp
     Movie.cpp
@@ -205,10 +207,12 @@ list(APPEND MOC_HEADERS
     DisplayGroupGraphicsViewProxy.h
     DisplayGroupListWidgetProxy.h
     EventReceiver.h
-    Marker.h
+    Markers.h
+    MarkerRenderer.h
     MPIChannel.h
     NetworkListener.h
     NetworkListenerThread.h
+    MultiTouchListener.h
     Options.h
     PixelStreamDispatcher.h
     PixelStreamWindowManager.h

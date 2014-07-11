@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,62 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#include "Markers.h"
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
-
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+Markers::Markers()
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
 }
 
-CONTENT_TYPE PDFContent::getType()
+const MarkersMap& Markers::getMarkers() const
 {
-    return CONTENT_TYPE_PDF;
+    return markers_;
 }
 
-bool PDFContent::readMetadata()
+void Markers::addMarker(const int id, const QPointF position)
 {
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+    if (markers_.count(id))
+        return;
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
-
-    return true;
+    markers_[id].setPosition(position);
+    emit(updated(shared_from_this()));
 }
 
-const QStringList& PDFContent::getSupportedExtensions()
+void Markers::updateMarker(const int id, const QPointF position)
 {
-    static QStringList extensions;
+    if (!markers_.count(id))
+        return;
 
-    if (extensions.empty())
+    markers_[id].setPosition(position);
+    emit(updated(shared_from_this()));
+}
+
+void Markers::removeMarker(const int id)
+{
+    if (!markers_.count(id))
+        return;
+
+    markers_.erase(id);
+    emit(updated(shared_from_this()));
+}
+
+void Markers::clearOldMarkers()
+{
+    const size_t initialSize = markers_.size();
+
+    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
+
+    MarkersMap::iterator it = markers_.begin();
+
+    while(it != markers_.end())
     {
-        extensions << "pdf";
+        if(!it->second.isActive(now))
+            markers_.erase(it++);  // note the post increment; increments the iterator but returns original value for erase
+        else
+            ++it;
     }
 
-    return extensions;
-}
-
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, MPIChannelPtr)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
+    if (initialSize != markers_.size())
+        emit(updated(shared_from_this()));
 }

@@ -42,6 +42,7 @@
 #include "MessageHeader.h"
 #include "DisplayGroupManager.h"
 #include "Options.h"
+#include "Markers.h"
 #include "PixelStreamFrame.h"
 
 #include "log.h"
@@ -55,6 +56,8 @@
 #include "ContentWindowManager.h"
 #include "Content.h"
 #include "Factories.h"
+
+#define RANK0 0
 
 template <typename T>
 inline std::string serialize(T& object)
@@ -81,7 +84,7 @@ template <typename T>
 void receiveBroadcast(T& object, const size_t messageSize, const MPI_Comm mpiComm = MPI_COMM_WORLD)
 {
     std::vector<char> buffer(messageSize);
-    MPI_Bcast((void *)buffer.data(), buffer.size(), MPI_BYTE, 0, mpiComm);
+    MPI_Bcast((void *)buffer.data(), buffer.size(), MPI_BYTE, RANK0, mpiComm);
 
     deserialize(object, buffer);
 }
@@ -90,10 +93,20 @@ MPIChannel::MPIChannel(int argc, char * argv[])
     : mpiRank_(-1)
     , mpiSize_(-1)
 {
+//    int required = MPI_THREAD_MULTIPLE;
+//    int provided;
+//    MPI_Init_thread(&argc, &argv, required, &provided);
+//    if (provided < required)
+//    {
+//        put_flog(LOG_FATAL, "Error: MPI does not provide the required thread support. %d / %d\n", provided, required);
+//        MPI_Abort(MPI_COMM_WORLD, 1);
+//        exit(1);
+//    }
+
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank_);
     MPI_Comm_size(MPI_COMM_WORLD, &mpiSize_);
-    MPI_Comm_split(MPI_COMM_WORLD, mpiRank_ != 0, mpiRank_, &mpiRenderComm_);
+    MPI_Comm_split(MPI_COMM_WORLD, mpiRank_ != RANK0, mpiRank_, &mpiRenderComm_);
 }
 
 MPIChannel::~MPIChannel()
@@ -177,7 +190,7 @@ void MPIChannel::calibrateTimestampOffset()
 
 void MPIChannel::receiveMessages()
 {
-    if(mpiRank_ == 0)
+    if(mpiRank_ == RANK0)
     {
         put_flog(LOG_FATAL, "called on rank 0");
         return;
@@ -186,56 +199,69 @@ void MPIChannel::receiveMessages()
     // check to see if we have a message (non-blocking)
     int flag;
     MPI_Status status;
-    MPI_Iprobe(0, 0, MPI_COMM_WORLD, &flag, &status);
+    MPI_Iprobe(RANK0, 0, MPI_COMM_WORLD, &flag, &status);
 
     // check to see if all render processes have a message
     int allFlag;
     MPI_Allreduce(&flag, &allFlag, 1, MPI_INT, MPI_LAND, mpiRenderComm_);
 
-    // message header
-    MessageHeader mh;
+//    static int counter = 0;
+//    if(mpiRank_ == 1)
+//    {
+//        if (allFlag)
+//            put_flog(LOG_FATAL, "Received message %d", counter++);
+//        else
+//            put_flog(LOG_FATAL, "No message. Last %d", counter);
+//    }
 
-    // if all render processes have a message...
-    if(allFlag != 0)
+    // continue receiving messages until we get to the last one which all render processes have
+    // this will "drop frames" and keep all processes synchronized
+    while(allFlag)
     {
-        // continue receiving messages until we get to the last one which all render processes have
-        // this will "drop frames" and keep all processes synchronized
-        while(allFlag)
+        MessageHeader mh;
+        MPI_Recv((void *)&mh, sizeof(MessageHeader), MPI_BYTE, RANK0, 0, MPI_COMM_WORLD, &status);
+
+        if(mh.type == MESSAGE_TYPE_CONTENTS)
         {
-            // first, get message header
-            MPI_Recv((void *)&mh, sizeof(MessageHeader), MPI_BYTE, 0, 0, MPI_COMM_WORLD, &status);
-
-            if(mh.type == MESSAGE_TYPE_CONTENTS)
-            {
-                displayGroup_ = receiveDisplayGroup(mh);
-                emit(received(displayGroup_));
-            }
-            else if(mh.type == MESSAGE_TYPE_OPTIONS)
-            {
-                emit(received(receiveOptions(mh)));
-            }
-            else if(mh.type == MESSAGE_TYPE_CONTENTS_DIMENSIONS)
-            {
-                receiveContentsDimensionsRequest();
-            }
-            else if(mh.type == MESSAGE_TYPE_PIXELSTREAM)
-            {
-                receivePixelStreams(mh);
-            }
-            else if(mh.type == MESSAGE_TYPE_QUIT)
-            {
-                QApplication::instance()->quit();
-                return;
-            }
-
-            // check to see if we have another message waiting for this process
-            // and for all render processes
-            MPI_Iprobe(0, 0, MPI_COMM_WORLD, &flag, &status);
-            MPI_Allreduce(&flag, &allFlag, 1, MPI_INT, MPI_LAND, mpiRenderComm_);
+            displayGroup_ = receiveDisplayGroup(mh);
+            emit(received(displayGroup_));
+        }
+        else if(mh.type == MESSAGE_TYPE_OPTIONS)
+        {
+            emit(received(receiveOptions(mh)));
+        }
+        else if(mh.type == MESSAGE_TYPE_MARKERS)
+        {
+            emit(received(receiveMarkers(mh)));
+        }
+        else if(mh.type == MESSAGE_TYPE_CONTENTS_DIMENSIONS)
+        {
+            receiveContentsDimensionsRequest();
+        }
+        else if(mh.type == MESSAGE_TYPE_PIXELSTREAM)
+        {
+            receivePixelStreams(mh);
+        }
+        else if(mh.type == MESSAGE_TYPE_QUIT)
+        {
+            QApplication::instance()->quit();
+            return;
         }
 
-        // at this point, we've received the last message available for all render processes
+        // check to see if we have another message waiting for this process
+        // and for all render processes
+        MPI_Iprobe(RANK0, 0, MPI_COMM_WORLD, &flag, &status);
+        MPI_Allreduce(&flag, &allFlag, 1, MPI_INT, MPI_LAND, mpiRenderComm_);
+
+//    if(mpiRank_ == 1)
+//    {
+//        if (allFlag)
+//            put_flog(LOG_FATAL, "Received message %d", counter++);
+//        else
+//            put_flog(LOG_FATAL, "No message. Last %d", counter);
+//    }
     }
+    // at this point, we've received the last message available for all render processes
 }
 
 void MPIChannel::send(DisplayGroupManagerPtr displayGroup)
@@ -268,6 +294,21 @@ void MPIChannel::send(OptionsPtr options)
     broadcast(serializedString);
 }
 
+void MPIChannel::send(MarkersPtr markers)
+{
+    const std::string& serializedString = serialize(markers);
+
+    MessageHeader mh;
+    mh.size = serializedString.size();
+    mh.type = MESSAGE_TYPE_MARKERS;
+
+    // Send header via a send so we can probe it on the render processes
+    for(int i=1; i<mpiSize_; ++i)
+        send(mh, i);
+
+    broadcast(serializedString);
+}
+
 void MPIChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows)
 {
     if(mpiSize_ < 2)
@@ -276,7 +317,7 @@ void MPIChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentW
         return;
     }
 
-    if(mpiRank_ != 0)
+    if(mpiRank_ != RANK0)
     {
         put_flog(LOG_ERROR, "called on rank: %i != 0", mpiRank_);
         return;
@@ -403,6 +444,20 @@ OptionsPtr MPIChannel::receiveOptions(const MessageHeader& messageHeader)
     return options;
 }
 
+MarkersPtr MPIChannel::receiveMarkers(const MessageHeader& messageHeader)
+{
+    if(mpiRank_ < 1)
+    {
+        put_flog(LOG_WARN, "called on rank %i < 1", mpiRank_);
+        return MarkersPtr();
+    }
+
+    MarkersPtr markers;
+    receiveBroadcast(markers, messageHeader.size);
+
+    return markers;
+}
+
 void MPIChannel::receiveContentsDimensionsRequest()
 {
     if(mpiRank_ != 1)
@@ -438,13 +493,13 @@ void MPIChannel::receiveContentsDimensionsRequest()
     mh.size = serializedString.size();
     mh.type = MESSAGE_TYPE_CONTENTS_DIMENSIONS;
 
-    send(mh, 0);
-    send(serializedString, 0);
+    send(mh, RANK0);
+    send(serializedString, RANK0);
 }
 
 void MPIChannel::send(PixelStreamFramePtr frame)
 {
-    if(mpiRank_ != 0)
+    if(mpiRank_ != RANK0)
     {
         put_flog(LOG_WARN, "called on rank %i != 0", mpiRank_);
         return;
@@ -499,5 +554,5 @@ void MPIChannel::send(const std::string& serializedData, const int dest)
 void MPIChannel::broadcast(const std::string& serializedData, const MPI_Comm mpiComm)
 {
     MPI_Bcast((void *)serializedData.data(), serializedData.size(),
-              MPI_BYTE, 0, mpiComm);
+              MPI_BYTE, RANK0, mpiComm);
 }

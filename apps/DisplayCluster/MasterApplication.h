@@ -40,8 +40,10 @@
 #ifndef MASTERAPPLICATION_H
 #define MASTERAPPLICATION_H
 
+#include "config.h"
 #include "Application.h"
 #include <boost/scoped_ptr.hpp>
+#include <QThread>
 
 class MasterWindow;
 class NetworkListener;
@@ -50,6 +52,7 @@ class PixelStreamWindowManager;
 class WebServiceServer;
 class TextInputDispatcher;
 class MasterConfiguration;
+class MultiTouchListener;
 
 /**
  * The main application for the Master process.
@@ -77,6 +80,12 @@ private:
     boost::scoped_ptr<PixelStreamWindowManager> pixelStreamWindowManager_;
     boost::scoped_ptr<WebServiceServer> webServiceServer_;
     boost::scoped_ptr<TextInputDispatcher> textInputDispatcher_;
+#if ENABLE_TUIO_TOUCH_LISTENER
+    boost::scoped_ptr<MultiTouchListener> touchListener_;
+#endif
+    MarkersPtr markers_;
+
+    QThread mpiWorkerThread_;
 
 #if ENABLE_JOYSTICK_SUPPORT
     boost::scoped_ptr<JoystickThread> joystickThread_;
@@ -91,6 +100,11 @@ private:
     void startWebservice(const int webServicePort);
     void restoreBackground(const MasterConfiguration* configuration);
     void initPixelStreamLauncher();
+    void initMPIConnection();
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+    void initTouchListener();
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
     void startJoystickThread();

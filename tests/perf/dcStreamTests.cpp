@@ -151,8 +151,6 @@ class DCThread : public QThread
 
 BOOST_AUTO_TEST_CASE( testSocketConnection )
 {
-    ut::master_test_suite_t& testSuite = ut::framework::master_test_suite();
-    g_mpiChannel.reset(new MPIChannel(testSuite.argc, testSuite.argv));
     g_configuration = new MasterConfiguration( "configuration.xml" );
 
     DisplayGroupManager displayGroup;

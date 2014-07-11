@@ -43,7 +43,6 @@
 #include "Options.h"
 #include "MPIChannel.h"
 #include "RenderContext.h"
-#include "GLWindow.h"
 #include "log.h"
 
 #include "PixelStreamSegmentRenderer.h"
@@ -66,12 +65,12 @@ void PixelStream::getDimensions(int &width, int &height) const
     height = height_;
 }
 
-void PixelStream::preRenderUpdate(const QRectF& windowRect)
+void PixelStream::preRenderUpdate(const QRectF& windowRect, MPIChannelPtr mpiChannel)
 {
     // Store the window coordinates for the rendering pass
     contentWindowRect_ = windowRect;
 
-    if( isDecodingInProgress( ))
+    if(isDecodingInProgress(mpiChannel))
         return;
 
     // After swapping the buffers, wait until decoding has finished to update the renderers.
@@ -208,7 +207,7 @@ void PixelStream::insertNewFrame(const PixelStreamSegments &segments)
     backBuffer_ = segments;
 }
 
-bool PixelStream::isDecodingInProgress()
+bool PixelStream::isDecodingInProgress(MPIChannelPtr mpiChannel)
 {
     // determine if threads are running on any processes for this PixelStream
     int localThreadsRunning = 0;
@@ -220,7 +219,7 @@ bool PixelStream::isDecodingInProgress()
             ++localThreadsRunning;
     }
 
-    int globalThreadsRunning = g_mpiChannel->globalSum(localThreadsRunning);
+    int globalThreadsRunning = mpiChannel->globalSum(localThreadsRunning);
     return globalThreadsRunning > 0;
 }
 

@@ -38,5 +38,4 @@
 
 #include "globals.h"
 
-MPIChannelPtr g_mpiChannel;
 Configuration * g_configuration = 0;

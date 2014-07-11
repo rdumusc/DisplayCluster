@@ -40,38 +40,51 @@
 #ifndef MULTI_TOUCH_LISTENER_H
 #define MULTI_TOUCH_LISTENER_H
 
+#include "types.h"
+
 #include <TuioListener.h>
 #include <TuioClient.h>
+
+#include <QObject>
 #include <QtGui/QtEvents>
 
+class DisplayGroupGraphicsView;
 
-class DisplayGroupGraphicsViewProxy;
-
-class MultiTouchListener : public TUIO::TuioListener
+/**
+ * Listen to TUIO events and transmit the touch points to a target QGraphicsView.
+ */
+class MultiTouchListener : public QObject, public TUIO::TuioListener
 {
-    public:
-        MultiTouchListener( DisplayGroupGraphicsViewProxy* proxy );
-        ~MultiTouchListener();
+    Q_OBJECT
 
-        void addTuioObject( TUIO::TuioObject* tobj );
-        void updateTuioObject( TUIO::TuioObject* tobj );
-        void removeTuioObject( TUIO::TuioObject* tobj );
+public:
+    MultiTouchListener( DisplayGroupGraphicsView* graphicsView );
+    ~MultiTouchListener();
 
-        void addTuioCursor( TUIO::TuioCursor* tcur );
-        void updateTuioCursor( TUIO::TuioCursor* tcur );
-        void removeTuioCursor( TUIO::TuioCursor* tcur );
+    void addTuioObject( TUIO::TuioObject* tobj );
+    void updateTuioObject( TUIO::TuioObject* tobj );
+    void removeTuioObject( TUIO::TuioObject* tobj );
 
-        void refresh( TUIO::TuioTime frameTime );
+    void addTuioCursor( TUIO::TuioCursor* tcur );
+    void updateTuioCursor( TUIO::TuioCursor* tcur );
+    void removeTuioCursor( TUIO::TuioCursor* tcur );
 
-    private:
-        void handleEvent( TUIO::TuioCursor* tcur,
-                          const QEvent::Type eventType );
+    void refresh( TUIO::TuioTime frameTime );
 
-        QMap< int, QTouchEvent::TouchPoint > _touchPointMap;
+signals:
+    void touchPointAdded(int id, QPointF position);
+    void touchPointUpdated(int id, QPointF position);
+    void touchPointRemoved(int id);
 
-        DisplayGroupGraphicsViewProxy* _graphicsViewProxy;
+private:
+    void handleEvent( TUIO::TuioCursor* tcur,
+                      const QEvent::Type eventType );
 
-        TUIO::TuioClient client_;
+    QMap< int, QTouchEvent::TouchPoint > touchPointMap_;
+
+    DisplayGroupGraphicsView* graphicsView_;
+
+    TUIO::TuioClient client_;
 };
 
 #endif

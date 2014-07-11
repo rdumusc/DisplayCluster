@@ -90,7 +90,7 @@ private:
     int pageNumber_;
     int pageCount_;
 
-    void advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration) override;
+    void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr mpiChannel) override;
 };
 
 #endif // PDFCONTENT_H

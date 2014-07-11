@@ -41,34 +41,24 @@
 
 #include "types.h"
 
-#include <QtGui>
-#include <boost/shared_ptr.hpp>
-#include <vector>
+#include <QGraphicsScene>
 
-class Marker;
+class DisplayGroupGraphicsScene : public QGraphicsScene
+{
+public:
+    DisplayGroupGraphicsScene();
 
-class DisplayGroupGraphicsScene : public QGraphicsScene {
+    void refreshTileRects();
 
-    public:
+protected:
+    bool event(QEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
 
-        DisplayGroupGraphicsScene(DisplayGroupManagerPtr displayGroup);
-
-        void refreshTileRects();
-
-    protected:
-
-        bool event(QEvent *event);
-        void mouseMoveEvent(QGraphicsSceneMouseEvent * event);
-        void mousePressEvent(QGraphicsSceneMouseEvent * event);
-        void mouseReleaseEvent(QGraphicsSceneMouseEvent * event);
-
-    private:
-
-        MarkerPtrs markers_;
-
-        std::vector<QGraphicsRectItem *> tileRects_;
-
-        DisplayGroupManagerPtr displayGroup_;
+private:
+    typedef std::vector<QGraphicsRectItem *> TileRectItems;
+    TileRectItems tileRects_;
 };
 
 #endif

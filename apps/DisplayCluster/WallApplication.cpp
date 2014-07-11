@@ -50,6 +50,7 @@
 #include "DisplayGroupManager.h"
 #include "ContentWindowManager.h"
 #include "DisplayGroupRenderer.h"
+#include "MarkerRenderer.h"
 
 #include <boost/foreach.hpp>
 
@@ -64,7 +65,8 @@ WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChan
 
     factories_.reset(new Factories(*renderContext_));
     displayGroupRenderer_.reset(new DisplayGroupRenderer(factories_));
-    displayGroupRenderer_->setDisplayGroup(displayGroup_);
+
+    MarkerRendererPtr markerRenderer(new MarkerRenderer);
 
     if (mpiChannel_->getRank() == 1)
         mpiChannel_->setFactories(factories_);
@@ -73,6 +75,7 @@ WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChan
     {
         GLWindowPtr glWindow = renderContext_->getGLWindow(i);
         glWindow->addRenderable(displayGroupRenderer_);
+        glWindow->addRenderable(markerRenderer);
 
         RenderablePtr testPattern(new TestPattern(glWindow.get(),
                                                   config,
@@ -86,6 +89,9 @@ WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChan
 
     connect(mpiChannel_.get(), SIGNAL(received(OptionsPtr)),
             this, SLOT(updateOptions(OptionsPtr)));
+
+    connect(mpiChannel_.get(), SIGNAL(received(MarkersPtr)),
+            markerRenderer.get(), SLOT(setMarkers(MarkersPtr)));
 
     connect(mpiChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
             this, SLOT(processPixelStreamFrame(PixelStreamFramePtr)));
@@ -105,50 +111,53 @@ WallApplication::~WallApplication()
 
 void WallApplication::renderFrame()
 {
-    mpiChannel_->receiveMessages();
+    mpiChannel_->receiveMessages(); // TODO make this an async task
 
-    // synchronize clock right after receiving messages to ensure we have an
-    // accurate time for rendering, etc. below
-    mpiChannel_->synchronizeClock();
+    preRenderUpdate();
 
-    // All processes swap windows sychronously
     renderContext_->updateGLWindows();
     mpiChannel_->globalBarrier();
     renderContext_->swapBuffers();
 
-    advanceContent();
-
-    factories_->clearStaleFactoryObjects();
-
-    lastFrameTime_ = mpiChannel_->getTime();
+    postRenderUpdate();
 
     emit(frameFinished());
 }
 
-void WallApplication::advanceContent()
+void WallApplication::preRenderUpdate()
 {
-    boost::posix_time::time_duration timeSinceLastFrame = getTimeSinceLastFrame();
+    // synchronize clock right after receiving messages to ensure we have an
+    // accurate time for rendering, etc. below
+    mpiChannel_->synchronizeClock();
+
     ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
 
     BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
     {
         // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
         // we will call advance() multiple times per frame on that Content object...
-        contentWindow->getContent()->advance(factories_, contentWindow, timeSinceLastFrame);
+        contentWindow->getContent()->preRenderUpdate(factories_, contentWindow, mpiChannel_);
     }
     ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
     if (backgroundWindow)
-        backgroundWindow->getContent()->advance(factories_, backgroundWindow, timeSinceLastFrame);
+        backgroundWindow->getContent()->preRenderUpdate(factories_, backgroundWindow, mpiChannel_);
 }
 
-boost::posix_time::time_duration WallApplication::getTimeSinceLastFrame() const
+void WallApplication::postRenderUpdate()
 {
-    boost::posix_time::ptime currentTime = mpiChannel_->getTime();
+    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
 
-    if (lastFrameTime_.is_not_a_date_time() || currentTime.is_not_a_date_time())
-        return boost::posix_time::time_duration(); // duration == 0
+    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    {
+        // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
+        // we will call advance() multiple times per frame on that Content object...
+        contentWindow->getContent()->postRenderUpdate(factories_, contentWindow, mpiChannel_);
+    }
+    ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
+    if (backgroundWindow)
+        backgroundWindow->getContent()->postRenderUpdate(factories_, backgroundWindow, mpiChannel_);
 
-    return currentTime - lastFrameTime_;
+    factories_->clearStaleFactoryObjects();
 }
 
 void WallApplication::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)

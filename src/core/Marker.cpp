@@ -37,35 +37,32 @@
 /*********************************************************************/
 
 #include "Marker.h"
-#include "globals.h"
-#include "MPIChannel.h"
 
 // number of seconds before a marker stops being rendered
 #define MARKER_TIMEOUT_SECONDS 5
 
 Marker::Marker()
-    : x_(0)
-    , y_(0)
 {}
 
-void Marker::setPosition(float x, float y)
+void Marker::setPosition(const QPointF& position)
 {
-    x_ = x;
-    y_ = y;
-    updatedTimestamp_ = g_mpiChannel->getTime();
-
-    emit(positionChanged());
+    position_ = position;
+    touch();
 }
 
-void Marker::getPosition(float &x, float &y) const
+QPointF Marker::getPosition() const
 {
-    x = x_;
-    y = y_;
+    return position_;
 }
 
-bool Marker::isActive() const
+void Marker::touch()
 {
-    if((g_mpiChannel->getTime() - updatedTimestamp_).total_seconds() > MARKER_TIMEOUT_SECONDS)
+    updatedTimestamp_ = boost::posix_time::microsec_clock::universal_time();
+}
+
+bool Marker::isActive(const boost::posix_time::ptime currentTime) const
+{
+    if((currentTime - updatedTimestamp_).total_seconds() > MARKER_TIMEOUT_SECONDS)
         return false;
     else
         return true;

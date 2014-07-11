@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,22 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#include "ElapsedTimer.h"
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
-
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
-
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+ElapsedTimer::ElapsedTimer()
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
 }
 
-CONTENT_TYPE PDFContent::getType()
+void ElapsedTimer::setCurrentTime(boost::posix_time::ptime time)
 {
-    return CONTENT_TYPE_PDF;
+    previousTime_ = currentTime_;
+    currentTime_ = time;
 }
 
-bool PDFContent::readMetadata()
+boost::posix_time::time_duration ElapsedTimer::getElapsedTime() const
 {
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+    if (previousTime_.is_not_a_date_time() || currentTime_.is_not_a_date_time())
+        return boost::posix_time::time_duration(); // duration == 0
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
-
-    return true;
-}
-
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
-
-    if (extensions.empty())
-    {
-        extensions << "pdf";
-    }
-
-    return extensions;
-}
-
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, MPIChannelPtr)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
+    return currentTime_ - previousTime_;
 }

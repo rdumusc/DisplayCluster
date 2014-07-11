@@ -40,7 +40,6 @@
 #define DISPLAY_GROUP_GRAPHICS_VIEW_PROXY_H
 
 #include "DisplayGroupInterface.h"
-#include <QtGui>
 
 class DisplayGroupGraphicsView;
 
@@ -48,27 +47,23 @@ class DisplayGroupGraphicsViewProxy : public DisplayGroupInterface
 {
     Q_OBJECT
 
-    public:
+public:
+    DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup);
+    ~DisplayGroupGraphicsViewProxy();
 
-        DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup);
-        ~DisplayGroupGraphicsViewProxy();
+    DisplayGroupGraphicsView* getGraphicsView();
 
-        DisplayGroupGraphicsView * getGraphicsView();
+    void addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
+    void removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
+    void moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
 
-        // re-implemented DisplayGroupInterface slots
-        void addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
-        void removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
-        void moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
+public slots:
+    void optionsUpdated(OptionsPtr options);
 
-    public slots:
-
-        void optionsUpdated(OptionsPtr options);
-
-    private:
-
-        // we make this a member since we can't have multiple inheritance of QObject and still use signals/slots
-        // see the "Diamond problem"
-        DisplayGroupGraphicsView * graphicsView_;
+private:
+    // we make this a member since we can't have multiple inheritance of QObject and still use signals/slots
+    // see the "Diamond problem"
+    DisplayGroupGraphicsView* graphicsView_;
 };
 
 #endif

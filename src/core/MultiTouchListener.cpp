@@ -41,19 +41,17 @@
 
 #include "configuration/Configuration.h"
 #include "DisplayGroupGraphicsView.h"
-#include "DisplayGroupGraphicsViewProxy.h"
 #include "gestures/DoubleTapGestureRecognizer.h"
 #include "gestures/PanGestureRecognizer.h"
 #include "gestures/PinchGestureRecognizer.h"
 #include "globals.h"
 #include "log.h"
 
-#include <QtGui/QGraphicsView>
+#include <QApplication>
 
-
-MultiTouchListener::MultiTouchListener( DisplayGroupGraphicsViewProxy* proxy )
+MultiTouchListener::MultiTouchListener(DisplayGroupGraphicsView* graphicsView )
     : TUIO::TuioListener()
-    , _graphicsViewProxy( proxy )
+    , graphicsView_( graphicsView )
 {
     DoubleTapGestureRecognizer::install();
     PanGestureRecognizer::install();
@@ -85,14 +83,13 @@ void MultiTouchListener::removeTuioObject( TUIO::TuioObject* )
 void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
                                       const QEvent::Type eventType )
 {
-    QGraphicsView* view = _graphicsViewProxy->getGraphicsView();
-    if( !view )
+    if( !graphicsView_ )
         return;
 
-    const QPoint& viewPos = view->mapToGlobal( view->pos());
-    const QRectF& sceneRect = view->sceneRect();
-    const int viewWidth = view->geometry().width();
-    const int viewHeight = view->geometry().height();
+    const QPoint& viewPos = graphicsView_->mapToGlobal( graphicsView_->pos());
+    const QRectF& sceneRect = graphicsView_->sceneRect();
+    const int viewWidth = graphicsView_->geometry().width();
+    const int viewHeight = graphicsView_->geometry().height();
 
     const qreal w = viewWidth / sceneRect.width();
     const qreal h = viewHeight / sceneRect.height();
@@ -143,7 +140,7 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
         else
             touchPointStates = Qt::TouchPointReleased;
 
-        const QTouchEvent::TouchPoint& prevPoint = _touchPointMap.value( tcur->getCursorID( ));
+        const QTouchEvent::TouchPoint& prevPoint = touchPointMap_.value( tcur->getCursorID( ));
         touchPoint.setStartNormalizedPos( prevPoint.startNormalizedPos( ));
         touchPoint.setStartPos( prevPoint.startPos( ));
         touchPoint.setStartScreenPos( prevPoint.startScreenPos( ));
@@ -162,30 +159,35 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     }
 
     touchPoint.setState( touchPointStates );
-    _touchPointMap.insert( tcur->getCursorID(), touchPoint );
+    touchPointMap_.insert( tcur->getCursorID(), touchPoint );
 
     QEvent* touchEvent = new QTouchEvent( eventType, QTouchEvent::TouchScreen,
                                           Qt::NoModifier, touchPointStates,
-                                          _touchPointMap.values( ));
-    QApplication::postEvent( view->viewport(), touchEvent );
+                                          touchPointMap_.values( ));
+    QApplication::postEvent( graphicsView_->viewport(), touchEvent );
 
     if( eventType == QEvent::TouchEnd )
-        _touchPointMap.remove( tcur->getCursorID( ));
+        touchPointMap_.remove( tcur->getCursorID( ));
 }
 
 void MultiTouchListener::addTuioCursor(TUIO::TuioCursor *tcur)
 {
     handleEvent( tcur, QEvent::TouchBegin );
+    const QPointF position( tcur->getX(), tcur->getY( ));
+    emit touchPointAdded( tcur->getCursorID(), position );
 }
 
 void MultiTouchListener::updateTuioCursor(TUIO::TuioCursor *tcur)
 {
     handleEvent( tcur, QEvent::TouchUpdate );
+    const QPointF position( tcur->getX(), tcur->getY( ));
+    emit touchPointUpdated( tcur->getCursorID(), position );
 }
 
 void MultiTouchListener::removeTuioCursor(TUIO::TuioCursor *tcur)
 {
     handleEvent( tcur, QEvent::TouchEnd );
+    emit touchPointRemoved( tcur->getCursorID( ));
 }
 
 void MultiTouchListener::refresh(TUIO::TuioTime)

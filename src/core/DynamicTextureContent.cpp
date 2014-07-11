@@ -77,11 +77,10 @@ const QStringList& DynamicTextureContent::getSupportedExtensions()
     return extensions;
 }
 
-void DynamicTextureContent::advance(FactoriesPtr factories, ContentWindowManagerPtr, const boost::posix_time::time_duration)
+void DynamicTextureContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, MPIChannelPtr)
 {
     if( blockAdvance_ )
         return;
 
-    // recall that advance() is called after rendering
     factories->getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
 }

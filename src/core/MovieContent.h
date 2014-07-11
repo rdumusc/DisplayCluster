@@ -68,7 +68,7 @@ private:
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
     }
 
-    void advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration timeSinceLastFrame);
+    void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr mpiChannel) override;
 };
 
 #endif

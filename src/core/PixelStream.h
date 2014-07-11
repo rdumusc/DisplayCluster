@@ -60,7 +60,7 @@ public:
 
     void getDimensions(int &width, int &height) const override;
 
-    void preRenderUpdate(const QRectF& windowRect);
+    void preRenderUpdate(const QRectF& windowRect, MPIChannelPtr mpiChannel);
     void render(const QRectF& texCoords) override;
 
     void insertNewFrame(const PixelStreamSegments& segments);
@@ -97,7 +97,7 @@ private:
     void adjustFrameDecodersCount(const size_t count);
     void adjustSegmentRendererCount(const size_t count);
 
-    bool isDecodingInProgress();
+    bool isDecodingInProgress(MPIChannelPtr mpiChannel);
 
     bool isVisible(const QRect& segment, const QRectF& windowRect);
     bool isVisible(const PixelStreamSegment& segment, const QRectF& windowRect);

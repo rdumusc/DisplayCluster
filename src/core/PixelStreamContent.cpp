@@ -54,8 +54,8 @@ bool PixelStreamContent::readMetadata()
     return true;
 }
 
-void PixelStreamContent::advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration)
+void PixelStreamContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr mpiChannel)
 {
     const QRectF& windowRect = window->getCoordinates();
-    factories->getPixelStreamFactory().getObject(getURI())->preRenderUpdate(windowRect);
+    factories->getPixelStreamFactory().getObject(getURI())->preRenderUpdate(windowRect, mpiChannel);
 }

@@ -45,6 +45,11 @@
 #include "configuration/MasterConfiguration.h"
 #include "MPIChannel.h"
 #include "Options.h"
+#include "Markers.h"
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+    #include "MultiTouchListener.h"
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
 #include "JoystickThread.h"
@@ -75,6 +80,7 @@
 
 MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
     : Application(argc_, argv_, mpiChannel)
+    , markers_(new Markers)
 {
     displayGroup_.reset(new DisplayGroupManager(mpiChannel));
 
@@ -83,12 +89,6 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr mpi
 
     if( argc_ == 2 )
         StateSerializationHelper(displayGroup_).load( argv_[1] );
-
-    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
-            mpiChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
-
-    connect(config->getOptions().get(), SIGNAL(updated(OptionsPtr)),
-            mpiChannel_.get(), SLOT(send(OptionsPtr)));
 
     init(config);
 }
@@ -119,7 +119,12 @@ void MasterApplication::init(const MasterConfiguration* config)
     initPixelStreamLauncher();
     startNetworkListener(config);
     startWebservice(config->getWebServicePort());
+    initMPIConnection();
     restoreBackground(config);
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+    initTouchListener();
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
     startJoystickThread();
@@ -136,10 +141,6 @@ void MasterApplication::startNetworkListener(const MasterConfiguration* configur
         return;
 
     networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
-    connect(networkListener_->getPixelStreamDispatcher(),
-            SIGNAL(sendFrame(PixelStreamFramePtr)),
-            mpiChannel_.get(),
-            SLOT(send(PixelStreamFramePtr)));
 
     CommandHandler& handler = networkListener_->getCommandHandler();
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));
@@ -192,8 +193,41 @@ void MasterApplication::initPixelStreamLauncher()
     pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(openDock(QPointF,QSize,QString)),
                                        SLOT(openDock(QPointF,QSize,QString)));
     pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(hideDock()),
-                                       SLOT(hideDock()));
+                                    SLOT(hideDock()));
 }
+
+void MasterApplication::initMPIConnection()
+{
+    mpiChannel_->moveToThread(&mpiWorkerThread_);
+
+    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
+            mpiChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
+
+    connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
+            mpiChannel_.get(), SLOT(send(OptionsPtr)));
+
+    connect(markers_.get(), SIGNAL(updated(MarkersPtr)),
+            mpiChannel_.get(), SLOT(send(MarkersPtr)));
+
+    connect(networkListener_->getPixelStreamDispatcher(),
+            SIGNAL(sendFrame(PixelStreamFramePtr)),
+            mpiChannel_.get(), SLOT(send(PixelStreamFramePtr)));
+
+    mpiWorkerThread_.start();
+}
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+void MasterApplication::initTouchListener()
+{
+    touchListener_.reset(new MultiTouchListener(masterWindow_->getGraphicsView()));
+    connect(touchListener_.get(), SIGNAL(touchPointAdded(int,QPointF)),
+            markers_.get(), SLOT(addMarker(int,QPointF)));
+    connect(touchListener_.get(), SIGNAL(touchPointUpdated(int,QPointF)),
+            markers_.get(), SLOT(updateMarker(int,QPointF)));
+    connect(touchListener_.get(), SIGNAL(touchPointRemoved(int)),
+            markers_.get(), SLOT(removeMarker(int)));
+}
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
 void MasterApplication::startJoystickThread()

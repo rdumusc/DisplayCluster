@@ -42,9 +42,6 @@
 
 #include "Application.h"
 
-#ifndef Q_MOC_RUN
-#include <boost/date_time/posix_time/posix_time.hpp>
-#endif
 #include <boost/scoped_ptr.hpp>
 
 class WallConfiguration;
@@ -83,13 +80,9 @@ private:
     boost::scoped_ptr<RenderContext> renderContext_;
     DisplayGroupRendererPtr displayGroupRenderer_;
     FactoriesPtr factories_;
-    boost::posix_time::ptime lastFrameTime_;
 
-    /** Update the content every frame. */
-    void advanceContent();
-
-    /** Get the time since the last frame was rendered. */
-    boost::posix_time::time_duration getTimeSinceLastFrame() const;
+    void preRenderUpdate();
+    void postRenderUpdate();
 };
 
 #endif // WALLAPPLICATION_H

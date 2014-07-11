@@ -42,8 +42,6 @@
 #include "Content.h"
 #include "MPIChannel.h"
 
-#include <QApplication>
-
 DisplayGroupManager::DisplayGroupManager()
 {
 }
@@ -56,34 +54,6 @@ DisplayGroupManager::DisplayGroupManager(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
 {
     assert(mpiChannel_->getRank() == 0);
-}
-
-MarkerPtr DisplayGroupManager::getNewMarker()
-{
-    QMutexLocker locker(&markersMutex_);
-
-    MarkerPtr marker(new Marker());
-    markers_.push_back(marker);
-
-    // the marker needs to be owned by the main thread for queued connections to work properly
-    marker->moveToThread(QApplication::instance()->thread());
-
-    // make marker trigger sendDisplayGroup() when it is updated
-    connect(marker.get(), SIGNAL(positionChanged()), this, SLOT(sendDisplayGroup()), Qt::QueuedConnection);
-
-    return marker;
-}
-
-MarkerPtrs DisplayGroupManager::getMarkers() const
-{
-    QMutexLocker locker(&markersMutex_);
-    return markers_;
-}
-
-void DisplayGroupManager::deleteMarkers()
-{
-    QMutexLocker locker(&markersMutex_);
-    markers_.clear();
 }
 
 #if ENABLE_SKELETON_SUPPORT

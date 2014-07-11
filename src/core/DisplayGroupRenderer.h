@@ -42,10 +42,8 @@
 
 #include "types.h"
 
-#include "ContentWindowRenderer.h"
-#include "MarkerRenderer.h"
 #include "Renderable.h"
-
+#include "ContentWindowRenderer.h"
 #if ENABLE_SKELETON_SUPPORT
 #include "SkeletonRenderer.h"
 #endif
@@ -75,14 +73,12 @@ private:
     FactoriesPtr factories_;
     DisplayGroupManagerPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
-    MarkerRenderer markerRenderer_;
 #if ENABLE_SKELETON_SUPPORT
     SkeletonRenderer skeletonRenderer_;
 #endif
 
     void renderBackgroundContent(ContentWindowManagerPtr backgroundContentWindow);
     void renderContentWindows(ContentWindowManagerPtrs contentWindowManagers);
-    void renderMarkers(const MarkerPtrs& markers);
 };
 
 #endif // DISPLAYGROUPRENDERER_H

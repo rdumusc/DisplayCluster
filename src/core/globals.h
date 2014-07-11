@@ -39,12 +39,9 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <stdint.h>
 #include "types.h"
 
 class Configuration;
-
-extern MPIChannelPtr g_mpiChannel;
 extern Configuration* g_configuration;
 
 #endif

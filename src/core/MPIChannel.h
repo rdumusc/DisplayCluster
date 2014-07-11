@@ -60,7 +60,7 @@ class MPIChannel : public QObject
 public:
     /**
      * Constructor, initialize the MPI communication.
-     * Only one instance is of this class per program is allowed.
+     * Only one instance of this class per program is allowed.
      * @param argc main program arguments count
      * @param argv main program arguments
      */
@@ -76,16 +76,16 @@ public:
     void globalBarrier() const;
 
     /**
-     * Get the sum of the given local values across all processes.
+     * Ranks 1-N: Get the sum of the given local values across all processes.
      * @param localValue The value to sum
      * @return the sum of the localValues
      */
     int globalSum(const int localValue) const;
 
-    /** Synchronize clock time across all processes. */
+    /** Ranks 1-N: Synchronize clock time across all processes. */
     void synchronizeClock();
 
-    /** Get the current timestamp, synchronized accross processes. */
+    /** Ranks 1-N: Get the current timestamp, synchronized accross processes. */
     boost::posix_time::ptime getTime() const;
 
     /**
@@ -114,7 +114,7 @@ public:
      */
     void sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows);
 
-    /** Set the factories on Rank1 to respond to Content Dimensions request */
+    /** Rank1(-N): Set the factories to respond to Content Dimensions request */
     void setFactories(FactoriesPtr factories);
 
 public slots:
@@ -129,6 +129,12 @@ public slots:
      * @param options The options to send
      */
     void send(OptionsPtr options);
+
+    /**
+     * Rank0: send the given Markers to ranks 1-N
+     * @param markers The markers to send
+     */
+    void send(MarkersPtr markers);
 
     /**
      * Rank 0: Send pixel stream frame to ranks 1-N
@@ -147,9 +153,16 @@ signals:
     /**
      * Rank 1-N: Emitted when new Options were recieved
      * @see receiveMessages()
-     * @param options The options that was received
+     * @param options The options that were received
      */
     void received(OptionsPtr options);
+
+    /**
+     * Rank 1-N: Emitted when new Markers were recieved
+     * @see receiveMessages()
+     * @param markers The markers that were received
+     */
+    void received(MarkersPtr markers);
 
     /**
      * Rank 1-N: Emitted when a new PixelStream frame was recieved
@@ -176,6 +189,7 @@ private:
     // Ranks 1-n recieve data through MPI
     DisplayGroupManagerPtr receiveDisplayGroup(const MessageHeader& messageHeader);
     OptionsPtr receiveOptions(const MessageHeader& messageHeader);
+    MarkersPtr receiveMarkers(const MessageHeader& messageHeader);
     void receivePixelStreams(const MessageHeader& messageHeader);
 
     // TODO remove content dimension requests (DISCL-21)

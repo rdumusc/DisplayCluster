@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#ifndef ELAPSEDTIMER_H
+#define ELAPSEDTIMER_H
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#ifndef Q_MOC_RUN
+#include <boost/date_time/posix_time/posix_time.hpp>
+#endif
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
-
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+/**
+ * Simple timer to mesures time differences.
+ */
+class ElapsedTimer
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
-}
+public:
+    /** Constructor. */
+    ElapsedTimer();
 
-CONTENT_TYPE PDFContent::getType()
-{
-    return CONTENT_TYPE_PDF;
-}
+    /** Set the current time. */
+    void setCurrentTime(boost::posix_time::ptime time);
 
-bool PDFContent::readMetadata()
-{
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+    /** Get the elapsed time between the last two calls to setCurrentTime(). */
+    boost::posix_time::time_duration getElapsedTime() const;
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
+private:
+    boost::posix_time::ptime currentTime_;
+    boost::posix_time::ptime previousTime_;
+};
 
-    return true;
-}
-
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
-
-    if (extensions.empty())
-    {
-        extensions << "pdf";
-    }
-
-    return extensions;
-}
-
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, MPIChannelPtr)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}
+#endif // ELAPSEDTIMER_H

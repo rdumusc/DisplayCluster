@@ -45,6 +45,7 @@
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 #include "Factories.h"
+#include "MPIChannel.h"
 
 BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
 
@@ -71,7 +72,7 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration timeSinceLastFrame)
+void MovieContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr mpiChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
@@ -85,5 +86,5 @@ void MovieContent::advance(FactoriesPtr factories, ContentWindowManagerPtr windo
 
     movie->setPause( window->getControlState() & STATE_PAUSED );
     movie->setLoop( window->getControlState() & STATE_LOOP );
-    movie->nextFrame(timeSinceLastFrame, skipDecoding);
+    movie->nextFrame(mpiChannel->getTime(), skipDecoding);
 }

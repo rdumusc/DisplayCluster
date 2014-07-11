@@ -55,12 +55,10 @@
 IMPLEMENT_SERIALIZE_FOR_XML(ContentWindowManager)
 
 ContentWindowManager::ContentWindowManager()
-    : interactionDelegate_( 0 )
 {
 }
 
 ContentWindowManager::ContentWindowManager(ContentPtr content)
-    : interactionDelegate_( 0 )
 {
     setContent(content);
 
@@ -69,7 +67,6 @@ ContentWindowManager::ContentWindowManager(ContentPtr content)
 
 ContentWindowManager::~ContentWindowManager()
 {
-    delete interactionDelegate_;
 }
 
 void ContentWindowManager::setContent(ContentPtr content)
@@ -80,19 +77,15 @@ void ContentWindowManager::setContent(ContentPtr content)
         content_->disconnect(this, SIGNAL(contentModified()));
     }
 
-    // set content object
     content_ = content;
 
-    // content dimensions
     if(content_)
     {
         content_->getDimensions(contentWidth_, contentHeight_);
 
-        // receive updates to content dimensions
         connect(content.get(), SIGNAL(dimensionsChanged(int, int)),
                 this, SLOT(setContentDimensions(int, int)));
 
-        // Notify DisplayGroup that the content was modified
         connect(content.get(), SIGNAL(modified()),
                 this, SIGNAL(contentModified()));
     }
@@ -109,28 +102,25 @@ ContentPtr ContentWindowManager::getContent() const
 
 void ContentWindowManager::createInteractionDelegate()
 {
-    if (!g_mpiChannel || g_mpiChannel->getRank() != 0)
-        return;
-
-    delete interactionDelegate_;
-    interactionDelegate_ = 0;
-
-    if(!getContent())
-        return;
-
-    if (getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM)
+    if(!content_)
     {
-        interactionDelegate_ = new PixelStreamInteractionDelegate(*this);
+        interactionDelegate_.reset();
+        return;
     }
+
+    switch (content_->getType())
+    {
+    case CONTENT_TYPE_PIXEL_STREAM:
+        interactionDelegate_.reset(new PixelStreamInteractionDelegate(*this));
+        break;
 #if ENABLE_PDF_SUPPORT
-    else if (getContent()->getType() == CONTENT_TYPE_PDF)
-    {
-        interactionDelegate_ = new PDFInteractionDelegate(*this);
-    }
+    case CONTENT_TYPE_PDF:
+        interactionDelegate_.reset(new PDFInteractionDelegate(*this));
+        break;
 #endif
-    else
-    {
-        interactionDelegate_ = new ZoomInteractionDelegate(*this);
+    default:
+        interactionDelegate_.reset(new ZoomInteractionDelegate(*this));
+        break;
     }
 }
 

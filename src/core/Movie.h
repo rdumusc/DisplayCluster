@@ -42,6 +42,7 @@
 #include "FactoryObject.h"
 #include "GLTexture2D.h"
 #include "GLQuad.h"
+#include "ElapsedTimer.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -56,7 +57,7 @@ public:
     void getDimensions(int &width, int &height) const override;
     void render(const QRectF& texCoords) override;
 
-    void nextFrame(const boost::posix_time::time_duration timeSinceLastFrame, const bool skipDecoding);
+    void nextFrame(const boost::posix_time::ptime now, const bool skipDecoding);
     void setPause(const bool pause);
     void setLoop(const bool loop);
 
@@ -66,6 +67,7 @@ private:
     QString uri_;
     GLTexture2D texture_;
     GLQuad quad_;
+    ElapsedTimer elapsedTimer_;
 
     bool paused_;
 

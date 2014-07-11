@@ -80,13 +80,20 @@ class Content : public QObject
         **/
         virtual bool readMetadata() = 0;
 
+        /** Get the dimensions. */
         void getDimensions(int &width, int &height);
+
+        /** Set the dimensions. */
         void setDimensions(int width, int height);
+
+        /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
         void blockAdvance( bool block ) { blockAdvance_ = block; }
 
-        // virtual method for implementing actions on advancing to a new frame
-        // useful when a process has multiple GLWindows
-        virtual void advance(FactoriesPtr, ContentWindowManagerPtr, const boost::posix_time::time_duration) { }
+        /** Re-implement this method to update or synchronize before rendering. */
+        virtual void preRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, MPIChannelPtr) { }
+
+        /** Re-implement this method to update or synchronize after rendering. */
+        virtual void postRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, MPIChannelPtr) { }
 
     signals:
         /** Emitted when dimensions have changed */

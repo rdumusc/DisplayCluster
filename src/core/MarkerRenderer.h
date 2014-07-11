@@ -41,26 +41,41 @@
 #define MARKERRENDERER_H
 
 #include "types.h"
+#include "Renderable.h"
 #include "GLTexture2D.h"
 #include "GLQuad.h"
+#include "Markers.h"
+
+#include <QObject>
 
 /**
  * Renderer for Marker objects.
  */
-class MarkerRenderer
+class MarkerRenderer : public QObject, public Renderable
 {
+    Q_OBJECT
+
 public:
     /** Constructor */
     MarkerRenderer();
 
-    /** Render a Marker */
-    void render(MarkerPtr marker);
+    /** Render the markers. */
+    void render() override;
+
+public slots:
+    /**
+     * Set the Markers to render, replacing the previous ones.
+     * @see render()
+     */
+    void setMarkers(MarkersPtr markers);
 
 private:
     GLTexture2D texture_;
     GLQuad quad_;
+    MarkersPtr markers_;
 
     bool generateTexture();
+    void render(const Marker& marker);
 };
 
 #endif // MARKERRENDERER_H

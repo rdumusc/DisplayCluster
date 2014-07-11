@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,57 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#ifndef MARKERS_H
+#define MARKERS_H
 
+#include "types.h"
+
+#include "Marker.h"
 #include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+#include <QObject>
+#include <QPointF>
+#include <map>
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+#include <boost/serialization/access.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/serialization/map.hpp>
+
+typedef std::map<int, Marker> MarkersMap;
+
+/**
+ * Store Markers to display user interaction.
+ */
+class Markers : public QObject, public boost::enable_shared_from_this<Markers>
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
-}
+    Q_OBJECT
 
-CONTENT_TYPE PDFContent::getType()
-{
-    return CONTENT_TYPE_PDF;
-}
+public:
+    /** Constructor */
+    Markers();
 
-bool PDFContent::readMetadata()
-{
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+    /** Get all the markers. */
+    const MarkersMap& getMarkers() const;
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
+public slots:
+    void addMarker(const int id, const QPointF position);
+    void updateMarker(const int id, const QPointF position);
+    void removeMarker(const int id);
+    void clearOldMarkers();
 
-    return true;
-}
+signals:
+    void updated(MarkersPtr markers);
 
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
+private:
+    friend class boost::serialization::access;
 
-    if (extensions.empty())
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int)
     {
-        extensions << "pdf";
+        ar & markers_;
     }
 
-    return extensions;
-}
+    MarkersMap markers_;
+};
 
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, MPIChannelPtr)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}
+#endif // MARKERS_H
