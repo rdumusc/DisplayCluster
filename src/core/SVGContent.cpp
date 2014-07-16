@@ -37,13 +37,10 @@
 /*********************************************************************/
 
 #include "SVGContent.h"
-#include "globals.h"
-#include "SVG.h"
-#include "MainWindow.h"
-#include "GLWindow.h"
 
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
+#include <QFileInfo>
 
 BOOST_CLASS_EXPORT_GUID(SVGContent, "SVGContent")
 
@@ -54,7 +51,8 @@ CONTENT_TYPE SVGContent::getType()
 
 bool SVGContent::readMetadata()
 {
-    return true;
+    QFileInfo file( getURI( ));
+    return file.exists() && file.isReadable();
 }
 
 const QStringList& SVGContent::getSupportedExtensions()
@@ -67,14 +65,4 @@ const QStringList& SVGContent::getSupportedExtensions()
     }
 
     return extensions;
-}
-
-void SVGContent::getFactoryObjectDimensions(int &width, int &height)
-{
-    g_mainWindow->getGLWindow()->getSVGFactory().getObject(getURI())->getDimensions(width, height);
-}
-
-void SVGContent::renderFactoryObject(ContentWindowManagerPtr, const QRectF& texCoords)
-{
-    g_mainWindow->getGLWindow()->getSVGFactory().getObject(getURI())->render(texCoords);
 }

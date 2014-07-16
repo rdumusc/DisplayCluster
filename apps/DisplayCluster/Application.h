@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,54 +37,38 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef APPLICATION_H
+#define APPLICATION_H
 
-#include <math.h>
+#include <QApplication>
 
-template <class T> void vectorCrossProduct(const T a[3], const T b[3], T c[3])
+#include "globals.h"
+
+/**
+ * The base class for both Master and Wall main applications.
+ */
+class Application : public QApplication
 {
-    c[0] = a[1] * b[2] - a[2] * b[1];
-    c[1] = a[2] * b[0] - a[0] * b[2];
-    c[2] = a[0] * b[1] - a[1] * b[0];
+    Q_OBJECT
+public:
+    /**
+     * Create an Application.
+     *
+     * @param argc Command line argument count (required by QApplication)
+     * @param argv Command line arguments (required by QApplication)
+     * @param mpiChannel The interprocess communication channel
+     */
+    Application(int &argc, char **argv, MPIChannelPtr mpiChannel);
 
-    return;
-}
+    /** Destructor */
+    virtual ~Application();
 
-template <class T> T vectorMagnitude(const T a[3])
-{
-    return sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+protected:
+    /** Get the configuration filename. */
+    QString getConfigFilename() const;
 
-}
+    MPIChannelPtr mpiChannel_;
+    DisplayGroupManagerPtr displayGroup_;
+};
 
-template <class T> void vectorSubtraction(const T a[3], const T b[3], T c[3])
-{
-    c[0] = a[0] - b[0];
-    c[1] = a[1] - b[1];
-    c[2] = a[2] - b[2];
-
-    return;
-}
-
-template <class T> void vectorNormalize(T a[3])
-{
-    T magnitude = vectorMagnitude(a);
-
-    a[0] /= magnitude;
-    a[1] /= magnitude;
-    a[2] /= magnitude;
-
-    return;
-}
-
-template <class T> T vectorDotProduct(const T a[3], const T b[3])
-{
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-}
-
-template <class T> T vectorDistance(const T a[3], const T b[3])
-{
-    return sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]));
-}
-
-#endif
+#endif // APPLICATION_H

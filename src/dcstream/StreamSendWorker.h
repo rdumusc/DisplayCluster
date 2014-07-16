@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2013-2014, EPFL/Blue Brain Project                  */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,90 +37,57 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MAIN_WINDOW_H
-#define MAIN_WINDOW_H
+#ifndef DCSTREAMSENDWORKER_H
+#define DCSTREAMSENDWORKER_H
 
-#include "config.h"
-#include "types.h"
+// needed for future.hpp with Boost 1.41
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 
-#include <QtGui>
-#include <QGLWidget>
-#include <boost/shared_ptr.hpp>
+#include <boost/thread/future.hpp>
+#include <boost/thread/thread.hpp>
+#include <deque>
 
-class MultiTouchListener;
-class BackgroundWidget;
+#include "Stream.h" // Stream::Future
 
-class MainWindow : public QMainWindow
+namespace dc
 {
-    Q_OBJECT
 
-    public:
-        MainWindow();
-        ~MainWindow();
+class StreamPrivate;
+struct ImageWrapper;
 
-        GLWindowPtr getGLWindow(int index=0);
-        GLWindowPtr getActiveGLWindow();
+/**
+ * Worker class that is used to send images that are pushed to a worker queue.
+ */
+class StreamSendWorker
+{
+public:
+    /** Create a new stream worker associated to an existing stream object. */
+    StreamSendWorker( StreamPrivate& stream );
 
-        bool isRegionVisible(const QRectF& region) const;
+    ~StreamSendWorker();
 
-        void finalize();
+    /** Enqueue an image to be send during the execution of run(). */
+    Stream::Future enqueueImage( const ImageWrapper& image );
 
-    signals:
-        void openDock(QPointF pos, QSize size, QString rootDir);
-        void hideDock();
-        void openWebBrowser(QPointF pos, QSize size, QString url);
+private:
+    /** Starts asynchronous sending of queued images. */
+    void run_();
 
-#if ENABLE_SKELETON_SUPPORT
-        void enableSkeletonTracking();
-        void disableSkeletonTracking();
-#endif
-        void updateGLWindowsFinished();
+    /** Stop the worker and clear any pending image send requests. */
+    void stop_();
 
-    protected:
-        void dragEnterEvent(QDragEnterEvent *event);
-        void dropEvent(QDropEvent *event);
+    typedef boost::promise< bool > Promise;
+    typedef boost::shared_ptr< Promise > PromisePtr;
+    typedef std::pair< PromisePtr, ImageWrapper > Request;
 
-    private slots:
-        void openContent();
-        void openContentsDirectory();
-        void clearContents();
-
-        void saveState();
-        void loadState();
-
-        void computeImagePyramid();
-        void showBackgroundWidget();
-
-        void openWebBrowser();
-        void openDock(const QPointF position);
-
-    #if ENABLE_SKELETON_SUPPORT
-        void setEnableSkeletonTracking(bool enable);
-    #endif
-
-        void updateGLWindows();
-
-    private:
-        void setupMasterWindowUI();
-        void setupWallOpenGLWindows();
-
-        void addContentDirectory(const QString &directoryName, unsigned int gridX=0, unsigned int gridY=0);
-        void loadState(const QString &filename);
-
-        void estimateGridSize(unsigned int numElem, unsigned int& gridX, unsigned int& gridY);
-
-        QStringList extractValidContentUrls(const QMimeData* mimeData);
-        QStringList extractFolderUrls(const QMimeData *mimeData);
-        QString extractStateFile(const QMimeData *mimeData);
-
-        GLWindowPtrs glWindows_;
-        GLWindowPtr activeGLWindow_;
-
-        BackgroundWidget* backgroundWidget_;
-
-#if ENABLE_TUIO_TOUCH_LISTENER
-        MultiTouchListener* touchListener_;
-#endif
+    StreamPrivate& stream_;
+    std::deque< Request > requests_;
+    boost::mutex mutex_;
+    boost::condition condition_;
+    bool running_;
+    boost::thread thread_;
 };
 
-#endif
+}
+#endif // DCSTREAMPRIVATE_H

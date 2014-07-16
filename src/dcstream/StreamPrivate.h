@@ -45,6 +45,7 @@
 #include "MessageHeader.h"
 #include "ImageSegmenter.h"
 #include "Socket.h" // member
+#include "Stream.h" // Stream::Future
 
 #include <QMutex>
 #include <string>
@@ -56,6 +57,7 @@ namespace dc
 
 struct PixelStreamSegment;
 struct PixelStreamSegmentParameters;
+class StreamSendWorker;
 
 /**
  * Private implementation for the Stream class.
@@ -96,6 +98,15 @@ public:
      */
     bool close();
 
+    /** @sa Stream::send */
+    bool send( const ImageWrapper& image );
+
+    /** @sa Stream::asyncSend */
+    Stream::Future asyncSend(const ImageWrapper& image);
+
+    /** @sa Stream::finishFrame */
+    bool finishFrame();
+
     /**
      * Send an existing PixelStreamSegment via the DcSocket.
      * @param socket The DcSocket instance
@@ -112,8 +123,10 @@ public:
      */
     bool sendCommand(const QString& command);
 
-private:
     QMutex sendLock_;
+
+private:
+    StreamSendWorker* sendWorker_;
 };
 
 }
