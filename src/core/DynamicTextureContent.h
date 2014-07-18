@@ -75,7 +75,7 @@ class DynamicTextureContent : public Content
             ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
         }
 
-        void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr) override;
+        void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, WallToWallChannel&) override;
 };
 
 #endif

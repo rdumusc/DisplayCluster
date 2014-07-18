@@ -41,8 +41,10 @@
 #define PIXELSTREAMFRAME_H
 
 #include "types.h"
+#include "PixelStreamSegment.h"
 
 #include <QString>
+#include <boost/serialization/access.hpp>
 
 /**
  * A frame for a PixelStream.
@@ -54,6 +56,16 @@ struct PixelStreamFrame
 
     /** The PixelStream uri to which this frame is associated. */
     QString uri;
+
+private:
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int)
+    {
+        ar & segments;
+        ar & uri;
+    }
 };
 
 #endif // PIXELSTREAMFRAME_H

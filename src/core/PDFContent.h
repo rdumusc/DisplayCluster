@@ -90,7 +90,7 @@ private:
     int pageNumber_;
     int pageCount_;
 
-    void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr mpiChannel) override;
+    void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, WallToWallChannel& mpiChannel) override;
 };
 
 #endif // PDFCONTENT_H

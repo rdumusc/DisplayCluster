@@ -42,10 +42,6 @@
 
 #include "types.h"
 
-#include "Factory.hpp"
-
-#include <QObject>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <mpi.h>
 
 struct MessageHeader;
@@ -53,10 +49,8 @@ struct MessageHeader;
 /**
  * Handle MPI communications between all DisplayCluster instances.
  */
-class MPIChannel : public QObject
+class MPIChannel
 {
-    Q_OBJECT
-
 public:
     /**
      * Constructor, initialize the MPI communication.
@@ -73,130 +67,29 @@ public:
     int getRank() const;
 
     /** Block execution until all programs have reached the barrier. */
-    void globalBarrier() const;
+    void globalBarrier(const MPI_Comm mpiComm = MPI_COMM_WORLD) const;
 
     /**
-     * Ranks 1-N: Get the sum of the given local values across all processes.
+     * Get the sum of the given local values across all processes.
      * @param localValue The value to sum
      * @return the sum of the localValues
      */
-    int globalSum(const int localValue) const;
+    int globalSum(const int localValue, const MPI_Comm mpiComm) const;
 
-    /** Ranks 1-N: Synchronize clock time across all processes. */
-    void synchronizeClock();
-
-    /** Ranks 1-N: Get the current timestamp, synchronized accross processes. */
-    boost::posix_time::ptime getTime() const;
-
-    /**
-     * Ranks 1-N: Receive messages.
-     * Will emit a signal if an object was reveived.
-     * @see received(DisplayGroupManagerPtr)
-     * @see received(OptionsPtr)
-     */
-    void receiveMessages();
-
-    /**
-     * Rank0: Calibrate the offset between its local clock and the rank1 clock.
-     * @note The rank1 clock is used across ranks 1-N.
-     */
-    void calibrateTimestampOffset();
-
-    /**
-     * Rank0: send quit message to ranks 1-N, terminating the processes.
-     */
-    void sendQuit();
-
-    // TODO remove content dimension requests (DISCL-21)
-    /**
-     * Rank0: ask rank1 to provide the dimensions for the given Contents.
-     * @param contentWindows The Contents for which to update dimensions.
-     */
-    void sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows);
-
-    /** Rank1(-N): Set the factories to respond to Content Dimensions request */
-    void setFactories(FactoriesPtr factories);
-
-public slots:
-    /**
-     * Rank0: send the given DisplayGroup to ranks 1-N
-     * @param displayGroup The DisplayGroup to send
-     */
-    void send(DisplayGroupManagerPtr displayGroup);
-
-    /**
-     * Rank0: send the given Options to ranks 1-N
-     * @param options The options to send
-     */
-    void send(OptionsPtr options);
-
-    /**
-     * Rank0: send the given Markers to ranks 1-N
-     * @param markers The markers to send
-     */
-    void send(MarkersPtr markers);
-
-    /**
-     * Rank 0: Send pixel stream frame to ranks 1-N
-     * @param frame The frame to send
-     */
-    void send(PixelStreamFramePtr frame);
-
-signals:
-    /**
-     * Rank 1-N: Emitted when a displayGroup was recieved
-     * @see receiveMessages()
-     * @param displayGroup The DisplayGroup that was received
-     */
-    void received(DisplayGroupManagerPtr displayGroup);
-
-    /**
-     * Rank 1-N: Emitted when new Options were recieved
-     * @see receiveMessages()
-     * @param options The options that were received
-     */
-    void received(OptionsPtr options);
-
-    /**
-     * Rank 1-N: Emitted when new Markers were recieved
-     * @see receiveMessages()
-     * @param markers The markers that were received
-     */
-    void received(MarkersPtr markers);
-
-    /**
-     * Rank 1-N: Emitted when a new PixelStream frame was recieved
-     * @see receiveMessages()
-     * @param frame The frame that was received
-     */
-    void received(PixelStreamFramePtr frame);
-
-private:
-    int mpiRank_;
-    int mpiSize_;
-    MPI_Comm mpiRenderComm_;
-
-    boost::posix_time::ptime timestamp_; // frame timing
-    boost::posix_time::time_duration timestampOffset_; // rank1 - rank0 offset
+    // TODO cleanup the send/receive code
+    bool messageAvailable();
 
     void send(const MessageHeader& messageHeader, const int dest);
     void send(const std::string& serializedData, const int dest);
     void broadcast(const std::string& serializedData, const MPI_Comm mpiComm = MPI_COMM_WORLD);
 
-    void sendFrameClockUpdate();
-    void receiveFrameClockUpdate();
+    MessageHeader receiveHeader(const int src, const MPI_Comm mpiComm = MPI_COMM_WORLD);
+    void receiveBroadcast(char* dataBuffer, const size_t messageSize, const MPI_Comm mpiComm = MPI_COMM_WORLD);
 
-    // Ranks 1-n recieve data through MPI
-    DisplayGroupManagerPtr receiveDisplayGroup(const MessageHeader& messageHeader);
-    OptionsPtr receiveOptions(const MessageHeader& messageHeader);
-    MarkersPtr receiveMarkers(const MessageHeader& messageHeader);
-    void receivePixelStreams(const MessageHeader& messageHeader);
-
-    // TODO remove content dimension requests (DISCL-21)
-    void receiveContentsDimensionsRequest();
-    // Storing the DisplayGroup (on Rank1) to serve contentDimensionsRequests
-    DisplayGroupManagerPtr displayGroup_;
-    FactoriesPtr factories_;
+    int mpiRank_;
+    int mpiSize_;
+    MPI_Comm mpiRenderComm_;
+private:
 };
 
 #endif // MPICHANNEL_H

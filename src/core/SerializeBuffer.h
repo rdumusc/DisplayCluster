@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,61 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#ifndef SERIALIZEBUFFER_H
+#define SERIALIZEBUFFER_H
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include <vector>
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+#include <boost/serialization/vector.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/date_time/posix_time/time_serialize.hpp>
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+class SerializeBuffer
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
-}
-
-CONTENT_TYPE PDFContent::getType()
-{
-    return CONTENT_TYPE_PDF;
-}
-
-bool PDFContent::readMetadata()
-{
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
-
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
-
-    return true;
-}
-
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
-
-    if (extensions.empty())
+public:
+    void setSize(const size_t minSize)
     {
-        extensions << "pdf";
+        if (buffer_.size() < minSize)
+            buffer_.resize(minSize);
+        size_ = minSize;
     }
 
-    return extensions;
-}
-
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
+    size_t size() const
     {
-        ++pageNumber_;
-        emit(pageChanged());
+        return size_;
     }
-}
 
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
+    char* data()
     {
-        --pageNumber_;
-        emit(pageChanged());
+        return buffer_.data();
     }
-}
 
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}
+    template <typename T>
+    static std::string serialize(T& object)
+    {
+        std::ostringstream oss(std::ostringstream::binary);
+        {
+            boost::archive::binary_oarchive oa(oss);
+            oa << object;
+        }
+        return oss.str();
+    }
+
+    template <typename T>
+    void deserialize(T& object)
+    {
+        std::istringstream iss(std::istringstream::binary);
+        iss.rdbuf()->pubsetbuf(buffer_.data(), size_);
+
+        boost::archive::binary_iarchive ia(iss);
+        ia >> object;
+    }
+
+private:
+    std::vector<char> buffer_;
+    size_t size_;
+};
+
+#endif // SERIALIZEBUFFER_H

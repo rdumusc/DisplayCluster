@@ -50,6 +50,7 @@
 
 class PixelStreamSegmentRenderer;
 class PixelStreamSegmentDecoder;
+class WallToWallChannel;
 typedef boost::shared_ptr<PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
 typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRendererPtr;
 
@@ -60,7 +61,7 @@ public:
 
     void getDimensions(int &width, int &height) const override;
 
-    void preRenderUpdate(const QRectF& windowRect, MPIChannelPtr mpiChannel);
+    void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
     void render(const QRectF& texCoords) override;
 
     void insertNewFrame(const PixelStreamSegments& segments);
@@ -97,7 +98,7 @@ private:
     void adjustFrameDecodersCount(const size_t count);
     void adjustSegmentRendererCount(const size_t count);
 
-    bool isDecodingInProgress(MPIChannelPtr mpiChannel);
+    bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
 
     bool isVisible(const QRect& segment, const QRectF& windowRect);
     bool isVisible(const PixelStreamSegment& segment, const QRectF& windowRect);

@@ -37,38 +37,114 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Application.h"
+#include "WallToMasterChannel.h"
+
+#include "MessageHeader.h"
+#include "MPIChannel.h"
 
 #include "DisplayGroupManager.h"
+#include "Options.h"
+#include "Markers.h"
+#include "PixelStreamFrame.h"
+
+// Will be removed when implementing DISCL-21
+#include "ContentWindowManager.h"
+#include "Content.h"
+#include "Factories.h"
 #include "log.h"
-#include "configuration/Configuration.h"
 
-#define CONFIGURATION_FILENAME "configuration.xml"
-#define DISPLAYCLUSTER_DIR "DISPLAYCLUSTER_DIR"
-
-Application::Application(int &argc_, char **argv_)
-    : QApplication(argc_, argv_)
-    , displayGroup_(new DisplayGroupManager)
+WallToMasterChannel::WallToMasterChannel(MPIChannelPtr mpiChannel)
+    : mpiChannel_(mpiChannel)
 {
-    QObject::connect(this, SIGNAL(lastWindowClosed()),
-                     this, SLOT(quit()));
 }
 
-Application::~Application()
+void WallToMasterChannel::receiveMessages()
 {
-    delete g_configuration;
-    g_configuration = 0;
-}
-
-QString Application::getConfigFilename() const
-{
-    if( !getenv( DISPLAYCLUSTER_DIR ))
+    while(mpiChannel_->messageAvailable())
     {
-        put_flog(LOG_FATAL, "DISPLAYCLUSTER_DIR environment variable must be set");
-        exit(EXIT_FAILURE);
+        MessageHeader mh = mpiChannel_->receiveHeader(0, MPI_COMM_WORLD);
+
+        switch (mh.type)
+        {
+        case MESSAGE_TYPE_CONTENTS:
+            displayGroup_ = receiveBroadcast<DisplayGroupManagerPtr>(mh.size);
+            emit received(displayGroup_);
+            break;
+        case MESSAGE_TYPE_OPTIONS:
+            emit received(receiveBroadcast<OptionsPtr>(mh.size));
+            break;
+        case MESSAGE_TYPE_MARKERS:
+            emit received(receiveBroadcast<MarkersPtr>(mh.size));
+            break;
+        case MESSAGE_TYPE_PIXELSTREAM:
+            emit received(receiveBroadcast<PixelStreamFramePtr>(mh.size));
+            break;
+        case MESSAGE_TYPE_QUIT:
+            emit receivedQuit();
+            break;
+        case MESSAGE_TYPE_CONTENTS_DIMENSIONS:
+            sendContentsDimensionsReply();
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void WallToMasterChannel::setFactories(FactoriesPtr factories)
+{
+    factories_ = factories;
+}
+
+template <typename T>
+T WallToMasterChannel::receiveBroadcast(const size_t messageSize)
+{
+    T object;
+
+    buffer_.setSize(messageSize);
+    mpiChannel_->receiveBroadcast(buffer_.data(), messageSize);
+    buffer_.deserialize(object);
+
+    return object;
+}
+
+void WallToMasterChannel::sendContentsDimensionsReply()
+{
+    if(mpiChannel_->getRank() != 1)
+        return;
+
+    if (!displayGroup_)
+    {
+        put_flog(LOG_ERROR, "Cannot send content dimensions before a DisplayGroup was received!");
+        return;
+    }
+    else
+
+    if (!factories_)
+    {
+        put_flog(LOG_FATAL, "Cannot send content dimensions before setFactories was called!");
+        return;
     }
 
-    const QString displayClusterDir = QString(getenv( DISPLAYCLUSTER_DIR ));
-    put_flog(LOG_DEBUG, "base directory is %s", displayClusterDir.toLatin1().constData());
-    return QString( "%1/%2" ).arg( displayClusterDir ).arg( CONFIGURATION_FILENAME );
+    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
+
+    std::vector<std::pair<int, int> > dimensions;
+
+    for(size_t i=0; i<contentWindows.size(); ++i)
+    {
+        int w,h;
+        FactoryObjectPtr object = factories_->getFactoryObject(contentWindows[i]->getContent());
+        object->getDimensions(w, h);
+
+        dimensions.push_back(std::pair<int,int>(w,h));
+    }
+
+    const std::string& serializedString = buffer_.serialize(dimensions);
+
+    MessageHeader mh;
+    mh.size = serializedString.size();
+    mh.type = MESSAGE_TYPE_CONTENTS_DIMENSIONS;
+
+    mpiChannel_->send(mh, 0);
+    mpiChannel_->send(serializedString, 0);
 }

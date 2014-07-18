@@ -45,6 +45,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <QThread>
 
+class MasterToWallChannel;
 class MasterWindow;
 class NetworkListener;
 class PixelStreamerLauncher;
@@ -74,6 +75,7 @@ public:
     virtual ~MasterApplication();
 
 private:
+    boost::scoped_ptr<MasterToWallChannel> masterToWallChannel_;
     boost::scoped_ptr<MasterWindow> masterWindow_;
     boost::scoped_ptr<NetworkListener> networkListener_;
     boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;

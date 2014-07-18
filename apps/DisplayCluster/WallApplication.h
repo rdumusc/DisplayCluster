@@ -46,6 +46,8 @@
 
 class WallConfiguration;
 class RenderContext;
+class WallToMasterChannel;
+class WallToWallChannel;
 
 /**
  * The main application for Wall processes.
@@ -78,8 +80,13 @@ private slots:
 
 private:
     boost::scoped_ptr<RenderContext> renderContext_;
-    DisplayGroupRendererPtr displayGroupRenderer_;
+    boost::scoped_ptr<WallToMasterChannel> wallToMasterChannel_;
+    boost::scoped_ptr<WallToWallChannel> wallToWallChannel_;
     FactoriesPtr factories_;
+
+    void initRenderContext(const WallConfiguration* config);
+    void setupTestPattern(const WallConfiguration* config, const int rank);
+    void initMPIConnection();
 
     void preRenderUpdate();
     void postRenderUpdate();

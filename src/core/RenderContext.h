@@ -45,19 +45,35 @@
 
 class WallConfiguration;
 
+/**
+ * A render context composed of multiple GL windows.
+ */
 class RenderContext
 {
 public:
+    /**
+     * Create a new RenderContext and initialize the GLWindows.
+     * @param configuration The configuration that describes the window settings
+     */
     RenderContext(const WallConfiguration* configuration);
+
+    /** Destructor. */
     ~RenderContext();
 
     GLWindowPtr getGLWindow(const int index=0) const;
     GLWindowPtr getActiveGLWindow() const;
     size_t getGLWindowCount() const;
 
+    /** Add an object to be rendered. */
+    void addRenderable(RenderablePtr renderable);
+
+    /** Check if a region is visible. */
     bool isRegionVisible(const QRectF& region) const;
 
+    /** Render GL objects on all windows. */
     void updateGLWindows();
+
+    /** Swap GL buffers on all windows. */
     void swapBuffers();
 
 private:

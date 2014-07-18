@@ -45,7 +45,7 @@
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 #include "Factories.h"
-#include "MPIChannel.h"
+#include "WallToWallChannel.h"
 
 BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
 
@@ -72,7 +72,7 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, MPIChannelPtr mpiChannel)
+void MovieContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
@@ -86,5 +86,5 @@ void MovieContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManager
 
     movie->setPause( window->getControlState() & STATE_PAUSED );
     movie->setLoop( window->getControlState() & STATE_LOOP );
-    movie->nextFrame(mpiChannel->getTime(), skipDecoding);
+    movie->nextFrame(wallToWallChannel.getTime(), skipDecoding);
 }

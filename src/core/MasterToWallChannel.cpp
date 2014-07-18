@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,96 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#include "MasterToWallChannel.h"
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include "MessageHeader.h"
+#include "MPIChannel.h"
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+#include "DisplayGroupManager.h"
+#include "ContentWindowManager.h"
+#include "Options.h"
+#include "Markers.h"
+#include "PixelStreamFrame.h"
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+#include <mpi.h>
+
+MasterToWallChannel::MasterToWallChannel(MPIChannelPtr mpiChannel)
+    : mpiChannel_(mpiChannel)
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
 }
 
-CONTENT_TYPE PDFContent::getType()
+template <typename T>
+void MasterToWallChannel::broadcast(const T object, const MessageType type)
 {
-    return CONTENT_TYPE_PDF;
+    const std::string& serializedString = buffer_.serialize(object);
+
+    MessageHeader mh;
+    mh.size = serializedString.size();
+    mh.type = type;
+
+    // Send header via a send so we can probe it on the render processes
+    for(int i=1; i<mpiChannel_->mpiSize_; ++i)
+        mpiChannel_->send(mh, i);
+
+    mpiChannel_->broadcast(serializedString);
 }
 
-bool PDFContent::readMetadata()
+void MasterToWallChannel::send(DisplayGroupManagerPtr displayGroup)
 {
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
-
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
-
-    return true;
+    broadcast(displayGroup, MESSAGE_TYPE_CONTENTS);
 }
 
-const QStringList& PDFContent::getSupportedExtensions()
+void MasterToWallChannel::send(OptionsPtr options)
 {
-    static QStringList extensions;
-
-    if (extensions.empty())
-    {
-        extensions << "pdf";
-    }
-
-    return extensions;
+    broadcast(options, MESSAGE_TYPE_OPTIONS);
 }
 
-void PDFContent::nextPage()
+void MasterToWallChannel::send(MarkersPtr markers)
 {
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
+    broadcast(markers, MESSAGE_TYPE_MARKERS);
 }
 
-void PDFContent::previousPage()
+void MasterToWallChannel::send(PixelStreamFramePtr frame)
 {
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
+    assert(!frame->segments.empty() && "received an empty frame");
+    broadcast(frame, MESSAGE_TYPE_PIXELSTREAM);
 }
 
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
+void MasterToWallChannel::sendQuit()
 {
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
+    MessageHeader mh;
+    mh.type = MESSAGE_TYPE_QUIT;
+
+    // Send header via a send so that we can probe it on the render processes
+    for(int i=1; i<mpiChannel_->mpiSize_; ++i)
+        mpiChannel_->send(mh, i);
+}
+
+void MasterToWallChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows)
+{
+    MessageHeader mh;
+    mh.type = MESSAGE_TYPE_CONTENTS_DIMENSIONS;
+
+    // the header is sent via a send, so that we can probe it on the render processes
+    for(int i=1; i<mpiChannel_->mpiSize_; i++)
+        mpiChannel_->send(mh, i);
+
+    // now, receive response from rank 1
+    receiveContentsDimensionsReply(contentWindows);
+}
+
+void MasterToWallChannel::receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows)
+{
+    MPI_Status status;
+    MessageHeader mh = mpiChannel_->receiveHeader(1, MPI_COMM_WORLD);
+
+    buffer_.setSize(mh.size);
+    MPI_Recv((void *)buffer_.data(), buffer_.size(), MPI_BYTE, 1, 0, MPI_COMM_WORLD, &status);
+
+    std::vector<std::pair<int, int> > dimensions;
+    buffer_.deserialize(dimensions);
+
+    // overwrite old dimensions
+    for(size_t i=0; i<dimensions.size() && i<contentWindows.size(); ++i)
+        contentWindows[i]->getContent()->setDimensions(dimensions[i].first, dimensions[i].second);
 }

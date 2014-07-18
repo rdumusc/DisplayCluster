@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,67 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#ifndef MASTERTOWALLCHANNEL_H
+#define MASTERTOWALLCHANNEL_H
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include "types.h"
+#include "MessageHeader.h"
+#include "SerializeBuffer.h"
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+#include <QObject>
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+class MasterToWallChannel : public QObject
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
-}
+    Q_OBJECT
 
-CONTENT_TYPE PDFContent::getType()
-{
-    return CONTENT_TYPE_PDF;
-}
+public:
+    /** Constructor */
+    MasterToWallChannel(MPIChannelPtr mpiChannel);
 
-bool PDFContent::readMetadata()
-{
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+public slots:
+    /**
+     * Rank0: send the given DisplayGroup to ranks 1-N
+     * @param displayGroup The DisplayGroup to send
+     */
+    void send(DisplayGroupManagerPtr displayGroup);
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
+    /**
+     * Rank0: send the given Options to ranks 1-N
+     * @param options The options to send
+     */
+    void send(OptionsPtr options);
 
-    return true;
-}
+    /**
+     * Rank0: send the given Markers to ranks 1-N
+     * @param markers The markers to send
+     */
+    void send(MarkersPtr markers);
 
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
+    /**
+     * Rank 0: Send pixel stream frame to ranks 1-N
+     * @param frame The frame to send
+     */
+    void send(PixelStreamFramePtr frame);
 
-    if (extensions.empty())
-    {
-        extensions << "pdf";
-    }
+    /**
+     * Rank0: send quit message to ranks 1-N, terminating the processes.
+     */
+    void sendQuit();
 
-    return extensions;
-}
+    // TODO remove content dimension requests (DISCL-21)
+    /**
+     * Rank0: ask rank1 to provide the dimensions for the given Contents.
+     * @param contentWindows The Contents for which to update dimensions.
+     */
+    void sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows);
 
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
+private:
+    MPIChannelPtr mpiChannel_;
+    SerializeBuffer buffer_;
 
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
+    template <typename T>
+    void broadcast(const T object, const MessageType type);
+    void receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows);
+};
 
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}
+#endif // MASTERTOWALLCHANNEL_H

@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,77 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#include "WallToWallChannel.h"
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include "MPIChannel.h"
+#include "MessageHeader.h"
+#include "log.h"
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
-
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+WallToWallChannel::WallToWallChannel(MPIChannelPtr mpiChannel)
+    : mpiChannel_(mpiChannel)
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
 }
 
-CONTENT_TYPE PDFContent::getType()
+int WallToWallChannel::globalSum(const int localValue) const
 {
-    return CONTENT_TYPE_PDF;
+    return mpiChannel_->globalSum(localValue, mpiChannel_->mpiRenderComm_);
 }
 
-bool PDFContent::readMetadata()
+boost::posix_time::ptime WallToWallChannel::getTime() const
 {
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
-
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
-
-    return true;
+    return timestamp_;
 }
 
-const QStringList& PDFContent::getSupportedExtensions()
+void WallToWallChannel::synchronizeClock()
 {
-    static QStringList extensions;
+    if(mpiChannel_->getRank() == 1)
+        sendClock();
+    else
+        receiveClock();
+}
 
-    if (extensions.empty())
+void WallToWallChannel::globalBarrier() const
+{
+    mpiChannel_->globalBarrier(mpiChannel_->mpiRenderComm_);
+}
+
+void WallToWallChannel::sendClock()
+{
+    if(mpiChannel_->getRank() != 1)
     {
-        extensions << "pdf";
+        put_flog(LOG_WARN, "called by rank %i != 1", mpiChannel_->getRank());
+        return;
     }
 
-    return extensions;
+    timestamp_ = boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time());
+
+    const std::string& serializedString = buffer_.serialize(timestamp_);
+
+    MessageHeader mh;
+    mh.size = serializedString.size();
+    mh.type = MESSAGE_TYPE_FRAME_CLOCK;
+
+    // the header is sent via a send, so that we can probe it on the render processes
+    for(int i=2; i<mpiChannel_->mpiSize_; i++)
+        mpiChannel_->send(mh, i);
+
+    mpiChannel_->broadcast(serializedString, mpiChannel_->mpiRenderComm_);
 }
 
-void PDFContent::nextPage()
+void WallToWallChannel::receiveClock()
 {
-    if (pageNumber_ < pageCount_-1)
+    if(mpiChannel_->getRank() == 1)
+        return;
+
+    MessageHeader messageHeader = mpiChannel_->receiveHeader(1, MPI_COMM_WORLD);
+    if(messageHeader.type != MESSAGE_TYPE_FRAME_CLOCK)
     {
-        ++pageNumber_;
-        emit(pageChanged());
+        put_flog(LOG_FATAL, "unexpected message type");
+        return;
     }
+
+    buffer_.setSize(messageHeader.size);
+    mpiChannel_->receiveBroadcast(buffer_.data(), buffer_.size(), mpiChannel_->mpiRenderComm_);
+    buffer_.deserialize(timestamp_);
 }
 
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}

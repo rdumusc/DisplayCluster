@@ -51,6 +51,8 @@
 #include <boost/serialization/access.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+class MasterToWallChannel;
+
 /**
  * A collection of ContentWindows.
  *
@@ -72,7 +74,7 @@ public:
      * Rank0 only: Constructor with MPIChannel for ContentDimensionsRequest.
      * @note TODO remove this whole procedure (DISCL-21)
      */
-    DisplayGroupManager(MPIChannelPtr mpiChannel);
+    DisplayGroupManager(MasterToWallChannel* masterToWallChannel);
 
     /** Get the background content window. */
     ContentWindowManagerPtr getBackgroundContentWindow() const;
@@ -137,7 +139,7 @@ private:
 
     ContentWindowManagerPtr backgroundContent_;
 
-    MPIChannelPtr mpiChannel_;
+    MasterToWallChannel* masterToWallChannel_;
 
 #if ENABLE_SKELETON_SUPPORT
     SkeletonStatePtrs skeletons_;

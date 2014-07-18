@@ -43,7 +43,7 @@
 #include "DisplayGroupManager.h"
 #include "ContentFactory.h"
 #include "configuration/MasterConfiguration.h"
-#include "MPIChannel.h"
+#include "MasterToWallChannel.h"
 #include "Options.h"
 #include "Markers.h"
 
@@ -79,10 +79,11 @@
 
 
 MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
-    : Application(argc_, argv_, mpiChannel)
+    : Application(argc_, argv_)
+    , masterToWallChannel_(new MasterToWallChannel(mpiChannel))
     , markers_(new Markers)
 {
-    displayGroup_.reset(new DisplayGroupManager(mpiChannel));
+    displayGroup_.reset(new DisplayGroupManager(masterToWallChannel_.get()));
 
     MasterConfiguration* config = new MasterConfiguration(getConfigFilename());
     g_configuration = config;
@@ -95,6 +96,8 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr mpi
 
 MasterApplication::~MasterApplication()
 {
+    masterToWallChannel_->sendQuit();
+
 #if ENABLE_SKELETON_SUPPORT
     skeletonThread_->stop();
     skeletonThread_->wait();
@@ -198,20 +201,20 @@ void MasterApplication::initPixelStreamLauncher()
 
 void MasterApplication::initMPIConnection()
 {
-    mpiChannel_->moveToThread(&mpiWorkerThread_);
+    masterToWallChannel_->moveToThread(&mpiWorkerThread_);
 
     connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
-            mpiChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
+            masterToWallChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
 
     connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
-            mpiChannel_.get(), SLOT(send(OptionsPtr)));
+            masterToWallChannel_.get(), SLOT(send(OptionsPtr)));
 
     connect(markers_.get(), SIGNAL(updated(MarkersPtr)),
-            mpiChannel_.get(), SLOT(send(MarkersPtr)));
+            masterToWallChannel_.get(), SLOT(send(MarkersPtr)));
 
     connect(networkListener_->getPixelStreamDispatcher(),
             SIGNAL(sendFrame(PixelStreamFramePtr)),
-            mpiChannel_.get(), SLOT(send(PixelStreamFramePtr)));
+            masterToWallChannel_.get(), SLOT(send(PixelStreamFramePtr)));
 
     mpiWorkerThread_.start();
 }

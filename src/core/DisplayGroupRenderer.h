@@ -48,11 +48,15 @@
 #include "SkeletonRenderer.h"
 #endif
 
+#include <QObject>
+
 /**
  * Renders a DisplayGroup.
  */
-class DisplayGroupRenderer : public Renderable
+class DisplayGroupRenderer : public QObject, public Renderable
 {
+    Q_OBJECT
+
 public:
     /** Constructor */
     DisplayGroupRenderer(FactoriesPtr factories);
@@ -63,6 +67,7 @@ public:
      */
     void render() override;
 
+public slots:
     /**
      * Set the DisplayGroup to render, replacing the previous one.
      * @see render()

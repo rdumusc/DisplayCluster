@@ -50,6 +50,8 @@
 #include <boost/serialization/nvp.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+class WallToWallChannel;
+
 /**
  * An abstract Content displayed in a ContentWindowManager.
  *
@@ -90,10 +92,10 @@ class Content : public QObject
         void blockAdvance( bool block ) { blockAdvance_ = block; }
 
         /** Re-implement this method to update or synchronize before rendering. */
-        virtual void preRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, MPIChannelPtr) { }
+        virtual void preRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, WallToWallChannel&) { }
 
         /** Re-implement this method to update or synchronize after rendering. */
-        virtual void postRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, MPIChannelPtr) { }
+        virtual void postRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, WallToWallChannel&) { }
 
     signals:
         /** Emitted when dimensions have changed */

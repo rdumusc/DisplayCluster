@@ -40,9 +40,10 @@
 
 #include "ContentWindowManager.h"
 #include "Content.h"
-#include "MPIChannel.h"
+#include "MasterToWallChannel.h"
 
 DisplayGroupManager::DisplayGroupManager()
+    : masterToWallChannel_(0)
 {
 }
 
@@ -50,11 +51,9 @@ DisplayGroupManager::~DisplayGroupManager()
 {
 }
 
-DisplayGroupManager::DisplayGroupManager(MPIChannelPtr mpiChannel)
-    : mpiChannel_(mpiChannel)
-{
-    assert(mpiChannel_->getRank() == 0);
-}
+DisplayGroupManager::DisplayGroupManager(MasterToWallChannel* masterToWallChannel)
+    : masterToWallChannel_(masterToWallChannel)
+{}
 
 #if ENABLE_SKELETON_SUPPORT
 SkeletonStatePtrs DisplayGroupManager::getSkeletons()
@@ -74,12 +73,12 @@ void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr conten
 
         emit modified(shared_from_this());
 
-        if (mpiChannel_ && contentWindowManager->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM)
+        if (masterToWallChannel_ && contentWindowManager->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM)
         {
             // TODO initialize all content dimensions on creation so we can
             // remove this procedure (DISCL-21)
             // make sure we have its dimensions so we can constrain its aspect ratio
-            mpiChannel_->sendContentsDimensionsRequest(getContentWindowManagers());
+            masterToWallChannel_->sendContentsDimensionsRequest(getContentWindowManagers());
         }
     }
 }

@@ -40,6 +40,7 @@
 #include "WallApplication.h"
 
 #include "MPIChannel.h"
+#include "WallToWallChannel.h"
 #include "configuration/WallConfiguration.h"
 #include "Options.h"
 #include "RenderContext.h"
@@ -53,48 +54,22 @@
 #include "MarkerRenderer.h"
 
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
-    : Application(argc_, argv_, mpiChannel)
+    : Application(argc_, argv_)
+    , wallToMasterChannel_(mpiChannel)
+    , wallToWallChannel_(new WallToWallChannel(mpiChannel))
 {
     WallConfiguration* config = new WallConfiguration(getConfigFilename(),
-                                                      mpiChannel_->getRank());
+                                                      mpiChannel->getRank());
     g_configuration = config;
 
-    renderContext_.reset(new RenderContext(config));
+    initRenderContext(config);
+    setupTestPattern(config, mpiChannel->getRank());
+    initMPIConnection();
 
-    factories_.reset(new Factories(*renderContext_));
-    displayGroupRenderer_.reset(new DisplayGroupRenderer(factories_));
-
-    MarkerRendererPtr markerRenderer(new MarkerRenderer);
-
-    if (mpiChannel_->getRank() == 1)
-        mpiChannel_->setFactories(factories_);
-
-    for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
-    {
-        GLWindowPtr glWindow = renderContext_->getGLWindow(i);
-        glWindow->addRenderable(displayGroupRenderer_);
-        glWindow->addRenderable(markerRenderer);
-
-        RenderablePtr testPattern(new TestPattern(glWindow.get(),
-                                                  config,
-                                                  mpiChannel_->getRank(),
-                                                  glWindow->getTileIndex()));
-        glWindow->setTestPattern(testPattern);
-    }
-
-    connect(mpiChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
-            this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
-
-    connect(mpiChannel_.get(), SIGNAL(received(OptionsPtr)),
-            this, SLOT(updateOptions(OptionsPtr)));
-
-    connect(mpiChannel_.get(), SIGNAL(received(MarkersPtr)),
-            markerRenderer.get(), SLOT(setMarkers(MarkersPtr)));
-
-    connect(mpiChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
-            this, SLOT(processPixelStreamFrame(PixelStreamFramePtr)));
+    wallToMasterChannel_->setFactories(factories_);
 
     // setup connection so renderFrame() will be called continuously.
     // Must be a queued connection to avoid infinite recursion.
@@ -109,14 +84,60 @@ WallApplication::~WallApplication()
     factories_->clear();
 }
 
+void WallApplication::initRenderContext(const WallConfiguration* config)
+{
+    renderContext_.reset(new RenderContext(config));
+    factories_.reset(new Factories(*renderContext_));
+
+    DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
+    MarkerRendererPtr markerRenderer(new MarkerRenderer());
+
+    connect(wallToMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
+            markerRenderer.get(), SLOT(setMarkers(MarkersPtr)));
+
+    connect(wallToMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
+            displayGroupRenderer.get(), SLOT(setDisplayGroup(DisplayGroupManagerPtr)));
+
+    renderContext_->addRenderable(displayGroupRenderer);
+    renderContext_->addRenderable(markerRenderer);
+}
+
+void WallApplication::setupTestPattern(const WallConfiguration* config, const int rank)
+{
+    for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
+    {
+        GLWindowPtr glWindow = renderContext_->getGLWindow(i);
+        RenderablePtr testPattern(new TestPattern(glWindow.get(),
+                                                  config,
+                                                  rank,
+                                                  glWindow->getTileIndex()));
+        glWindow->setTestPattern(testPattern);
+    }
+}
+
+void WallApplication::initMPIConnection()
+{
+    connect(wallToMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
+            this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
+
+    connect(wallToMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
+            this, SLOT(updateOptions(OptionsPtr)));
+
+    connect(wallToMasterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
+            this, SLOT(processPixelStreamFrame(PixelStreamFramePtr)));
+
+    connect(wallToMasterChannel_.get(), SIGNAL(receivedQuit()),
+            this, SLOT(quit()));
+}
+
 void WallApplication::renderFrame()
 {
-    mpiChannel_->receiveMessages(); // TODO make this an async task
+    wallToMasterChannel_->receiveMessages(); // TODO make this an async task
 
     preRenderUpdate();
 
     renderContext_->updateGLWindows();
-    mpiChannel_->globalBarrier();
+    wallToWallChannel_->globalBarrier();
     renderContext_->swapBuffers();
 
     postRenderUpdate();
@@ -128,7 +149,7 @@ void WallApplication::preRenderUpdate()
 {
     // synchronize clock right after receiving messages to ensure we have an
     // accurate time for rendering, etc. below
-    mpiChannel_->synchronizeClock();
+    wallToWallChannel_->synchronizeClock();
 
     ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
 
@@ -136,11 +157,11 @@ void WallApplication::preRenderUpdate()
     {
         // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
         // we will call advance() multiple times per frame on that Content object...
-        contentWindow->getContent()->preRenderUpdate(factories_, contentWindow, mpiChannel_);
+        contentWindow->getContent()->preRenderUpdate(factories_, contentWindow, wallToWallChannel_);
     }
     ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
     if (backgroundWindow)
-        backgroundWindow->getContent()->preRenderUpdate(factories_, backgroundWindow, mpiChannel_);
+        backgroundWindow->getContent()->preRenderUpdate(factories_, backgroundWindow, wallToWallChannel_);
 }
 
 void WallApplication::postRenderUpdate()
@@ -151,11 +172,11 @@ void WallApplication::postRenderUpdate()
     {
         // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
         // we will call advance() multiple times per frame on that Content object...
-        contentWindow->getContent()->postRenderUpdate(factories_, contentWindow, mpiChannel_);
+        contentWindow->getContent()->postRenderUpdate(factories_, contentWindow, wallToWallChannel_);
     }
     ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
     if (backgroundWindow)
-        backgroundWindow->getContent()->postRenderUpdate(factories_, backgroundWindow, mpiChannel_);
+        backgroundWindow->getContent()->postRenderUpdate(factories_, backgroundWindow, wallToWallChannel_);
 
     factories_->clearStaleFactoryObjects();
 }
@@ -163,7 +184,6 @@ void WallApplication::postRenderUpdate()
 void WallApplication::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)
 {
     displayGroup_ = displayGroup;
-    displayGroupRenderer_->setDisplayGroup(displayGroup);
 }
 
 void WallApplication::updateOptions(OptionsPtr options)

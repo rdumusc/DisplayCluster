@@ -41,7 +41,7 @@
 #include "ContentWindowManager.h"
 #include "configuration/Configuration.h"
 #include "Options.h"
-#include "MPIChannel.h"
+#include "WallToWallChannel.h"
 #include "RenderContext.h"
 #include "log.h"
 
@@ -65,12 +65,12 @@ void PixelStream::getDimensions(int &width, int &height) const
     height = height_;
 }
 
-void PixelStream::preRenderUpdate(const QRectF& windowRect, MPIChannelPtr mpiChannel)
+void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel)
 {
     // Store the window coordinates for the rendering pass
     contentWindowRect_ = windowRect;
 
-    if(isDecodingInProgress(mpiChannel))
+    if(isDecodingInProgress(wallToWallChannel))
         return;
 
     // After swapping the buffers, wait until decoding has finished to update the renderers.
@@ -207,7 +207,7 @@ void PixelStream::insertNewFrame(const PixelStreamSegments &segments)
     backBuffer_ = segments;
 }
 
-bool PixelStream::isDecodingInProgress(MPIChannelPtr mpiChannel)
+bool PixelStream::isDecodingInProgress(WallToWallChannel& wallToWallChannel)
 {
     // determine if threads are running on any processes for this PixelStream
     int localThreadsRunning = 0;
@@ -219,7 +219,7 @@ bool PixelStream::isDecodingInProgress(MPIChannelPtr mpiChannel)
             ++localThreadsRunning;
     }
 
-    int globalThreadsRunning = mpiChannel->globalSum(localThreadsRunning);
+    int globalThreadsRunning = wallToWallChannel.globalSum(localThreadsRunning);
     return globalThreadsRunning > 0;
 }
 

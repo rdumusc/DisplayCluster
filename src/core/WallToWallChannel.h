@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,49 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#ifndef WALLTOWALLCHANNEL_H
+#define WALLTOWALLCHANNEL_H
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include "types.h"
+#include "SerializeBuffer.h"
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+#include <QObject>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+/**
+ * A communication channel between Wall processes.
+ */
+class WallToWallChannel : public QObject
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
-}
+    Q_OBJECT
 
-CONTENT_TYPE PDFContent::getType()
-{
-    return CONTENT_TYPE_PDF;
-}
+public:
+    /** Constructor */
+    WallToWallChannel(MPIChannelPtr mpiChannel);
 
-bool PDFContent::readMetadata()
-{
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+    /**
+     * Get the sum of the given local values across all processes.
+     * @param localValue The value to sum
+     * @return the sum of the localValues
+     */
+    int globalSum(const int localValue) const;
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
+    /** Get the current timestamp, synchronized accross processes. */
+    boost::posix_time::ptime getTime() const;
 
-    return true;
-}
+    /** Synchronize clock time across all processes. */
+    void synchronizeClock();
 
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
+    /** Block execution until all programs have reached the barrier. */
+    void globalBarrier() const;
 
-    if (extensions.empty())
-    {
-        extensions << "pdf";
-    }
+private:
+    MPIChannelPtr mpiChannel_;
+    boost::posix_time::ptime timestamp_;
+    SerializeBuffer buffer_;
 
-    return extensions;
-}
+    void sendClock();
+    void receiveClock();
+};
 
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
-
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}
+#endif // WALLTOWALLCHANNEL_H

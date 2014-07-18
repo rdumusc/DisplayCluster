@@ -38,7 +38,6 @@
 
 #include "config.h"
 
-#include "globals.h"
 #include "MPIChannel.h"
 
 #include "WallApplication.h"
@@ -69,20 +68,12 @@ int main(int argc, char * argv[])
     else
         app = new WallApplication(argc, argv, mpiChannel);
 
-    // calibrate timestamp offset between rank 0 and rank 1 clocks
-    mpiChannel->calibrateTimestampOffset();
     // wait for render comms to be ready for receiving and rendering background
-    mpiChannel->globalBarrier(); // previously: MPI_COMM_WORLD
-
+    mpiChannel->globalBarrier();
     app->exec(); // enter Qt event loop
 
     put_flog(LOG_DEBUG, "quitting");
-
     QThreadPool::globalInstance()->waitForDone();
-
-    if (mpiChannel->getRank() == 0)
-        mpiChannel->sendQuit();
-
     delete app;
 
     return EXIT_SUCCESS;

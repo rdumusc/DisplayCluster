@@ -138,6 +138,7 @@ list(APPEND SRCS
     Marker.cpp
     Markers.cpp
     MarkerRenderer.cpp
+    MasterToWallChannel.cpp
     MetaTypeRegistration.cpp
     Movie.cpp
     MovieContent.cpp
@@ -163,6 +164,8 @@ list(APPEND SRCS
     TestPattern.cpp
     Texture.cpp
     TextureContent.cpp
+    WallToMasterChannel.cpp
+    WallToWallChannel.cpp
     WebbrowserCommandHandler.cpp
     ZoomInteractionDelegate.cpp
     configuration/Configuration.cpp
@@ -206,9 +209,11 @@ list(APPEND MOC_HEADERS
     DisplayGroupGraphicsView.h
     DisplayGroupGraphicsViewProxy.h
     DisplayGroupListWidgetProxy.h
+    DisplayGroupRenderer.h
     EventReceiver.h
     Markers.h
     MarkerRenderer.h
+    MasterToWallChannel.h
     MPIChannel.h
     NetworkListener.h
     NetworkListenerThread.h
@@ -216,6 +221,8 @@ list(APPEND MOC_HEADERS
     Options.h
     PixelStreamDispatcher.h
     PixelStreamWindowManager.h
+    WallToMasterChannel.h
+    WallToWallChannel.h
     WebbrowserCommandHandler.h
     localstreamer/AsyncImageLoader.h
     localstreamer/DockPixelStreamer.h

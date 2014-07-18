@@ -40,9 +40,9 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include <QApplication>
-
+#include "types.h"
 #include "globals.h"
+#include <QApplication>
 
 /**
  * The base class for both Master and Wall main applications.
@@ -56,9 +56,8 @@ public:
      *
      * @param argc Command line argument count (required by QApplication)
      * @param argv Command line arguments (required by QApplication)
-     * @param mpiChannel The interprocess communication channel
      */
-    Application(int &argc, char **argv, MPIChannelPtr mpiChannel);
+    Application(int &argc, char **argv);
 
     /** Destructor */
     virtual ~Application();
@@ -67,7 +66,6 @@ protected:
     /** Get the configuration filename. */
     QString getConfigFilename() const;
 
-    MPIChannelPtr mpiChannel_;
     DisplayGroupManagerPtr displayGroup_;
 };
 

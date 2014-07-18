@@ -39,8 +39,6 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include "types.h"
-
 class Configuration;
 extern Configuration* g_configuration;
 

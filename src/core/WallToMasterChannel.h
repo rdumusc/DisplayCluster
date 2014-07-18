@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,72 +37,80 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFContent.h"
-#include "PDF.h"
-#include "Factories.h"
+#ifndef WALLTOMASTERCHANNEL_H
+#define WALLTOMASTERCHANNEL_H
 
-#include "serializationHelpers.h"
-#include <boost/serialization/export.hpp>
+#include "types.h"
+#include "SerializeBuffer.h"
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+#include <QObject>
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+class WallToMasterChannel : public QObject
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
-}
+    Q_OBJECT
 
-CONTENT_TYPE PDFContent::getType()
-{
-    return CONTENT_TYPE_PDF;
-}
+public:
+    /** Constructor */
+    WallToMasterChannel(MPIChannelPtr mpiChannel);
 
-bool PDFContent::readMetadata()
-{
-    PDF pdf(uri_);
-    if (!pdf.isValid())
-        return false;
+    /**
+     * Ranks 1-N: Receive messages.
+     * Will emit a signal if an object was reveived.
+     * @see received(DisplayGroupManagerPtr)
+     * @see received(OptionsPtr)
+     */
+    void receiveMessages();
 
-    pdf.getDimensions(width_, height_);
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
+    // TODO remove content dimension requests (DISCL-21)
+    /** Rank1(-N): Set the factories to respond to Content Dimensions request */
+    void setFactories(FactoriesPtr factories);
 
-    return true;
-}
+signals:
+    /**
+     * Rank 1-N: Emitted when a displayGroup was recieved
+     * @see receiveMessages()
+     * @param displayGroup The DisplayGroup that was received
+     */
+    void received(DisplayGroupManagerPtr displayGroup);
 
-const QStringList& PDFContent::getSupportedExtensions()
-{
-    static QStringList extensions;
+    /**
+     * Rank 1-N: Emitted when new Options were recieved
+     * @see receiveMessages()
+     * @param options The options that were received
+     */
+    void received(OptionsPtr options);
 
-    if (extensions.empty())
-    {
-        extensions << "pdf";
-    }
+    /**
+     * Rank 1-N: Emitted when new Markers were recieved
+     * @see receiveMessages()
+     * @param markers The markers that were received
+     */
+    void received(MarkersPtr markers);
 
-    return extensions;
-}
+    /**
+     * Rank 1-N: Emitted when a new PixelStream frame was recieved
+     * @see receiveMessages()
+     * @param frame The frame that was received
+     */
+    void received(PixelStreamFramePtr frame);
 
-void PDFContent::nextPage()
-{
-    if (pageNumber_ < pageCount_-1)
-    {
-        ++pageNumber_;
-        emit(pageChanged());
-    }
-}
+    /**
+     * Rank 1-N: Emitted when the quit message was recieved
+     * @see receiveMessages()
+     */
+    void receivedQuit();
 
-void PDFContent::previousPage()
-{
-    if (pageNumber_ > 0)
-    {
-        --pageNumber_;
-        emit(pageChanged());
-    }
-}
+private:
+    MPIChannelPtr mpiChannel_;
+    SerializeBuffer buffer_;
 
-void PDFContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
-{
-    factories->getPDFFactory().getObject(getURI())->setPage(pageNumber_);
-}
+    template <typename T>
+    T receiveBroadcast(const size_t messageSize);
+
+    // TODO remove content dimension requests (DISCL-21)
+    void sendContentsDimensionsReply();
+    DisplayGroupManagerPtr displayGroup_;
+    FactoriesPtr factories_;
+};
+
+#endif // WALLTOMASTERCHANNEL_H
