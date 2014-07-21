@@ -72,14 +72,14 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
+void MovieContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
     if( blockAdvance_ )
         return;
 
-    boost::shared_ptr< Movie > movie = factories->getMovieFactory().getObject(getURI());
+    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject(getURI());
 
     // skip a frame if the Content rectangle is not visible in any window; otherwise decode normally
     const bool skipDecoding = !movie->getRenderContext()->isRegionVisible(window->getCoordinates());

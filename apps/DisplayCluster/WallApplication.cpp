@@ -40,42 +40,35 @@
 #include "WallApplication.h"
 
 #include "MPIChannel.h"
+#include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
 #include "configuration/WallConfiguration.h"
-#include "Options.h"
 #include "RenderContext.h"
 #include "Factories.h"
 #include "PixelStreamFrame.h"
 #include "GLWindow.h"
 #include "TestPattern.h"
 #include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
 #include "DisplayGroupRenderer.h"
 #include "MarkerRenderer.h"
 
-#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/bind.hpp>
 
-WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
+WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
     : Application(argc_, argv_)
-    , wallToMasterChannel_(mpiChannel)
-    , wallToWallChannel_(new WallToWallChannel(mpiChannel))
+    , wallChannel_(new WallToWallChannel(wallChannel))
+    , syncDisplayGroup_(boost::make_shared<DisplayGroupManager>())
 {
     WallConfiguration* config = new WallConfiguration(getConfigFilename(),
-                                                      mpiChannel->getRank());
+                                                      worldChannel->getRank());
     g_configuration = config;
+    syncOptions_.setCallback(boost::bind(&Configuration::setOptions, config, _1));
 
     initRenderContext(config);
-    setupTestPattern(config, mpiChannel->getRank());
-    initMPIConnection();
-
-    wallToMasterChannel_->setFactories(factories_);
-
-    // setup connection so renderFrame() will be called continuously.
-    // Must be a queued connection to avoid infinite recursion.
-    connect(this, SIGNAL(frameFinished()),
-            this, SLOT(renderFrame()), Qt::QueuedConnection);
-    renderFrame();
+    setupTestPattern(config, worldChannel->getRank());
+    initMPIConnection(worldChannel);
+    startRendering();
 }
 
 WallApplication::~WallApplication()
@@ -92,11 +85,11 @@ void WallApplication::initRenderContext(const WallConfiguration* config)
     DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
     MarkerRendererPtr markerRenderer(new MarkerRenderer());
 
-    connect(wallToMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
-            markerRenderer.get(), SLOT(setMarkers(MarkersPtr)));
+    syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
+                                               displayGroupRenderer.get(), _1));
 
-    connect(wallToMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
-            displayGroupRenderer.get(), SLOT(setDisplayGroup(DisplayGroupManagerPtr)));
+    syncMarkers_.setCallback(boost::bind(&MarkerRenderer::setMarkers,
+                                          markerRenderer.get(), _1));
 
     renderContext_->addRenderable(displayGroupRenderer);
     renderContext_->addRenderable(markerRenderer);
@@ -115,29 +108,61 @@ void WallApplication::setupTestPattern(const WallConfiguration* config, const in
     }
 }
 
-void WallApplication::initMPIConnection()
+void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
 {
-    connect(wallToMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
+    const bool multithreaded = worldChannel->isThreadSafe();
+
+    masterChannel_.reset(new WallToMasterChannel(worldChannel));
+
+    if (multithreaded)
+        masterChannel_->moveToThread(&mpiWorkerThread_);
+
+    connect(masterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
             this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
 
-    connect(wallToMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
+    connect(masterChannel_.get(), SIGNAL(received(OptionsPtr)),
             this, SLOT(updateOptions(OptionsPtr)));
 
-    connect(wallToMasterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
+    connect(masterChannel_.get(), SIGNAL(received(MarkersPtr)),
+            this, SLOT(updateMarkers(MarkersPtr)));
+
+    connect(masterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
             this, SLOT(processPixelStreamFrame(PixelStreamFramePtr)));
 
-    connect(wallToMasterChannel_.get(), SIGNAL(receivedQuit()),
+    connect(masterChannel_.get(), SIGNAL(receivedQuit()),
             this, SLOT(quit()));
+
+    masterChannel_->setFactories(factories_);
+
+    if (multithreaded)
+    {
+        connect(&mpiWorkerThread_, SIGNAL(started()),
+                masterChannel_.get(), SLOT(processMessages()));
+        mpiWorkerThread_.start();
+    }
+}
+
+void WallApplication::startRendering()
+{
+    // setup connection so renderFrame() will be called continuously.
+    // Must be a queued connection to avoid infinite recursion.
+    connect(this, SIGNAL(frameFinished()),
+            this, SLOT(renderFrame()), Qt::QueuedConnection);
+    renderFrame();
+}
+
+void WallApplication::receiveMPIMessages()
+{
+    while(wallChannel_->allReady(masterChannel_->isMessageAvailable()))
+        masterChannel_->receiveMessage();
 }
 
 void WallApplication::renderFrame()
 {
-    wallToMasterChannel_->receiveMessages(); // TODO make this an async task
-
     preRenderUpdate();
 
     renderContext_->updateGLWindows();
-    wallToWallChannel_->globalBarrier();
+    wallChannel_->globalBarrier();
     renderContext_->swapBuffers();
 
     postRenderUpdate();
@@ -147,48 +172,43 @@ void WallApplication::renderFrame()
 
 void WallApplication::preRenderUpdate()
 {
-    // synchronize clock right after receiving messages to ensure we have an
-    // accurate time for rendering, etc. below
-    wallToWallChannel_->synchronizeClock();
+    if (!mpiWorkerThread_.isRunning())
+        receiveMPIMessages();
 
-    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
+    syncObjects();
+    wallChannel_->synchronizeClock();
+    factories_->preRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_.get());
+}
 
-    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
-    {
-        // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
-        // we will call advance() multiple times per frame on that Content object...
-        contentWindow->getContent()->preRenderUpdate(factories_, contentWindow, wallToWallChannel_);
-    }
-    ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
-    if (backgroundWindow)
-        backgroundWindow->getContent()->preRenderUpdate(factories_, backgroundWindow, wallToWallChannel_);
+void WallApplication::syncObjects()
+{
+    const SyncFunction versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, wallChannel_.get(), _1 );
+
+    syncDisplayGroup_.sync(versionCheckFunc);
+    syncMarkers_.sync(versionCheckFunc);
+    syncOptions_.sync(versionCheckFunc);
 }
 
 void WallApplication::postRenderUpdate()
 {
-    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
-
-    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
-    {
-        // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
-        // we will call advance() multiple times per frame on that Content object...
-        contentWindow->getContent()->postRenderUpdate(factories_, contentWindow, wallToWallChannel_);
-    }
-    ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
-    if (backgroundWindow)
-        backgroundWindow->getContent()->postRenderUpdate(factories_, backgroundWindow, wallToWallChannel_);
-
+    factories_->postRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_.get());
     factories_->clearStaleFactoryObjects();
 }
 
 void WallApplication::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)
 {
-    displayGroup_ = displayGroup;
+    syncDisplayGroup_.update(displayGroup);
+}
+
+void WallApplication::updateMarkers(MarkersPtr markers)
+{
+    syncMarkers_.update(markers);
 }
 
 void WallApplication::updateOptions(OptionsPtr options)
 {
-    g_configuration->setOptions(options);
+    syncOptions_.update(options);
 }
 
 void WallApplication::processPixelStreamFrame(PixelStreamFramePtr frame)

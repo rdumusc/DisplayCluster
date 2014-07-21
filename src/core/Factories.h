@@ -87,6 +87,12 @@ public:
     /** Clear all Factories (useful on shutdown). */
     void clear();
 
+    /** Update the objects before rendering. */
+    void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+
+    /** Update the objects after rendering. */
+    void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+
     //@{
     /** Getters for specific Factory types. */
     Factory<Texture> & getTextureFactory();

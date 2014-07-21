@@ -39,9 +39,7 @@
 
 #include "WallToMasterChannel.h"
 
-#include "MessageHeader.h"
 #include "MPIChannel.h"
-
 #include "DisplayGroupManager.h"
 #include "Options.h"
 #include "Markers.h"
@@ -55,45 +53,55 @@
 
 WallToMasterChannel::WallToMasterChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
+    , processMessages_(true)
 {
 }
 
-void WallToMasterChannel::receiveMessages()
+bool WallToMasterChannel::isMessageAvailable()
 {
-    while(mpiChannel_->messageAvailable())
-    {
-        MessageHeader mh = mpiChannel_->receiveHeader(0, MPI_COMM_WORLD);
+    return mpiChannel_->isMessageAvailable(0);
+}
 
-        switch (mh.type)
-        {
-        case MESSAGE_TYPE_CONTENTS:
-            displayGroup_ = receiveBroadcast<DisplayGroupManagerPtr>(mh.size);
-            emit received(displayGroup_);
-            break;
-        case MESSAGE_TYPE_OPTIONS:
-            emit received(receiveBroadcast<OptionsPtr>(mh.size));
-            break;
-        case MESSAGE_TYPE_MARKERS:
-            emit received(receiveBroadcast<MarkersPtr>(mh.size));
-            break;
-        case MESSAGE_TYPE_PIXELSTREAM:
-            emit received(receiveBroadcast<PixelStreamFramePtr>(mh.size));
-            break;
-        case MESSAGE_TYPE_QUIT:
-            emit receivedQuit();
-            break;
-        case MESSAGE_TYPE_CONTENTS_DIMENSIONS:
-            sendContentsDimensionsReply();
-            break;
-        default:
-            break;
-        }
+void WallToMasterChannel::receiveMessage()
+{
+    MPIHeader mh = mpiChannel_->receiveHeader(0);
+
+    switch (mh.type)
+    {
+    case MPI_MESSAGE_TYPE_DISPLAYGROUP:
+        displayGroup_ = receiveBroadcast<DisplayGroupManagerPtr>(mh.size);
+        emit received(displayGroup_);
+        break;
+    case MPI_MESSAGE_TYPE_OPTIONS:
+        emit received(receiveBroadcast<OptionsPtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_MARKERS:
+        emit received(receiveBroadcast<MarkersPtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_PIXELSTREAM:
+        emit received(receiveBroadcast<PixelStreamFramePtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_QUIT:
+        processMessages_ = false;
+        emit receivedQuit();
+        break;
+    case MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS:
+        sendContentsDimensionsReply();
+        break;
+    default:
+        break;
     }
 }
 
 void WallToMasterChannel::setFactories(FactoriesPtr factories)
 {
     factories_ = factories;
+}
+
+void WallToMasterChannel::processMessages()
+{
+    while(processMessages_)
+        receiveMessage();
 }
 
 template <typename T>
@@ -118,8 +126,6 @@ void WallToMasterChannel::sendContentsDimensionsReply()
         put_flog(LOG_ERROR, "Cannot send content dimensions before a DisplayGroup was received!");
         return;
     }
-    else
-
     if (!factories_)
     {
         put_flog(LOG_FATAL, "Cannot send content dimensions before setFactories was called!");
@@ -141,10 +147,5 @@ void WallToMasterChannel::sendContentsDimensionsReply()
 
     const std::string& serializedString = buffer_.serialize(dimensions);
 
-    MessageHeader mh;
-    mh.size = serializedString.size();
-    mh.type = MESSAGE_TYPE_CONTENTS_DIMENSIONS;
-
-    mpiChannel_->send(mh, 0);
-    mpiChannel_->send(serializedString, 0);
+    mpiChannel_->send(MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS, serializedString, 0);
 }

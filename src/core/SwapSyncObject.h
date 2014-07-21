@@ -37,36 +37,80 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Application.h"
+#ifndef SWAPSYNCOBJECT_H
+#define SWAPSYNCOBJECT_H
 
-#include "log.h"
-#include "configuration/Configuration.h"
+#include <boost/function/function1.hpp>
 
-#define CONFIGURATION_FILENAME "configuration.xml"
-#define DISPLAYCLUSTER_DIR "DISPLAYCLUSTER_DIR"
+/** Function to be used to synchronize the swapping. */
+typedef boost::function< bool( const uint64_t ) > SyncFunction;
 
-Application::Application(int &argc_, char **argv_)
-    : QApplication(argc_, argv_)
+/**
+ * Encapsulate an object to be swapped synchronously accross processes.
+ */
+template <typename T>
+class SwapSyncObject
 {
-    QObject::connect(this, SIGNAL(lastWindowClosed()),
-                     this, SLOT(quit()));
-}
+public:
+    /** Callback function after synchronization. */
+    typedef boost::function< void ( T ) > SyncCallbackFunction;
 
-Application::~Application()
-{
-    delete g_configuration;
-    g_configuration = 0;
-}
+    /** Default constructor. */
+    SwapSyncObject()
+        : version_(0)
+    {}
 
-QString Application::getConfigFilename() const
-{
-    if( !getenv( DISPLAYCLUSTER_DIR ))
+    /** Default value constructor. */
+    SwapSyncObject(const T& defaultObject)
+        : frontObject_(defaultObject)
+        , backObject_(defaultObject)
+        , version_(0)
+    {}
+
+    /** Get the front object */
+    T get() const
     {
-        put_flog(LOG_FATAL, "DISPLAYCLUSTER_DIR environment variable must be set");
-        exit(EXIT_FAILURE);
+        return frontObject_;
     }
 
-    const QString displayClusterDir = QString(getenv( DISPLAYCLUSTER_DIR ));
-    put_flog(LOG_DEBUG, "base directory is %s", displayClusterDir.toLatin1().constData());
-    return QString( "%1/%2" ).arg( displayClusterDir ).arg( CONFIGURATION_FILENAME );
-}
+    /** Update the back object. */
+    void update(const T& newObject)
+    {
+        backObject_ = newObject;
+        ++version_;
+    }
+
+    /** Synchronize the object. */
+    bool sync(const SyncFunction syncFunc)
+    {
+        assert(syncFunc);
+
+        if (syncFunc(version_) && frontObject_ != backObject_)
+        {
+            swap();
+            if (callback_)
+                callback_(frontObject_);
+            return true;
+        }
+        return false;
+    }
+
+    /** Set an optional function to call after swapping. */
+    void setCallback(const SyncCallbackFunction callback)
+    {
+        callback_ = callback;
+    }
+
+private:
+    SyncCallbackFunction callback_;
+    T frontObject_;
+    T backObject_;
+    uint64_t version_;
+
+    void swap()
+    {
+        frontObject_ = backObject_;
+    }
+};
+
+#endif // SWAPSYNCOBJECT_H

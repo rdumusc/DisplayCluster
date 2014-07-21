@@ -40,6 +40,10 @@
 #include "Factories.h"
 
 #include "Content.h"
+#include "DisplayGroupManager.h"
+#include "ContentWindowManager.h"
+
+#include <boost/foreach.hpp>
 
 Factories::Factories(RenderContext& renderContext)
     : frameIndex_(0)
@@ -78,6 +82,36 @@ void Factories::clear()
     svgFactory_.clear();
     movieFactory_.clear();
     pixelStreamFactory_.clear();
+}
+
+void Factories::preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+{
+    ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
+
+    // note that if we have multiple ContentWindows for a single Content object,
+    // we will call advance() multiple times per frame on that Content object...
+    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    {
+        contentWindow->getContent()->preRenderUpdate(*this, contentWindow, wallChannel);
+    }
+    ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
+    if (backgroundWindow)
+        backgroundWindow->getContent()->preRenderUpdate(*this, backgroundWindow, wallChannel);
+}
+
+void Factories::postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+{
+    ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
+
+    // note that if we have multiple ContentWindows for a single Content object,
+    // we will call advance() multiple times per frame on that Content object...
+    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    {
+        contentWindow->getContent()->postRenderUpdate(*this, contentWindow, wallChannel);
+    }
+    ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
+    if (backgroundWindow)
+        backgroundWindow->getContent()->postRenderUpdate(*this, backgroundWindow, wallChannel);
 }
 
 FactoryObjectPtr Factories::getFactoryObject(ContentPtr content)

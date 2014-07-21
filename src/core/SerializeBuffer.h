@@ -69,7 +69,7 @@ public:
     }
 
     template <typename T>
-    static std::string serialize(T& object)
+    static std::string serialize(const T& object)
     {
         std::ostringstream oss(std::ostringstream::binary);
         {

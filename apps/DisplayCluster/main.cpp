@@ -53,23 +53,23 @@
 
 int main(int argc, char * argv[])
 {
-    MPIChannelPtr mpiChannel(new MPIChannel(argc, argv));
+    MPIChannelPtr worldChannel(new MPIChannel(argc, argv));
+    const int rank = worldChannel->getRank();
+    MPIChannelPtr wallChannel(new MPIChannel(*worldChannel, rank != 0, rank));
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     // we need X multithreading support if we're running the
     // TouchListener thread and creating X events
-    if (mpiChannel->getRank() == 0)
+    if (rank == 0)
         XInitThreads();
 #endif
 
     Application* app = 0;
-    if ( mpiChannel->getRank() == 0 )
-        app = new MasterApplication(argc, argv, mpiChannel);
+    if (rank == 0)
+        app = new MasterApplication(argc, argv, worldChannel);
     else
-        app = new WallApplication(argc, argv, mpiChannel);
+        app = new WallApplication(argc, argv, worldChannel, wallChannel);
 
-    // wait for render comms to be ready for receiving and rendering background
-    mpiChannel->globalBarrier();
     app->exec(); // enter Qt event loop
 
     put_flog(LOG_DEBUG, "quitting");

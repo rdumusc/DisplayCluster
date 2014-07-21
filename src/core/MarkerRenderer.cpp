@@ -43,6 +43,7 @@
 
 #include "globals.h"
 #include "configuration/Configuration.h"
+#include "Options.h"
 
 #include "log.h"
 
@@ -58,6 +59,9 @@ MarkerRenderer::MarkerRenderer()
 
 void MarkerRenderer::render()
 {
+    if (!g_configuration->getOptions()->getShowTouchPoints())
+        return;
+
     const MarkersMap& map = markers_->getMarkers();
     for(MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it)
         render(it->second);
@@ -89,7 +93,7 @@ void MarkerRenderer::render(const Marker& marker)
 
     glTranslatef(pos.x(), pos.y(), 0);
     glScalef(MARKER_WIDTH, markerHeight, 1.f);
-    glTranslatef(-0.5f*MARKER_WIDTH, -0.5f*markerHeight, 0); // Center unit quad
+    glTranslatef(-0.5f, -0.5f, 0); // Center unit quad
 
     texture_.bind();
     quad_.render();

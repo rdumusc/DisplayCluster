@@ -77,10 +77,10 @@ const QStringList& DynamicTextureContent::getSupportedExtensions()
     return extensions;
 }
 
-void DynamicTextureContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr, WallToWallChannel&)
+void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&)
 {
     if( blockAdvance_ )
         return;
 
-    factories->getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
+    factories.getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
 }

@@ -143,6 +143,7 @@ list(APPEND SRCS
     Movie.cpp
     MovieContent.cpp
     MPIChannel.cpp
+    MPIContext.cpp
     NetworkListener.cpp
     NetworkListenerThread.cpp
     Options.cpp

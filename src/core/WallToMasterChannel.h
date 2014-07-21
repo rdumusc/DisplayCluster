@@ -45,6 +45,9 @@
 
 #include <QObject>
 
+/**
+ * Communication channel between a wall process and the master application.
+ */
 class WallToMasterChannel : public QObject
 {
     Q_OBJECT
@@ -53,56 +56,65 @@ public:
     /** Constructor */
     WallToMasterChannel(MPIChannelPtr mpiChannel);
 
+    /** Check if a message is available from the Master process. */
+    bool isMessageAvailable();
+
     /**
-     * Ranks 1-N: Receive messages.
-     * Will emit a signal if an object was reveived.
-     * @see received(DisplayGroupManagerPtr)
-     * @see received(OptionsPtr)
+     * Receive a message.
+     * A received() signal will be emitted according to the message type.
+     * This method is blocking.
      */
-    void receiveMessages();
+    void receiveMessage();
 
     // TODO remove content dimension requests (DISCL-21)
     /** Rank1(-N): Set the factories to respond to Content Dimensions request */
     void setFactories(FactoriesPtr factories);
 
+public slots:
+    /**
+     * Process messages until the QUIT message is received.
+     */
+    void processMessages();
+
 signals:
     /**
-     * Rank 1-N: Emitted when a displayGroup was recieved
-     * @see receiveMessages()
+     * Emitted when a displayGroup was recieved
+     * @see receiveMessage()
      * @param displayGroup The DisplayGroup that was received
      */
     void received(DisplayGroupManagerPtr displayGroup);
 
     /**
-     * Rank 1-N: Emitted when new Options were recieved
-     * @see receiveMessages()
+     * Emitted when new Options were recieved
+     * @see receiveMessage()
      * @param options The options that were received
      */
     void received(OptionsPtr options);
 
     /**
-     * Rank 1-N: Emitted when new Markers were recieved
-     * @see receiveMessages()
+     * Emitted when new Markers were recieved
+     * @see receiveMessage()
      * @param markers The markers that were received
      */
     void received(MarkersPtr markers);
 
     /**
-     * Rank 1-N: Emitted when a new PixelStream frame was recieved
-     * @see receiveMessages()
+     * Emitted when a new PixelStream frame was recieved
+     * @see receiveMessage()
      * @param frame The frame that was received
      */
     void received(PixelStreamFramePtr frame);
 
     /**
-     * Rank 1-N: Emitted when the quit message was recieved
-     * @see receiveMessages()
+     * Emitted when the quit message was recieved
+     * @see receiveMessage()
      */
     void receivedQuit();
 
 private:
     MPIChannelPtr mpiChannel_;
     SerializeBuffer buffer_;
+    bool processMessages_;
 
     template <typename T>
     T receiveBroadcast(const size_t messageSize);

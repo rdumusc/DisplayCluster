@@ -39,6 +39,7 @@
 
 #include "MPIChannel.h"
 
+#include "MPIContext.h"
 #include "MessageHeader.h"
 
 #include "log.h"
@@ -46,29 +47,30 @@
 #define RANK0 0
 
 MPIChannel::MPIChannel(int argc, char * argv[])
-    : mpiRank_(-1)
+    : mpiContext_(new MPIContext(argc, argv))
+    , mpiComm_(MPI_COMM_WORLD)
+    , mpiRank_(-1)
     , mpiSize_(-1)
 {
-//    int required = MPI_THREAD_MULTIPLE;
-//    int provided;
-//    MPI_Init_thread(&argc, &argv, required, &provided);
-//    if (provided < required)
-//    {
-//        put_flog(LOG_FATAL, "Error: MPI does not provide the required thread support. %d / %d\n", provided, required);
-//        MPI_Abort(MPI_COMM_WORLD, 1);
-//        exit(1);
-//    }
-
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank_);
     MPI_Comm_size(MPI_COMM_WORLD, &mpiSize_);
-    MPI_Comm_split(MPI_COMM_WORLD, mpiRank_ != RANK0, mpiRank_, &mpiRenderComm_);
+}
+
+MPIChannel::MPIChannel(const MPIChannel& parent, const int color, const int key)
+    : mpiContext_(parent.mpiContext_)
+    , mpiComm_(MPI_COMM_WORLD)
+    , mpiRank_(-1)
+    , mpiSize_(-1)
+{
+    MPI_Comm_split(parent.mpiComm_, color, key, &mpiComm_);
+    MPI_Comm_rank(mpiComm_, &mpiRank_);
+    MPI_Comm_size(mpiComm_, &mpiSize_);
 }
 
 MPIChannel::~MPIChannel()
 {
-    MPI_Comm_free(&mpiRenderComm_);
-    MPI_Finalize();
+    if (mpiComm_ != MPI_COMM_WORLD)
+        MPI_Comm_free(&mpiComm_);
 }
 
 int MPIChannel::getRank() const
@@ -76,60 +78,117 @@ int MPIChannel::getRank() const
     return mpiRank_;
 }
 
-void MPIChannel::globalBarrier(const MPI_Comm mpiComm) const
+int MPIChannel::getSize() const
 {
-    MPI_Barrier(mpiComm);
+    return mpiSize_;
 }
 
-int MPIChannel::globalSum(const int localValue, const MPI_Comm mpiComm) const
+bool MPIChannel::isThreadSafe() const
+{
+    return mpiContext_->hasMultithreadSupport();
+}
+
+void MPIChannel::globalBarrier() const
+{
+    MPI_Barrier(mpiComm_);
+}
+
+int MPIChannel::globalSum(const int localValue) const
 {
     int globalValue = 0;
     MPI_Allreduce((void *)&localValue, (void *)&globalValue,
-                  1, MPI_INT, MPI_SUM, mpiComm);
+                  1, MPI_INT, MPI_SUM, mpiComm_);
     return globalValue;
 }
 
-bool MPIChannel::messageAvailable()
+bool MPIChannel::isMessageAvailable(const int src)
 {
-    // check to see if we have a message (non-blocking)
     int flag;
     MPI_Status status;
-    MPI_Iprobe(RANK0, 0, MPI_COMM_WORLD, &flag, &status);
+    MPI_Iprobe(src, 0, mpiComm_, &flag, &status);
 
-    // check to see if all render processes have a message
-    int allFlag;
-    MPI_Allreduce(&flag, &allFlag, 1, MPI_INT, MPI_LAND, mpiRenderComm_);
-
-    return (bool)allFlag;
+    return (bool)flag;
 }
 
-void MPIChannel::send(const MessageHeader& messageHeader, const int dest)
+void MPIChannel::send(const MPIHeader& header, const int dest)
 {
-    MPI_Send((void *)&messageHeader, sizeof(MessageHeader),
-             MPI_BYTE, dest, 0, MPI_COMM_WORLD);
+    int err = MPI_Send((void *)&header, sizeof(MPIHeader), MPI_BYTE, dest, 0, mpiComm_);
+
+    if (err != MPI_SUCCESS)
+        put_flog(LOG_ERROR, "Error detected! (%d)", err);
 }
 
-void MPIChannel::send(const std::string& serializedData, const int dest)
+void MPIChannel::send(const MPIMessageType type, const std::string& serializedData, const int dest)
 {
-    MPI_Send((void *)serializedData.data(), (int)serializedData.size(),
-             MPI_BYTE, dest, 0, MPI_COMM_WORLD);
+    MPIHeader mh;
+    mh.size = serializedData.size();
+    mh.type = type;
+
+    send(mh, dest);
 }
 
-void MPIChannel::broadcast(const std::string& serializedData, const MPI_Comm mpiComm)
+void MPIChannel::sendAll(const MPIMessageType type)
 {
-    MPI_Bcast((void *)serializedData.data(), serializedData.size(),
-              MPI_BYTE, RANK0, mpiComm);
+    MPIHeader mh;
+    mh.size = 0;
+    mh.type = type;
+
+    for(int i=1; i<mpiSize_; ++i)
+        send(mh, i);
 }
 
-MessageHeader MPIChannel::receiveHeader(const int src, const MPI_Comm mpiComm)
+void MPIChannel::broadcast(const MPIMessageType type, const std::string& serializedData)
+{
+    MPIHeader mh;
+    mh.size = serializedData.size();
+    mh.type = type;
+
+    for(int i=1; i<mpiSize_; ++i)
+        send(mh, i);
+
+    int err = MPI_Bcast((void *)serializedData.data(), serializedData.size(),
+                         MPI_BYTE, RANK0, mpiComm_);
+
+    if (err != MPI_SUCCESS)
+        put_flog(LOG_ERROR, "Error detected! (%d)", err);
+}
+
+MPIHeader MPIChannel::receiveHeader(const int src)
 {
     MPI_Status status;
-    MessageHeader mh;
-    MPI_Recv((void *)&mh, sizeof(MessageHeader), MPI_BYTE, src, 0, mpiComm, &status);
+    MPIHeader mh;
+    MPI_Recv((void *)&mh, sizeof(MPIHeader), MPI_BYTE, src, 0, mpiComm_, &status);
     return mh;
+
+    if (status.MPI_ERROR != MPI_SUCCESS)
+        put_flog(LOG_ERROR, "Error detected! (%d)", status.MPI_ERROR);
 }
 
-void MPIChannel::receiveBroadcast(char* dataBuffer, const size_t messageSize, const MPI_Comm mpiComm)
+void MPIChannel::receive(char* dataBuffer, const size_t messageSize, const int src)
 {
-    MPI_Bcast((void *)dataBuffer, messageSize, MPI_BYTE, RANK0, mpiComm);
+    MPI_Status status;
+    MPI_Recv((void *)dataBuffer, messageSize, MPI_BYTE, src, 0, mpiComm_, &status);
+
+    if (status.MPI_ERROR != MPI_SUCCESS)
+        put_flog(LOG_ERROR, "Error detected! (%d)", status.MPI_ERROR);
+}
+
+void MPIChannel::receiveBroadcast(char* dataBuffer, const size_t messageSize)
+{
+    int err = MPI_Bcast((void *)dataBuffer, messageSize, MPI_BYTE, RANK0, mpiComm_);
+
+    if (err != MPI_SUCCESS)
+        put_flog(LOG_ERROR, "Error detected! (%d)", err);
+}
+
+std::vector<uint64_t> MPIChannel::gatherAll(const uint64_t value)
+{
+    std::vector<uint64_t> results(mpiSize_);
+    int err = MPI_Allgather((void *)&value, 1, MPI_LONG_LONG_INT,
+                            (void *)results.data(), 1, MPI_LONG_LONG_INT, mpiComm_);
+
+    if (err != MPI_SUCCESS)
+        put_flog(LOG_ERROR, "Error detected! (%d)", err);
+
+    return results;
 }

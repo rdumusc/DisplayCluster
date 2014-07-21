@@ -37,36 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Application.h"
+#ifndef MPICONTEXT_H
+#define MPICONTEXT_H
 
-#include "log.h"
-#include "configuration/Configuration.h"
+#include <boost/noncopyable.hpp>
 
-#define CONFIGURATION_FILENAME "configuration.xml"
-#define DISPLAYCLUSTER_DIR "DISPLAYCLUSTER_DIR"
-
-Application::Application(int &argc_, char **argv_)
-    : QApplication(argc_, argv_)
+/**
+ * A global MPI context.
+ * Only one instance of this class can exist during the program execution.
+ */
+class MPIContext : public boost::noncopyable
 {
-    QObject::connect(this, SIGNAL(lastWindowClosed()),
-                     this, SLOT(quit()));
-}
+public:
+    /**
+     * Constructor, initialize the MPI context.
+     * Only one instance of this class per program is allowed.
+     * @param argc main program arguments count
+     * @param argv main program arguments
+     */
+    MPIContext(int argc, char* argv[]);
 
-Application::~Application()
-{
-    delete g_configuration;
-    g_configuration = 0;
-}
+    /** Destructor. */
+    ~MPIContext();
 
-QString Application::getConfigFilename() const
-{
-    if( !getenv( DISPLAYCLUSTER_DIR ))
-    {
-        put_flog(LOG_FATAL, "DISPLAYCLUSTER_DIR environment variable must be set");
-        exit(EXIT_FAILURE);
-    }
+    /** Check if the context could be created with multithread support. */
+    bool hasMultithreadSupport() const;
 
-    const QString displayClusterDir = QString(getenv( DISPLAYCLUSTER_DIR ));
-    put_flog(LOG_DEBUG, "base directory is %s", displayClusterDir.toLatin1().constData());
-    return QString( "%1/%2" ).arg( displayClusterDir ).arg( CONFIGURATION_FILENAME );
-}
+private:
+    bool multithreadSupportEnabled_;
+};
+
+#endif // MPICONTEXT_H

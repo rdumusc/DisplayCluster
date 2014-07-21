@@ -65,8 +65,6 @@ public:
 protected:
     /** Get the configuration filename. */
     QString getConfigFilename() const;
-
-    DisplayGroupManagerPtr displayGroup_;
 };
 
 #endif // APPLICATION_H

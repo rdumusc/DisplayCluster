@@ -92,10 +92,10 @@ class Content : public QObject
         void blockAdvance( bool block ) { blockAdvance_ = block; }
 
         /** Re-implement this method to update or synchronize before rendering. */
-        virtual void preRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, WallToWallChannel&) { }
+        virtual void preRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel&) { }
 
         /** Re-implement this method to update or synchronize after rendering. */
-        virtual void postRenderUpdate(FactoriesPtr, ContentWindowManagerPtr, WallToWallChannel&) { }
+        virtual void postRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel&) { }
 
     signals:
         /** Emitted when dimensions have changed */

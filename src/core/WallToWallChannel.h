@@ -47,7 +47,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 /**
- * A communication channel between Wall processes.
+ * Communication channel between the Wall processes.
  */
 class WallToWallChannel : public QObject
 {
@@ -64,6 +64,9 @@ public:
      */
     int globalSum(const int localValue) const;
 
+    /** Check if all processes are ready to perform a common action. */
+    bool allReady(const bool isReady) const;
+
     /** Get the current timestamp, synchronized accross processes. */
     boost::posix_time::ptime getTime() const;
 
@@ -72,6 +75,9 @@ public:
 
     /** Block execution until all programs have reached the barrier. */
     void globalBarrier() const;
+
+    /** Check that all processes have the same version of an object. */
+    bool checkVersion(const uint64_t version) const;
 
 private:
     MPIChannelPtr mpiChannel_;

@@ -68,7 +68,7 @@ private:
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
     }
 
-    void postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
+    void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
 };
 
 #endif

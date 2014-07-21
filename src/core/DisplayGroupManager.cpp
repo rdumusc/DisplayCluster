@@ -78,7 +78,8 @@ void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr conten
             // TODO initialize all content dimensions on creation so we can
             // remove this procedure (DISCL-21)
             // make sure we have its dimensions so we can constrain its aspect ratio
-            masterToWallChannel_->sendContentsDimensionsRequest(getContentWindowManagers());
+//            masterToWallChannel_->sendContentsDimensionsRequest();
+//            masterToWallChannel_->receiveContentsDimensionsReply(getContentWindowManagers());
         }
     }
 }

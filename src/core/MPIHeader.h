@@ -37,36 +37,30 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Application.h"
+#ifndef MPIHEADER_H
+#define MPIHEADER_H
 
-#include "log.h"
-#include "configuration/Configuration.h"
-
-#define CONFIGURATION_FILENAME "configuration.xml"
-#define DISPLAYCLUSTER_DIR "DISPLAYCLUSTER_DIR"
-
-Application::Application(int &argc_, char **argv_)
-    : QApplication(argc_, argv_)
+/** The type of MPI message. */
+enum MPIMessageType
 {
-    QObject::connect(this, SIGNAL(lastWindowClosed()),
-                     this, SLOT(quit()));
-}
+    MPI_MESSAGE_TYPE_NONE,
+    MPI_MESSAGE_TYPE_FRAME_CLOCK,
+    MPI_MESSAGE_TYPE_QUIT,
+    MPI_MESSAGE_TYPE_DISPLAYGROUP,
+    MPI_MESSAGE_TYPE_PIXELSTREAM,
+    MPI_MESSAGE_TYPE_OPTIONS,
+    MPI_MESSAGE_TYPE_MARKERS,
+    MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS
+};
 
-Application::~Application()
+/** Fixed-size message header. */
+struct MPIHeader
 {
-    delete g_configuration;
-    g_configuration = 0;
-}
+    /** Message type. */
+    MPIMessageType type;
 
-QString Application::getConfigFilename() const
-{
-    if( !getenv( DISPLAYCLUSTER_DIR ))
-    {
-        put_flog(LOG_FATAL, "DISPLAYCLUSTER_DIR environment variable must be set");
-        exit(EXIT_FAILURE);
-    }
+    /** Size of the message payload. */
+    uint32_t size;
+};
 
-    const QString displayClusterDir = QString(getenv( DISPLAYCLUSTER_DIR ));
-    put_flog(LOG_DEBUG, "base directory is %s", displayClusterDir.toLatin1().constData());
-    return QString( "%1/%2" ).arg( displayClusterDir ).arg( CONFIGURATION_FILENAME );
-}
+#endif // MPIHEADER_H

@@ -78,9 +78,10 @@
 #include "ws/DisplayGroupManagerAdapter.h"
 
 
-MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
+MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel)
     : Application(argc_, argv_)
-    , masterToWallChannel_(new MasterToWallChannel(mpiChannel))
+    , masterToWallChannel_(new MasterToWallChannel(worldChannel))
+    , displayGroup_(new DisplayGroupManager)
     , markers_(new Markers)
 {
     displayGroup_.reset(new DisplayGroupManager(masterToWallChannel_.get()));

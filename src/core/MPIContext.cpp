@@ -37,36 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Application.h"
+#include "MPIContext.h"
 
 #include "log.h"
-#include "configuration/Configuration.h"
 
-#define CONFIGURATION_FILENAME "configuration.xml"
-#define DISPLAYCLUSTER_DIR "DISPLAYCLUSTER_DIR"
+#include <mpi.h>
 
-Application::Application(int &argc_, char **argv_)
-    : QApplication(argc_, argv_)
+MPIContext::MPIContext(int argc, char* argv[])
+    : multithreadSupportEnabled_(true)
 {
-    QObject::connect(this, SIGNAL(lastWindowClosed()),
-                     this, SLOT(quit()));
-}
-
-Application::~Application()
-{
-    delete g_configuration;
-    g_configuration = 0;
-}
-
-QString Application::getConfigFilename() const
-{
-    if( !getenv( DISPLAYCLUSTER_DIR ))
+    const int required = MPI_THREAD_MULTIPLE;
+    int provided;
+    MPI_Init_thread(&argc, &argv, required, &provided);
+    if (provided < required)
     {
-        put_flog(LOG_FATAL, "DISPLAYCLUSTER_DIR environment variable must be set");
-        exit(EXIT_FAILURE);
+        multithreadSupportEnabled_ = false;
+        put_flog(LOG_WARN, "MPI does not provide multithread thread support."
+                 "(Level: %d/%d)", provided, required);
     }
-
-    const QString displayClusterDir = QString(getenv( DISPLAYCLUSTER_DIR ));
-    put_flog(LOG_DEBUG, "base directory is %s", displayClusterDir.toLatin1().constData());
-    return QString( "%1/%2" ).arg( displayClusterDir ).arg( CONFIGURATION_FILENAME );
 }
+
+MPIContext::~MPIContext()
+{
+    MPI_Finalize();
+}
+
+bool MPIContext::hasMultithreadSupport() const
+{
+    return multithreadSupportEnabled_;
+}
+
+

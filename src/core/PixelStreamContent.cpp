@@ -54,8 +54,8 @@ bool PixelStreamContent::readMetadata()
     return true;
 }
 
-void PixelStreamContent::postRenderUpdate(FactoriesPtr factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
+void PixelStreamContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
 {
     const QRectF& windowRect = window->getCoordinates();
-    factories->getPixelStreamFactory().getObject(getURI())->preRenderUpdate(windowRect, wallToWallChannel);
+    factories.getPixelStreamFactory().getObject(getURI())->preRenderUpdate(windowRect, wallToWallChannel);
 }

@@ -41,11 +41,14 @@
 #define MASTERTOWALLCHANNEL_H
 
 #include "types.h"
-#include "MessageHeader.h"
+#include "MPIHeader.h"
 #include "SerializeBuffer.h"
 
 #include <QObject>
 
+/**
+ * Communication channel between the master application and the wall processes.
+ */
 class MasterToWallChannel : public QObject
 {
     Q_OBJECT
@@ -56,48 +59,50 @@ public:
 
 public slots:
     /**
-     * Rank0: send the given DisplayGroup to ranks 1-N
+     * Send the given DisplayGroup to the wall processes.
      * @param displayGroup The DisplayGroup to send
      */
     void send(DisplayGroupManagerPtr displayGroup);
 
     /**
-     * Rank0: send the given Options to ranks 1-N
+     * Send the given Options to the wall processes.
      * @param options The options to send
      */
     void send(OptionsPtr options);
 
     /**
-     * Rank0: send the given Markers to ranks 1-N
+     * Send the given Markers to the wall processes.
      * @param markers The markers to send
      */
     void send(MarkersPtr markers);
 
     /**
-     * Rank 0: Send pixel stream frame to ranks 1-N
+     * Send pixel stream frame to the wall processes.
      * @param frame The frame to send
      */
     void send(PixelStreamFramePtr frame);
 
     /**
-     * Rank0: send quit message to ranks 1-N, terminating the processes.
+     * Send quit message to the wall processes, terminating the application.
      */
     void sendQuit();
 
     // TODO remove content dimension requests (DISCL-21)
+    /** Ask rank1 to provide the dimensions for the given Contents. */
+    void sendContentsDimensionsRequest();
+
     /**
-     * Rank0: ask rank1 to provide the dimensions for the given Contents.
+     * Receive Contents dimensions reply from rank1.
      * @param contentWindows The Contents for which to update dimensions.
      */
-    void sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows);
+    void receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows);
 
 private:
     MPIChannelPtr mpiChannel_;
     SerializeBuffer buffer_;
 
     template <typename T>
-    void broadcast(const T object, const MessageType type);
-    void receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows);
+    void broadcast(const T& object, const MPIMessageType type);
 };
 
 #endif // MASTERTOWALLCHANNEL_H

@@ -40,7 +40,6 @@
 #include "WallToWallChannel.h"
 
 #include "MPIChannel.h"
-#include "MessageHeader.h"
 #include "log.h"
 
 WallToWallChannel::WallToWallChannel(MPIChannelPtr mpiChannel)
@@ -50,7 +49,12 @@ WallToWallChannel::WallToWallChannel(MPIChannelPtr mpiChannel)
 
 int WallToWallChannel::globalSum(const int localValue) const
 {
-    return mpiChannel_->globalSum(localValue, mpiChannel_->mpiRenderComm_);
+    return mpiChannel_->globalSum(localValue);
+}
+
+bool WallToWallChannel::allReady(const bool isReady) const
+{
+    return mpiChannel_->globalSum(isReady ? 1 : 0) == mpiChannel_->getSize();
 }
 
 boost::posix_time::ptime WallToWallChannel::getTime() const
@@ -60,7 +64,7 @@ boost::posix_time::ptime WallToWallChannel::getTime() const
 
 void WallToWallChannel::synchronizeClock()
 {
-    if(mpiChannel_->getRank() == 1)
+    if(mpiChannel_->getRank() == 0)
         sendClock();
     else
         receiveClock();
@@ -68,46 +72,41 @@ void WallToWallChannel::synchronizeClock()
 
 void WallToWallChannel::globalBarrier() const
 {
-    mpiChannel_->globalBarrier(mpiChannel_->mpiRenderComm_);
+    mpiChannel_->globalBarrier();
+}
+
+bool WallToWallChannel::checkVersion(const uint64_t version) const
+{
+    std::vector<uint64_t> versions = mpiChannel_->gatherAll(version);
+
+    for (std::vector<uint64_t>::const_iterator it = versions.begin(); it != versions.end(); ++it)
+    {
+        if (*it != version)
+            return false;
+    }
+    return true;
 }
 
 void WallToWallChannel::sendClock()
 {
-    if(mpiChannel_->getRank() != 1)
-    {
-        put_flog(LOG_WARN, "called by rank %i != 1", mpiChannel_->getRank());
-        return;
-    }
+    assert(mpiChannel_->getRank() == 0);
 
     timestamp_ = boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time());
 
     const std::string& serializedString = buffer_.serialize(timestamp_);
 
-    MessageHeader mh;
-    mh.size = serializedString.size();
-    mh.type = MESSAGE_TYPE_FRAME_CLOCK;
-
-    // the header is sent via a send, so that we can probe it on the render processes
-    for(int i=2; i<mpiChannel_->mpiSize_; i++)
-        mpiChannel_->send(mh, i);
-
-    mpiChannel_->broadcast(serializedString, mpiChannel_->mpiRenderComm_);
+    mpiChannel_->broadcast(MPI_MESSAGE_TYPE_FRAME_CLOCK, serializedString);
 }
 
 void WallToWallChannel::receiveClock()
 {
-    if(mpiChannel_->getRank() == 1)
-        return;
+    assert(mpiChannel_->getRank() != 0);
 
-    MessageHeader messageHeader = mpiChannel_->receiveHeader(1, MPI_COMM_WORLD);
-    if(messageHeader.type != MESSAGE_TYPE_FRAME_CLOCK)
-    {
-        put_flog(LOG_FATAL, "unexpected message type");
-        return;
-    }
+    MPIHeader header = mpiChannel_->receiveHeader(0);
+    assert(header.type == MPI_MESSAGE_TYPE_FRAME_CLOCK);
 
-    buffer_.setSize(messageHeader.size);
-    mpiChannel_->receiveBroadcast(buffer_.data(), buffer_.size(), mpiChannel_->mpiRenderComm_);
+    buffer_.setSize(header.size);
+    mpiChannel_->receiveBroadcast(buffer_.data(), buffer_.size());
     buffer_.deserialize(timestamp_);
 }
 

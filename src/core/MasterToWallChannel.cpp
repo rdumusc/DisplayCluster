@@ -39,16 +39,14 @@
 
 #include "MasterToWallChannel.h"
 
-#include "MessageHeader.h"
 #include "MPIChannel.h"
-
 #include "DisplayGroupManager.h"
 #include "ContentWindowManager.h"
 #include "Options.h"
 #include "Markers.h"
 #include "PixelStreamFrame.h"
 
-#include <mpi.h>
+#define RANK1 1
 
 MasterToWallChannel::MasterToWallChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
@@ -56,77 +54,54 @@ MasterToWallChannel::MasterToWallChannel(MPIChannelPtr mpiChannel)
 }
 
 template <typename T>
-void MasterToWallChannel::broadcast(const T object, const MessageType type)
+void MasterToWallChannel::broadcast(const T& object, const MPIMessageType type)
 {
     const std::string& serializedString = buffer_.serialize(object);
 
-    MessageHeader mh;
-    mh.size = serializedString.size();
-    mh.type = type;
-
-    // Send header via a send so we can probe it on the render processes
-    for(int i=1; i<mpiChannel_->mpiSize_; ++i)
-        mpiChannel_->send(mh, i);
-
-    mpiChannel_->broadcast(serializedString);
+    mpiChannel_->broadcast(type, serializedString);
 }
 
 void MasterToWallChannel::send(DisplayGroupManagerPtr displayGroup)
 {
-    broadcast(displayGroup, MESSAGE_TYPE_CONTENTS);
+    broadcast(displayGroup, MPI_MESSAGE_TYPE_DISPLAYGROUP);
 }
 
 void MasterToWallChannel::send(OptionsPtr options)
 {
-    broadcast(options, MESSAGE_TYPE_OPTIONS);
+    broadcast(options, MPI_MESSAGE_TYPE_OPTIONS);
 }
 
 void MasterToWallChannel::send(MarkersPtr markers)
 {
-    broadcast(markers, MESSAGE_TYPE_MARKERS);
+    broadcast(markers, MPI_MESSAGE_TYPE_MARKERS);
 }
 
 void MasterToWallChannel::send(PixelStreamFramePtr frame)
 {
     assert(!frame->segments.empty() && "received an empty frame");
-    broadcast(frame, MESSAGE_TYPE_PIXELSTREAM);
+    broadcast(frame, MPI_MESSAGE_TYPE_PIXELSTREAM);
 }
 
 void MasterToWallChannel::sendQuit()
 {
-    MessageHeader mh;
-    mh.type = MESSAGE_TYPE_QUIT;
-
-    // Send header via a send so that we can probe it on the render processes
-    for(int i=1; i<mpiChannel_->mpiSize_; ++i)
-        mpiChannel_->send(mh, i);
+    mpiChannel_->sendAll(MPI_MESSAGE_TYPE_QUIT);
 }
 
-void MasterToWallChannel::sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows)
+void MasterToWallChannel::sendContentsDimensionsRequest()
 {
-    MessageHeader mh;
-    mh.type = MESSAGE_TYPE_CONTENTS_DIMENSIONS;
-
-    // the header is sent via a send, so that we can probe it on the render processes
-    for(int i=1; i<mpiChannel_->mpiSize_; i++)
-        mpiChannel_->send(mh, i);
-
-    // now, receive response from rank 1
-    receiveContentsDimensionsReply(contentWindows);
+    mpiChannel_->sendAll(MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS);
 }
 
 void MasterToWallChannel::receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows)
 {
-    MPI_Status status;
-    MessageHeader mh = mpiChannel_->receiveHeader(1, MPI_COMM_WORLD);
+    MPIHeader mh = mpiChannel_->receiveHeader(RANK1);
 
     buffer_.setSize(mh.size);
-    MPI_Recv((void *)buffer_.data(), buffer_.size(), MPI_BYTE, 1, 0, MPI_COMM_WORLD, &status);
+    mpiChannel_->receive(buffer_.data(), buffer_.size(), RANK1);
 
     std::vector<std::pair<int, int> > dimensions;
     buffer_.deserialize(dimensions);
 
-    // overwrite old dimensions
     for(size_t i=0; i<dimensions.size() && i<contentWindows.size(); ++i)
         contentWindows[i]->getContent()->setDimensions(dimensions[i].first, dimensions[i].second);
 }

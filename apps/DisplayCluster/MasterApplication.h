@@ -67,9 +67,9 @@ public:
      * Constructor
      * @param argc Command line argument count (required by QApplication)
      * @param argv Command line arguments (required by QApplication)
-     * @param mpiChannel The interprocess communication channel
+     * @param worldChannel The world MPI channel
      */
-    MasterApplication(int &argc, char **argv, MPIChannelPtr mpiChannel);
+    MasterApplication(int &argc, char **argv, MPIChannelPtr worldChannel);
 
     /** Destructor */
     virtual ~MasterApplication();
@@ -85,6 +85,8 @@ private:
 #if ENABLE_TUIO_TOUCH_LISTENER
     boost::scoped_ptr<MultiTouchListener> touchListener_;
 #endif
+
+    DisplayGroupManagerPtr displayGroup_;
     MarkersPtr markers_;
 
     QThread mpiWorkerThread_;

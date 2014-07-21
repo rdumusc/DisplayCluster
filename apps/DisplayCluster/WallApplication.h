@@ -41,7 +41,9 @@
 #define WALLAPPLICATION_H
 
 #include "Application.h"
+#include "SwapSyncObject.h"
 
+#include <QThread>
 #include <boost/scoped_ptr.hpp>
 
 class WallConfiguration;
@@ -61,9 +63,10 @@ public:
      * Constructor
      * @param argc Command line argument count (required by QApplication)
      * @param argv Command line arguments (required by QApplication)
-     * @param mpiChannel The interprocess communication channel
+     * @param worldChannel The world MPI channel
+     * @param wallChannel The wall MPI channel
      */
-    WallApplication(int &argc, char **argv, MPIChannelPtr mpiChannel);
+    WallApplication(int &argc, char **argv, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel);
 
     /** Destructor */
     virtual ~WallApplication();
@@ -76,18 +79,27 @@ private slots:
     void renderFrame();
     void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
     void updateOptions(OptionsPtr options);
+    void updateMarkers(MarkersPtr markers);
     void processPixelStreamFrame(PixelStreamFramePtr frame);
 
 private:
     boost::scoped_ptr<RenderContext> renderContext_;
-    boost::scoped_ptr<WallToMasterChannel> wallToMasterChannel_;
-    boost::scoped_ptr<WallToWallChannel> wallToWallChannel_;
+    boost::scoped_ptr<WallToMasterChannel> masterChannel_;
+    boost::scoped_ptr<WallToWallChannel> wallChannel_;
     FactoriesPtr factories_;
+    QThread mpiWorkerThread_;
+
+    SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
+    SwapSyncObject<OptionsPtr> syncOptions_;
+    SwapSyncObject<MarkersPtr> syncMarkers_;
 
     void initRenderContext(const WallConfiguration* config);
     void setupTestPattern(const WallConfiguration* config, const int rank);
-    void initMPIConnection();
+    void initMPIConnection(MPIChannelPtr worldChannel);
+    void startRendering();
 
+    void receiveMPIMessages();
+    void syncObjects();
     void preRenderUpdate();
     void postRenderUpdate();
 };
