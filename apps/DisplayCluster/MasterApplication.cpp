@@ -52,13 +52,13 @@
 #endif
 
 #if ENABLE_JOYSTICK_SUPPORT
-#include "JoystickThread.h"
-#define JOYSTICK_THREAD_WAIT_TIME_USEC 1000
+    #include "JoystickThread.h"
+    #define JOYSTICK_THREAD_WAIT_TIME_USEC 1000
 #endif
 
 #if ENABLE_SKELETON_SUPPORT
-#include "SkeletonThread.h"
-#define SKELTON_THREAD_WAIT_TIME_USEC 1000
+    #include "SkeletonThread.h"
+    #define SKELTON_THREAD_WAIT_TIME_USEC 1000
 #endif
 
 #include "NetworkListener.h"
@@ -98,6 +98,9 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
 MasterApplication::~MasterApplication()
 {
     masterToWallChannel_->sendQuit();
+
+    mpiWorkerThread_.quit();
+    mpiWorkerThread_.wait();
 
 #if ENABLE_SKELETON_SUPPORT
     skeletonThread_->stop();

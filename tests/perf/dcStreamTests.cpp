@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE( testSocketConnection )
 {
     g_configuration = new MasterConfiguration( "configuration.xml" );
 
-    DisplayGroupManager displayGroup;
-    PixelStreamWindowManager pixelStreamWindowManager( displayGroup );
+    DisplayGroupManagerPtr displayGroup( new DisplayGroupManager);
+    PixelStreamWindowManager pixelStreamWindowManager( *displayGroup );
     NetworkListener listener( pixelStreamWindowManager );
 #ifdef NTHREADS
     QThreadPool::globalInstance()->setMaxThreadCount( NTHREADS );
