@@ -177,7 +177,7 @@ void WallApplication::preRenderUpdate()
 
     syncObjects();
     wallChannel_->synchronizeClock();
-    factories_->preRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_.get());
+    factories_->preRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
 }
 
 void WallApplication::syncObjects()
@@ -192,7 +192,7 @@ void WallApplication::syncObjects()
 
 void WallApplication::postRenderUpdate()
 {
-    factories_->postRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_.get());
+    factories_->postRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
     factories_->clearStaleFactoryObjects();
 }
 

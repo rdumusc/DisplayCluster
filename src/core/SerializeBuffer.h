@@ -51,6 +51,10 @@
 class SerializeBuffer
 {
 public:
+    SerializeBuffer()
+        : size_( 0 )
+    {}
+
     void setSize(const size_t minSize)
     {
         if (buffer_.size() < minSize)
