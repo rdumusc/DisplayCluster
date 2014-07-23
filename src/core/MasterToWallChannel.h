@@ -87,16 +87,6 @@ public slots:
      */
     void sendQuit();
 
-    // TODO remove content dimension requests (DISCL-21)
-    /** Ask rank1 to provide the dimensions for the given Contents. */
-    void sendContentsDimensionsRequest();
-
-    /**
-     * Receive Contents dimensions reply from rank1.
-     * @param contentWindows The Contents for which to update dimensions.
-     */
-    void receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows);
-
 private:
     MPIChannelPtr mpiChannel_;
     SerializeBuffer buffer_;

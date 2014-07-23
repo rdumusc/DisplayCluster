@@ -37,16 +37,16 @@
 /*********************************************************************/
 
 #include "MovieContent.h"
-#include "globals.h"
+
 #include "Movie.h"
+#include "FFMPEGMovie.h"
 #include "ContentWindowManager.h"
 #include "RenderContext.h"
-#include "GLWindow.h"
-#include <boost/serialization/export.hpp>
-#include "serializationHelpers.h"
 #include "Factories.h"
 #include "WallToWallChannel.h"
 
+#include "serializationHelpers.h"
+#include <boost/serialization/export.hpp>
 BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
 
 CONTENT_TYPE MovieContent::getType()
@@ -57,7 +57,16 @@ CONTENT_TYPE MovieContent::getType()
 bool MovieContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    return file.exists() && file.isReadable();
+    if (!file.exists() || !file.isReadable())
+        return false;
+
+    const FFMPEGMovie movie(getURI());
+    if (!movie.isValid())
+        return false;
+
+    width_ = movie.getWidth();
+    height_ = movie.getHeight();
+    return true;
 }
 
 const QStringList& MovieContent::getSupportedExtensions()

@@ -70,7 +70,6 @@ private:
     // Material properties (may go to a separate class)
     GLenum renderMode_;
     bool enableTexture_;
-
 };
 
 #endif // GLQUAD_H

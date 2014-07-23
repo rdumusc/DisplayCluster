@@ -46,19 +46,15 @@
 class Texture : public FactoryObject
 {
 public:
-    Texture(QString uri);
+    Texture(const QString uri);
     ~Texture();
 
     void getDimensions(int &width, int &height) const override;
     void render(const QRectF& texCoords) override;
 
 private:
-    // image location
     QString uri_;
-
-    // original image dimensions
-    int imageWidth_;
-    int imageHeight_;
+    QSize imageSize_;
 
     GLTexture2D texture_;
     GLQuad quad_;

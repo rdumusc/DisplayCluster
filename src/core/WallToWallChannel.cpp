@@ -42,6 +42,8 @@
 #include "MPIChannel.h"
 #include "log.h"
 
+#include <boost/date_time/posix_time/time_serialize.hpp>
+
 WallToWallChannel::WallToWallChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
 {

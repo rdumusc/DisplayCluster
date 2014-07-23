@@ -58,7 +58,12 @@ CONTENT_TYPE DynamicTextureContent::getType()
 bool DynamicTextureContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    return file.exists() && file.isReadable();
+    if (!file.exists() || !file.isReadable())
+        return false;
+
+    const DynamicTexture dynamicTexture(getURI());
+    dynamicTexture.getDimensions(width_, height_);
+    return true;
 }
 
 const QStringList& DynamicTextureContent::getSupportedExtensions()
@@ -75,6 +80,11 @@ const QStringList& DynamicTextureContent::getSupportedExtensions()
     }
 
     return extensions;
+}
+
+void DynamicTextureContent::preRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&)
+{
+    factories.getDynamicTextureFactory().getObject(getURI())->preRenderUpdate();
 }
 
 void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&)

@@ -93,13 +93,11 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
         // this is the top-level object, so its path is 0
         treePath_.push_back(0);
 
-        // Try to read the pyramid metadata from file
         const QString extension = QString(".").append(pyramidFileExtension);
         if(uri_.endsWith(extension))
             readPyramidMetadataFromFile(uri_);
-        // Read the whole image to get the size. There might be a more optimized solution.
         else
-            loadFullResImage();
+            readFullImageMetadata(uri_);
     }
 }
 
@@ -110,6 +108,16 @@ DynamicTexture::~DynamicTexture()
 bool DynamicTexture::isRoot() const
 {
     return depth_ == 0;
+}
+
+bool DynamicTexture::readFullImageMetadata(const QString& uri)
+{
+    const QImageReader imageReader(uri);
+    if(!imageReader.canRead())
+        return false;
+
+    imageSize_ = imageReader.size();
+    return true;
 }
 
 bool DynamicTexture::readPyramidMetadataFromFile(const QString& uri)
@@ -235,42 +243,8 @@ bool DynamicTexture::loadFullResImage()
         put_flog(LOG_ERROR, "error loading %s", uri_.toLocal8Bit().constData());
         return false;
     }
-    imageSize_= fullscaleImage_.size();
+    imageSize_ = fullscaleImage_.size();
     return true;
-}
-
-QImage DynamicTexture::loadImageRegionFromFullResImageFile(const QString& filename)
-{
-    QImageReader imageReader(filename);
-
-    if(!imageReader.canRead())
-    {
-        put_flog(LOG_ERROR, "image cannot be read. aborting.");
-        return QImage();
-    }
-
-    // get image rectangle for this object in the root's coordinates
-    QRect rootRect;
-
-    if(isRoot())
-        rootRect = QRect(0,0, imageReader.size().width(), imageReader.size().height());
-    else
-        rootRect = getRootImageCoordinates(0., 0., 1., 1.);
-
-    // save the image dimensions (in terms of the root image) that this object represents
-    imageSize_ = rootRect.size();
-
-    put_flog(LOG_DEBUG, "reading clipped region of image");
-
-    imageReader.setClipRect(rootRect);
-    QImage image = imageReader.read();
-
-    if(!image.isNull())
-        return image.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
-
-    put_flog(LOG_DEBUG, "failed to read clipped region of image; attempting to read clipped and scaled region of image");
-    imageReader.setScaledSize(QSize(TEXTURE_SIZE, TEXTURE_SIZE));
-    return imageReader.read();
 }
 
 void DynamicTexture::loadImage()
@@ -300,23 +274,17 @@ void DynamicTexture::loadImage()
             DynamicTexturePtr parent(parent_);
             const QImage image = parent->getImageFromParent(imageCoordsInParentImage_, this);
 
-            // if we managed to get a valid image, go ahead and scale it
             if(!image.isNull())
             {
                 imageSize_= image.size();
                 scaledImage_ = image.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
-            }
-            else
-            {
-                // try alternative methods of reading it using QImageReader
-                scaledImage_ = loadImageRegionFromFullResImageFile(root->uri_);
             }
         }
     }
 
     if(scaledImage_.isNull())
     {
-        put_flog(LOG_ERROR, "failed to load the image. aborting.");
+        put_flog(LOG_ERROR, "failed to load the image.");
         return;
     }
 }
@@ -352,12 +320,15 @@ void DynamicTexture::render(const QRectF& texCoords)
     render_(texCoords);
 }
 
-void DynamicTexture::postRenderUpdate()
+void DynamicTexture::preRenderUpdate()
 {
     // Root needs to always have a texture for renderInParent()
     if (isRoot() && !loadImageThreadStarted_)
         loadImageAsync();
+}
 
+void DynamicTexture::postRenderUpdate()
+{
     clearOldChildren();
     renderedChildren_ = false;
 }

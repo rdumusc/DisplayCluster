@@ -66,10 +66,6 @@ public:
      */
     void receiveMessage();
 
-    // TODO remove content dimension requests (DISCL-21)
-    /** Rank1(-N): Set the factories to respond to Content Dimensions request */
-    void setFactories(FactoriesPtr factories);
-
 public slots:
     /**
      * Process messages until the QUIT message is received.
@@ -118,11 +114,6 @@ private:
 
     template <typename T>
     T receiveBroadcast(const size_t messageSize);
-
-    // TODO remove content dimension requests (DISCL-21)
-    void sendContentsDimensionsReply();
-    DisplayGroupManagerPtr displayGroup_;
-    FactoriesPtr factories_;
 };
 
 #endif // WALLTOMASTERCHANNEL_H

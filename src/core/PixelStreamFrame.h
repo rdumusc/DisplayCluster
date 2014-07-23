@@ -45,6 +45,7 @@
 
 #include <QString>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
 
 /**
  * A frame for a PixelStream.

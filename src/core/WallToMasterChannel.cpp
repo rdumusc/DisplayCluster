@@ -41,15 +41,10 @@
 
 #include "MPIChannel.h"
 #include "DisplayGroupManager.h"
+#include "ContentWindowManager.h"
 #include "Options.h"
 #include "Markers.h"
 #include "PixelStreamFrame.h"
-
-// Will be removed when implementing DISCL-21
-#include "ContentWindowManager.h"
-#include "Content.h"
-#include "Factories.h"
-#include "log.h"
 
 WallToMasterChannel::WallToMasterChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
@@ -69,8 +64,7 @@ void WallToMasterChannel::receiveMessage()
     switch (mh.type)
     {
     case MPI_MESSAGE_TYPE_DISPLAYGROUP:
-        displayGroup_ = receiveBroadcast<DisplayGroupManagerPtr>(mh.size);
-        emit received(displayGroup_);
+        emit received(receiveBroadcast<DisplayGroupManagerPtr>(mh.size));
         break;
     case MPI_MESSAGE_TYPE_OPTIONS:
         emit received(receiveBroadcast<OptionsPtr>(mh.size));
@@ -85,17 +79,9 @@ void WallToMasterChannel::receiveMessage()
         processMessages_ = false;
         emit receivedQuit();
         break;
-    case MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS:
-        sendContentsDimensionsReply();
-        break;
     default:
         break;
     }
-}
-
-void WallToMasterChannel::setFactories(FactoriesPtr factories)
-{
-    factories_ = factories;
 }
 
 void WallToMasterChannel::processMessages()
@@ -114,38 +100,4 @@ T WallToMasterChannel::receiveBroadcast(const size_t messageSize)
     buffer_.deserialize(object);
 
     return object;
-}
-
-void WallToMasterChannel::sendContentsDimensionsReply()
-{
-    if(mpiChannel_->getRank() != 1)
-        return;
-
-    if (!displayGroup_)
-    {
-        put_flog(LOG_ERROR, "Cannot send content dimensions before a DisplayGroup was received!");
-        return;
-    }
-    if (!factories_)
-    {
-        put_flog(LOG_FATAL, "Cannot send content dimensions before setFactories was called!");
-        return;
-    }
-
-    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
-
-    std::vector<std::pair<int, int> > dimensions;
-
-    for(size_t i=0; i<contentWindows.size(); ++i)
-    {
-        int w,h;
-        FactoryObjectPtr object = factories_->getFactoryObject(contentWindows[i]->getContent());
-        object->getDimensions(w, h);
-
-        dimensions.push_back(std::pair<int,int>(w,h));
-    }
-
-    const std::string& serializedString = buffer_.serialize(dimensions);
-
-    mpiChannel_->send(MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS, serializedString, 0);
 }

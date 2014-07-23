@@ -41,7 +41,6 @@
 
 #include "DisplayGroupManager.h"
 #include "ContentWindowManager.h"
-#include "log.h"
 
 ContentLoader::ContentLoader(DisplayGroupManagerPtr displayGroupManager)
     : displayGroupManager_(displayGroupManager)
@@ -52,20 +51,16 @@ bool ContentLoader::load(const QString& filename, const QPointF& windowCenterPos
 {
     ContentPtr content = ContentFactory::getContent( filename );
     if( !content )
-    {
         return false;
-    }
 
     ContentWindowManagerPtr contentWindow( new ContentWindowManager( content ));
-    displayGroupManager_->addContentWindowManager( contentWindow );
-
-    // TODO (DISCL-21) Remove this when content dimensions request is no longer needed
-    contentWindow->adjustSize( SIZE_1TO1 );
 
     if (!windowSize.isNull())
         contentWindow->setSize(windowSize.width(), windowSize.height());
 
     contentWindow->centerPositionAround(windowCenterPosition, true);
+
+    displayGroupManager_->addContentWindowManager( contentWindow );
 
     return true;
 }

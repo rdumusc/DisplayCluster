@@ -39,19 +39,18 @@
 #include "Texture.h"
 #include "log.h"
 
-Texture::Texture(QString uri)
+#include <QImageReader>
+
+Texture::Texture(const QString uri)
     : uri_( uri )
 {
-    const QImage image(uri_);
-    if(image.isNull())
+    const QImageReader imageReader(uri_);
+    if(!imageReader.canRead())
     {
         put_flog(LOG_ERROR, "error loading %s", uri_.toLocal8Bit().constData());
         return;
     }
-
-    // save image dimensions
-    imageWidth_ = image.width();
-    imageHeight_ = image.height();
+    imageSize_ = imageReader.size();
 }
 
 Texture::~Texture()
@@ -60,8 +59,8 @@ Texture::~Texture()
 
 void Texture::getDimensions(int &width, int &height) const
 {
-    width = imageWidth_;
-    height = imageHeight_;
+    width = imageSize_.width();
+    height = imageSize_.height();
 }
 
 bool Texture::generateTexture()

@@ -132,8 +132,6 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
     connect(masterChannel_.get(), SIGNAL(receivedQuit()),
             this, SLOT(quit()));
 
-    masterChannel_->setFactories(factories_);
-
     if (multithreaded)
     {
         connect(&mpiWorkerThread_, SIGNAL(started()),

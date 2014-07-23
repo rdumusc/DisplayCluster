@@ -41,12 +41,11 @@
 #define SERIALIZEBUFFER_H
 
 #include <vector>
+#include <sstream>
 
-#include <boost/serialization/vector.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/utility.hpp>
-#include <boost/date_time/posix_time/time_serialize.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 
 class SerializeBuffer
 {

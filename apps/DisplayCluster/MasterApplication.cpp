@@ -84,8 +84,6 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
     , displayGroup_(new DisplayGroupManager)
     , markers_(new Markers)
 {
-    displayGroup_.reset(new DisplayGroupManager(masterToWallChannel_.get()));
-
     MasterConfiguration* config = new MasterConfiguration(getConfigFilename());
     g_configuration = config;
 

@@ -38,6 +38,7 @@
 
 #include "SVGContent.h"
 
+#include "SVG.h"
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 #include <QFileInfo>
@@ -52,7 +53,12 @@ CONTENT_TYPE SVGContent::getType()
 bool SVGContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    return file.exists() && file.isReadable();
+    if(!file.exists() || !file.isReadable())
+        return false;
+
+    const SVG svg(getURI());
+    svg.getDimensions(width_, height_);
+    return true;
 }
 
 const QStringList& SVGContent::getSupportedExtensions()

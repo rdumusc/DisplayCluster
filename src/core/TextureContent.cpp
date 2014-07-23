@@ -41,7 +41,6 @@
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
 #include <QImageReader>
-#include <QFileInfo>
 
 BOOST_CLASS_EXPORT_GUID(TextureContent, "TextureContent")
 
@@ -52,8 +51,13 @@ CONTENT_TYPE TextureContent::getType()
 
 bool TextureContent::readMetadata()
 {
-    QFileInfo file( getURI( ));
-    return file.exists() && file.isReadable();
+    const QImageReader imageReader(uri_);
+    if(!imageReader.canRead())
+        return false;
+
+    width_ = imageReader.size().width();
+    height_ = imageReader.size().height();
+    return true;
 }
 
 const QStringList& TextureContent::getSupportedExtensions()

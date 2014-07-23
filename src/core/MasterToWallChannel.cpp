@@ -46,8 +46,6 @@
 #include "Markers.h"
 #include "PixelStreamFrame.h"
 
-#define RANK1 1
-
 MasterToWallChannel::MasterToWallChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
 {
@@ -85,23 +83,4 @@ void MasterToWallChannel::send(PixelStreamFramePtr frame)
 void MasterToWallChannel::sendQuit()
 {
     mpiChannel_->sendAll(MPI_MESSAGE_TYPE_QUIT);
-}
-
-void MasterToWallChannel::sendContentsDimensionsRequest()
-{
-    mpiChannel_->sendAll(MPI_MESSAGE_TYPE_CONTENTS_DIMENSIONS);
-}
-
-void MasterToWallChannel::receiveContentsDimensionsReply(ContentWindowManagerPtrs contentWindows)
-{
-    MPIHeader mh = mpiChannel_->receiveHeader(RANK1);
-
-    buffer_.setSize(mh.size);
-    mpiChannel_->receive(buffer_.data(), buffer_.size(), RANK1);
-
-    std::vector<std::pair<int, int> > dimensions;
-    buffer_.deserialize(dimensions);
-
-    for(size_t i=0; i<dimensions.size() && i<contentWindows.size(); ++i)
-        contentWindows[i]->getContent()->setDimensions(dimensions[i].first, dimensions[i].second);
 }

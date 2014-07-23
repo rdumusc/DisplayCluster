@@ -50,7 +50,6 @@ SVG::SVG(QString uri)
     , width_(0)
     , height_(0)
 {
-    // open file corresponding to URI
     QFile file(uri);
 
     if(!file.open(QIODevice::ReadOnly))
