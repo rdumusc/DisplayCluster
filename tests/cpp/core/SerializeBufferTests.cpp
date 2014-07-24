@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel Nachbaur<daniel.nachbaur@epfl.ch>      */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,80 +37,69 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef SWAPSYNCOBJECT_H
-#define SWAPSYNCOBJECT_H
 
-#include <boost/function/function1.hpp>
+#define BOOST_TEST_MODULE SerializeBufferTests
+#include <boost/test/unit_test.hpp>
+namespace ut = boost::unit_test;
 
-/** Function to be used to synchronize the swapping. */
-typedef boost::function< bool( const uint64_t ) > SyncFunction;
+#include "SerializeBuffer.h"
 
-/**
- * Encapsulate an object to be swapped synchronously accross processes.
- */
-template <typename T>
-class SwapSyncObject
+
+BOOST_AUTO_TEST_CASE( testSerializeBufferConstruction )
 {
-public:
-    /** Callback function after synchronization. */
-    typedef boost::function< void ( T ) > SyncCallbackFunction;
+    const SerializeBuffer buffer;
+    BOOST_CHECK_EQUAL( buffer.size(), 0 );
+}
 
-    /** Default constructor. */
-    SwapSyncObject()
-        : version_(0)
-    {}
+BOOST_AUTO_TEST_CASE( testSetSize )
+{
+    SerializeBuffer buffer;
+    buffer.setSize( 1 );
+    BOOST_CHECK_EQUAL( buffer.size(), 1 );
 
-    /** Default value constructor. */
-    SwapSyncObject(const T& defaultObject)
-        : frontObject_(defaultObject)
-        , backObject_(defaultObject)
-        , version_(0)
-    {}
+    buffer.setSize( 11 );
+    BOOST_CHECK_EQUAL( buffer.size(), 11 );
 
-    /** Get the front object */
-    T get() const
-    {
-        return frontObject_;
-    }
+    buffer.setSize( 5 );
+    BOOST_CHECK_EQUAL( buffer.size(), 5 );
+}
 
-    /** Update the back object. */
-    void update(const T& newObject)
-    {
-        backObject_ = newObject;
-        ++version_;
-    }
+namespace
+{
+template< typename T >
+T serializeAndDeserialize( const T& data )
+{
+    const std::string& serialized = SerializeBuffer::serialize( data );
 
-    /** Synchronize the object. */
-    bool sync(const SyncFunction& syncFunc)
-    {
-        assert(syncFunc);
+    SerializeBuffer buffer;
+    buffer.setSize( serialized.size( ));
+    memcpy( buffer.data(), serialized.data(), serialized.size( ));
 
-        if (syncFunc(version_) && frontObject_ != backObject_)
-        {
-            swap();
-            if (callback_)
-                callback_(frontObject_);
-            return true;
-        }
-        return false;
-    }
+    T deserializedData;
+    buffer.deserialize( deserializedData );
+    return deserializedData;
+}
+}
 
-    /** Set an optional function to call after swapping. */
-    void setCallback(const SyncCallbackFunction& callback)
-    {
-        callback_ = callback;
-    }
+BOOST_AUTO_TEST_CASE( testSerializeInt )
+{
+    int foo = 42;
+    int newFoo = serializeAndDeserialize( foo );
 
-private:
-    SyncCallbackFunction callback_;
-    T frontObject_;
-    T backObject_;
-    uint64_t version_;
+    BOOST_CHECK_EQUAL( foo, newFoo );
+}
 
-    void swap()
-    {
-        frontObject_ = backObject_;
-    }
-};
+BOOST_AUTO_TEST_CASE( testSerializeMultipleData )
+{
+    std::string dataString( "hello world" );
+    bool dataBool( false );
+    float dataFloat( 42.56f );
 
-#endif // SWAPSYNCOBJECT_H
+    std::string newDataString = serializeAndDeserialize( dataString );
+    bool newDataBool = serializeAndDeserialize( dataBool );
+    float newDataFloat = serializeAndDeserialize( dataFloat );
+
+    BOOST_CHECK_EQUAL( dataString, newDataString );
+    BOOST_CHECK_EQUAL( dataBool, newDataBool );
+    BOOST_CHECK_EQUAL( dataFloat, newDataFloat );
+}

@@ -47,13 +47,24 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 
-class SerializeBuffer
+/**
+ * Utility class to ease and optimize (de)serialization of any object using
+ * boost.serialization.
+ */
+class SerializeBuffer : boost::noncopyable
 {
 public:
+    /**
+     * Construct any empty serialization buffer
+     */
     SerializeBuffer()
         : size_( 0 )
     {}
 
+    /**
+     * Set the new size of the buffer and grow the storage if necessary
+     * @param minSize the minimum size required for a following (de)serialization
+     */
     void setSize(const size_t minSize)
     {
         if (buffer_.size() < minSize)
@@ -61,16 +72,22 @@ public:
         size_ = minSize;
     }
 
+    /** @return the current size of the buffer */
     size_t size() const
     {
         return size_;
     }
 
+    /** Direct write access to the buffer, don't write beyond size() */
     char* data()
     {
         return buffer_.data();
     }
 
+    /**
+     * Serialize the given object using a binary archive to a string
+     * @param object the object which should be serialized
+     */
     template <typename T>
     static std::string serialize(const T& object)
     {
@@ -82,6 +99,10 @@ public:
         return oss.str();
     }
 
+    /**
+     * Deserialize the current buffer into the given object
+     * @param object the target object for deserializing the current buffer
+     */
     template <typename T>
     void deserialize(T& object)
     {
