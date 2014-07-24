@@ -47,7 +47,7 @@
 #include <QObject>
 
 /**
- * Communication channel between the master application and the wall processes.
+ * Sending channel from the master application to the wall processes.
  */
 class MasterToWallChannel : public QObject
 {

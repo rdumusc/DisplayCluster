@@ -43,6 +43,7 @@
 
 PixelStreamBuffer::PixelStreamBuffer()
     : lastFrameComplete_(0)
+    , allowedToSend_(false)
 {
 }
 
@@ -102,7 +103,7 @@ bool PixelStreamBuffer::isFirstCompleteFrame() const
     return true;
 }
 
-PixelStreamSegments PixelStreamBuffer::getFrame()
+PixelStreamSegments PixelStreamBuffer::popFrame()
 {
     PixelStreamSegments frame;
     for(SourceBufferMap::iterator it = sourceBuffers_.begin(); it != sourceBuffers_.end(); ++it)
@@ -113,6 +114,16 @@ PixelStreamSegments PixelStreamBuffer::getFrame()
     }
     ++lastFrameComplete_;
     return frame;
+}
+
+void PixelStreamBuffer::setAllowedToSend(const bool enable)
+{
+    allowedToSend_ = enable;
+}
+
+bool PixelStreamBuffer::isAllowedToSend() const
+{
+    return allowedToSend_;
 }
 
 QSize PixelStreamBuffer::getFrameSize() const

@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -40,64 +40,22 @@
 #include "WallToMasterChannel.h"
 
 #include "MPIChannel.h"
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
-#include "Options.h"
-#include "Markers.h"
-#include "PixelStreamFrame.h"
+#include "SerializeBuffer.h"
+#include "serializationHelpers.h"
+
 
 WallToMasterChannel::WallToMasterChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
-    , processMessages_(true)
 {
 }
 
-bool WallToMasterChannel::isMessageAvailable()
+void WallToMasterChannel::sendRequestFrame(const QString uri)
 {
-    return mpiChannel_->isMessageAvailable(0);
+    const std::string& data = SerializeBuffer::serialize(uri);
+    mpiChannel_->send(MPI_MESSAGE_TYPE_REQUEST_FRAME, data, 0);
 }
 
-void WallToMasterChannel::receiveMessage()
+void WallToMasterChannel::sendQuit()
 {
-    MPIHeader mh = mpiChannel_->receiveHeader(0);
-
-    switch (mh.type)
-    {
-    case MPI_MESSAGE_TYPE_DISPLAYGROUP:
-        emit received(receiveBroadcast<DisplayGroupManagerPtr>(mh.size));
-        break;
-    case MPI_MESSAGE_TYPE_OPTIONS:
-        emit received(receiveBroadcast<OptionsPtr>(mh.size));
-        break;
-    case MPI_MESSAGE_TYPE_MARKERS:
-        emit received(receiveBroadcast<MarkersPtr>(mh.size));
-        break;
-    case MPI_MESSAGE_TYPE_PIXELSTREAM:
-        emit received(receiveBroadcast<PixelStreamFramePtr>(mh.size));
-        break;
-    case MPI_MESSAGE_TYPE_QUIT:
-        processMessages_ = false;
-        emit receivedQuit();
-        break;
-    default:
-        break;
-    }
-}
-
-void WallToMasterChannel::processMessages()
-{
-    while(processMessages_)
-        receiveMessage();
-}
-
-template <typename T>
-T WallToMasterChannel::receiveBroadcast(const size_t messageSize)
-{
-    T object;
-
-    buffer_.setSize(messageSize);
-    mpiChannel_->receiveBroadcast(buffer_.data(), messageSize);
-    buffer_.deserialize(object);
-
-    return object;
+    mpiChannel_->send(MPI_MESSAGE_TYPE_QUIT, "", 0);
 }

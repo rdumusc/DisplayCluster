@@ -110,6 +110,13 @@ public slots:
      */
     void deleteStream(const QString uri);
 
+    /**
+     * Is called when the wall processes are ready to receive new frames
+     *
+     * @param uri Identifier for the stream
+     */
+    void requestFrame(const QString uri);
+
 signals:
     /**
      * Notify that a PixelStream has been opened
@@ -133,25 +140,13 @@ signals:
      */
     void sendFrame(PixelStreamFramePtr frame);
 
-#ifndef USE_TIMER
-    /** @internal */
-    void dispatchFramesSignal();
-#endif
-
-private slots:
-    void dispatchFrames();
-
 private:
+    void sendLatestFrame(const QString uri);
+
     PixelStreamWindowManager& windowManager_;
 
     // The buffers for each URI
     StreamBuffers streamBuffers_;
-
-#ifdef USE_TIMER
-    QTimer sendTimer_;
-#else
-    boost::posix_time::ptime lastFrameSent_;
-#endif
 };
 
 #endif // PIXELSTREAMDISPATCHER_H

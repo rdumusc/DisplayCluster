@@ -48,6 +48,7 @@
 
 class WallConfiguration;
 class RenderContext;
+class WallFromMasterChannel;
 class WallToMasterChannel;
 class WallToWallChannel;
 
@@ -80,14 +81,16 @@ private slots:
     void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
     void updateOptions(OptionsPtr options);
     void updateMarkers(MarkersPtr markers);
-    void processPixelStreamFrame(PixelStreamFramePtr frame);
+    void updatePixelStreamFrame(PixelStreamFramePtr frame);
 
 private:
     boost::scoped_ptr<RenderContext> renderContext_;
-    boost::scoped_ptr<WallToMasterChannel> masterChannel_;
+    boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
+    boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
     boost::scoped_ptr<WallToWallChannel> wallChannel_;
     FactoriesPtr factories_;
-    QThread mpiWorkerThread_;
+    QThread mpiSendThread_;
+    QThread mpiReceiveThread_;
 
     SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
     SwapSyncObject<OptionsPtr> syncOptions_;
@@ -97,6 +100,7 @@ private:
     void setupTestPattern(const WallConfiguration* config, const int rank);
     void initMPIConnection(MPIChannelPtr worldChannel);
     void startRendering();
+    void onNewObject(FactoryObject& object);
 
     void receiveMPIMessages();
     void syncObjects();

@@ -45,16 +45,16 @@
 
 #include <boost/foreach.hpp>
 
-Factories::Factories(RenderContext& renderContext)
+Factories::Factories(const Factory<FactoryObject>::NewObjectFunc& func)
     : frameIndex_(0)
-    , textureFactory_(renderContext)
-    , dynamicTextureFactory_(renderContext)
+    , textureFactory_(func)
+    , dynamicTextureFactory_(func)
 #if ENABLE_PDF_SUPPORT
-    , pdfFactory_(renderContext)
+    , pdfFactory_(func)
 #endif
-    , svgFactory_(renderContext)
-    , movieFactory_(renderContext)
-    , pixelStreamFactory_(renderContext)
+    , svgFactory_(func)
+    , movieFactory_(func)
+    , pixelStreamFactory_(func)
 {
 }
 

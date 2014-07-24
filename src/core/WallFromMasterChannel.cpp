@@ -37,88 +37,67 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FACTORIES_H
-#define FACTORIES_H
+#include "WallFromMasterChannel.h"
 
-#include "config.h"
-#include "Factory.hpp"
-#include "Texture.h"
-#include "DynamicTexture.h"
-#if ENABLE_PDF_SUPPORT
-#include "PDF.h"
-#endif
-#include "SVG.h"
-#include "Movie.h"
-#include "PixelStream.h"
+#include "MPIChannel.h"
+#include "DisplayGroupManager.h"
+#include "ContentWindowManager.h"
+#include "Options.h"
+#include "Markers.h"
+#include "PixelStreamFrame.h"
 
-/**
- * A set of Factory<T> for all valid ContentTypes.
- *
- * It is used on Wall processes to map Content objects received from the
- * master application to FactoryObjects which hold the actual data.
- * It implements a basic garbage collection strategy for FactoryObjects
- * that are no longer referenced/accessed.
- */
-class Factories
+WallFromMasterChannel::WallFromMasterChannel(MPIChannelPtr mpiChannel)
+    : mpiChannel_(mpiChannel)
+    , processMessages_(true)
 {
-public:
-    /**
-     * Constructor
-     * @param func the callback function when a new object in a factory was created
-     */
-    Factories(const Factory<FactoryObject>::NewObjectFunc& func);
+}
 
-    /**
-     * Get the factory object associated to a given Content.
-     *
-     * If the object does not exist, it is created.
-     * Objects not accessed during two consecutive frames are deleted using
-     * a garbage collection mechanism.
-     * @see clearStaleFactoryObjects()
-     */
-    FactoryObjectPtr getFactoryObject(ContentPtr content);
+bool WallFromMasterChannel::isMessageAvailable()
+{
+    return mpiChannel_->isMessageAvailable(0);
+}
 
-    /**
-     * Garbarge-collect unused objects.
-     *
-     * Only call this function once per frame.
-     * This will delete all FactoryObjects which have not been accessed since
-     * this method was last called.
-     */
-    void clearStaleFactoryObjects();
+void WallFromMasterChannel::receiveMessage()
+{
+    MPIHeader mh = mpiChannel_->receiveHeader(0);
 
-    /** Clear all Factories (useful on shutdown). */
-    void clear();
+    switch (mh.type)
+    {
+    case MPI_MESSAGE_TYPE_DISPLAYGROUP:
+        emit received(receiveBroadcast<DisplayGroupManagerPtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_OPTIONS:
+        emit received(receiveBroadcast<OptionsPtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_MARKERS:
+        emit received(receiveBroadcast<MarkersPtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_PIXELSTREAM:
+        emit received(receiveBroadcast<PixelStreamFramePtr>(mh.size));
+        break;
+    case MPI_MESSAGE_TYPE_QUIT:
+        processMessages_ = false;
+        emit receivedQuit();
+        break;
+    default:
+        break;
+    }
+}
 
-    /** Update the objects before rendering. */
-    void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+void WallFromMasterChannel::processMessages()
+{
+    while(processMessages_)
+        receiveMessage();
+}
 
-    /** Update the objects after rendering. */
-    void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+template <typename T>
+T WallFromMasterChannel::receiveBroadcast(const size_t messageSize)
+{
+    T object;
 
-    //@{
-    /** Getters for specific Factory types. */
-    Factory<Texture> & getTextureFactory();
-    Factory<DynamicTexture> & getDynamicTextureFactory();
-#if ENABLE_PDF_SUPPORT
-    Factory<PDF> & getPDFFactory();
-#endif
-    Factory<SVG> & getSVGFactory();
-    Factory<Movie> & getMovieFactory();
-    Factory<PixelStream> & getPixelStreamFactory();
-    //@}
+    buffer_.setSize(messageSize);
+    mpiChannel_->receiveBroadcast(buffer_.data(), messageSize);
+    buffer_.deserialize(object);
 
-private:
-    uint64_t frameIndex_;
-
-    Factory<Texture> textureFactory_;
-    Factory<DynamicTexture> dynamicTextureFactory_;
-#if ENABLE_PDF_SUPPORT
-    Factory<PDF> pdfFactory_;
-#endif
-    Factory<SVG> svgFactory_;
-    Factory<Movie> movieFactory_;
-    Factory<PixelStream> pixelStreamFactory_;
-};
-
-#endif // FACTORIES_H
+    return object;
+}
