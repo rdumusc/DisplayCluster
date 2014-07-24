@@ -37,7 +37,7 @@
 /*********************************************************************/
 
 #include "DynamicTextureContent.h"
-#include "globals.h"
+
 #include "DynamicTexture.h"
 #include "serializationHelpers.h"
 #include "Factories.h"

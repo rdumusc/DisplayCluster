@@ -39,8 +39,6 @@
 #include "ContentWindowManager.h"
 #include "Content.h"
 #include "DisplayGroupManager.h"
-#include "globals.h"
-#include "MPIChannel.h"
 #include "ContentInteractionDelegate.h"
 #include "config.h"
 #include "log.h"

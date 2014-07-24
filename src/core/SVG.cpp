@@ -45,7 +45,7 @@
 
 #define MULTI_SAMPLE_ANTI_ALIASING_SAMPLES 8
 
-SVG::SVG(QString uri)
+SVG::SVG(const QString uri)
     : uri_(uri)
     , width_(0)
     , height_(0)
@@ -76,7 +76,12 @@ void SVG::getDimensions(int &width, int &height) const
     height = height_;
 }
 
-bool SVG::setImageData(QByteArray imageData)
+bool SVG::isValid() const
+{
+    return svgRenderer_.isValid();
+}
+
+bool SVG::setImageData(const QByteArray& imageData)
 {
     if( !svgRenderer_.load(imageData) || !svgRenderer_.isValid() )
     {

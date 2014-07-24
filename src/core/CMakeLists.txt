@@ -215,7 +215,6 @@ list(APPEND MOC_HEADERS
     Markers.h
     MarkerRenderer.h
     MasterToWallChannel.h
-    MPIChannel.h
     NetworkListener.h
     NetworkListenerThread.h
     MultiTouchListener.h

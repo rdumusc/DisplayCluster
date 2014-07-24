@@ -44,29 +44,29 @@
 
 class SVGContent : public Content
 {
-    public:
-        SVGContent(QString uri = "") : Content(uri) { }
+public:
+    SVGContent(QString uri = "") : Content(uri) { }
 
-        /** Get the content type **/
-        CONTENT_TYPE getType() override;
+    /** Get the content type **/
+    CONTENT_TYPE getType() override;
 
-        /**
-         * Read SVG metadata.
-         * @return true on success, false if the URI is invalid or an error occured.
-        **/
-        bool readMetadata() override;
+    /**
+     * Read SVG metadata.
+     * @return true on success, false if the URI is invalid or an error occured.
+    **/
+    bool readMetadata() override;
 
-        static const QStringList& getSupportedExtensions();
+    static const QStringList& getSupportedExtensions();
 
-    private:
-        friend class boost::serialization::access;
+private:
+    friend class boost::serialization::access;
 
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int)
-        {
-            // serialize base class information (with NVP for xml archives)
-            ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
-        }
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int)
+    {
+        // serialize base class information (with NVP for xml archives)
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+    }
 };
 
 #endif

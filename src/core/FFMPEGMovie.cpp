@@ -40,10 +40,7 @@
 #include "FFMPEGMovie.h"
 
 #include "FFMPEGVideoFrameConverter.h"
-
 #include "log.h"
-
-#include "globals.h"
 
 #define INVALID_STREAM_INDEX -1
 

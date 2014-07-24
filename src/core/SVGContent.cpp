@@ -57,6 +57,9 @@ bool SVGContent::readMetadata()
         return false;
 
     const SVG svg(getURI());
+    if (!svg.isValid())
+        return false;
+
     svg.getDimensions(width_, height_);
     return true;
 }
