@@ -7,17 +7,37 @@
 # which runs all of them.
 
 # TEST_LIBRARIES is used by CommonCTest.cmake to link tests against them
-set(TEST_LIBRARIES
-  ${DC_LIBRARIES}
-  ${Boost_LIBRARIES}
-  mock
-)
+set(TEST_LIBRARIES ${DC_LIBRARIES} ${Boost_LIBRARIES} mock)
 
 find_package(X11)
 if(NOT X11_FOUND)
+  list(APPEND EXCLUDE_FROM_TESTS core/WebbrowserTests.cpp)
+endif()
+if(NOT BUILD_CORE_LIBRARY)
   list(APPEND EXCLUDE_FROM_TESTS
+    common/PixelStreamSegmentDecoderTests.cpp
+    core/AsciiToQtKeyCodeMapperTests.cpp
+    core/CommandLineOptionsTests.cpp
+    core/CommandTests.cpp
+    core/ConfigurationTests.cpp
+    core/ConfigurationTests.cpp
+    core/ContentWindowManagerTests.cpp
+    core/DockToolbarTests.cpp
+    core/DoubleTapGestureTests.cpp
+    core/LocalPixelStreamerTests.cpp
+    core/PixelStreamBufferTests.cpp
+    core/PixelStreamWindowManagerTests.cpp
+    core/StateSerializationTests.cpp
+    core/TextInputHandlerTests.cpp
     core/WebbrowserTests.cpp
-  )
+    core/WebkitHtmlSelectReplacementTests.cpp
+    dcWebservice/BoostRegexTests.cpp
+    dcWebservice/HandlerTests.cpp
+    dcWebservice/MapperTests.cpp
+    dcWebservice/RequestBuilderTests.cpp
+    dcWebservice/ResponseTests.cpp
+    dcWebservice/ServerTests.cpp
+)
 endif()
 
 if(NOT BUILD_CORE_LIBRARY)

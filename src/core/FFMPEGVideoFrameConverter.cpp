@@ -41,6 +41,9 @@
 
 #include "log.h"
 
+#pragma clang diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter(const AVCodecContext& videoCodecContext,
                                                      const PixelFormat targetFormat)
     : swsContext_(0)
