@@ -246,6 +246,12 @@ install(TARGETS dccore
     RUNTIME DESTINATION bin COMPONENT core
     LIBRARY DESTINATION lib COMPONENT core)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+  set_source_files_properties(FFMPEGVideoFrameConverter.cpp
+    PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
+endif()
+
+
 # build Python module if Python support is enabled
 if(ENABLE_PYTHON_SUPPORT)
     add_custom_command(TARGET displaycluster POST_BUILD
