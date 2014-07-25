@@ -60,7 +60,8 @@ public:
      * @param shareWidget An optional widget to share an existing GLContext.
      *                    A new GLContext is allocated if not provided.
      */
-    GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget = 0);
+    GLWindow(const int tileIndex, QRect windowRect,
+             OptionsPtr options, QGLWidget* shareWidget = 0);
     ~GLWindow();
 
     /** Get the unique tile index identifier. */
@@ -100,6 +101,7 @@ protected:
 
 private:
     const WallConfiguration* configuration_;
+    OptionsPtr options_;
 
     int tileIndex_;
 

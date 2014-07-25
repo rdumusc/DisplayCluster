@@ -43,9 +43,10 @@
 #include "ContentWindowManager.h"
 #include "Marker.h"
 
-DisplayGroupRenderer::DisplayGroupRenderer(FactoriesPtr factories)
+DisplayGroupRenderer::DisplayGroupRenderer(FactoriesPtr factories, OptionsPtr options)
     : factories_(factories)
-    , windowRenderer_(factories)
+    , windowRenderer_(factories, options)
+    , options_(options)
 {
 }
 
@@ -58,7 +59,7 @@ void DisplayGroupRenderer::render()
     renderContentWindows(displayGroup_->getContentWindowManagers());
 
 #if ENABLE_SKELETON_SUPPORT
-    if (g_configuration->getOptions()->getShowSkeletons())
+    if (options_->getShowSkeletons())
         skeletonRenderer_.render(displayGroup_->getSkeletons());
 #endif
 }

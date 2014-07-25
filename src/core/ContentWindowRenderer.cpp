@@ -54,8 +54,9 @@
 #define CONTEXT_VIEW_BORDER_WIDTH   5.f
 #define WINDOW_BORDER_WIDTH_PIXELS  5.f
 
-ContentWindowRenderer::ContentWindowRenderer(FactoriesPtr factories)
+ContentWindowRenderer::ContentWindowRenderer(FactoriesPtr factories, OptionsPtr options)
     : factories_(factories)
+    , options_(options)
 {
     quad_.setEnableTexture(false);
 }
@@ -70,8 +71,8 @@ void ContentWindowRenderer::render()
 
     if(g_configuration)
     {
-        showWindowBorders = g_configuration->getOptions()->getShowWindowBorders();
-        showZoomContext = g_configuration->getOptions()->getShowZoomContext();
+        showWindowBorders = options_->getShowWindowBorders();
+        showZoomContext = options_->getShowZoomContext();
     }
 
     renderContent(showZoomContext);

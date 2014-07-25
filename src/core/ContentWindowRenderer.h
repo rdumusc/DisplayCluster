@@ -56,7 +56,7 @@ public:
      * Constructor.
      * @param factories Used to retrieve FactoryObjects for rendering Contents.
      */
-    ContentWindowRenderer(FactoriesPtr factories);
+    ContentWindowRenderer(FactoriesPtr factories, OptionsPtr options);
 
     /**
      * Render the associated ContentWindow.
@@ -74,6 +74,7 @@ private:
     FactoriesPtr factories_;
     ContentWindowManagerPtr window_;
     GLQuad quad_;
+    OptionsPtr options_;
 
     void renderWindowBorder();
     void renderContent(const bool showZoomContext);

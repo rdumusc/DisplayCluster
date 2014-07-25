@@ -57,9 +57,10 @@
     #include <GL/glu.h>
 #endif
 
-GLWindow::GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget)
+GLWindow::GLWindow(const int tileIndex, QRect windowRect, OptionsPtr options, QGLWidget* shareWidget)
   : QGLWidget(0, shareWidget)
   , configuration_(static_cast<WallConfiguration*>(g_configuration))
+  , options_(options)
   , tileIndex_(tileIndex)
   , left_(0)
   , right_(0)
@@ -106,12 +107,10 @@ void GLWindow::initializeGL()
 
 void GLWindow::paintGL()
 {
-    OptionsPtr options = configuration_->getOptions();
-
-    clear(options->getBackgroundColor());
+    clear(options_->getBackgroundColor());
     setOrthographicView();
 
-    if(options->getShowTestPattern())
+    if(options_->getShowTestPattern())
     {
         testPattern_->render();
         return;
@@ -120,7 +119,7 @@ void GLWindow::paintGL()
     foreach (RenderablePtr renderable, renderables_)
         renderable->render();
 
-    if (options->getShowStreamingStatistics())
+    if (options_->getShowStreamingStatistics())
         drawFps();
 }
 
@@ -146,30 +145,10 @@ void GLWindow::setOrthographicView()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    // tiled display parameters
-    double tileI = (double)configuration_->getGlobalScreenIndex(tileIndex_).x();
-    double screenWidth = (double)configuration_->getScreenWidth();
-    double mullionWidth = (double)configuration_->getMullionWidth();
-    double totalWidth = (double)configuration_->getTotalWidth();
+    const QPoint tileIndex = configuration_->getGlobalScreenIndex(tileIndex_);
+    const QRectF screen = configuration_->getNormalizedScreenRect(tileIndex);
 
-    double tileJ = (double)configuration_->getGlobalScreenIndex(tileIndex_).y();
-    double screenHeight = (double)configuration_->getScreenHeight();
-    double mullionHeight = (double)configuration_->getMullionHeight();
-    double totalHeight = (double)configuration_->getTotalHeight();
-
-    // border calculations
-    left_ = tileI * (screenWidth + mullionWidth);
-    right_ = left_ + screenWidth;
-    top_ = tileJ * (screenHeight + mullionHeight);
-    bottom_ = top_ + screenHeight;
-
-    // normalize to 0->1
-    left_ /= totalWidth;
-    right_ /= totalWidth;
-    bottom_ /= totalHeight;
-    top_ /= totalHeight;
-
-    gluOrtho2D(left_, right_, bottom_, top_);
+    gluOrtho2D(screen.left(), screen.right(), screen.bottom(), screen.top());
     glPushMatrix();
 
     glMatrixMode(GL_MODELVIEW);

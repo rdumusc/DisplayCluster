@@ -52,14 +52,15 @@
 // this is a fraction of the tiled display width of 1
 #define MARKER_WIDTH 0.005
 
-MarkerRenderer::MarkerRenderer()
+MarkerRenderer::MarkerRenderer(OptionsPtr options)
     : markers_(new Markers)
+    , options_(options)
 {
 }
 
 void MarkerRenderer::render()
 {
-    if (!g_configuration->getOptions()->getShowTouchPoints())
+    if (!options_->getShowTouchPoints())
         return;
 
     const MarkersMap& map = markers_->getMarkers();

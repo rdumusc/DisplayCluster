@@ -101,8 +101,6 @@ bool WallApplication::createConfig(const QString& filename, const int rank)
         put_flog(LOG_FATAL, "Could not load configuration. '%s'", e.what());
         return false;
     }
-    syncOptions_.setCallback(boost::bind(&Configuration::setOptions,
-                                         config_.get(), _1));
     return true;
 }
 
@@ -113,8 +111,12 @@ void WallApplication::initRenderContext()
     renderContext_.reset(new RenderContext(*config_));
     factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
 
-    DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
-    MarkerRendererPtr markerRenderer(new MarkerRenderer());
+    syncOptions_.setCallback(boost::bind(&RenderContext::updateOptions,
+                                         renderContext_.get(), _1));
+    OptionsPtr options = renderContext_->getOptions();
+
+    DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_, options));
+    MarkerRendererPtr markerRenderer(new MarkerRenderer(options));
 
     syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
                                                displayGroupRenderer.get(), _1));

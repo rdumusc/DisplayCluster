@@ -59,52 +59,26 @@ DisplayGroupGraphicsScene::DisplayGroupGraphicsScene()
 
 void DisplayGroupGraphicsScene::refreshTileRects()
 {
-    // add rectangles for tiled display and each monitor
-
-    // tiled display parameters
-    int numTilesX = g_configuration->getTotalScreenCountX();
-    int screenWidth = g_configuration->getScreenWidth();
-    int mullionWidth = g_configuration->getMullionWidth();
-
-    int numTilesY = g_configuration->getTotalScreenCountY();
-    int screenHeight = g_configuration->getScreenHeight();
-    int mullionHeight = g_configuration->getMullionHeight();
-
-    int totalWidth = g_configuration->getTotalWidth();
-    int totalHeight = g_configuration->getTotalHeight();
-
-    // rendering parameters
-
-    // border
-    QPen pen;
-    pen.setColor(QColor(0,0,0));
-
-    // fill color / opacity
-    QBrush brush = QBrush(QColor(0, 0, 0, 32));
-
     // clear existing tile rects
     for(TileRectItems::iterator it = tileRects_.begin(); it != tileRects_.end(); ++it)
         delete *it;
-
     tileRects_.clear();
 
-    for(int i=0; i<numTilesX; i++)
+    // add rectangles for tiled display and each monitor
+    const int numTilesX = g_configuration->getTotalScreenCountX();
+    const int numTilesY = g_configuration->getTotalScreenCountY();
+
+    const QPen pen(QColor(0,0,0)); // border
+    const QBrush brush(QColor(0, 0, 0, 32)); // fill color / opacity
+
+    for(int i=0; i<numTilesX; ++i)
     {
-        for(int j=0; j<numTilesY; j++)
+        for(int j=0; j<numTilesY; ++j)
         {
-            // border calculations
-            double left = (double)i / (double)numTilesX * ( (double)numTilesX * (double)screenWidth ) + (double)i * (double)mullionWidth;
-            double right = left + (double)screenWidth;
-            double bottom = j / (double)numTilesY * ( (double)numTilesY * (double)screenHeight ) + (double)j * (double)mullionHeight;
-            double top = bottom + (double)screenHeight;
+            const QPoint tileIndex(i,j);
+            const QRectF screen = g_configuration->getNormalizedScreenRect(tileIndex);
 
-            // normalize to 0->1
-            left /= (double)totalWidth;
-            right /= (double)totalWidth;
-            bottom /= (double)totalHeight;
-            top /= (double)totalHeight;
-
-            tileRects_.push_back(addRect(left, bottom, right-left, top-bottom, pen, brush));
+            tileRects_.push_back(addRect(screen, pen, brush));
         }
     }
 }

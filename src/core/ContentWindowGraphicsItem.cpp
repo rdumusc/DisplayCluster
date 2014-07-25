@@ -290,14 +290,12 @@ void ContentWindowGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent * event
         toggleFullscreen();
     }
     else if(fabs(((r.x()+r.width())/2) - eventPos.x() - buttonWidth) <= buttonWidth &&
-            fabs((r.y()+r.height()) - eventPos.y()) <= buttonHeight &&
-            g_configuration->getOptions()->getShowMovieControls( ))
+            fabs((r.y()+r.height()) - eventPos.y()) <= buttonHeight)
     {
         contentWindow->setControlState( ControlState(contentWindow->getControlState() ^ STATE_PAUSED) );
     }
     else if(fabs(((r.x()+r.width())/2) - eventPos.x()) <= buttonWidth &&
-            fabs((r.y()+r.height()) - eventPos.y()) <= buttonHeight &&
-            g_configuration->getOptions()->getShowMovieControls( ))
+            fabs((r.y()+r.height()) - eventPos.y()) <= buttonHeight)
     {
         contentWindow->setControlState( ControlState(contentWindow->getControlState() ^ STATE_LOOP) );
     }
@@ -453,8 +451,7 @@ void ContentWindowGraphicsItem::drawMovieControls_( QPainter* painter )
 
     QPen pen;
 
-    if( contentWindowManager->getContent()->getType() == CONTENT_TYPE_MOVIE &&
-        g_configuration->getOptions()->getShowMovieControls( ))
+    if( contentWindowManager->getContent()->getType() == CONTENT_TYPE_MOVIE )
     {
         // play/pause
         QRectF playPauseRect(coordinates_.x() + coordinates_.width()/2 - buttonWidth, coordinates_.y() + coordinates_.height() - buttonHeight,

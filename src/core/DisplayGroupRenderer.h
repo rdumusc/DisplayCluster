@@ -59,7 +59,7 @@ class DisplayGroupRenderer : public QObject, public Renderable
 
 public:
     /** Constructor */
-    DisplayGroupRenderer(FactoriesPtr factories);
+    DisplayGroupRenderer(FactoriesPtr factories, OptionsPtr options);
 
     /**
      * Render the associated DisplayGroup.
@@ -78,6 +78,7 @@ private:
     FactoriesPtr factories_;
     DisplayGroupManagerPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
+    OptionsPtr options_;
 #if ENABLE_SKELETON_SUPPORT
     SkeletonRenderer skeletonRenderer_;
 #endif

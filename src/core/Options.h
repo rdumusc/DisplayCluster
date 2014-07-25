@@ -61,13 +61,15 @@ public:
     /** Constructor */
     Options();
 
+    /** Copy assignement */
+    void copy(const Options& other);
+
     //@{
     /** Public getters */
     bool getShowWindowBorders() const;
     bool getShowTouchPoints() const;
     bool getShowMovieControls() const;
     bool getShowTestPattern() const;
-    bool getEnableMullionCompensation() const;
     bool getShowZoomContext() const;
     bool getShowStreamingSegments() const;
     bool getShowStreamingStatistics() const;
@@ -82,9 +84,7 @@ public slots:
     /** Public setters. @see updated() */
     void setShowWindowBorders(bool set);
     void setShowTouchPoints(bool set);
-    void setShowMovieControls(bool set);
     void setShowTestPattern(bool set);
-    void setEnableMullionCompensation(bool set);
     void setShowZoomContext(bool set);
     void setShowStreamingSegments(bool set);
     void setShowStreamingStatistics(bool set);
@@ -106,9 +106,7 @@ private:
     {
         ar & showWindowBorders_;
         ar & showTouchPoints_;
-        ar & showMovieControls_;
         ar & showTestPattern_;
-        ar & enableMullionCompensation_;
         ar & showZoomContext_;
         ar & showStreamingSegments_;
         ar & showStreamingStatistics_;
@@ -120,9 +118,7 @@ private:
 
     bool showWindowBorders_;
     bool showTouchPoints_;
-    bool showMovieControls_;
     bool showTestPattern_;
-    bool enableMullionCompensation_;
     bool showZoomContext_;
     bool showStreamingSegments_;
     bool showStreamingStatistics_;

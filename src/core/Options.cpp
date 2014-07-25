@@ -41,9 +41,7 @@
 Options::Options()
     : showWindowBorders_(false)
     , showTouchPoints_(false)
-    , showMovieControls_(true)
     , showTestPattern_(false)
-    , enableMullionCompensation_(true)
     , showZoomContext_(true)
     , showStreamingSegments_(false)
     , showStreamingStatistics_(false)
@@ -51,6 +49,20 @@ Options::Options()
     , showSkeletons_(true)
 #endif
 {
+}
+
+void Options::copy(const Options& other)
+{
+    showWindowBorders_ = other.showWindowBorders_;
+    showTouchPoints_ = other.showTouchPoints_;
+    showTestPattern_ = other.showTestPattern_;
+    showZoomContext_ = other.showZoomContext_;
+    showStreamingSegments_ = other.showStreamingSegments_;
+    showStreamingStatistics_ = other.showStreamingStatistics_;
+    backgroundColor_ = other.backgroundColor_;
+#if ENABLE_SKELETON_SUPPORT
+    showSkeletons_ = other.showSkeletons_;
+#endif
 }
 
 bool Options::getShowWindowBorders() const
@@ -63,19 +75,9 @@ bool Options::getShowTouchPoints() const
     return showTouchPoints_;
 }
 
-bool Options::getShowMovieControls() const
-{
-    return showMovieControls_;
-}
-
 bool Options::getShowTestPattern() const
 {
     return showTestPattern_;
-}
-
-bool Options::getEnableMullionCompensation() const
-{
-    return enableMullionCompensation_;
 }
 
 bool Options::getShowZoomContext() const
@@ -119,23 +121,9 @@ void Options::setShowTouchPoints(bool set)
     emit(updated(shared_from_this()));
 }
 
-void Options::setShowMovieControls(bool set)
-{
-    showMovieControls_ = set;
-
-    emit(updated(shared_from_this()));
-}
-
 void Options::setShowTestPattern(bool set)
 {
     showTestPattern_ = set;
-
-    emit(updated(shared_from_this()));
-}
-
-void Options::setEnableMullionCompensation(bool set)
-{
-    enableMullionCompensation_ = set;
 
     emit(updated(shared_from_this()));
 }

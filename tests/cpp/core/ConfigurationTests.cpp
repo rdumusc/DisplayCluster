@@ -44,7 +44,6 @@ namespace ut = boost::unit_test;
 #include "MinimalGlobalQtApp.h"
 
 #include "configuration/MasterConfiguration.h"
-#include "Options.h"
 #include "configuration/WallConfiguration.h"
 
 #include <QDir>
@@ -66,27 +65,17 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
 void testBaseParameters(const Configuration& config)
 {
-    OptionsPtr options = config.getOptions();
-
     BOOST_CHECK( config.getBackgroundColor() == QColor(CONFIG_EXPECTED_BACKGROUND_COLOR) );
     BOOST_CHECK_EQUAL( config.getBackgroundUri().toStdString(), CONFIG_EXPECTED_BACKGROUND );
 
     BOOST_CHECK_EQUAL( config.getFullscreen(), true );
 
-    options->setEnableMullionCompensation(false);
-    BOOST_CHECK_EQUAL( config.getMullionHeight(), 0 );
-    BOOST_CHECK_EQUAL( config.getMullionWidth(), 0 );
-    options->setEnableMullionCompensation(true);
     BOOST_CHECK_EQUAL( config.getMullionHeight(), 12 );
     BOOST_CHECK_EQUAL( config.getMullionWidth(), 14 );
 
     BOOST_CHECK_EQUAL( config.getScreenHeight(), 1080 );
     BOOST_CHECK_EQUAL( config.getScreenWidth(), 3840 );
 
-    options->setEnableMullionCompensation(false);
-    BOOST_CHECK_EQUAL( config.getTotalHeight(), 3240 );
-    BOOST_CHECK_EQUAL( config.getTotalWidth(), 7680 );
-    options->setEnableMullionCompensation(true);
     BOOST_CHECK_EQUAL( config.getTotalHeight(), 3264 );
     BOOST_CHECK_EQUAL( config.getTotalWidth(), 7694 );
 

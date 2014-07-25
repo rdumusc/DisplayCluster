@@ -41,6 +41,7 @@
 
 #include <QString>
 #include <QColor>
+#include <QRectF>
 
 #include "types.h"
 
@@ -73,15 +74,6 @@ public:
 
     /** Destructor. */
     virtual ~Configuration() {}
-
-    /** Get the configuration options that change during runtime. */
-    OptionsPtr getOptions() const;
-
-    /**
-     * Replace the options during runtime.
-     * @param options The new options.
-     */
-    void setOptions(OptionsPtr options);
 
     /**
      * @brief getTotalScreenCountX Get the total number of screens along the x axis
@@ -138,6 +130,9 @@ public:
      */
     double getAspectRatio() const;
 
+    /** Get the normalized coordinates and dimensions of a screen. */
+    QRectF getNormalizedScreenRect(const QPoint& tileIndex) const;
+
     /**
      * @brief getFullscreen Display the windows in fullscreen mode
      * @return
@@ -181,7 +176,6 @@ public:
      */
     bool save(const QString& filename) const;
 
-
 protected:
     /**
      * @brief filename_ The path to the xml configuration file
@@ -189,8 +183,6 @@ protected:
     QString filename_;
 
 private:
-    OptionsPtr options_;
-
     int totalScreenCountX_;
     int totalScreenCountY_;
     int screenWidth_;

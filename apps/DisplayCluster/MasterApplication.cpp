@@ -206,7 +206,7 @@ void MasterApplication::startWebservice(const int webServicePort)
 
 void MasterApplication::restoreBackground()
 {
-    config_->getOptions()->setBackgroundColor( config_->getBackgroundColor( ));
+    masterWindow_->getOptions()->setBackgroundColor( config_->getBackgroundColor( ));
 
     const QString& backgroundUri = config_->getBackgroundUri();
     if ( !backgroundUri.isEmpty( ))
@@ -236,7 +236,7 @@ void MasterApplication::initMPIConnection()
     connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
             masterToWallChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
 
-    connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
+    connect(masterWindow_->getOptions().get(), SIGNAL(updated(OptionsPtr)),
             masterToWallChannel_.get(), SLOT(send(OptionsPtr)));
 
     connect(markers_.get(), SIGNAL(updated(MarkersPtr)),
