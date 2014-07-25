@@ -41,9 +41,11 @@
 #define MASTERAPPLICATION_H
 
 #include "config.h"
-#include "Application.h"
-#include <boost/scoped_ptr.hpp>
+#include "types.h"
+
+#include <QApplication>
 #include <QThread>
+#include <boost/scoped_ptr.hpp>
 
 class MasterToWallChannel;
 class MasterFromWallChannel;
@@ -59,7 +61,7 @@ class MultiTouchListener;
 /**
  * The main application for the Master process.
  */
-class MasterApplication : public Application
+class MasterApplication : public QApplication
 {
     Q_OBJECT
 
@@ -79,6 +81,7 @@ private:
     boost::scoped_ptr<MasterToWallChannel> masterToWallChannel_;
     boost::scoped_ptr<MasterFromWallChannel> masterFromWallChannel_;
     boost::scoped_ptr<MasterWindow> masterWindow_;
+    boost::scoped_ptr<MasterConfiguration> config_;
     boost::scoped_ptr<NetworkListener> networkListener_;
     boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;
     boost::scoped_ptr<PixelStreamWindowManager> pixelStreamWindowManager_;
@@ -102,10 +105,11 @@ private:
     boost::scoped_ptr<SkeletonThread> skeletonThread_;
 #endif
 
-    void init(const MasterConfiguration* config);
-    void startNetworkListener(const MasterConfiguration* configuration);
+    void init();
+    bool createConfig(const QString& filename);
+    void startNetworkListener();
     void startWebservice(const int webServicePort);
-    void restoreBackground(const MasterConfiguration* configuration);
+    void restoreBackground();
     void initPixelStreamLauncher();
     void initMPIConnection();
 

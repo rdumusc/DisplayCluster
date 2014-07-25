@@ -43,7 +43,7 @@
 
 #include <boost/foreach.hpp>
 
-RenderContext::RenderContext(const WallConfiguration* configuration)
+RenderContext::RenderContext(const WallConfiguration& configuration)
 {
     setupOpenGLWindows(configuration);
 }
@@ -52,13 +52,13 @@ RenderContext::~RenderContext()
 {
 }
 
-void RenderContext::setupOpenGLWindows(const WallConfiguration* configuration)
+void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
 {
-    for(int i=0; i<configuration->getScreenCount(); ++i)
+    for(int i=0; i<configuration.getScreenCount(); ++i)
     {
-        QRect windowRect = QRect(configuration->getScreenPosition(i),
-                                 QSize(configuration->getScreenWidth(),
-                                       configuration->getScreenHeight()));
+        QRect windowRect = QRect(configuration.getScreenPosition(i),
+                                 QSize(configuration.getScreenWidth(),
+                                       configuration.getScreenHeight()));
 
         // share OpenGL context from the first GLWindow
         GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0].get();
@@ -66,7 +66,7 @@ void RenderContext::setupOpenGLWindows(const WallConfiguration* configuration)
         GLWindowPtr glw(new GLWindow(i, windowRect, shareWidget));
         glWindows_.push_back(glw);
 
-        if(configuration->getFullscreen())
+        if(configuration.getFullscreen())
             glw->showFullScreen();
         else
             glw->show();

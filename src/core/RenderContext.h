@@ -55,7 +55,7 @@ public:
      * Create a new RenderContext and initialize the GLWindows.
      * @param configuration The configuration that describes the window settings
      */
-    RenderContext(const WallConfiguration* configuration);
+    RenderContext(const WallConfiguration& configuration);
 
     /** Destructor. */
     ~RenderContext();
@@ -77,7 +77,7 @@ public:
     void swapBuffers();
 
 private:
-    void setupOpenGLWindows(const WallConfiguration* configuration);
+    void setupOpenGLWindows(const WallConfiguration& configuration);
 
     GLWindowPtrs glWindows_;
     GLWindowPtr activeGLWindow_;

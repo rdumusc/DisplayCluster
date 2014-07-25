@@ -37,34 +37,67 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef APPLICATION_H
-#define APPLICATION_H
+#include "CommandLineParameters.h"
 
-#include "types.h"
-#include "globals.h"
-#include <QApplication>
+#include <iostream>
+#include <boost/program_options.hpp>
 
-/**
- * The base class for both Master and Wall main applications.
- */
-class Application : public QApplication
+CommandLineParameters::CommandLineParameters(int &argc, char **argv)
+    : desc_("Allowed options")
+    , getHelp_(false)
 {
-    Q_OBJECT
-public:
-    /**
-     * Create an Application.
-     *
-     * @param argc Command line argument count (required by QApplication)
-     * @param argv Command line arguments (required by QApplication)
-     */
-    Application(int &argc, char **argv);
+    initDesc();
+    parseCommandLineArguments(argc, argv);
+}
 
-    /** Destructor */
-    virtual ~Application();
 
-protected:
-    /** Get the configuration filename. */
-    QString getConfigFilename() const;
-};
+bool CommandLineParameters::getHelp() const
+{
+    return getHelp_;
+}
 
-#endif // APPLICATION_H
+void CommandLineParameters::showSyntax() const
+{
+    std::cout << desc_;
+}
+
+void CommandLineParameters::initDesc()
+{
+    desc_.add_options()
+        ("help", "produce help message")
+        ("config", boost::program_options::value<std::string>()->default_value(""),
+                 "path to configuration file")
+        ("session", boost::program_options::value<std::string>()->default_value(""),
+                 "path to an initial session file")
+    ;
+}
+
+void CommandLineParameters::parseCommandLineArguments(int &argc, char **argv)
+{
+    boost::program_options::variables_map vm;
+    try
+    {
+        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc_), vm);
+        boost::program_options::notify(vm);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return;
+    }
+
+    getHelp_ = vm.count("help");
+    configFilename_ = vm["config"].as<std::string>().c_str();
+    sessionFilename_ = vm["session"].as<std::string>().c_str();
+}
+
+const QString& CommandLineParameters::getConfigFilename() const
+{
+    return configFilename_;
+}
+
+const QString& CommandLineParameters::getSessionFilename() const
+{
+    return sessionFilename_;
+}
+

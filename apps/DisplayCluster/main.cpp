@@ -37,14 +37,13 @@
 /*********************************************************************/
 
 #include "config.h"
+#include "log.h"
 
 #include "MPIChannel.h"
-
 #include "WallApplication.h"
 #include "MasterApplication.h"
 
-#include "log.h"
-
+#include <boost/scoped_ptr.hpp>
 #include <QThreadPool>
 
 #if ENABLE_TUIO_TOUCH_LISTENER
@@ -56,7 +55,7 @@ int main(int argc, char * argv[])
     MPIChannelPtr worldChannel(new MPIChannel(argc, argv));
     if (!worldChannel->isThreadSafe())
     {
-        put_flog(LOG_DEBUG, "MPI implementation must support at least "
+        put_flog(LOG_FATAL, "MPI implementation must support at least "
                  "MPI_THREAD_SERIALIZED. (MPI_THREAD_MULTIPLE is recommended "
                  "for better performances)");
         return EXIT_FAILURE;
@@ -72,17 +71,24 @@ int main(int argc, char * argv[])
         XInitThreads();
 #endif
 
-    Application* app = 0;
-    if (rank == 0)
-        app = new MasterApplication(argc, argv, worldChannel);
-    else
-        app = new WallApplication(argc, argv, worldChannel, wallChannel);
+    boost::scoped_ptr<QApplication> app;
+    try
+    {
+        if (rank == 0)
+            app.reset(new MasterApplication(argc, argv, worldChannel));
+        else
+            app.reset(new WallApplication(argc, argv, worldChannel, wallChannel));
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Could not initialize application. %s", e.what());
+        return EXIT_FAILURE;
+    }
 
     app->exec(); // enter Qt event loop
 
-    put_flog(LOG_DEBUG, "quitting");
+    put_flog(LOG_INFO, "quitting");
     QThreadPool::globalInstance()->waitForDone();
-    delete app;
 
     return EXIT_SUCCESS;
 }

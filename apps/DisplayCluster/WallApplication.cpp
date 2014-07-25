@@ -39,10 +39,13 @@
 
 #include "WallApplication.h"
 
+#include "log.h"
+#include "CommandLineParameters.h"
 #include "MPIChannel.h"
 #include "WallFromMasterChannel.h"
 #include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
+#include "globals.h"
 #include "configuration/WallConfiguration.h"
 #include "RenderContext.h"
 #include "Factories.h"
@@ -56,18 +59,20 @@
 #include <boost/bind.hpp>
 
 WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
-    : Application(argc_, argv_)
+    : QApplication(argc_, argv_)
     , wallChannel_(new WallToWallChannel(wallChannel))
     , syncQuit_(false)
     , syncDisplayGroup_(boost::make_shared<DisplayGroupManager>())
 {
-    WallConfiguration* config = new WallConfiguration(getConfigFilename(),
-                                                      worldChannel->getRank());
-    g_configuration = config;
-    syncOptions_.setCallback(boost::bind(&Configuration::setOptions, config, _1));
+    CommandLineParameters options(argc_, argv_);
+    if (options.getHelp())
+        options.showSyntax();
 
-    initRenderContext(config);
-    setupTestPattern(config, worldChannel->getRank());
+    if (!createConfig(options.getConfigFilename(), worldChannel->getRank()))
+        throw std::runtime_error("WallApplication: initialization failed.");
+
+    initRenderContext();
+    setupTestPattern(worldChannel->getRank());
     initMPIConnection(worldChannel);
     startRendering();
 }
@@ -84,9 +89,28 @@ WallApplication::~WallApplication()
     mpiSendThread_.wait();
 }
 
-void WallApplication::initRenderContext(const WallConfiguration* config)
+bool WallApplication::createConfig(const QString& filename, const int rank)
 {
-    renderContext_.reset(new RenderContext(config));
+    try
+    {
+        config_.reset(new WallConfiguration(filename, rank));
+        g_configuration = config_.get();
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Could not load configuration. '%s'", e.what());
+        return false;
+    }
+    syncOptions_.setCallback(boost::bind(&Configuration::setOptions,
+                                         config_.get(), _1));
+    return true;
+}
+
+void WallApplication::initRenderContext()
+{
+    connect(this, SIGNAL(lastWindowClosed()), this, SLOT(quit()));
+
+    renderContext_.reset(new RenderContext(*config_));
     factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
 
     DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
@@ -115,13 +139,13 @@ void WallApplication::onNewObject(FactoryObject& object)
     }
 }
 
-void WallApplication::setupTestPattern(const WallConfiguration* config, const int rank)
+void WallApplication::setupTestPattern(const int rank)
 {
     for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
     {
         GLWindowPtr glWindow = renderContext_->getGLWindow(i);
         RenderablePtr testPattern(new TestPattern(glWindow.get(),
-                                                  config,
+                                                  *config_,
                                                   rank,
                                                   glWindow->getTileIndex()));
         glWindow->setTestPattern(testPattern);

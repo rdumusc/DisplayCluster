@@ -1,6 +1,6 @@
 <configuration>
     <dimensions numTilesWidth="16" numTilesHeight="5" screenWidth="2560" screenHeight="1600" mullionWidth="200" mullionHeight="200" fullscreen="0"/>
-
+    <masterProcess host="localhost" display=":0">
     <process host="s01" display=":0">
         <screen x="0" y="0"    i="0" j="4"/>
         <screen x="2560" y="0" i="1" j="4"/>

@@ -37,36 +37,42 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Application.h"
+#ifndef COMMANDLINEPARAMETERS_H
+#define COMMANDLINEPARAMETERS_H
 
-#include "log.h"
-#include "configuration/Configuration.h"
+#include <QString>
+#include <boost/program_options/options_description.hpp>
 
-#define CONFIGURATION_FILENAME "configuration.xml"
-#define DISPLAYCLUSTER_DIR "DISPLAYCLUSTER_DIR"
-
-Application::Application(int &argc_, char **argv_)
-    : QApplication(argc_, argv_)
+/**
+ * Parse command line parameters for the DisplayCluster application.
+ */
+class CommandLineParameters
 {
-    QObject::connect(this, SIGNAL(lastWindowClosed()),
-                     this, SLOT(quit()));
-}
+public:
+    /** Construct from command line parameters */
+    CommandLineParameters(int &argc, char **argv);
 
-Application::~Application()
-{
-    delete g_configuration;
-    g_configuration = 0;
-}
+    /** Was the --help flag given. */
+    bool getHelp() const;
 
-QString Application::getConfigFilename() const
-{
-    if( !getenv( DISPLAYCLUSTER_DIR ))
-    {
-        put_flog(LOG_FATAL, "DISPLAYCLUSTER_DIR environment variable must be set");
-        exit(EXIT_FAILURE);
-    }
+    /** Print syntax to std::out */
+    void showSyntax() const;
 
-    const QString displayClusterDir = QString(getenv( DISPLAYCLUSTER_DIR ));
-    put_flog(LOG_DEBUG, "base directory is %s", displayClusterDir.toLatin1().constData());
-    return QString( "%1/%2" ).arg( displayClusterDir ).arg( CONFIGURATION_FILENAME );
-}
+    /** Get the config filename */
+    const QString& getConfigFilename() const;
+
+    /** Get the config filename */
+    const QString& getSessionFilename() const;
+
+private:
+    void initDesc();
+    void parseCommandLineArguments(int &argc, char **argv);
+
+    boost::program_options::options_description desc_;
+    bool getHelp_;
+
+    QString configFilename_;
+    QString sessionFilename_;
+};
+
+#endif // COMMANDLINEPARAMETERS_H

@@ -40,9 +40,10 @@
 #ifndef WALLAPPLICATION_H
 #define WALLAPPLICATION_H
 
-#include "Application.h"
+#include "types.h"
 #include "SwapSyncObject.h"
 
+#include <QApplication>
 #include <QThread>
 #include <boost/scoped_ptr.hpp>
 
@@ -55,7 +56,7 @@ class WallToWallChannel;
 /**
  * The main application for Wall processes.
  */
-class WallApplication : public Application
+class WallApplication : public QApplication
 {
     Q_OBJECT
 
@@ -88,6 +89,7 @@ private:
     boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
     boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
     boost::scoped_ptr<WallToWallChannel> wallChannel_;
+    boost::scoped_ptr<WallConfiguration> config_;
     FactoriesPtr factories_;
     QThread mpiSendThread_;
     QThread mpiReceiveThread_;
@@ -97,8 +99,9 @@ private:
     SwapSyncObject<OptionsPtr> syncOptions_;
     SwapSyncObject<MarkersPtr> syncMarkers_;
 
-    void initRenderContext(const WallConfiguration* config);
-    void setupTestPattern(const WallConfiguration* config, const int rank);
+    bool createConfig(const QString& filename, const int rank);
+    void initRenderContext();
+    void setupTestPattern(const int rank);
     void initMPIConnection(MPIChannelPtr worldChannel);
     void startRendering();
     void onNewObject(FactoryObject& object);

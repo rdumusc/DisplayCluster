@@ -60,4 +60,4 @@ include(DoxygenRule)
 add_subdirectory(doc)
 
 # Install example files
-install(DIRECTORY examples DESTINATION . COMPONENT examples)
+install(DIRECTORY examples DESTINATION share/DisplayCluster COMPONENT examples)

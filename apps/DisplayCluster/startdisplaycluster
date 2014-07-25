@@ -1,8 +1,8 @@
 #!/usr/bin/python
-
-# example launcher for DisplayCluster
-# this should work for most cases, but can be modified for a particular
-# installation if necessary
+"""
+Launcher for DisplayCluster
+Usage: ./startdisplaycluster --help
+"""
 
 import os
 import sys
@@ -10,21 +10,34 @@ import xml.etree.ElementTree as ET
 import subprocess
 import shlex
 import distutils.spawn
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--config", help="The configuration file to load")
+parser.add_argument("--session", help="The session to load")
+parser.add_argument("--printcmd", help="Print the command without executing it",
+                    action="store_true")
+parser.add_argument("--vglrun", help="Run the main application using vglrun",
+                    action="store_true")
+args = parser.parse_args()
 
 # DisplayCluster directory; this is the parent directory of this script
-dcPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DC_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# set an environment variable for the base DisplayCluster directory
-os.environ['DISPLAYCLUSTER_DIR'] = dcPath
+DC_BIN = DC_PATH + '/bin/displaycluster'
+if args.config:
+    DC_CONFIG_FILE = args.config
+else:
+    DC_CONFIG_FILE = DC_PATH + '/share/DisplayCluster/examples/configuration.xml'
 
 # set the Python path so the pydc module can be found
 if 'PYTHONPATH' not in os.environ:
-    os.environ['PYTHONPATH'] = dcPath + '/python'
+    os.environ['PYTHONPATH'] = DC_PATH + '/python'
 else:
-    os.environ['PYTHONPATH'] += os.pathsep + dcPath + '/python'
+    os.environ['PYTHONPATH'] += os.pathsep + DC_PATH + '/python'
 
 # for example scripts
-os.environ['PYTHONPATH'] += os.pathsep + dcPath + '/examples'
+os.environ['PYTHONPATH'] += os.pathsep + DC_PATH + '/examples'
 
 # add in the default Python path provided by the Python interpreter since it
 # is not provided in our GUI Python console
@@ -32,52 +45,94 @@ os.environ['PYTHONPATH'] += os.pathsep + os.pathsep.join(sys.path)
 
 # add our own lib folder
 if 'LD_LIBRARY_PATH' not in os.environ:
-    os.environ['LD_LIBRARY_PATH'] = dcPath + '/lib'
+    os.environ['LD_LIBRARY_PATH'] = DC_PATH + '/lib'
 else:
-    os.environ['LD_LIBRARY_PATH'] += os.pathsep + dcPath + '/lib'
+    os.environ['LD_LIBRARY_PATH'] += os.pathsep + DC_PATH + '/lib'
+
+# find full path to mpirun; if MPI is installed in a non-standard location the
+# full path may be necessary to launch correctly across the cluster.
+MPIRUN_CMD = distutils.spawn.find_executable('mpirun')
+
+if MPIRUN_CMD is None:
+    print('Error, could not find mpirun executable in PATH')
+    exit(-3)
+
+# mpirun has a different commandline syntax for MVAPICH than OpenMPI
+IS_MVAPICH = distutils.spawn.find_executable('mpiname')
+if IS_MVAPICH:
+    MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
+    EXPORT_DISPLAY = ' -env DISPLAY '
+    MPI_ARGS = ' -genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts '
+else:
+    MPI_SPECIAL_FLAGS = ''
+    EXPORT_DISPLAY = ' -x DISPLAY='
+    MPI_ARGS = ' -x LD_LIBRARY_PATH -host '
+
+# Form the application parameters list
+DC_PARAMS = ' --config ' + DC_CONFIG_FILE
+if args.session:
+    DC_PARAMS += ' --session ' + args.session
+
+if args.vglrun:
+    VGLRUN_BIN = 'vglrun '
+else:
+    VGLRUN_BIN = ''
 
 # form the MPI host list
+hostlist = []
 
-# rank 0 is always on localhost
-hostList = ['bbplxviz03i']
+# Form the list of commands to execute
+runcommands = []
 
-# configuration.xml gives the rest of the hosts
+# configuration.xml gives the rest of the hosts and the displays
 try:
-    doc = ET.parse(dcPath + "/configuration.xml")
+    XML_CONFIG = ET.parse(DC_CONFIG_FILE)
 
-    for elem in doc.findall('.//process'):
+    # parse the masterProcess element
+    master_elem = XML_CONFIG.find('masterProcess')
+    if master_elem is None:
+        print("masterProcess not found, using defaults: 'localhost' ':0'")
+    else:
+        host = master_elem.get("host")
+        display = master_elem.get('display')
+
+    if host is None:
+        host = 'localhost'
+
+    if display is None:
+        display = ':0'
+
+    hostlist.append(host)
+    runcommands.append(MPI_SPECIAL_FLAGS + EXPORT_DISPLAY + display +
+                       ' -np 1 '+ VGLRUN_BIN + DC_BIN + DC_PARAMS)
+
+    # parse the wall process elements
+    for elem in XML_CONFIG.findall('.//process'):
         host = elem.get("host")
 
         if host is None:
             print('Error, no host attribute in <process> tag.')
             exit(-1)
 
-        hostList.append(host)
+        hostlist.append(host)
+
+        display = elem.get('display')
+        if display == None:
+            display = ':0'
+
+        runcommands.append(MPI_SPECIAL_FLAGS + EXPORT_DISPLAY + display +
+                           ' -np 1 '+ DC_BIN + DC_PARAMS)
 except:
-    print('Error processing configuration.xml. Make sure you have created a configuration.xml and put it in ' + dcPath + '/. An example is provided in the examples/ directory.')
+    print("Error processing xml configuration '" + DC_CONFIG_FILE + "'.")
     exit(-2)
 
-hostListString = ",".join(hostList)
+HOST_LIST = ",".join(hostlist)
+RUN_COMMANDS = ' : '.join(runcommands)
 
-# find full path to mpirun; if MPI is installed in a non-standard location the
-# full path may be necessary to launch correctly across the cluster.
-mpirunCommand = distutils.spawn.find_executable('mpirun')
+START_CMD = MPIRUN_CMD + MPI_ARGS + HOST_LIST + ' ' + RUN_COMMANDS
 
-if mpirunCommand is None:
-    print('Error, could not find mpirun executable in PATH')
-    exit(-3)
-
-params = ' '
-if len(sys.argv) == 2 :
-    params += sys.argv[1]
-
-# check if MVAPICH is used; mpirun has a different commandline syntax than OpenMPI
-mpinameCommand = distutils.spawn.find_executable('mpiname')
-if mpinameCommand:
-    startCommand = mpirunCommand + ' -env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1 -genvlist DISPLAYCLUSTER_DIR,PYTHONPATH,LD_LIBRARY_PATH -hosts ' + hostListString + ' ' + dcPath + '/bin/displaycluster.py' + params
+if args.printcmd:
+    print(START_CMD)
 else:
-    startCommand = mpirunCommand + ' -x DISPLAYCLUSTER_DIR -x PYTHONPATH -x LD_LIBRARY_PATH -host ' + hostListString + ' ' + dcPath + '/bin/displaycluster.py' + params
-
-print('launching with command: ' + startCommand)
-
-subprocess.call(shlex.split(startCommand))
+    print('launching with command: ', START_CMD)
+    subprocess.call(shlex.split(START_CMD))
