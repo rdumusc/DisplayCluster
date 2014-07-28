@@ -246,7 +246,6 @@ install(TARGETS dccore
     RUNTIME DESTINATION bin COMPONENT core
     LIBRARY DESTINATION lib COMPONENT core)
 
-
 # build Python module if Python support is enabled
 if(ENABLE_PYTHON_SUPPORT)
     add_custom_command(TARGET displaycluster POST_BUILD
