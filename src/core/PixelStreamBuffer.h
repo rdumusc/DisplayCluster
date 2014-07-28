@@ -60,13 +60,27 @@ typedef std::vector<PixelStreamSegment> PixelStreamSegments;
  */
 struct SourceBuffer
 {
-    SourceBuffer() : frameIndex(0) {}
+    SourceBuffer() : frontFrameIndex(0), backFrameIndex(0) {}
 
-    /** The current index of the frame for this source */
-    FrameIndex frameIndex;
+    /** The current indexes of the frame for this source */
+    FrameIndex frontFrameIndex, backFrameIndex;
 
     /** The collection of segments */
     std::queue<PixelStreamSegments> segments;
+
+    /** Pop the first element of the buffer */
+    void pop()
+    {
+        segments.pop();
+        ++frontFrameIndex;
+    }
+
+    /** Push a new element to the back of the buffer */
+    void push()
+    {
+        segments.push(PixelStreamSegments());
+        ++backFrameIndex;
+    }
 };
 
 typedef std::map<size_t, SourceBuffer> SourceBufferMap;
@@ -85,8 +99,10 @@ public:
     /**
      * Add a source of segments.
      * @param sourceIndex Unique source identifier
+     * @return false if the source was already added or if finishFrameForSource()
+     *         has already been called for all existing source (TODO DISCL-241).
      */
-    void addSource(const size_t sourceIndex);
+    bool addSource(const size_t sourceIndex);
 
     /**
      * Remove a source of segments.

@@ -39,7 +39,7 @@
 
 #include "PixelStreamBuffer.h"
 
-#define FIRST_FRAME_INDEX 1
+#define FIRST_FRAME_INDEX 0
 
 PixelStreamBuffer::PixelStreamBuffer()
     : lastFrameComplete_(0)
@@ -47,12 +47,18 @@ PixelStreamBuffer::PixelStreamBuffer()
 {
 }
 
-void PixelStreamBuffer::addSource(const size_t sourceIndex)
+bool PixelStreamBuffer::addSource(const size_t sourceIndex)
 {
     assert(!sourceBuffers_.count(sourceIndex));
 
+    // TODO: This function must return false if the stream was already started!
+    // This requires an full adaptation of the dc::Stream library (DISCL-241)
+    if (sourceBuffers_.count(sourceIndex))
+        return false;
+
     sourceBuffers_[sourceIndex] = SourceBuffer();
     sourceBuffers_[sourceIndex].segments.push(PixelStreamSegments());
+    return true;
 }
 
 void PixelStreamBuffer::removeSource(const size_t sourceIndex)
@@ -76,8 +82,7 @@ void PixelStreamBuffer::finishFrameForSource(const size_t sourceIndex)
 {
     assert(sourceBuffers_.count(sourceIndex));
 
-    sourceBuffers_[sourceIndex].frameIndex++;
-    sourceBuffers_[sourceIndex].segments.push(PixelStreamSegments());
+    sourceBuffers_[sourceIndex].push();
 }
 
 bool PixelStreamBuffer::hasCompleteFrame() const
@@ -87,7 +92,8 @@ bool PixelStreamBuffer::hasCompleteFrame() const
     // Check if all sources for Stream have reached the same index
     for(SourceBufferMap::const_iterator it = sourceBuffers_.begin(); it != sourceBuffers_.end(); ++it)
     {
-        if (it->second.frameIndex <= lastFrameComplete_)
+        const SourceBuffer& buffer = it->second;
+        if (buffer.backFrameIndex <= lastFrameComplete_)
             return false;
     }
     return true;
@@ -97,7 +103,8 @@ bool PixelStreamBuffer::isFirstCompleteFrame() const
 {
     for(SourceBufferMap::const_iterator it = sourceBuffers_.begin(); it != sourceBuffers_.end(); ++it)
     {
-        if (it->second.frameIndex != FIRST_FRAME_INDEX)
+        const SourceBuffer& buffer = it->second;
+        if (buffer.frontFrameIndex != FIRST_FRAME_INDEX)
             return false;
     }
     return true;
@@ -110,7 +117,7 @@ PixelStreamSegments PixelStreamBuffer::popFrame()
     {
         SourceBuffer& buffer = it->second;
         frame.insert(frame.end(), buffer.segments.front().begin(), buffer.segments.front().end());
-        buffer.segments.pop();
+        buffer.pop();
     }
     ++lastFrameComplete_;
     return frame;

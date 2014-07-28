@@ -74,10 +74,10 @@ public:
      *
      * @param name the unique stream name
      * @param address Address of the target DisplayCluster instance.
-     * @return true if the connection could be established
      */
     StreamPrivate( const std::string& name, const std::string& address );
 
+    /** Destructor, close the Stream. */
     ~StreamPrivate();
 
     /** The stream identifier. */

@@ -66,8 +66,7 @@ StreamPrivate::StreamPrivate( const std::string &name,
 
     if( dcSocket_.isConnected( ))
     {
-        // Open a window for the PixelStream
-        MessageHeader mh( MESSAGE_TYPE_PIXELSTREAM_OPEN, 0, name_ );
+        const MessageHeader mh( MESSAGE_TYPE_PIXELSTREAM_OPEN, 0, name_ );
         dcSocket_.send( mh, QByteArray( ));
     }
 }

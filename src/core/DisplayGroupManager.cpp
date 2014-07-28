@@ -40,6 +40,9 @@
 
 #include "ContentWindowManager.h"
 
+#include "log.h"
+#include <boost/foreach.hpp>
+
 DisplayGroupManager::DisplayGroupManager()
 {
 }
@@ -57,6 +60,15 @@ SkeletonStatePtrs DisplayGroupManager::getSkeletons()
 
 void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
 {
+    BOOST_FOREACH(ContentWindowManagerPtr existingWindow, contentWindowManagers_)
+    {
+        if (contentWindowManager->getID() == existingWindow->getID())
+        {
+            put_flog(LOG_WARN, "A window with the same id already exists!");
+            return;
+        }
+    }
+
     DisplayGroupInterface::addContentWindowManager(contentWindowManager, source);
 
     if(source != this)
