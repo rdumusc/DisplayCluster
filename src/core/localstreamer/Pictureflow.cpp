@@ -39,6 +39,7 @@
 #endif
 
 #ifdef PICTUREFLOW_QT4
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
 #include <QApplication>
 #include <QCache>
 #include <QHash>
