@@ -49,6 +49,11 @@ WallToWallChannel::WallToWallChannel(MPIChannelPtr mpiChannel)
 {
 }
 
+int WallToWallChannel::getRank() const
+{
+    return mpiChannel_->getRank();
+}
+
 int WallToWallChannel::globalSum(const int localValue) const
 {
     return mpiChannel_->globalSum(localValue);

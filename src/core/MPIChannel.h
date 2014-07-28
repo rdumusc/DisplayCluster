@@ -49,6 +49,27 @@ class MPIContext;
 typedef boost::shared_ptr<MPIContext> MPIContextPtr;
 
 /**
+ * The result of an MPIChannel::probe() operation
+ */
+struct ProbeResult
+{
+    /** The source process that has sent a message */
+    const int src;
+
+    /** The size of the message */
+    const int size;
+
+    /** The type of the message */
+    const MPIMessageType message;
+
+    /** @return True if the probe was successful and receive() is safe */
+    bool isValid() const
+    {
+        return size != MPI_UNDEFINED;
+    }
+};
+
+/**
  * Handle MPI communications between all DisplayCluster instances.
  */
 class MPIChannel
@@ -119,6 +140,14 @@ public:
     bool isMessageAvailable(const int src);
 
     /**
+     * Perform a blocking probe operation that returns if a message is pending
+     * @param src The source process of where to probe on, default MPI_ANY_SOURCE
+     * @param tag The message tag of interest, default MPI_ANY_TAG
+     * @return The probe result for a subsequent receive()
+     */
+    ProbeResult probe(const int src = MPI_ANY_SOURCE, const int tag = MPI_ANY_TAG);
+
+    /**
      * Receive a header from a specific process.
      * This call is blocking.
      * @see isMessageAvailable()
@@ -134,8 +163,9 @@ public:
      * @param dataBuffer The target data buffer
      * @param messageSize The number of bytes to receive
      * @param src The source process
+     * @param tag The message tag/type, see probe()
      */
-    void receive(char* dataBuffer, const size_t messageSize, const int src);
+    void receive(char* dataBuffer, const size_t messageSize, const int src, const int tag = 0);
 
     /**
      * Recieve a broadcast.

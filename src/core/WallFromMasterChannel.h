@@ -37,88 +37,83 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FACTORIES_H
-#define FACTORIES_H
+#ifndef WALLFROMMASTERCHANNEL_H
+#define WALLFROMMASTERCHANNEL_H
 
-#include "config.h"
-#include "Factory.hpp"
-#include "Texture.h"
-#include "DynamicTexture.h"
-#if ENABLE_PDF_SUPPORT
-#include "PDF.h"
-#endif
-#include "SVG.h"
-#include "Movie.h"
-#include "PixelStream.h"
+#include "types.h"
+#include "SerializeBuffer.h"
+
+#include <QObject>
 
 /**
- * A set of Factory<T> for all valid ContentTypes.
- *
- * It is used on Wall processes to map Content objects received from the
- * master application to FactoryObjects which hold the actual data.
- * It implements a basic garbage collection strategy for FactoryObjects
- * that are no longer referenced/accessed.
+ * Receiving channel from the master application to the wall processes.
  */
-class Factories
+class WallFromMasterChannel : public QObject
 {
+    Q_OBJECT
+
 public:
-    /**
-     * Constructor
-     * @param func the callback function when a new object in a factory was created
-     */
-    Factories(const Factory<FactoryObject>::NewObjectFunc& func);
+    /** Constructor */
+    WallFromMasterChannel(MPIChannelPtr mpiChannel);
+
+    /** Check if a message is available from the Master process. */
+    bool isMessageAvailable();
 
     /**
-     * Get the factory object associated to a given Content.
-     *
-     * If the object does not exist, it is created.
-     * Objects not accessed during two consecutive frames are deleted using
-     * a garbage collection mechanism.
-     * @see clearStaleFactoryObjects()
+     * Receive a message.
+     * A received() signal will be emitted according to the message type.
+     * This method is blocking.
      */
-    FactoryObjectPtr getFactoryObject(ContentPtr content);
+    void receiveMessage();
+
+public slots:
+    /**
+     * Process messages until the QUIT message is received.
+     */
+    void processMessages();
+
+signals:
+    /**
+     * Emitted when a displayGroup was recieved
+     * @see receiveMessage()
+     * @param displayGroup The DisplayGroup that was received
+     */
+    void received(DisplayGroupManagerPtr displayGroup);
 
     /**
-     * Garbarge-collect unused objects.
-     *
-     * Only call this function once per frame.
-     * This will delete all FactoryObjects which have not been accessed since
-     * this method was last called.
+     * Emitted when new Options were recieved
+     * @see receiveMessage()
+     * @param options The options that were received
      */
-    void clearStaleFactoryObjects();
+    void received(OptionsPtr options);
 
-    /** Clear all Factories (useful on shutdown). */
-    void clear();
+    /**
+     * Emitted when new Markers were recieved
+     * @see receiveMessage()
+     * @param markers The markers that were received
+     */
+    void received(MarkersPtr markers);
 
-    /** Update the objects before rendering. */
-    void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+    /**
+     * Emitted when a new PixelStream frame was recieved
+     * @see receiveMessage()
+     * @param frame The frame that was received
+     */
+    void received(PixelStreamFramePtr frame);
 
-    /** Update the objects after rendering. */
-    void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
-
-    //@{
-    /** Getters for specific Factory types. */
-    Factory<Texture> & getTextureFactory();
-    Factory<DynamicTexture> & getDynamicTextureFactory();
-#if ENABLE_PDF_SUPPORT
-    Factory<PDF> & getPDFFactory();
-#endif
-    Factory<SVG> & getSVGFactory();
-    Factory<Movie> & getMovieFactory();
-    Factory<PixelStream> & getPixelStreamFactory();
-    //@}
+    /**
+     * Emitted when the quit message was recieved
+     * @see receiveMessage()
+     */
+    void receivedQuit();
 
 private:
-    uint64_t frameIndex_;
+    MPIChannelPtr mpiChannel_;
+    SerializeBuffer buffer_;
+    bool processMessages_;
 
-    Factory<Texture> textureFactory_;
-    Factory<DynamicTexture> dynamicTextureFactory_;
-#if ENABLE_PDF_SUPPORT
-    Factory<PDF> pdfFactory_;
-#endif
-    Factory<SVG> svgFactory_;
-    Factory<Movie> movieFactory_;
-    Factory<PixelStream> pixelStreamFactory_;
+    template <typename T>
+    T receiveBroadcast(const size_t messageSize);
 };
 
-#endif // FACTORIES_H
+#endif // WALLFROMMASTERCHANNEL_H

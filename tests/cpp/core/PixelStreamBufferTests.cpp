@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE( TestCompleteAFrame )
     BOOST_CHECK_EQUAL( frameSize.width(), segment.parameters.width );
     BOOST_CHECK_EQUAL( frameSize.height(), segment.parameters.height );
 
-    PixelStreamSegments segments = buffer.getFrame();
+    PixelStreamSegments segments = buffer.popFrame();
 
     BOOST_CHECK_EQUAL( segments.size(), 1 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameSingleSource )
     BOOST_CHECK_EQUAL( frameSize.width(), 192 );
     BOOST_CHECK_EQUAL( frameSize.height(), 768 );
 
-    PixelStreamSegments segments = buffer.getFrame();
+    PixelStreamSegments segments = buffer.popFrame();
     frameSize = buffer.getFrameSize();
     BOOST_CHECK_EQUAL( frameSize.width(), 0 );
     BOOST_CHECK_EQUAL( frameSize.height(), 0 );
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameMultipleSources )
     BOOST_CHECK_EQUAL( frameSize.width(), 192 );
     BOOST_CHECK_EQUAL( frameSize.height(), 768 );
 
-    PixelStreamSegments segments = buffer.getFrame();
+    PixelStreamSegments segments = buffer.popFrame();
 
     BOOST_CHECK_EQUAL( segments.size(), 4 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE( TestRemoveSourceWhileStreaming )
     BOOST_CHECK( buffer.hasCompleteFrame() );
     BOOST_CHECK( buffer.isFirstCompleteFrame() );
 
-    PixelStreamSegments segments = buffer.getFrame();
+    PixelStreamSegments segments = buffer.popFrame();
 
     BOOST_CHECK_EQUAL( segments.size(), 4 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE( TestRemoveSourceWhileStreaming )
     BOOST_CHECK_EQUAL( frameSize.width(), 192 );
     BOOST_CHECK_EQUAL( frameSize.height(), 256 );
 
-    segments = buffer.getFrame();
+    segments = buffer.popFrame();
     BOOST_CHECK_EQUAL( segments.size(), 2 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
     BOOST_CHECK( !buffer.isFirstCompleteFrame() );

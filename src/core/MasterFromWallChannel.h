@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,88 +37,43 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FACTORIES_H
-#define FACTORIES_H
+#ifndef MASTERFROMWALLCHANNEL_H
+#define MASTERFROMWALLCHANNEL_H
 
-#include "config.h"
-#include "Factory.hpp"
-#include "Texture.h"
-#include "DynamicTexture.h"
-#if ENABLE_PDF_SUPPORT
-#include "PDF.h"
-#endif
-#include "SVG.h"
-#include "Movie.h"
-#include "PixelStream.h"
+#include "types.h"
+#include "MPIHeader.h"
+#include "SerializeBuffer.h"
+
+#include <QObject>
 
 /**
- * A set of Factory<T> for all valid ContentTypes.
- *
- * It is used on Wall processes to map Content objects received from the
- * master application to FactoryObjects which hold the actual data.
- * It implements a basic garbage collection strategy for FactoryObjects
- * that are no longer referenced/accessed.
+ * Receiving channel from the wall processes to the master application.
  */
-class Factories
+class MasterFromWallChannel : public QObject
 {
+    Q_OBJECT
+
 public:
+    /** Constructor */
+    MasterFromWallChannel(MPIChannelPtr mpiChannel);
+
+public slots:
     /**
-     * Constructor
-     * @param func the callback function when a new object in a factory was created
+     * Process messages until the QUIT message is received.
      */
-    Factories(const Factory<FactoryObject>::NewObjectFunc& func);
+    void processMessages();
 
+signals:
     /**
-     * Get the factory object associated to a given Content.
-     *
-     * If the object does not exist, it is created.
-     * Objects not accessed during two consecutive frames are deleted using
-     * a garbage collection mechanism.
-     * @see clearStaleFactoryObjects()
+     * Emitted when the given pixel stream was requested to send the next frame
+     * @param uri The URI of the pixel stream
      */
-    FactoryObjectPtr getFactoryObject(ContentPtr content);
-
-    /**
-     * Garbarge-collect unused objects.
-     *
-     * Only call this function once per frame.
-     * This will delete all FactoryObjects which have not been accessed since
-     * this method was last called.
-     */
-    void clearStaleFactoryObjects();
-
-    /** Clear all Factories (useful on shutdown). */
-    void clear();
-
-    /** Update the objects before rendering. */
-    void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
-
-    /** Update the objects after rendering. */
-    void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
-
-    //@{
-    /** Getters for specific Factory types. */
-    Factory<Texture> & getTextureFactory();
-    Factory<DynamicTexture> & getDynamicTextureFactory();
-#if ENABLE_PDF_SUPPORT
-    Factory<PDF> & getPDFFactory();
-#endif
-    Factory<SVG> & getSVGFactory();
-    Factory<Movie> & getMovieFactory();
-    Factory<PixelStream> & getPixelStreamFactory();
-    //@}
+    void receivedRequestFrame(const QString uri);
 
 private:
-    uint64_t frameIndex_;
-
-    Factory<Texture> textureFactory_;
-    Factory<DynamicTexture> dynamicTextureFactory_;
-#if ENABLE_PDF_SUPPORT
-    Factory<PDF> pdfFactory_;
-#endif
-    Factory<SVG> svgFactory_;
-    Factory<Movie> movieFactory_;
-    Factory<PixelStream> pixelStreamFactory_;
+    MPIChannelPtr mpiChannel_;
+    SerializeBuffer buffer_;
+    bool processMessages_;
 };
 
-#endif // FACTORIES_H
+#endif // MASTERFROMWALLCHANNEL_H

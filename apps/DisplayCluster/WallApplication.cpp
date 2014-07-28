@@ -40,6 +40,7 @@
 #include "WallApplication.h"
 
 #include "MPIChannel.h"
+#include "WallFromMasterChannel.h"
 #include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
 #include "configuration/WallConfiguration.h"
@@ -80,7 +81,7 @@ WallApplication::~WallApplication()
 void WallApplication::initRenderContext(const WallConfiguration* config)
 {
     renderContext_.reset(new RenderContext(config));
-    factories_.reset(new Factories(*renderContext_));
+    factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
 
     DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
     MarkerRendererPtr markerRenderer(new MarkerRenderer());
@@ -93,6 +94,19 @@ void WallApplication::initRenderContext(const WallConfiguration* config)
 
     renderContext_->addRenderable(displayGroupRenderer);
     renderContext_->addRenderable(markerRenderer);
+}
+
+void WallApplication::onNewObject(FactoryObject& object)
+{
+    object.setRenderContext(renderContext_.get());
+
+    PixelStream* pixelStream = dynamic_cast< PixelStream* >(&object);
+    // only one process needs to request new frames
+    if(pixelStream && wallChannel_->getRank() == 0)
+    {
+        connect(pixelStream, SIGNAL(requestFrame(const QString)),
+                toMasterChannel_.get(), SLOT(sendRequestFrame(const QString)));
+    }
 }
 
 void WallApplication::setupTestPattern(const WallConfiguration* config, const int rank)
@@ -112,31 +126,39 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
 {
     const bool multithreaded = worldChannel->isThreadSafe();
 
-    masterChannel_.reset(new WallToMasterChannel(worldChannel));
-
-    if (multithreaded)
-        masterChannel_->moveToThread(&mpiWorkerThread_);
-
-    connect(masterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
-            this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
-
-    connect(masterChannel_.get(), SIGNAL(received(OptionsPtr)),
-            this, SLOT(updateOptions(OptionsPtr)));
-
-    connect(masterChannel_.get(), SIGNAL(received(MarkersPtr)),
-            this, SLOT(updateMarkers(MarkersPtr)));
-
-    connect(masterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
-            this, SLOT(processPixelStreamFrame(PixelStreamFramePtr)));
-
-    connect(masterChannel_.get(), SIGNAL(receivedQuit()),
-            this, SLOT(quit()));
+    fromMasterChannel_.reset(new WallFromMasterChannel(worldChannel));
+    toMasterChannel_.reset(new WallToMasterChannel(worldChannel));
 
     if (multithreaded)
     {
-        connect(&mpiWorkerThread_, SIGNAL(started()),
-                masterChannel_.get(), SLOT(processMessages()));
-        mpiWorkerThread_.start();
+        fromMasterChannel_->moveToThread(&mpiReceiveThread_);
+        toMasterChannel_->moveToThread(&mpiSendThread_);
+    }
+
+    connect(fromMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
+            this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
+
+    connect(fromMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
+            this, SLOT(updateOptions(OptionsPtr)));
+
+    connect(fromMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
+            this, SLOT(updateMarkers(MarkersPtr)));
+
+    connect(fromMasterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
+            this, SLOT(updatePixelStreamFrame(PixelStreamFramePtr)));
+
+    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
+            this, SLOT(quit()));
+
+    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
+            toMasterChannel_.get(), SLOT(sendQuit()));
+
+    if (multithreaded)
+    {
+        connect(&mpiReceiveThread_, SIGNAL(started()),
+                fromMasterChannel_.get(), SLOT(processMessages()));
+        mpiReceiveThread_.start();
+        mpiSendThread_.start();
     }
 }
 
@@ -151,8 +173,8 @@ void WallApplication::startRendering()
 
 void WallApplication::receiveMPIMessages()
 {
-    while(wallChannel_->allReady(masterChannel_->isMessageAvailable()))
-        masterChannel_->receiveMessage();
+    while(wallChannel_->allReady(fromMasterChannel_->isMessageAvailable()))
+        fromMasterChannel_->receiveMessage();
 }
 
 void WallApplication::renderFrame()
@@ -170,7 +192,7 @@ void WallApplication::renderFrame()
 
 void WallApplication::preRenderUpdate()
 {
-    if (!mpiWorkerThread_.isRunning())
+    if (!mpiReceiveThread_.isRunning())
         receiveMPIMessages();
 
     syncObjects();
@@ -180,7 +202,7 @@ void WallApplication::preRenderUpdate()
 
 void WallApplication::syncObjects()
 {
-    const SyncFunction versionCheckFunc =
+    const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, wallChannel_.get(), _1 );
 
     syncDisplayGroup_.sync(versionCheckFunc);
@@ -209,8 +231,8 @@ void WallApplication::updateOptions(OptionsPtr options)
     syncOptions_.update(options);
 }
 
-void WallApplication::processPixelStreamFrame(PixelStreamFramePtr frame)
+void WallApplication::updatePixelStreamFrame(PixelStreamFramePtr frame)
 {
     Factory<PixelStream>& pixelStreamFactory = factories_->getPixelStreamFactory();
-    pixelStreamFactory.getObject(frame->uri)->insertNewFrame(frame->segments);
+    pixelStreamFactory.getObject(frame->uri)->setNewFrame(frame);
 }

@@ -44,6 +44,7 @@
 #include "ContentFactory.h"
 #include "configuration/MasterConfiguration.h"
 #include "MasterToWallChannel.h"
+#include "MasterFromWallChannel.h"
 #include "Options.h"
 #include "Markers.h"
 
@@ -81,6 +82,7 @@
 MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel)
     : Application(argc_, argv_)
     , masterToWallChannel_(new MasterToWallChannel(worldChannel))
+    , masterFromWallChannel_(new MasterFromWallChannel(worldChannel))
     , displayGroup_(new DisplayGroupManager)
     , markers_(new Markers)
 {
@@ -97,8 +99,11 @@ MasterApplication::~MasterApplication()
 {
     masterToWallChannel_->sendQuit();
 
-    mpiWorkerThread_.quit();
-    mpiWorkerThread_.wait();
+    mpiSendThread_.quit();
+    mpiSendThread_.wait();
+
+    mpiReceiveThread_.quit();
+    mpiReceiveThread_.wait();
 
 #if ENABLE_SKELETON_SUPPORT
     skeletonThread_->stop();
@@ -203,7 +208,8 @@ void MasterApplication::initPixelStreamLauncher()
 
 void MasterApplication::initMPIConnection()
 {
-    masterToWallChannel_->moveToThread(&mpiWorkerThread_);
+    masterToWallChannel_->moveToThread(&mpiSendThread_);
+    masterFromWallChannel_->moveToThread(&mpiReceiveThread_);
 
     connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
             masterToWallChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
@@ -218,7 +224,15 @@ void MasterApplication::initMPIConnection()
             SIGNAL(sendFrame(PixelStreamFramePtr)),
             masterToWallChannel_.get(), SLOT(send(PixelStreamFramePtr)));
 
-    mpiWorkerThread_.start();
+    connect(masterFromWallChannel_.get(),
+            SIGNAL(receivedRequestFrame(const QString)),
+            networkListener_->getPixelStreamDispatcher(), SLOT(requestFrame(const QString)));
+
+    connect(&mpiReceiveThread_, SIGNAL(started()),
+            masterFromWallChannel_.get(), SLOT(processMessages()));
+
+    mpiSendThread_.start();
+    mpiReceiveThread_.start();
 }
 
 #if ENABLE_TUIO_TOUCH_LISTENER

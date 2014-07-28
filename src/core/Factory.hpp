@@ -41,18 +41,22 @@
 
 #include <map>
 #include <boost/shared_ptr.hpp>
+#include <boost/signals2/signal.hpp>
 #include <QString>
 #include <QMutex>
 
-#include "RenderContext.h"
 
 template <class T>
 class Factory
 {
 public:
-    Factory(RenderContext& renderContext)
-        : renderContext_(renderContext)
-    {}
+    typedef void NewObjectSignature(T&);
+    typedef boost::function< NewObjectSignature > NewObjectFunc;
+
+    Factory(const NewObjectFunc& slot)
+    {
+        newObjectSignal_.connect(slot);
+    }
 
     boost::shared_ptr<T> getObject(const QString& uri)
     {
@@ -61,7 +65,7 @@ public:
         if(!map_.count(uri))
         {
             boost::shared_ptr<T> t(new T(uri));
-            t->setRenderContext(&renderContext_);
+            newObjectSignal_(*t);
 
             map_[uri] = t;
         }
@@ -111,8 +115,7 @@ public:
     }
 
 private:
-    // Render context for the FactoryObjects
-    RenderContext& renderContext_;
+    boost::signals2::signal< NewObjectSignature > newObjectSignal_;
 
     // mutex for thread-safe access to map
     QMutex mapMutex_;

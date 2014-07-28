@@ -123,7 +123,7 @@ public:
      * Get the finished frame.
      * @return A collection of segments that form a frame
      */
-    PixelStreamSegments getFrame();
+    PixelStreamSegments popFrame();
 
     /**
      * Compute the overall dimensions of a frame
@@ -132,9 +132,16 @@ public:
      */
     static QSize computeFrameDimensions(const PixelStreamSegments& segments);
 
+    /** Allow this buffer to be used by the next PixelStreamDispatcher::sendLatestFrame */
+    void setAllowedToSend(const bool enable);
+
+    /** @return true if this buffer can be sent by PixelStreamDispatcher, false otherwise */
+    bool isAllowedToSend() const;
+
 private:
     FrameIndex lastFrameComplete_;
     SourceBufferMap sourceBuffers_;
+    bool allowedToSend_;
 };
 
 #endif // PIXELSTREAMBUFFER_H

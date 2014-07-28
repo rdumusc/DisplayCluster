@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -41,12 +41,11 @@
 #define WALLTOMASTERCHANNEL_H
 
 #include "types.h"
-#include "SerializeBuffer.h"
 
 #include <QObject>
 
 /**
- * Communication channel between a wall process and the master application.
+ * Sending channel from a wall process to the master application.
  */
 class WallToMasterChannel : public QObject
 {
@@ -56,64 +55,20 @@ public:
     /** Constructor */
     WallToMasterChannel(MPIChannelPtr mpiChannel);
 
-    /** Check if a message is available from the Master process. */
-    bool isMessageAvailable();
-
-    /**
-     * Receive a message.
-     * A received() signal will be emitted according to the message type.
-     * This method is blocking.
-     */
-    void receiveMessage();
-
 public slots:
     /**
-     * Process messages until the QUIT message is received.
+     * Send a request frame message for the given pixel stream
+     * @param uri The URI of the pixel stream
      */
-    void processMessages();
-
-signals:
-    /**
-     * Emitted when a displayGroup was recieved
-     * @see receiveMessage()
-     * @param displayGroup The DisplayGroup that was received
-     */
-    void received(DisplayGroupManagerPtr displayGroup);
+    void sendRequestFrame(const QString uri);
 
     /**
-     * Emitted when new Options were recieved
-     * @see receiveMessage()
-     * @param options The options that were received
+     * Send quit message to the master application to stop the receiver.
      */
-    void received(OptionsPtr options);
-
-    /**
-     * Emitted when new Markers were recieved
-     * @see receiveMessage()
-     * @param markers The markers that were received
-     */
-    void received(MarkersPtr markers);
-
-    /**
-     * Emitted when a new PixelStream frame was recieved
-     * @see receiveMessage()
-     * @param frame The frame that was received
-     */
-    void received(PixelStreamFramePtr frame);
-
-    /**
-     * Emitted when the quit message was recieved
-     * @see receiveMessage()
-     */
-    void receivedQuit();
+    void sendQuit();
 
 private:
     MPIChannelPtr mpiChannel_;
-    SerializeBuffer buffer_;
-    bool processMessages_;
-
-    template <typename T>
-    T receiveBroadcast(const size_t messageSize);
 };
 
 #endif // WALLTOMASTERCHANNEL_H

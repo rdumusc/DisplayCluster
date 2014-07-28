@@ -57,6 +57,9 @@ public:
     /** Constructor */
     WallToWallChannel(MPIChannelPtr mpiChannel);
 
+    /** @return The rank of this process. */
+    int getRank() const;
+
     /**
      * Get the sum of the given local values across all processes.
      * @param localValue The value to sum

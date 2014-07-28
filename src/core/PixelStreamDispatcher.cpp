@@ -41,22 +41,11 @@
 #include "PixelStreamWindowManager.h"
 #include "PixelStreamFrame.h"
 
-#define DISPATCH_FREQUENCY 100
-
 #define STREAM_WINDOW_DEFAULT_SIZE 100
 
 PixelStreamDispatcher::PixelStreamDispatcher(PixelStreamWindowManager& windowManager)
     : windowManager_(windowManager)
 {
-#ifdef USE_TIMER
-    connect(&sendTimer_, SIGNAL(timeout()), this, SLOT(dispatchFrames()));
-    sendTimer_.start(1000/DISPATCH_FREQUENCY);
-#else
-    lastFrameSent_ = boost::posix_time::microsec_clock::universal_time();
-    // Not using a queued connection here causes the rendering to lag behind and the main UI to freeze..
-    connect(this, SIGNAL(dispatchFramesSignal()), this, SLOT(dispatchFrames()), Qt::QueuedConnection);
-#endif
-
     // Connect with the DisplayGroupManager
     connect(this, SIGNAL(openPixelStream(QString, QSize)), &windowManager, SLOT(openPixelStreamWindow(QString, QSize)));
     connect(this, SIGNAL(deletePixelStream(QString)), &windowManager, SLOT(closePixelStreamWindow(QString)));
@@ -92,25 +81,19 @@ void PixelStreamDispatcher::processFrameFinished(const QString uri, const size_t
     if (!streamBuffers_.count(uri))
         return;
 
-    streamBuffers_[uri].finishFrameForSource(sourceIndex);
+    PixelStreamBuffer& buffer = streamBuffers_[uri];
+    buffer.finishFrameForSource(sourceIndex);
 
     // When the first frame is complete, notify that the stream is now open
-    if (streamBuffers_[uri].isFirstCompleteFrame())
+    if (buffer.isFirstCompleteFrame())
     {
-        QSize size = streamBuffers_[uri].getFrameSize();
+        QSize size = buffer.getFrameSize();
         emit openPixelStream(uri, size);
+        buffer.setAllowedToSend(true);
     }
 
-#ifdef USE_TIMER
-#else
-    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
-    if ((now - lastFrameSent_).total_milliseconds() > 1000/DISPATCH_FREQUENCY)
-    {
-        lastFrameSent_ = now;
-        //dispatchFrames(); // See comment above about direct Signal connection..
-        emit dispatchFramesSignal();
-    }
-#endif
+    if (buffer.isAllowedToSend())
+        sendLatestFrame(uri);
 }
 
 void PixelStreamDispatcher::deleteStream(const QString uri)
@@ -122,24 +105,35 @@ void PixelStreamDispatcher::deleteStream(const QString uri)
     }
 }
 
-void PixelStreamDispatcher::dispatchFrames()
+void PixelStreamDispatcher::requestFrame(const QString uri)
 {
-    for (StreamBuffers::iterator it = streamBuffers_.begin(); it != streamBuffers_.end(); ++it)
-    {
-        PixelStreamFramePtr frame(new PixelStreamFrame);
-        frame->uri = it->first;
+    if (!streamBuffers_.count(uri))
+        return;
 
-        // Only dispatch the lastest frame
-        while (it->second.hasCompleteFrame())
-        {
-            frame->segments = it->second.getFrame();
-        }
-        if (!frame->segments.empty())
-        {
-            QSize size = it->second.computeFrameDimensions(frame->segments);
-            windowManager_.updateDimension(frame->uri, size);
+    PixelStreamBuffer& buffer = streamBuffers_[uri];
+    buffer.setAllowedToSend(true);
+    sendLatestFrame(uri);
+}
 
-            emit sendFrame(frame);
-        }
-    }
+void PixelStreamDispatcher::sendLatestFrame(const QString uri)
+{
+    PixelStreamFramePtr frame(new PixelStreamFrame);
+    frame->uri = uri;
+
+    PixelStreamBuffer& buffer = streamBuffers_[uri];
+
+    // Only send the lastest frame
+    while (buffer.hasCompleteFrame())
+        frame->segments = buffer.popFrame();
+
+    if (frame->segments.empty())
+        return;
+
+    const QSize& size = PixelStreamBuffer::computeFrameDimensions(frame->segments);
+    windowManager_.updateDimension(frame->uri, size);
+
+    // receiver will request a new frame once this frame was consumed
+    buffer.setAllowedToSend(false);
+
+    emit sendFrame(frame);
 }

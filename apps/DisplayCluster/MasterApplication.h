@@ -46,6 +46,7 @@
 #include <QThread>
 
 class MasterToWallChannel;
+class MasterFromWallChannel;
 class MasterWindow;
 class NetworkListener;
 class PixelStreamerLauncher;
@@ -76,6 +77,7 @@ public:
 
 private:
     boost::scoped_ptr<MasterToWallChannel> masterToWallChannel_;
+    boost::scoped_ptr<MasterFromWallChannel> masterFromWallChannel_;
     boost::scoped_ptr<MasterWindow> masterWindow_;
     boost::scoped_ptr<NetworkListener> networkListener_;
     boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;
@@ -89,7 +91,8 @@ private:
     DisplayGroupManagerPtr displayGroup_;
     MarkersPtr markers_;
 
-    QThread mpiWorkerThread_;
+    QThread mpiSendThread_;
+    QThread mpiReceiveThread_;
 
 #if ENABLE_JOYSTICK_SUPPORT
     boost::scoped_ptr<JoystickThread> joystickThread_;

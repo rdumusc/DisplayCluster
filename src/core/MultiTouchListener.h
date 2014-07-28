@@ -42,8 +42,8 @@
 
 #include "types.h"
 
-#include <TuioListener.h>
-#include <TuioClient.h>
+#include <TUIO/TuioListener.h>
+#include <TUIO/TuioClient.h>
 
 #include <QObject>
 #include <QtGui/QtEvents>

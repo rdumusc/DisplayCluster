@@ -22,6 +22,8 @@ if(ENABLE_TUIO_TOUCH_LISTENER)
   list(APPEND SRCS MultiTouchListener.cpp
                    TouchListener.cpp)
 
+  list(APPEND MOC_HEADERS MultiTouchListener.h)
+
   find_package(X11 REQUIRED)
   include_directories(${X11_INCLUDE_DIR})
   list(APPEND CORE_LIBRARY_LIBS ${X11_LIBRARIES})
@@ -138,6 +140,7 @@ list(APPEND SRCS
     Marker.cpp
     Markers.cpp
     MarkerRenderer.cpp
+    MasterFromWallChannel.cpp
     MasterToWallChannel.cpp
     MetaTypeRegistration.cpp
     Movie.cpp
@@ -165,6 +168,7 @@ list(APPEND SRCS
     TestPattern.cpp
     Texture.cpp
     TextureContent.cpp
+    WallFromMasterChannel.cpp
     WallToMasterChannel.cpp
     WallToWallChannel.cpp
     WebbrowserCommandHandler.cpp
@@ -214,13 +218,15 @@ list(APPEND MOC_HEADERS
     EventReceiver.h
     Markers.h
     MarkerRenderer.h
+    MasterFromWallChannel.h
     MasterToWallChannel.h
     NetworkListener.h
     NetworkListenerThread.h
-    MultiTouchListener.h
     Options.h
+    PixelStream.h
     PixelStreamDispatcher.h
     PixelStreamWindowManager.h
+    WallFromMasterChannel.h
     WallToMasterChannel.h
     WallToWallChannel.h
     WebbrowserCommandHandler.h

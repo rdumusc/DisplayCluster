@@ -56,7 +56,7 @@ class PixelStreamContent : public Content
         **/
         bool readMetadata() override;
 
-        void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
+        void preRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
 
     private:
         friend class boost::serialization::access;

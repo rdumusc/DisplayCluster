@@ -44,12 +44,15 @@
 #include "WallToWallChannel.h"
 #include "RenderContext.h"
 #include "log.h"
+#include "PixelStreamFrame.h"
 
 #include "PixelStreamSegmentRenderer.h"
 #include "PixelStreamSegmentDecoder.h"
 
 #include "PixelStreamSegmentParameters.h"
 using dc::PixelStreamSegmentParameters;
+
+#include <boost/bind.hpp>
 
 PixelStream::PixelStream(const QString &uri)
     : uri_(uri)
@@ -67,6 +70,8 @@ void PixelStream::getDimensions(int &width, int &height) const
 
 void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel)
 {
+    sync(wallToWallChannel);
+
     // Store the window coordinates for the rendering pass
     contentWindowRect_ = windowRect;
 
@@ -202,9 +207,20 @@ void PixelStream::adjustSegmentRendererCount(const size_t count)
     }
 }
 
-void PixelStream::insertNewFrame(const PixelStreamSegments &segments)
+void PixelStream::setNewFrame(const PixelStreamFramePtr frame)
 {
-    backBuffer_ = segments;
+    syncPixelStreamFrame_.update(frame);
+}
+
+void PixelStream::sync(WallToWallChannel& wallToWallChannel)
+{
+    const SyncFunction& versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, &wallToWallChannel, _1 );
+    if (syncPixelStreamFrame_.sync(versionCheckFunc))
+    {
+        backBuffer_ = syncPixelStreamFrame_.get()->segments;
+        emit requestFrame(uri_);
+    }
 }
 
 bool PixelStream::isDecodingInProgress(WallToWallChannel& wallToWallChannel)
