@@ -78,6 +78,7 @@ signals:
 
 private slots:
     void renderFrame();
+    void updateQuit();
     void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
     void updateOptions(OptionsPtr options);
     void updateMarkers(MarkersPtr markers);
@@ -92,6 +93,7 @@ private:
     QThread mpiSendThread_;
     QThread mpiReceiveThread_;
 
+    SwapSyncObject<bool> syncQuit_;
     SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
     SwapSyncObject<OptionsPtr> syncOptions_;
     SwapSyncObject<MarkersPtr> syncMarkers_;

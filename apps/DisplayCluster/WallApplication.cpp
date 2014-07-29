@@ -59,6 +59,7 @@
 WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
     : Application(argc_, argv_)
     , wallChannel_(new WallToWallChannel(wallChannel))
+    , syncQuit_(false)
     , syncDisplayGroup_(boost::make_shared<DisplayGroupManager>())
 {
     WallConfiguration* config = new WallConfiguration(getConfigFilename(),
@@ -154,7 +155,7 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
             this, SLOT(updatePixelStreamFrame(PixelStreamFramePtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
-            this, SLOT(quit()));
+            this, SLOT(updateQuit()));
 
     connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
             toMasterChannel_.get(), SLOT(sendQuit()));
@@ -211,6 +212,9 @@ void WallApplication::syncObjects()
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, wallChannel_.get(), _1 );
 
+    syncQuit_.sync(versionCheckFunc);
+    if (syncQuit_.get())
+        quit();
     syncDisplayGroup_.sync(versionCheckFunc);
     syncMarkers_.sync(versionCheckFunc);
     syncOptions_.sync(versionCheckFunc);
@@ -220,6 +224,11 @@ void WallApplication::postRenderUpdate()
 {
     factories_->postRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
     factories_->clearStaleFactoryObjects();
+}
+
+void WallApplication::updateQuit()
+{
+    syncQuit_.update(true);
 }
 
 void WallApplication::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)
