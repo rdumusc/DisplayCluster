@@ -49,7 +49,7 @@ MPIContext::MPIContext(int argc, char* argv[])
     const int required = MPI_THREAD_MULTIPLE;
     int provided;
     MPI_Init_thread(&argc, &argv, required, &provided);
-    if (provided < required)
+    if (provided < MPI_THREAD_SERIALIZED)
     {
         multithreadSupportEnabled_ = false;
         put_flog(LOG_WARN, "MPI does not provide multithread thread support."

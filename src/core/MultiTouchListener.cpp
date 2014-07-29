@@ -63,6 +63,9 @@ MultiTouchListener::MultiTouchListener(DisplayGroupGraphicsView* graphicsView )
 
 MultiTouchListener::~MultiTouchListener()
 {
+    client_.removeTuioListener( this );
+    client_.disconnect();
+
     DoubleTapGestureRecognizer::uninstall();
     PanGestureRecognizer::uninstall();
     PinchGestureRecognizer::uninstall();

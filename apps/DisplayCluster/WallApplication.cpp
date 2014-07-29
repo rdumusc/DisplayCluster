@@ -76,6 +76,12 @@ WallApplication::~WallApplication()
 {
     // Must be done before destructing the GLWindows to release GL objects
     factories_->clear();
+
+    mpiReceiveThread_.quit();
+    mpiReceiveThread_.wait();
+
+    mpiSendThread_.quit();
+    mpiSendThread_.wait();
 }
 
 void WallApplication::initRenderContext(const WallConfiguration* config)
