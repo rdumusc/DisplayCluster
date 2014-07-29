@@ -216,6 +216,7 @@ list(APPEND MOC_HEADERS
     DisplayGroupListWidgetProxy.h
     DisplayGroupRenderer.h
     EventReceiver.h
+    Factories.h
     Markers.h
     MarkerRenderer.h
     MasterFromWallChannel.h

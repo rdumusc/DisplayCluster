@@ -42,6 +42,7 @@
 #include "Content.h"
 #include "DisplayGroupManager.h"
 #include "ContentWindowManager.h"
+#include "PixelStreamFrame.h"
 
 #include <boost/foreach.hpp>
 
@@ -145,6 +146,14 @@ FactoryObjectPtr Factories::getFactoryObject(ContentPtr content)
     }
     object->setFrameIndex(frameIndex_);
     return object;
+}
+
+void Factories::updatePixelStream(PixelStreamFramePtr frame)
+{
+    typedef boost::shared_ptr<PixelStream> PixelStreamPtr;
+    PixelStreamPtr pixelStream = pixelStreamFactory_.getObject(frame->uri);
+    pixelStream->setNewFrame(frame);
+    pixelStream->setFrameIndex(frameIndex_);
 }
 
 Factory<Texture> & Factories::getTextureFactory()

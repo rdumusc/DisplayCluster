@@ -54,6 +54,14 @@
 int main(int argc, char * argv[])
 {
     MPIChannelPtr worldChannel(new MPIChannel(argc, argv));
+    if (!worldChannel->isThreadSafe())
+    {
+        put_flog(LOG_DEBUG, "MPI implementation must support at least "
+                 "MPI_THREAD_SERIALIZED. (MPI_THREAD_MULTIPLE is recommended "
+                 "for better performances)");
+        return EXIT_FAILURE;
+    }
+
     const int rank = worldChannel->getRank();
     MPIChannelPtr wallChannel(new MPIChannel(*worldChannel, rank != 0, rank));
 

@@ -51,6 +51,8 @@
 #include "Movie.h"
 #include "PixelStream.h"
 
+#include <QObject>
+
 /**
  * A set of Factory<T> for all valid ContentTypes.
  *
@@ -59,8 +61,10 @@
  * It implements a basic garbage collection strategy for FactoryObjects
  * that are no longer referenced/accessed.
  */
-class Factories
+class Factories : public QObject
 {
+    Q_OBJECT
+
 public:
     /**
      * Constructor
@@ -107,6 +111,16 @@ public:
     Factory<Movie> & getMovieFactory();
     Factory<PixelStream> & getPixelStreamFactory();
     //@}
+
+public slots:
+    /**
+     * Update a PixelStream with the given frame.
+     *
+     * If the PixelStream for the frame uri does not exist, it is created.
+     * The object accessed or created will not be garbage collected this frame.
+     * @see clearStaleFactoryObjects()
+     */
+    void updatePixelStream(PixelStreamFramePtr frame);
 
 private:
     uint64_t frameIndex_;

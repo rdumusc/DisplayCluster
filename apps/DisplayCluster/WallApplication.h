@@ -82,7 +82,6 @@ private slots:
     void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
     void updateOptions(OptionsPtr options);
     void updateMarkers(MarkersPtr markers);
-    void updatePixelStreamFrame(PixelStreamFramePtr frame);
 
 private:
     boost::scoped_ptr<RenderContext> renderContext_;
@@ -104,7 +103,6 @@ private:
     void startRendering();
     void onNewObject(FactoryObject& object);
 
-    void receiveMPIMessages();
     void syncObjects();
     void preRenderUpdate();
     void postRenderUpdate();

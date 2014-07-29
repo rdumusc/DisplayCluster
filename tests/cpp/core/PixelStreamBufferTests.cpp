@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( TestCompleteAFrame )
 
     BOOST_CHECK_EQUAL( segments.size(), 1 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
-    BOOST_CHECK( buffer.isFirstCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
 }
 
 
@@ -164,10 +164,9 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameSingleSource )
     BOOST_CHECK_EQUAL( frameSize.width(), 0 );
     BOOST_CHECK_EQUAL( frameSize.height(), 0 );
 
-
     BOOST_CHECK_EQUAL( segments.size(), 4 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
-    BOOST_CHECK( buffer.isFirstCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
 }
 
 
@@ -210,7 +209,7 @@ BOOST_AUTO_TEST_CASE( TestCompleteACompositeFrameMultipleSources )
 
     BOOST_CHECK_EQUAL( segments.size(), 4 );
     BOOST_CHECK( !buffer.hasCompleteFrame() );
-    BOOST_CHECK( buffer.isFirstCompleteFrame() );
+    BOOST_CHECK( !buffer.isFirstCompleteFrame() );
 }
 
 

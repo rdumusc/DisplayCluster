@@ -104,7 +104,8 @@ bool PixelStreamBuffer::isFirstCompleteFrame() const
     for(SourceBufferMap::const_iterator it = sourceBuffers_.begin(); it != sourceBuffers_.end(); ++it)
     {
         const SourceBuffer& buffer = it->second;
-        if (buffer.frontFrameIndex != FIRST_FRAME_INDEX)
+        if (buffer.frontFrameIndex != FIRST_FRAME_INDEX ||
+            buffer.backFrameIndex == FIRST_FRAME_INDEX)
             return false;
     }
     return true;
