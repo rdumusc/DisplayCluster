@@ -49,12 +49,12 @@ try:
         host = elem.get("host")
 
         if host is None:
-            print 'Error, no host attribute in <process> tag.'
+            print('Error, no host attribute in <process> tag.')
             exit(-1)
 
         hostList.append(host)
 except:
-    print 'Error processing configuration.xml. Make sure you have created a configuration.xml and put it in ' + dcPath + '/. An example is provided in the examples/ directory.'
+    print('Error processing configuration.xml. Make sure you have created a configuration.xml and put it in ' + dcPath + '/. An example is provided in the examples/ directory.')
     exit(-2)
 
 hostListString = ",".join(hostList)
@@ -64,7 +64,7 @@ hostListString = ",".join(hostList)
 mpirunCommand = distutils.spawn.find_executable('mpirun')
 
 if mpirunCommand is None:
-    print 'Error, could not find mpirun executable in PATH'
+    print('Error, could not find mpirun executable in PATH')
     exit(-3)
 
 params = ' '
@@ -78,6 +78,6 @@ if mpinameCommand:
 else:
     startCommand = mpirunCommand + ' -x DISPLAYCLUSTER_DIR -x PYTHONPATH -x LD_LIBRARY_PATH -host ' + hostListString + ' ' + dcPath + '/bin/displaycluster.py' + params
 
-print 'launching with command: ' + startCommand
+print('launching with command: ' + startCommand)
 
 subprocess.call(shlex.split(startCommand))
