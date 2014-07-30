@@ -60,13 +60,27 @@ typedef std::vector<PixelStreamSegment> PixelStreamSegments;
  */
 struct SourceBuffer
 {
-    SourceBuffer() : frameIndex(0) {}
+    SourceBuffer() : frontFrameIndex(0), backFrameIndex(0) {}
 
-    /** The current index of the frame for this source */
-    FrameIndex frameIndex;
+    /** The current indexes of the frame for this source */
+    FrameIndex frontFrameIndex, backFrameIndex;
 
     /** The collection of segments */
     std::queue<PixelStreamSegments> segments;
+
+    /** Pop the first element of the buffer */
+    void pop()
+    {
+        segments.pop();
+        ++frontFrameIndex;
+    }
+
+    /** Push a new element to the back of the buffer */
+    void push()
+    {
+        segments.push(PixelStreamSegments());
+        ++backFrameIndex;
+    }
 };
 
 typedef std::map<size_t, SourceBuffer> SourceBufferMap;
@@ -85,8 +99,10 @@ public:
     /**
      * Add a source of segments.
      * @param sourceIndex Unique source identifier
+     * @return false if the source was already added or if finishFrameForSource()
+     *         has already been called for all existing source (TODO DISCL-241).
      */
-    void addSource(const size_t sourceIndex);
+    bool addSource(const size_t sourceIndex);
 
     /**
      * Remove a source of segments.
@@ -110,20 +126,20 @@ public:
      */
     void finishFrameForSource(const size_t sourceIndex);
 
-    /** Does the Buffer have a complete frame (from all sources) */
-    bool hasFrameComplete() const;
+    /** Does the Buffer have a new complete frame (from all sources) */
+    bool hasCompleteFrame() const;
 
-    /** Is this the first frame */
-    bool isFirstFrame() const;
+    /** Is this the first frame to be finished by all sources */
+    bool isFirstCompleteFrame() const;
 
-    /** Get the size of the frame. Only meaningful if hasFrameComplete() is true */
+    /** Get the size of the frame. Only meaningful if hasCompleteFrame() is true */
     QSize getFrameSize() const;
 
     /**
      * Get the finished frame.
      * @return A collection of segments that form a frame
      */
-    PixelStreamSegments getFrame();
+    PixelStreamSegments popFrame();
 
     /**
      * Compute the overall dimensions of a frame
@@ -132,9 +148,16 @@ public:
      */
     static QSize computeFrameDimensions(const PixelStreamSegments& segments);
 
+    /** Allow this buffer to be used by the next PixelStreamDispatcher::sendLatestFrame */
+    void setAllowedToSend(const bool enable);
+
+    /** @return true if this buffer can be sent by PixelStreamDispatcher, false otherwise */
+    bool isAllowedToSend() const;
+
 private:
     FrameIndex lastFrameComplete_;
     SourceBufferMap sourceBuffers_;
+    bool allowedToSend_;
 };
 
 #endif // PIXELSTREAMBUFFER_H

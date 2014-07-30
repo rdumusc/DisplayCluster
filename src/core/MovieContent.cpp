@@ -37,15 +37,16 @@
 /*********************************************************************/
 
 #include "MovieContent.h"
-#include "globals.h"
+
 #include "Movie.h"
+#include "FFMPEGMovie.h"
 #include "ContentWindowManager.h"
 #include "RenderContext.h"
-#include "GLWindow.h"
-#include <boost/serialization/export.hpp>
-#include "serializationHelpers.h"
 #include "Factories.h"
+#include "WallToWallChannel.h"
 
+#include "serializationHelpers.h"
+#include <boost/serialization/export.hpp>
 BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
 
 CONTENT_TYPE MovieContent::getType()
@@ -56,7 +57,16 @@ CONTENT_TYPE MovieContent::getType()
 bool MovieContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    return file.exists() && file.isReadable();
+    if (!file.exists() || !file.isReadable())
+        return false;
+
+    const FFMPEGMovie movie(getURI());
+    if (!movie.isValid())
+        return false;
+
+    width_ = movie.getWidth();
+    height_ = movie.getHeight();
+    return true;
 }
 
 const QStringList& MovieContent::getSupportedExtensions()
@@ -71,19 +81,19 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration timeSinceLastFrame)
+void MovieContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
     if( blockAdvance_ )
         return;
 
-    boost::shared_ptr< Movie > movie = factories->getMovieFactory().getObject(getURI());
+    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject(getURI());
 
     // skip a frame if the Content rectangle is not visible in any window; otherwise decode normally
     const bool skipDecoding = !movie->getRenderContext()->isRegionVisible(window->getCoordinates());
 
     movie->setPause( window->getControlState() & STATE_PAUSED );
     movie->setLoop( window->getControlState() & STATE_LOOP );
-    movie->nextFrame(timeSinceLastFrame, skipDecoding);
+    movie->nextFrame(wallToWallChannel.getTime(), skipDecoding);
 }

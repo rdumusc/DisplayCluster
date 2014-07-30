@@ -22,6 +22,8 @@ if(ENABLE_TUIO_TOUCH_LISTENER)
   list(APPEND SRCS MultiTouchListener.cpp
                    TouchListener.cpp)
 
+  list(APPEND MOC_HEADERS MultiTouchListener.h)
+
   find_package(X11 REQUIRED)
   include_directories(${X11_INCLUDE_DIR})
   list(APPEND CORE_LIBRARY_LIBS ${X11_LIBRARIES})
@@ -114,6 +116,7 @@ list(APPEND SRCS
     DisplayGroupListWidgetProxy.cpp
     DynamicTexture.cpp
     DynamicTextureContent.cpp
+    ElapsedTimer.cpp
     Factory.hpp
     Factories.cpp
     FactoryObject.cpp
@@ -135,11 +138,15 @@ list(APPEND SRCS
     ../MessageHeader.cpp
     ImageJpegDecompressor.cpp
     Marker.cpp
+    Markers.cpp
     MarkerRenderer.cpp
+    MasterFromWallChannel.cpp
+    MasterToWallChannel.cpp
     MetaTypeRegistration.cpp
     Movie.cpp
     MovieContent.cpp
     MPIChannel.cpp
+    MPIContext.cpp
     NetworkListener.cpp
     NetworkListenerThread.cpp
     Options.cpp
@@ -161,6 +168,9 @@ list(APPEND SRCS
     TestPattern.cpp
     Texture.cpp
     TextureContent.cpp
+    WallFromMasterChannel.cpp
+    WallToMasterChannel.cpp
+    WallToWallChannel.cpp
     WebbrowserCommandHandler.cpp
     ZoomInteractionDelegate.cpp
     configuration/Configuration.cpp
@@ -204,14 +214,22 @@ list(APPEND MOC_HEADERS
     DisplayGroupGraphicsView.h
     DisplayGroupGraphicsViewProxy.h
     DisplayGroupListWidgetProxy.h
+    DisplayGroupRenderer.h
     EventReceiver.h
-    Marker.h
-    MPIChannel.h
+    Factories.h
+    Markers.h
+    MarkerRenderer.h
+    MasterFromWallChannel.h
+    MasterToWallChannel.h
     NetworkListener.h
     NetworkListenerThread.h
     Options.h
+    PixelStream.h
     PixelStreamDispatcher.h
     PixelStreamWindowManager.h
+    WallFromMasterChannel.h
+    WallToMasterChannel.h
+    WallToWallChannel.h
     WebbrowserCommandHandler.h
     localstreamer/AsyncImageLoader.h
     localstreamer/DockPixelStreamer.h

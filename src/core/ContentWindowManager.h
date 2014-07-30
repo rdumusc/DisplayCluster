@@ -142,7 +142,6 @@ protected:
         ar & zoom_;
         ar & controlState_;
         ar & windowState_;
-        ar & highlightedTimestamp_;
     }
 
     /** Serialize for saving to an xml file */
@@ -167,7 +166,7 @@ private:
     boost::weak_ptr<DisplayGroupManager> displayGroupManager_;
 
     // Rank0: Delegate to handle user inputs
-    ContentInteractionDelegate* interactionDelegate_;
+    boost::scoped_ptr<ContentInteractionDelegate> interactionDelegate_;
 };
 
 DECLARE_SERIALIZE_FOR_XML(ContentWindowManager)

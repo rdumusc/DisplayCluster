@@ -43,14 +43,12 @@
 #include "types.h"
 
 #include "DisplayGroupInterface.h"
-#include "Marker.h"
 
 #if ENABLE_SKELETON_SUPPORT
 #include "SkeletonState.h"
 #endif
 
-#include <vector>
-#include <QMutex>
+#include <boost/serialization/access.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 /**
@@ -70,30 +68,6 @@ public:
     /** Destructor */
     ~DisplayGroupManager();
 
-    /**
-     * Rank0 only: Constructor with MPIChannel for ContentDimensionsRequest.
-     * @note TODO remove this whole procedure (DISCL-21)
-     */
-    DisplayGroupManager(MPIChannelPtr mpiChannel);
-
-    /**
-     * Create and return a new Marker.
-     * The DisplayGroup keeps a reference on the returned object.
-     * @see getMarkers()
-     * @see deleteMarkers()
-     */
-    MarkerPtr getNewMarker();
-
-    /** Get all the markers stored by the DisplayGroup. @see getNewMarker() */
-    MarkerPtrs getMarkers() const;
-
-    /** Remove all internal references to the Markers. @see getNewMarker() */
-    void deleteMarkers();
-
-#if ENABLE_SKELETON_SUPPORT
-    SkeletonStatePtrs getSkeletons();
-#endif
-
     /** Get the background content window. */
     ContentWindowManagerPtr getBackgroundContentWindow() const;
 
@@ -109,6 +83,10 @@ public:
      *         no Window available. @see isEmpty().
      */
     ContentWindowManagerPtr getActiveWindow() const;
+
+#if ENABLE_SKELETON_SUPPORT
+    SkeletonStatePtrs getSkeletons();
+#endif
 
 signals:
     /** Emitted whenever the DisplayGroup is modified */
@@ -142,8 +120,6 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int)
     {
-        QMutexLocker locker(&markersMutex_);
-        ar & markers_;
         ar & contentWindowManagers_;
         ar & backgroundContent_;
 #if ENABLE_SKELETON_SUPPORT
@@ -154,11 +130,6 @@ private:
     void watchChanges(ContentWindowManagerPtr contentWindow);
 
     ContentWindowManagerPtr backgroundContent_;
-
-    mutable QMutex markersMutex_;
-    MarkerPtrs markers_;
-
-    MPIChannelPtr mpiChannel_;
 
 #if ENABLE_SKELETON_SUPPORT
     SkeletonStatePtrs skeletons_;

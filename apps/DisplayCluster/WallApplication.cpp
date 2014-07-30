@@ -40,56 +40,129 @@
 #include "WallApplication.h"
 
 #include "MPIChannel.h"
+#include "WallFromMasterChannel.h"
+#include "WallToMasterChannel.h"
+#include "WallToWallChannel.h"
 #include "configuration/WallConfiguration.h"
-#include "Options.h"
 #include "RenderContext.h"
 #include "Factories.h"
-#include "PixelStreamFrame.h"
 #include "GLWindow.h"
 #include "TestPattern.h"
 #include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
 #include "DisplayGroupRenderer.h"
+#include "MarkerRenderer.h"
 
-#include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/bind.hpp>
 
-WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
-    : Application(argc_, argv_, mpiChannel)
+WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
+    : Application(argc_, argv_)
+    , wallChannel_(new WallToWallChannel(wallChannel))
+    , syncQuit_(false)
+    , syncDisplayGroup_(boost::make_shared<DisplayGroupManager>())
 {
     WallConfiguration* config = new WallConfiguration(getConfigFilename(),
-                                                      mpiChannel_->getRank());
+                                                      worldChannel->getRank());
     g_configuration = config;
+    syncOptions_.setCallback(boost::bind(&Configuration::setOptions, config, _1));
 
+    initRenderContext(config);
+    setupTestPattern(config, worldChannel->getRank());
+    initMPIConnection(worldChannel);
+    startRendering();
+}
+
+WallApplication::~WallApplication()
+{
+    // Must be done before destructing the GLWindows to release GL objects
+    factories_->clear();
+
+    mpiReceiveThread_.quit();
+    mpiReceiveThread_.wait();
+
+    mpiSendThread_.quit();
+    mpiSendThread_.wait();
+}
+
+void WallApplication::initRenderContext(const WallConfiguration* config)
+{
     renderContext_.reset(new RenderContext(config));
+    factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
 
-    factories_.reset(new Factories(*renderContext_));
-    displayGroupRenderer_.reset(new DisplayGroupRenderer(factories_));
-    displayGroupRenderer_->setDisplayGroup(displayGroup_);
+    DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
+    MarkerRendererPtr markerRenderer(new MarkerRenderer());
 
-    if (mpiChannel_->getRank() == 1)
-        mpiChannel_->setFactories(factories_);
+    syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
+                                               displayGroupRenderer.get(), _1));
 
+    syncMarkers_.setCallback(boost::bind(&MarkerRenderer::setMarkers,
+                                          markerRenderer.get(), _1));
+
+    renderContext_->addRenderable(displayGroupRenderer);
+    renderContext_->addRenderable(markerRenderer);
+}
+
+void WallApplication::onNewObject(FactoryObject& object)
+{
+    object.setRenderContext(renderContext_.get());
+
+    PixelStream* pixelStream = dynamic_cast< PixelStream* >(&object);
+    // only one process needs to request new frames
+    if(pixelStream && wallChannel_->getRank() == 0)
+    {
+        connect(pixelStream, SIGNAL(requestFrame(const QString)),
+                toMasterChannel_.get(), SLOT(sendRequestFrame(const QString)));
+    }
+}
+
+void WallApplication::setupTestPattern(const WallConfiguration* config, const int rank)
+{
     for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
     {
         GLWindowPtr glWindow = renderContext_->getGLWindow(i);
-        glWindow->addRenderable(displayGroupRenderer_);
-
         RenderablePtr testPattern(new TestPattern(glWindow.get(),
                                                   config,
-                                                  mpiChannel_->getRank(),
+                                                  rank,
                                                   glWindow->getTileIndex()));
         glWindow->setTestPattern(testPattern);
     }
+}
 
-    connect(mpiChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
+void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
+{
+    fromMasterChannel_.reset(new WallFromMasterChannel(worldChannel));
+    toMasterChannel_.reset(new WallToMasterChannel(worldChannel));
+
+    fromMasterChannel_->moveToThread(&mpiReceiveThread_);
+    toMasterChannel_->moveToThread(&mpiSendThread_);
+
+    connect(fromMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
             this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
 
-    connect(mpiChannel_.get(), SIGNAL(received(OptionsPtr)),
+    connect(fromMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
             this, SLOT(updateOptions(OptionsPtr)));
 
-    connect(mpiChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
-            this, SLOT(processPixelStreamFrame(PixelStreamFramePtr)));
+    connect(fromMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
+            this, SLOT(updateMarkers(MarkersPtr)));
 
+    connect(fromMasterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
+            factories_.get(), SLOT(updatePixelStream(PixelStreamFramePtr)));
+
+    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
+            this, SLOT(updateQuit()));
+
+    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
+            toMasterChannel_.get(), SLOT(sendQuit()));
+
+    connect(&mpiReceiveThread_, SIGNAL(started()),
+            fromMasterChannel_.get(), SLOT(processMessages()));
+
+    mpiReceiveThread_.start();
+    mpiSendThread_.start();
+}
+
+void WallApplication::startRendering()
+{
     // setup connection so renderFrame() will be called continuously.
     // Must be a queued connection to avoid infinite recursion.
     connect(this, SIGNAL(frameFinished()),
@@ -97,73 +170,61 @@ WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr mpiChan
     renderFrame();
 }
 
-WallApplication::~WallApplication()
-{
-    // Must be done before destructing the GLWindows to release GL objects
-    factories_->clear();
-}
-
 void WallApplication::renderFrame()
 {
-    mpiChannel_->receiveMessages();
+    preRenderUpdate();
 
-    // synchronize clock right after receiving messages to ensure we have an
-    // accurate time for rendering, etc. below
-    mpiChannel_->synchronizeClock();
-
-    // All processes swap windows sychronously
     renderContext_->updateGLWindows();
-    mpiChannel_->globalBarrier();
+    wallChannel_->globalBarrier();
     renderContext_->swapBuffers();
 
-    advanceContent();
-
-    factories_->clearStaleFactoryObjects();
-
-    lastFrameTime_ = mpiChannel_->getTime();
+    postRenderUpdate();
 
     emit(frameFinished());
 }
 
-void WallApplication::advanceContent()
+void WallApplication::preRenderUpdate()
 {
-    boost::posix_time::time_duration timeSinceLastFrame = getTimeSinceLastFrame();
-    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
-
-    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
-    {
-        // note that if we have multiple ContentWindowManagers corresponding to a single Content object,
-        // we will call advance() multiple times per frame on that Content object...
-        contentWindow->getContent()->advance(factories_, contentWindow, timeSinceLastFrame);
-    }
-    ContentWindowManagerPtr backgroundWindow = displayGroup_->getBackgroundContentWindow();
-    if (backgroundWindow)
-        backgroundWindow->getContent()->advance(factories_, backgroundWindow, timeSinceLastFrame);
+    syncObjects();
+    wallChannel_->synchronizeClock();
+    factories_->preRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
 }
 
-boost::posix_time::time_duration WallApplication::getTimeSinceLastFrame() const
+void WallApplication::syncObjects()
 {
-    boost::posix_time::ptime currentTime = mpiChannel_->getTime();
+    const SyncFunction& versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, wallChannel_.get(), _1 );
 
-    if (lastFrameTime_.is_not_a_date_time() || currentTime.is_not_a_date_time())
-        return boost::posix_time::time_duration(); // duration == 0
+    syncQuit_.sync(versionCheckFunc);
+    if (syncQuit_.get())
+        quit();
+    syncDisplayGroup_.sync(versionCheckFunc);
+    syncMarkers_.sync(versionCheckFunc);
+    syncOptions_.sync(versionCheckFunc);
+}
 
-    return currentTime - lastFrameTime_;
+void WallApplication::postRenderUpdate()
+{
+    factories_->postRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
+    factories_->clearStaleFactoryObjects();
+}
+
+void WallApplication::updateQuit()
+{
+    syncQuit_.update(true);
 }
 
 void WallApplication::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)
 {
-    displayGroup_ = displayGroup;
-    displayGroupRenderer_->setDisplayGroup(displayGroup);
+    syncDisplayGroup_.update(displayGroup);
+}
+
+void WallApplication::updateMarkers(MarkersPtr markers)
+{
+    syncMarkers_.update(markers);
 }
 
 void WallApplication::updateOptions(OptionsPtr options)
 {
-    g_configuration->setOptions(options);
-}
-
-void WallApplication::processPixelStreamFrame(PixelStreamFramePtr frame)
-{
-    Factory<PixelStream>& pixelStreamFactory = factories_->getPixelStreamFactory();
-    pixelStreamFactory.getObject(frame->uri)->insertNewFrame(frame->segments);
+    syncOptions_.update(options);
 }

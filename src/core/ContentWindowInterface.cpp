@@ -96,7 +96,6 @@ ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWi
     connect(this, SIGNAL(zoomChanged(double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(eventChanged(Event, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(highlighted(ContentWindowInterface *)), contentWindowManager.get(), SLOT(highlight(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(movedToFront(ContentWindowInterface *)), contentWindowManager.get(), SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(this, SIGNAL(closed(ContentWindowInterface *)), contentWindowManager.get(), SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
 
@@ -110,7 +109,6 @@ ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWi
     connect(contentWindowManager.get(), SIGNAL(zoomChanged(double, ContentWindowInterface *)), this, SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), this, SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(eventChanged(Event, ContentWindowInterface *)), this, SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(highlighted(ContentWindowInterface *)), this, SLOT(highlight(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(movedToFront(ContentWindowInterface *)), this, SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
     connect(contentWindowManager.get(), SIGNAL(closed(ContentWindowInterface *)), this, SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
 
@@ -198,20 +196,6 @@ bool ContentWindowInterface::registerEventReceiver(EventReceiver* receiver)
         ++eventReceiversCount_;
 
     return success;
-}
-
-bool ContentWindowInterface::getHighlighted()
-{
-    const long dtMilliseconds = (g_mpiChannel->getTime() - highlightedTimestamp_).total_milliseconds();
-
-    if(dtMilliseconds > HIGHLIGHT_TIMEOUT_MILLISECONDS || dtMilliseconds % (HIGHLIGHT_BLINK_INTERVAL*2) < HIGHLIGHT_BLINK_INTERVAL)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
 }
 
 SizeState ContentWindowInterface::getSizeState() const
@@ -594,27 +578,6 @@ void ContentWindowInterface::setEvent(Event event_, ContentWindowInterface * sou
         }
 
         emit(eventChanged(event_, source));
-    }
-}
-
-void ContentWindowInterface::highlight(ContentWindowInterface * source)
-{
-    if(source == this)
-    {
-        return;
-    }
-
-    // set highlighted timestamp
-    highlightedTimestamp_ = g_mpiChannel->getTime();
-
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
-    {
-        if(source == NULL)
-        {
-            source = this;
-        }
-
-        emit(highlighted(source));
     }
 }
 

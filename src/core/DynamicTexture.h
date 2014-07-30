@@ -96,6 +96,11 @@ public:
     void render(const QRectF& texCoords) override;
 
     /**
+     * Pre render step.
+     */
+    void preRenderUpdate();
+
+    /**
      * Post render step.
      */
     void postRenderUpdate();
@@ -181,6 +186,8 @@ private:
      */
     DynamicTexturePtr getRoot(); // @Child only
 
+    bool readFullImageMetadata(const QString& uri);
+
     bool readPyramidMetadataFromFile(const QString& uri); // @Root only
     bool makePyramidFolder(const QString& pyramidFolder); // @Root only
     bool writeMetadataFile(const QString& pyramidFolder, const QString& filename) const; // @Root only
@@ -191,7 +198,6 @@ private:
 
     void loadImageAsync(); // Trigger the loading of the image in a separate thread // @All
     bool loadFullResImage(); // @Root only
-    QImage loadImageRegionFromFullResImageFile(const QString& filename); // @Child only
     QImage getImageFromParent(const QRectF& imageRegion, DynamicTexture * start); // @Child only
     void generateTexture(); // @All
 

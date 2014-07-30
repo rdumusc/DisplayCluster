@@ -115,9 +115,6 @@ class ContentWindowInterface : public QObject
         /** Get the zoom factor [1;inf]. */
         double getZoom();
 
-        /** Is the window highlighted. */
-        bool getHighlighted();
-
         /** Get the current size state. */
         SizeState getSizeState() const;
 
@@ -168,7 +165,6 @@ class ContentWindowInterface : public QObject
         virtual void scaleSize(double factor, ContentWindowInterface* source = 0);
         virtual void setCenter(double centerX, double centerY, ContentWindowInterface* source = 0);
         virtual void setZoom(double zoom, ContentWindowInterface* source = 0);
-        virtual void highlight(ContentWindowInterface* source = 0);
         virtual void setWindowState(ContentWindowInterface::WindowState windowState, ContentWindowInterface* source = 0);
         virtual void setEvent(Event event, ContentWindowInterface* source = 0);
         virtual void moveToFront(ContentWindowInterface* source = 0);
@@ -184,7 +180,6 @@ class ContentWindowInterface : public QObject
         void sizeChanged(double w, double h, ContentWindowInterface * source);
         void centerChanged(double centerX, double centerY, ContentWindowInterface * source);
         void zoomChanged(double zoom, ContentWindowInterface * source);
-        void highlighted(ContentWindowInterface * source);
         void windowStateChanged(ContentWindowInterface::WindowState windowState, ContentWindowInterface * source);
         void eventChanged(Event event, ContentWindowInterface * source);
         void movedToFront(ContentWindowInterface * source);
@@ -225,9 +220,6 @@ class ContentWindowInterface : public QObject
         ControlState controlState_;
 
         unsigned int eventReceiversCount_;
-
-        // highlighted timestamp
-        boost::posix_time::ptime highlightedTimestamp_;
 };
 
 #endif

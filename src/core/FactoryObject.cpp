@@ -37,7 +37,6 @@
 /*********************************************************************/
 
 #include "FactoryObject.h"
-#include "globals.h"
 
 FactoryObject::FactoryObject()
     : renderContext_(0)

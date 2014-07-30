@@ -39,18 +39,24 @@
 #ifndef DISPLAY_GROUP_GRAPHICS_VIEW_H
 #define DISPLAY_GROUP_GRAPHICS_VIEW_H
 
-#include <QtGui>
+#include <QGraphicsView>
+
 #include "types.h"
 
+class QGesture;
+class QGestureEvent;
 class PanGesture;
 class PinchGesture;
+class QSwipeGesture;
+class QTapGesture;
+class QTapAndHoldGesture;
 
 class DisplayGroupGraphicsView : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-    DisplayGroupGraphicsView(DisplayGroupManagerPtr displayGroup);
+    DisplayGroupGraphicsView();
     virtual ~DisplayGroupGraphicsView();
 
     void grabGestures();

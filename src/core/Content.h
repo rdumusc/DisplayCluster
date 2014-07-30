@@ -50,6 +50,8 @@
 #include <boost/serialization/nvp.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+class WallToWallChannel;
+
 /**
  * An abstract Content displayed in a ContentWindowManager.
  *
@@ -80,13 +82,20 @@ class Content : public QObject
         **/
         virtual bool readMetadata() = 0;
 
+        /** Get the dimensions. */
         void getDimensions(int &width, int &height);
+
+        /** Set the dimensions. */
         void setDimensions(int width, int height);
+
+        /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
         void blockAdvance( bool block ) { blockAdvance_ = block; }
 
-        // virtual method for implementing actions on advancing to a new frame
-        // useful when a process has multiple GLWindows
-        virtual void advance(FactoriesPtr, ContentWindowManagerPtr, const boost::posix_time::time_duration) { }
+        /** Re-implement this method to update or synchronize before rendering. */
+        virtual void preRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel&) { }
+
+        /** Re-implement this method to update or synchronize after rendering. */
+        virtual void postRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel&) { }
 
     signals:
         /** Emitted when dimensions have changed */

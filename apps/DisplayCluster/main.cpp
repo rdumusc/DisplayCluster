@@ -38,7 +38,6 @@
 
 #include "config.h"
 
-#include "globals.h"
 #include "MPIChannel.h"
 
 #include "WallApplication.h"
@@ -54,35 +53,35 @@
 
 int main(int argc, char * argv[])
 {
-    g_mpiChannel.reset( new MPIChannel( argc, argv ) );
+    MPIChannelPtr worldChannel(new MPIChannel(argc, argv));
+    if (!worldChannel->isThreadSafe())
+    {
+        put_flog(LOG_DEBUG, "MPI implementation must support at least "
+                 "MPI_THREAD_SERIALIZED. (MPI_THREAD_MULTIPLE is recommended "
+                 "for better performances)");
+        return EXIT_FAILURE;
+    }
+
+    const int rank = worldChannel->getRank();
+    MPIChannelPtr wallChannel(new MPIChannel(*worldChannel, rank != 0, rank));
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     // we need X multithreading support if we're running the
     // TouchListener thread and creating X events
-    if (g_mpiChannel->getRank() == 0)
+    if (rank == 0)
         XInitThreads();
 #endif
 
     Application* app = 0;
-    if ( g_mpiChannel->getRank() == 0 )
-        app = new MasterApplication(argc, argv, g_mpiChannel);
+    if (rank == 0)
+        app = new MasterApplication(argc, argv, worldChannel);
     else
-        app = new WallApplication(argc, argv, g_mpiChannel);
-
-    // calibrate timestamp offset between rank 0 and rank 1 clocks
-    g_mpiChannel->calibrateTimestampOffset();
-    // wait for render comms to be ready for receiving and rendering background
-    g_mpiChannel->globalBarrier(); // previously: MPI_COMM_WORLD
+        app = new WallApplication(argc, argv, worldChannel, wallChannel);
 
     app->exec(); // enter Qt event loop
 
     put_flog(LOG_DEBUG, "quitting");
-
     QThreadPool::globalInstance()->waitForDone();
-
-    if (g_mpiChannel->getRank() == 0)
-        g_mpiChannel->sendQuit();
-
     delete app;
 
     return EXIT_SUCCESS;

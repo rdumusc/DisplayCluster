@@ -39,37 +39,34 @@
 #ifndef MARKER_H
 #define MARKER_H
 
-#include <QObject>
+#include <QPointF>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/time_serialize.hpp>
+#include <boost/serialization/access.hpp>
 
 /**
  * A marker to represent touch points.
  */
-class Marker : public QObject
+class Marker
 {
-    Q_OBJECT
-
 public:
     /** Constructor. */
     Marker();
 
     /** Set the position */
-    void setPosition(float x, float y);
+    void setPosition(const QPointF& position);
 
     /** Get the position. */
-    void getPosition(float &x, float &y) const;
+    QPointF getPosition() const;
+
+    /** Update the internal timestamp without other modifications. */
+    void touch();
 
     /**
      * Check if the marker is active.
      * @return True if the marker position has been modified
      *         during the last 5 seconds.
      */
-    bool isActive() const;
-
-signals:
-    /** Emitted everytime the position is modified. */
-    void positionChanged();
+    bool isActive(const boost::posix_time::ptime currentTime) const;
 
 private:
     friend class boost::serialization::access;
@@ -77,13 +74,10 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int)
     {
-        ar & x_;
-        ar & y_;
-        ar & updatedTimestamp_;
+        ar & position_;
     }
 
-    float x_;
-    float y_;
+    QPointF position_;
     boost::posix_time::ptime updatedTimestamp_;
 };
 

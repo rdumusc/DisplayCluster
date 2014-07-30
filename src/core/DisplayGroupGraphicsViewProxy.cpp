@@ -37,6 +37,7 @@
 /*********************************************************************/
 
 #include "DisplayGroupGraphicsViewProxy.h"
+
 #include "DisplayGroupGraphicsView.h"
 #include "DisplayGroupGraphicsScene.h"
 #include "DisplayGroupManager.h"
@@ -45,7 +46,7 @@
 
 DisplayGroupGraphicsViewProxy::DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup)
     : DisplayGroupInterface(displayGroup)
-    , graphicsView_( new DisplayGroupGraphicsView(displayGroup) )
+    , graphicsView_(new DisplayGroupGraphicsView)
 {
 }
 

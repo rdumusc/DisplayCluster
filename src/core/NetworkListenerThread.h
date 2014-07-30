@@ -110,6 +110,7 @@ private:
     void send(const Event &evt);
     void sendQuit();
     bool send(const MessageHeader& messageHeader);
+    void flushSocket();
 };
 
 #endif

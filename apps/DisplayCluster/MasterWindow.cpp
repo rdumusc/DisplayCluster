@@ -62,9 +62,7 @@
     #include "PythonConsole.h"
 #endif
 
-#if ENABLE_TUIO_TOUCH_LISTENER
-    #include "MultiTouchListener.h"
-#endif
+#include <QtGui>
 
 #define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
 
@@ -74,9 +72,6 @@ MasterWindow::MasterWindow(DisplayGroupManagerPtr displayGroup)
     : QMainWindow()
     , displayGroup_(displayGroup)
     , backgroundWidget_(0)
-#if ENABLE_TUIO_TOUCH_LISTENER
-    , touchListener_(0)
-#endif
 {
 #if ENABLE_PYTHON_SUPPORT
     PythonConsole::init();
@@ -92,9 +87,11 @@ MasterWindow::MasterWindow(DisplayGroupManagerPtr displayGroup)
 
 MasterWindow::~MasterWindow()
 {
-#if ENABLE_TUIO_TOUCH_LISTENER
-    delete touchListener_;
-#endif
+}
+
+DisplayGroupGraphicsView* MasterWindow::getGraphicsView()
+{
+    return dggv_->getGraphicsView();
 }
 
 void MasterWindow::setupMasterWindowUI()
@@ -286,19 +283,15 @@ void MasterWindow::setupMasterWindowUI()
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    DisplayGroupGraphicsViewProxy * dggv = new DisplayGroupGraphicsViewProxy(displayGroup_);
-    mainWidget->addTab((QWidget *)dggv->getGraphicsView(), "Display group 0");
+    dggv_ = new DisplayGroupGraphicsViewProxy(displayGroup_);
+    mainWidget->addTab((QWidget *)dggv_->getGraphicsView(), "Display group 0");
     // Forward background touch events
-    connect(dggv->getGraphicsView(), SIGNAL(backgroundTap(QPointF)),
+    connect(dggv_->getGraphicsView(), SIGNAL(backgroundTap(QPointF)),
             this, SIGNAL(hideDock()));
-    connect(dggv->getGraphicsView(), SIGNAL(backgroundTapAndHold(QPointF)),
+    connect(dggv_->getGraphicsView(), SIGNAL(backgroundTapAndHold(QPointF)),
             this, SLOT(openDock(QPointF)));
     connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
-            dggv, SLOT(optionsUpdated(OptionsPtr)));
-
-#if ENABLE_TUIO_TOUCH_LISTENER
-    touchListener_ = new MultiTouchListener( dggv );
-#endif
+            dggv_, SLOT(optionsUpdated(OptionsPtr)));
 
     // create contents dock widget
     QDockWidget * contentsDockWidget = new QDockWidget("Contents", this);

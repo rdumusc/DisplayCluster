@@ -41,14 +41,16 @@
 #define WALLAPPLICATION_H
 
 #include "Application.h"
+#include "SwapSyncObject.h"
 
-#ifndef Q_MOC_RUN
-#include <boost/date_time/posix_time/posix_time.hpp>
-#endif
+#include <QThread>
 #include <boost/scoped_ptr.hpp>
 
 class WallConfiguration;
 class RenderContext;
+class WallFromMasterChannel;
+class WallToMasterChannel;
+class WallToWallChannel;
 
 /**
  * The main application for Wall processes.
@@ -62,9 +64,10 @@ public:
      * Constructor
      * @param argc Command line argument count (required by QApplication)
      * @param argv Command line arguments (required by QApplication)
-     * @param mpiChannel The interprocess communication channel
+     * @param worldChannel The world MPI channel
+     * @param wallChannel The wall MPI channel
      */
-    WallApplication(int &argc, char **argv, MPIChannelPtr mpiChannel);
+    WallApplication(int &argc, char **argv, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel);
 
     /** Destructor */
     virtual ~WallApplication();
@@ -75,21 +78,34 @@ signals:
 
 private slots:
     void renderFrame();
+    void updateQuit();
     void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
     void updateOptions(OptionsPtr options);
-    void processPixelStreamFrame(PixelStreamFramePtr frame);
+    void updateMarkers(MarkersPtr markers);
 
 private:
     boost::scoped_ptr<RenderContext> renderContext_;
-    DisplayGroupRendererPtr displayGroupRenderer_;
+    boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
+    boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
+    boost::scoped_ptr<WallToWallChannel> wallChannel_;
     FactoriesPtr factories_;
-    boost::posix_time::ptime lastFrameTime_;
+    QThread mpiSendThread_;
+    QThread mpiReceiveThread_;
 
-    /** Update the content every frame. */
-    void advanceContent();
+    SwapSyncObject<bool> syncQuit_;
+    SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
+    SwapSyncObject<OptionsPtr> syncOptions_;
+    SwapSyncObject<MarkersPtr> syncMarkers_;
 
-    /** Get the time since the last frame was rendered. */
-    boost::posix_time::time_duration getTimeSinceLastFrame() const;
+    void initRenderContext(const WallConfiguration* config);
+    void setupTestPattern(const WallConfiguration* config, const int rank);
+    void initMPIConnection(MPIChannelPtr worldChannel);
+    void startRendering();
+    void onNewObject(FactoryObject& object);
+
+    void syncObjects();
+    void preRenderUpdate();
+    void postRenderUpdate();
 };
 
 #endif // WALLAPPLICATION_H

@@ -52,6 +52,7 @@
 #define CONTEXT_VIEW_DELTA_Z        0.001f
 #define CONTEXT_VIEW_ALPHA          0.5f
 #define CONTEXT_VIEW_BORDER_WIDTH   5.f
+#define WINDOW_BORDER_WIDTH_PIXELS  5.f
 
 ContentWindowRenderer::ContentWindowRenderer(FactoriesPtr factories)
     : factories_(factories)
@@ -86,12 +87,11 @@ void ContentWindowRenderer::setContentWindow(ContentWindowManagerPtr window)
 
 void ContentWindowRenderer::renderWindowBorder()
 {
-    double horizontalBorder = 5. / (double)g_configuration->getTotalHeight(); // 5 pixels
+    const float horizontalBorder = WINDOW_BORDER_WIDTH_PIXELS /
+            (float)g_configuration->getTotalHeight();
 
-    if(window_->getHighlighted())
-        horizontalBorder *= 4.;
-
-    double verticalBorder = horizontalBorder / g_configuration->getAspectRatio();
+    const float verticalBorder = horizontalBorder /
+            g_configuration->getAspectRatio();
 
     glPushAttrib(GL_CURRENT_BIT);
 

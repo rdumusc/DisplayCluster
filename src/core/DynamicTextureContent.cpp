@@ -37,7 +37,7 @@
 /*********************************************************************/
 
 #include "DynamicTextureContent.h"
-#include "globals.h"
+
 #include "DynamicTexture.h"
 #include "serializationHelpers.h"
 #include "Factories.h"
@@ -58,7 +58,12 @@ CONTENT_TYPE DynamicTextureContent::getType()
 bool DynamicTextureContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    return file.exists() && file.isReadable();
+    if (!file.exists() || !file.isReadable())
+        return false;
+
+    const DynamicTexture dynamicTexture(getURI());
+    dynamicTexture.getDimensions(width_, height_);
+    return true;
 }
 
 const QStringList& DynamicTextureContent::getSupportedExtensions()
@@ -77,11 +82,15 @@ const QStringList& DynamicTextureContent::getSupportedExtensions()
     return extensions;
 }
 
-void DynamicTextureContent::advance(FactoriesPtr factories, ContentWindowManagerPtr, const boost::posix_time::time_duration)
+void DynamicTextureContent::preRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&)
+{
+    factories.getDynamicTextureFactory().getObject(getURI())->preRenderUpdate();
+}
+
+void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&)
 {
     if( blockAdvance_ )
         return;
 
-    // recall that advance() is called after rendering
-    factories->getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
+    factories.getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
 }

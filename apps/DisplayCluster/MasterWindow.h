@@ -46,8 +46,9 @@
 #include <QMainWindow>
 #include <QMimeData>
 
-class MultiTouchListener;
 class BackgroundWidget;
+class DisplayGroupGraphicsViewProxy;
+class DisplayGroupGraphicsView;
 
 /**
  * The main UI window for Master applications.
@@ -64,6 +65,9 @@ public:
 
     /** Destructor. */
     ~MasterWindow();
+
+    /** Get the GraphicsView used for touch interaction. */
+    DisplayGroupGraphicsView* getGraphicsView();
 
 signals:
     /** Emitted when users want to open a dock. */
@@ -118,10 +122,7 @@ private:
 
     DisplayGroupManagerPtr displayGroup_;
     BackgroundWidget* backgroundWidget_;
-
-#if ENABLE_TUIO_TOUCH_LISTENER
-    MultiTouchListener* touchListener_;
-#endif
+    DisplayGroupGraphicsViewProxy* dggv_;
 };
 
 #endif // MASTERWINDOW_H

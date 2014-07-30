@@ -101,12 +101,16 @@ public:
      */
     bool receive(MessageHeader & messageHeader, QByteArray & message);
 
+    /** Get the protocol version of the remote host */
+    int32_t getRemoteProtocolVersion() const;
+
 signals:
     /** Signal that the socket has been disconnected. */
     void disconnected();
 
 private:
     QTcpSocket* socket_;
+    int32_t remoteProtocolVersion_;
 
     bool connect(const std::string &hostname, const unsigned short port);
     bool checkProtocolVersion();

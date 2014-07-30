@@ -40,9 +40,13 @@
 #ifndef MASTERAPPLICATION_H
 #define MASTERAPPLICATION_H
 
+#include "config.h"
 #include "Application.h"
 #include <boost/scoped_ptr.hpp>
+#include <QThread>
 
+class MasterToWallChannel;
+class MasterFromWallChannel;
 class MasterWindow;
 class NetworkListener;
 class PixelStreamerLauncher;
@@ -50,6 +54,7 @@ class PixelStreamWindowManager;
 class WebServiceServer;
 class TextInputDispatcher;
 class MasterConfiguration;
+class MultiTouchListener;
 
 /**
  * The main application for the Master process.
@@ -63,20 +68,31 @@ public:
      * Constructor
      * @param argc Command line argument count (required by QApplication)
      * @param argv Command line arguments (required by QApplication)
-     * @param mpiChannel The interprocess communication channel
+     * @param worldChannel The world MPI channel
      */
-    MasterApplication(int &argc, char **argv, MPIChannelPtr mpiChannel);
+    MasterApplication(int &argc, char **argv, MPIChannelPtr worldChannel);
 
     /** Destructor */
     virtual ~MasterApplication();
 
 private:
+    boost::scoped_ptr<MasterToWallChannel> masterToWallChannel_;
+    boost::scoped_ptr<MasterFromWallChannel> masterFromWallChannel_;
     boost::scoped_ptr<MasterWindow> masterWindow_;
     boost::scoped_ptr<NetworkListener> networkListener_;
     boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;
     boost::scoped_ptr<PixelStreamWindowManager> pixelStreamWindowManager_;
     boost::scoped_ptr<WebServiceServer> webServiceServer_;
     boost::scoped_ptr<TextInputDispatcher> textInputDispatcher_;
+#if ENABLE_TUIO_TOUCH_LISTENER
+    boost::scoped_ptr<MultiTouchListener> touchListener_;
+#endif
+
+    DisplayGroupManagerPtr displayGroup_;
+    MarkersPtr markers_;
+
+    QThread mpiSendThread_;
+    QThread mpiReceiveThread_;
 
 #if ENABLE_JOYSTICK_SUPPORT
     boost::scoped_ptr<JoystickThread> joystickThread_;
@@ -91,6 +107,11 @@ private:
     void startWebservice(const int webServicePort);
     void restoreBackground(const MasterConfiguration* configuration);
     void initPixelStreamLauncher();
+    void initMPIConnection();
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+    void initTouchListener();
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
     void startJoystickThread();

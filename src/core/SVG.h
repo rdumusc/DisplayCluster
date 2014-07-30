@@ -66,8 +66,10 @@ struct SVGTextureData
 class SVG : public FactoryObject
 {
 public:
-    SVG(QString uri);
+    SVG(const QString uri);
     ~SVG();
+
+    bool isValid() const;
 
     void getDimensions(int &width, int &height) const override;
     void render(const QRectF& texCoords) override;
@@ -89,7 +91,7 @@ private:
 
     GLQuad quad_;
 
-    bool setImageData(QByteArray imageData);
+    bool setImageData(const QByteArray& imageData);
     void drawUnitTexturedQuad(const GLuint textureID);
 
     QRectF computeTextureRect(const QRectF& screenRect, const QRectF& fullRect,

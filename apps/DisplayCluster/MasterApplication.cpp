@@ -43,17 +43,23 @@
 #include "DisplayGroupManager.h"
 #include "ContentFactory.h"
 #include "configuration/MasterConfiguration.h"
-#include "MPIChannel.h"
+#include "MasterToWallChannel.h"
+#include "MasterFromWallChannel.h"
 #include "Options.h"
+#include "Markers.h"
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+    #include "MultiTouchListener.h"
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
-#include "JoystickThread.h"
-#define JOYSTICK_THREAD_WAIT_TIME_USEC 1000
+    #include "JoystickThread.h"
+    #define JOYSTICK_THREAD_WAIT_TIME_USEC 1000
 #endif
 
 #if ENABLE_SKELETON_SUPPORT
-#include "SkeletonThread.h"
-#define SKELTON_THREAD_WAIT_TIME_USEC 1000
+    #include "SkeletonThread.h"
+    #define SKELTON_THREAD_WAIT_TIME_USEC 1000
 #endif
 
 #include "NetworkListener.h"
@@ -73,28 +79,32 @@
 #include "ws/DisplayGroupManagerAdapter.h"
 
 
-MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr mpiChannel)
-    : Application(argc_, argv_, mpiChannel)
+MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel)
+    : Application(argc_, argv_)
+    , masterToWallChannel_(new MasterToWallChannel(worldChannel))
+    , masterFromWallChannel_(new MasterFromWallChannel(worldChannel))
+    , displayGroup_(new DisplayGroupManager)
+    , markers_(new Markers)
 {
-    displayGroup_.reset(new DisplayGroupManager(mpiChannel));
-
     MasterConfiguration* config = new MasterConfiguration(getConfigFilename());
     g_configuration = config;
 
     if( argc_ == 2 )
         StateSerializationHelper(displayGroup_).load( argv_[1] );
 
-    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
-            mpiChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
-
-    connect(config->getOptions().get(), SIGNAL(updated(OptionsPtr)),
-            mpiChannel_.get(), SLOT(send(OptionsPtr)));
-
     init(config);
 }
 
 MasterApplication::~MasterApplication()
 {
+    masterToWallChannel_->sendQuit();
+
+    mpiSendThread_.quit();
+    mpiSendThread_.wait();
+
+    mpiReceiveThread_.quit();
+    mpiReceiveThread_.wait();
+
 #if ENABLE_SKELETON_SUPPORT
     skeletonThread_->stop();
     skeletonThread_->wait();
@@ -119,7 +129,12 @@ void MasterApplication::init(const MasterConfiguration* config)
     initPixelStreamLauncher();
     startNetworkListener(config);
     startWebservice(config->getWebServicePort());
+    initMPIConnection();
     restoreBackground(config);
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+    initTouchListener();
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
     startJoystickThread();
@@ -136,10 +151,6 @@ void MasterApplication::startNetworkListener(const MasterConfiguration* configur
         return;
 
     networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
-    connect(networkListener_->getPixelStreamDispatcher(),
-            SIGNAL(sendFrame(PixelStreamFramePtr)),
-            mpiChannel_.get(),
-            SLOT(send(PixelStreamFramePtr)));
 
     CommandHandler& handler = networkListener_->getCommandHandler();
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));
@@ -192,8 +203,50 @@ void MasterApplication::initPixelStreamLauncher()
     pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(openDock(QPointF,QSize,QString)),
                                        SLOT(openDock(QPointF,QSize,QString)));
     pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(hideDock()),
-                                       SLOT(hideDock()));
+                                    SLOT(hideDock()));
 }
+
+void MasterApplication::initMPIConnection()
+{
+    masterToWallChannel_->moveToThread(&mpiSendThread_);
+    masterFromWallChannel_->moveToThread(&mpiReceiveThread_);
+
+    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
+            masterToWallChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
+
+    connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
+            masterToWallChannel_.get(), SLOT(send(OptionsPtr)));
+
+    connect(markers_.get(), SIGNAL(updated(MarkersPtr)),
+            masterToWallChannel_.get(), SLOT(send(MarkersPtr)));
+
+    connect(networkListener_->getPixelStreamDispatcher(),
+            SIGNAL(sendFrame(PixelStreamFramePtr)),
+            masterToWallChannel_.get(), SLOT(send(PixelStreamFramePtr)));
+
+    connect(masterFromWallChannel_.get(),
+            SIGNAL(receivedRequestFrame(const QString)),
+            networkListener_->getPixelStreamDispatcher(), SLOT(requestFrame(const QString)));
+
+    connect(&mpiReceiveThread_, SIGNAL(started()),
+            masterFromWallChannel_.get(), SLOT(processMessages()));
+
+    mpiSendThread_.start();
+    mpiReceiveThread_.start();
+}
+
+#if ENABLE_TUIO_TOUCH_LISTENER
+void MasterApplication::initTouchListener()
+{
+    touchListener_.reset(new MultiTouchListener(masterWindow_->getGraphicsView()));
+    connect(touchListener_.get(), SIGNAL(touchPointAdded(int,QPointF)),
+            markers_.get(), SLOT(addMarker(int,QPointF)));
+    connect(touchListener_.get(), SIGNAL(touchPointUpdated(int,QPointF)),
+            markers_.get(), SLOT(updateMarker(int,QPointF)));
+    connect(touchListener_.get(), SIGNAL(touchPointRemoved(int)),
+            markers_.get(), SLOT(removeMarker(int)));
+}
+#endif
 
 #if ENABLE_JOYSTICK_SUPPORT
 void MasterApplication::startJoystickThread()

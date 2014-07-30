@@ -57,6 +57,9 @@ struct MetaTypeRegistration
     {
         qRegisterMetaType<size_t>("size_t");
         qRegisterMetaType<Event>("Event");
+        qRegisterMetaType<OptionsPtr>("OptionsPtr");
+        qRegisterMetaType<MarkersPtr>("MarkersPtr");
+        qRegisterMetaType<DisplayGroupManagerPtr>("DisplayGroupManagerPtr");
         qRegisterMetaType<ContentWindowManagerPtr>("ContentWindowManagerPtr");
         qRegisterMetaType<PixelStreamSegment>("PixelStreamSegment");
         qRegisterMetaType<PixelStreamFramePtr>("PixelStreamFramePtr");

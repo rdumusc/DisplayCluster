@@ -43,6 +43,7 @@
 
 #include "globals.h"
 #include "configuration/Configuration.h"
+#include "Options.h"
 
 #include "log.h"
 
@@ -52,16 +53,31 @@
 #define MARKER_WIDTH 0.005
 
 MarkerRenderer::MarkerRenderer()
+    : markers_(new Markers)
 {
 }
 
-void MarkerRenderer::render(MarkerPtr marker)
+void MarkerRenderer::render()
+{
+    if (!g_configuration->getOptions()->getShowTouchPoints())
+        return;
+
+    const MarkersMap& map = markers_->getMarkers();
+    for(MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it)
+        render(it->second);
+}
+
+void MarkerRenderer::setMarkers(MarkersPtr markers)
+{
+    markers_ = markers;
+}
+
+void MarkerRenderer::render(const Marker& marker)
 {
     if (!texture_.isValid() && !generateTexture())
         return;
 
-    float x, y;
-    marker->getPosition(x, y);
+    const QPointF pos = marker.getPosition();
 
     // marker height needs to be scaled by the tiled display aspect ratio
     const float tiledDisplayAspect = g_configuration->getAspectRatio();
@@ -75,9 +91,9 @@ void MarkerRenderer::render(MarkerPtr marker)
 
     glPushMatrix();
 
-    glTranslatef(x, y, 0);
+    glTranslatef(pos.x(), pos.y(), 0);
     glScalef(MARKER_WIDTH, markerHeight, 1.f);
-    glTranslatef(-0.5f*MARKER_WIDTH, -0.5f*markerHeight, 0); // Center unit quad
+    glTranslatef(-0.5f, -0.5f, 0); // Center unit quad
 
     texture_.bind();
     quad_.render();

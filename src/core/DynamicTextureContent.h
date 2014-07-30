@@ -75,7 +75,9 @@ class DynamicTextureContent : public Content
             ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
         }
 
-        void advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration) override;
+        void preRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&) override;
+
+        void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel&) override;
 };
 
 #endif

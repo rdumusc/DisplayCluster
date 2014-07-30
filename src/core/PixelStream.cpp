@@ -41,16 +41,18 @@
 #include "ContentWindowManager.h"
 #include "configuration/Configuration.h"
 #include "Options.h"
-#include "MPIChannel.h"
+#include "WallToWallChannel.h"
 #include "RenderContext.h"
-#include "GLWindow.h"
 #include "log.h"
+#include "PixelStreamFrame.h"
 
 #include "PixelStreamSegmentRenderer.h"
 #include "PixelStreamSegmentDecoder.h"
 
 #include "PixelStreamSegmentParameters.h"
 using dc::PixelStreamSegmentParameters;
+
+#include <boost/bind.hpp>
 
 PixelStream::PixelStream(const QString &uri)
     : uri_(uri)
@@ -66,12 +68,14 @@ void PixelStream::getDimensions(int &width, int &height) const
     height = height_;
 }
 
-void PixelStream::preRenderUpdate(const QRectF& windowRect)
+void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel)
 {
+    sync(wallToWallChannel);
+
     // Store the window coordinates for the rendering pass
     contentWindowRect_ = windowRect;
 
-    if( isDecodingInProgress( ))
+    if(isDecodingInProgress(wallToWallChannel))
         return;
 
     // After swapping the buffers, wait until decoding has finished to update the renderers.
@@ -203,12 +207,23 @@ void PixelStream::adjustSegmentRendererCount(const size_t count)
     }
 }
 
-void PixelStream::insertNewFrame(const PixelStreamSegments &segments)
+void PixelStream::setNewFrame(const PixelStreamFramePtr frame)
 {
-    backBuffer_ = segments;
+    syncPixelStreamFrame_.update(frame);
 }
 
-bool PixelStream::isDecodingInProgress()
+void PixelStream::sync(WallToWallChannel& wallToWallChannel)
+{
+    const SyncFunction& versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, &wallToWallChannel, _1 );
+    if (syncPixelStreamFrame_.sync(versionCheckFunc))
+    {
+        backBuffer_ = syncPixelStreamFrame_.get()->segments;
+        emit requestFrame(uri_);
+    }
+}
+
+bool PixelStream::isDecodingInProgress(WallToWallChannel& wallToWallChannel)
 {
     // determine if threads are running on any processes for this PixelStream
     int localThreadsRunning = 0;
@@ -220,7 +235,7 @@ bool PixelStream::isDecodingInProgress()
             ++localThreadsRunning;
     }
 
-    int globalThreadsRunning = g_mpiChannel->globalSum(localThreadsRunning);
+    int globalThreadsRunning = wallToWallChannel.globalSum(localThreadsRunning);
     return globalThreadsRunning > 0;
 }
 

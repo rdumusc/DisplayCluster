@@ -57,9 +57,6 @@ void DisplayGroupRenderer::render()
     renderBackgroundContent(displayGroup_->getBackgroundContentWindow());
     renderContentWindows(displayGroup_->getContentWindowManagers());
 
-    // Markers should be rendered last since they're blended
-    renderMarkers(displayGroup_->getMarkers());
-
 #if ENABLE_SKELETON_SUPPORT
     if (g_configuration->getOptions()->getShowSkeletons())
         skeletonRenderer_.render(displayGroup_->getSkeletons());
@@ -112,15 +109,5 @@ void DisplayGroupRenderer::renderContentWindows(ContentWindowManagerPtrs content
         }
 
         ++i;
-    }
-}
-
-void DisplayGroupRenderer::renderMarkers(const MarkerPtrs& markers)
-{
-    for(MarkerPtrs::const_iterator it = markers.begin(); it != markers.end(); ++it)
-    {
-        // only render recently active markers
-        if((*it)->isActive())
-            markerRenderer_.render(*it);
     }
 }

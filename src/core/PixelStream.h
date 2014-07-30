@@ -41,8 +41,10 @@
 
 #include "FactoryObject.h"
 #include "PixelStreamSegment.h"
+#include "SwapSyncObject.h"
 #include "types.h"
 
+#include <QObject>
 #include <QRectF>
 #include <QString>
 #include <boost/shared_ptr.hpp>
@@ -50,22 +52,32 @@
 
 class PixelStreamSegmentRenderer;
 class PixelStreamSegmentDecoder;
+class WallToWallChannel;
 typedef boost::shared_ptr<PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
 typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRendererPtr;
 
-class PixelStream : public FactoryObject
+class PixelStream : public QObject, public FactoryObject
 {
+    Q_OBJECT
+
 public:
     PixelStream(const QString& uri);
 
     void getDimensions(int &width, int &height) const override;
 
-    void preRenderUpdate(const QRectF& windowRect);
+    void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
     void render(const QRectF& texCoords) override;
 
-    void insertNewFrame(const PixelStreamSegments& segments);
+    void setNewFrame(const PixelStreamFramePtr frame);
+
+signals:
+    void requestFrame(const QString uri);
 
 private:
+    void sync(WallToWallChannel& wallToWallChannel);
+
+    SwapSyncObject<PixelStreamFramePtr> syncPixelStreamFrame_;
+
     // pixel stream identifier
     QString uri_;
 
@@ -97,7 +109,7 @@ private:
     void adjustFrameDecodersCount(const size_t count);
     void adjustSegmentRendererCount(const size_t count);
 
-    bool isDecodingInProgress();
+    bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
 
     bool isVisible(const QRect& segment, const QRectF& windowRect);
     bool isVisible(const PixelStreamSegment& segment, const QRectF& windowRect);

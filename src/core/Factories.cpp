@@ -40,17 +40,22 @@
 #include "Factories.h"
 
 #include "Content.h"
+#include "DisplayGroupManager.h"
+#include "ContentWindowManager.h"
+#include "PixelStreamFrame.h"
 
-Factories::Factories(RenderContext& renderContext)
+#include <boost/foreach.hpp>
+
+Factories::Factories(const Factory<FactoryObject>::NewObjectFunc& func)
     : frameIndex_(0)
-    , textureFactory_(renderContext)
-    , dynamicTextureFactory_(renderContext)
+    , textureFactory_(func)
+    , dynamicTextureFactory_(func)
 #if ENABLE_PDF_SUPPORT
-    , pdfFactory_(renderContext)
+    , pdfFactory_(func)
 #endif
-    , svgFactory_(renderContext)
-    , movieFactory_(renderContext)
-    , pixelStreamFactory_(renderContext)
+    , svgFactory_(func)
+    , movieFactory_(func)
+    , pixelStreamFactory_(func)
 {
 }
 
@@ -78,6 +83,36 @@ void Factories::clear()
     svgFactory_.clear();
     movieFactory_.clear();
     pixelStreamFactory_.clear();
+}
+
+void Factories::preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+{
+    ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
+
+    // note that if we have multiple ContentWindows for a single Content object,
+    // we will call advance() multiple times per frame on that Content object...
+    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    {
+        contentWindow->getContent()->preRenderUpdate(*this, contentWindow, wallChannel);
+    }
+    ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
+    if (backgroundWindow)
+        backgroundWindow->getContent()->preRenderUpdate(*this, backgroundWindow, wallChannel);
+}
+
+void Factories::postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+{
+    ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
+
+    // note that if we have multiple ContentWindows for a single Content object,
+    // we will call advance() multiple times per frame on that Content object...
+    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    {
+        contentWindow->getContent()->postRenderUpdate(*this, contentWindow, wallChannel);
+    }
+    ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
+    if (backgroundWindow)
+        backgroundWindow->getContent()->postRenderUpdate(*this, backgroundWindow, wallChannel);
 }
 
 FactoryObjectPtr Factories::getFactoryObject(ContentPtr content)
@@ -111,6 +146,14 @@ FactoryObjectPtr Factories::getFactoryObject(ContentPtr content)
     }
     object->setFrameIndex(frameIndex_);
     return object;
+}
+
+void Factories::updatePixelStream(PixelStreamFramePtr frame)
+{
+    typedef boost::shared_ptr<PixelStream> PixelStreamPtr;
+    PixelStreamPtr pixelStream = pixelStreamFactory_.getObject(frame->uri);
+    pixelStream->setNewFrame(frame);
+    pixelStream->setFrameIndex(frameIndex_);
 }
 
 Factory<Texture> & Factories::getTextureFactory()

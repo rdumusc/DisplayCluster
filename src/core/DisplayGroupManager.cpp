@@ -39,10 +39,9 @@
 #include "DisplayGroupManager.h"
 
 #include "ContentWindowManager.h"
-#include "Content.h"
-#include "MPIChannel.h"
 
-#include <QApplication>
+#include "log.h"
+#include <boost/foreach.hpp>
 
 DisplayGroupManager::DisplayGroupManager()
 {
@@ -50,40 +49,6 @@ DisplayGroupManager::DisplayGroupManager()
 
 DisplayGroupManager::~DisplayGroupManager()
 {
-}
-
-DisplayGroupManager::DisplayGroupManager(MPIChannelPtr mpiChannel)
-    : mpiChannel_(mpiChannel)
-{
-    assert(mpiChannel_->getRank() == 0);
-}
-
-MarkerPtr DisplayGroupManager::getNewMarker()
-{
-    QMutexLocker locker(&markersMutex_);
-
-    MarkerPtr marker(new Marker());
-    markers_.push_back(marker);
-
-    // the marker needs to be owned by the main thread for queued connections to work properly
-    marker->moveToThread(QApplication::instance()->thread());
-
-    // make marker trigger sendDisplayGroup() when it is updated
-    connect(marker.get(), SIGNAL(positionChanged()), this, SLOT(sendDisplayGroup()), Qt::QueuedConnection);
-
-    return marker;
-}
-
-MarkerPtrs DisplayGroupManager::getMarkers() const
-{
-    QMutexLocker locker(&markersMutex_);
-    return markers_;
-}
-
-void DisplayGroupManager::deleteMarkers()
-{
-    QMutexLocker locker(&markersMutex_);
-    markers_.clear();
 }
 
 #if ENABLE_SKELETON_SUPPORT
@@ -95,6 +60,15 @@ SkeletonStatePtrs DisplayGroupManager::getSkeletons()
 
 void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
 {
+    BOOST_FOREACH(ContentWindowManagerPtr existingWindow, contentWindowManagers_)
+    {
+        if (contentWindowManager->getID() == existingWindow->getID())
+        {
+            put_flog(LOG_WARN, "A window with the same id already exists!");
+            return;
+        }
+    }
+
     DisplayGroupInterface::addContentWindowManager(contentWindowManager, source);
 
     if(source != this)
@@ -103,14 +77,6 @@ void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr conten
         watchChanges(contentWindowManager);
 
         emit modified(shared_from_this());
-
-        if (mpiChannel_ && contentWindowManager->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM)
-        {
-            // TODO initialize all content dimensions on creation so we can
-            // remove this procedure (DISCL-21)
-            // make sure we have its dimensions so we can constrain its aspect ratio
-            mpiChannel_->sendContentsDimensionsRequest(getContentWindowManagers());
-        }
     }
 }
 

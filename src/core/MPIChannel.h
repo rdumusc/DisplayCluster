@@ -41,38 +41,71 @@
 #define MPICHANNEL_H
 
 #include "types.h"
+#include "MPIHeader.h"
 
-#include "Factory.hpp"
-
-#include <QObject>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <mpi.h>
 
-struct MessageHeader;
+class MPIContext;
+typedef boost::shared_ptr<MPIContext> MPIContextPtr;
+
+/**
+ * The result of an MPIChannel::probe() operation
+ */
+struct ProbeResult
+{
+    /** The source process that has sent a message */
+    const int src;
+
+    /** The size of the message */
+    const int size;
+
+    /** The type of the message */
+    const MPIMessageType message;
+
+    /** @return True if the probe was successful and receive() is safe */
+    bool isValid() const
+    {
+        return size != MPI_UNDEFINED;
+    }
+};
 
 /**
  * Handle MPI communications between all DisplayCluster instances.
  */
-class MPIChannel : public QObject
+class MPIChannel
 {
-    Q_OBJECT
-
 public:
     /**
-     * Constructor, initialize the MPI communication.
-     * Only one instance is of this class per program is allowed.
+     * Create a new channel, initializing the MPI context.
+     * This constructor should only be used once per program.
+     * Use the alternative constructor to create additional channels which
+     * share the primary MPIContext.
      * @param argc main program arguments count
      * @param argv main program arguments
      */
     MPIChannel(int argc, char* argv[]);
 
-    /** Destructor, finalize the MPI communication. */
+    /**
+     * Create a new channel from splitting its parent channel.
+     * @param parent The parent context to split, sharing the same MPIContext
+     * @param color All processes with the same color belong to the same channel
+     * @param key If provided, used to order the new ranks for the new channel
+     */
+    MPIChannel(const MPIChannel& parent, const int color, const int key);
+
+    /** Destructor, closes the MPI channel. */
     ~MPIChannel();
 
     /** Get the rank of this process. */
     int getRank() const;
 
-    /** Block execution until all programs have reached the barrier. */
+    /** Get the number of processes in this channel. */
+    int getSize() const;
+
+    /** Is the channel thread-safe. Depends on the MPI implementation. */
+    bool isThreadSafe() const;
+
+    /** Block execution until all participants have reached the barrier. */
     void globalBarrier() const;
 
     /**
@@ -82,103 +115,81 @@ public:
      */
     int globalSum(const int localValue) const;
 
-    /** Synchronize clock time across all processes. */
-    void synchronizeClock();
-
-    /** Get the current timestamp, synchronized accross processes. */
-    boost::posix_time::ptime getTime() const;
+    /**
+     * Send data to a single process
+     * @param type The type of data to send
+     * @param serializedData The serialized data
+     * @param dest The destination process
+     */
+    void send(const MPIMessageType type, const std::string& serializedData, const int dest);
 
     /**
-     * Ranks 1-N: Receive messages.
-     * Will emit a signal if an object was reveived.
-     * @see received(DisplayGroupManagerPtr)
-     * @see received(OptionsPtr)
+     * Send a signal to all processes
+     * @param type The type of signal
      */
-    void receiveMessages();
+    void sendAll(const MPIMessageType type);
 
     /**
-     * Rank0: Calibrate the offset between its local clock and the rank1 clock.
-     * @note The rank1 clock is used across ranks 1-N.
+     * Send a brodcast message to all other processes
+     * @param type The message type
+     * @param serializedData The serialized data
      */
-    void calibrateTimestampOffset();
+    void broadcast(const MPIMessageType type, const std::string& serializedData);
+
+    /** Nonblocking probe for messages from a given source */
+    bool isMessageAvailable(const int src);
 
     /**
-     * Rank0: send quit message to ranks 1-N, terminating the processes.
+     * Perform a blocking probe operation that returns if a message is pending
+     * @param src The source process of where to probe on, default MPI_ANY_SOURCE
+     * @param tag The message tag of interest, default MPI_ANY_TAG
+     * @return The probe result for a subsequent receive()
      */
-    void sendQuit();
-
-    // TODO remove content dimension requests (DISCL-21)
-    /**
-     * Rank0: ask rank1 to provide the dimensions for the given Contents.
-     * @param contentWindows The Contents for which to update dimensions.
-     */
-    void sendContentsDimensionsRequest(ContentWindowManagerPtrs contentWindows);
-
-    /** Set the factories on Rank1 to respond to Content Dimensions request */
-    void setFactories(FactoriesPtr factories);
-
-public slots:
-    /**
-     * Rank0: send the given DisplayGroup to ranks 1-N
-     * @param displayGroup The DisplayGroup to send
-     */
-    void send(DisplayGroupManagerPtr displayGroup);
+    ProbeResult probe(const int src = MPI_ANY_SOURCE, const int tag = MPI_ANY_TAG);
 
     /**
-     * Rank0: send the given Options to ranks 1-N
-     * @param options The options to send
+     * Receive a header from a specific process.
+     * This call is blocking.
+     * @see isMessageAvailable()
+     * @param src The source process
+     * @return The header containing the message type and size
      */
-    void send(OptionsPtr options);
+    MPIHeader receiveHeader(const int src);
 
     /**
-     * Rank 0: Send pixel stream frame to ranks 1-N
-     * @param frame The frame to send
+     * Receive a message from a specific process.
+     * This call is blocking.
+     * @see receiveHeader()
+     * @param dataBuffer The target data buffer
+     * @param messageSize The number of bytes to receive
+     * @param src The source process
+     * @param tag The message tag/type, see probe()
      */
-    void send(PixelStreamFramePtr frame);
-
-signals:
-    /**
-     * Rank 1-N: Emitted when a displayGroup was recieved
-     * @see receiveMessages()
-     * @param displayGroup The DisplayGroup that was received
-     */
-    void received(DisplayGroupManagerPtr displayGroup);
+    void receive(char* dataBuffer, const size_t messageSize, const int src, const int tag = 0);
 
     /**
-     * Rank 1-N: Emitted when new Options were recieved
-     * @see receiveMessages()
-     * @param options The options that was received
+     * Recieve a broadcast.
+     * This call is blocking.
+     * @see receiveHeader()
+     * @param dataBuffer The target data buffer
+     * @param messageSize The number of bytes to receive
      */
-    void received(OptionsPtr options);
+    void receiveBroadcast(char* dataBuffer, const size_t messageSize);
 
     /**
-     * Rank 1-N: Emitted when a new PixelStream frame was recieved
-     * @see receiveMessages()
-     * @param frame The frame that was received
+     * Gather the values accross all the processes.
+     * @param value The local value
+     * @return A vector of values of size getSize(), ordered by process rank
      */
-    void received(PixelStreamFramePtr frame);
+    std::vector<uint64_t> gatherAll(const uint64_t value);
 
 private:
+    MPIContextPtr mpiContext_;
+    MPI_Comm mpiComm_;
     int mpiRank_;
     int mpiSize_;
-    MPI_Comm mpiRenderComm_;
 
-    boost::posix_time::ptime timestamp_; // frame timing
-    boost::posix_time::time_duration timestampOffset_; // rank1 - rank0 offset
-
-    void sendFrameClockUpdate();
-    void receiveFrameClockUpdate();
-
-    // Ranks 1-n recieve data through MPI
-    DisplayGroupManagerPtr receiveDisplayGroup(const MessageHeader& messageHeader);
-    OptionsPtr receiveOptions(const MessageHeader& messageHeader);
-    void receivePixelStreams(const MessageHeader& messageHeader);
-
-    // TODO remove content dimension requests (DISCL-21)
-    void receiveContentsDimensionsRequest();
-    // Storing the DisplayGroup (on Rank1) to serve contentDimensionsRequests
-    DisplayGroupManagerPtr displayGroup_;
-    FactoriesPtr factories_;
+    void send(const MPIHeader& header, const int dest);
 };
 
 #endif // MPICHANNEL_H

@@ -119,13 +119,8 @@ void NetworkListenerThread::process()
 
 void NetworkListenerThread::socketReceiveMessage()
 {
-    // first, read the message header
-    MessageHeader mh = receiveMessageHeader();
-
-    // next, read the actual message
-    QByteArray messageByteArray = receiveMessageBody(mh.size);
-
-    // got the message
+    const MessageHeader mh = receiveMessageHeader();
+    const QByteArray messageByteArray = receiveMessageBody(mh.size);
     handleMessage(mh, messageByteArray);
 }
 
@@ -169,7 +164,8 @@ void NetworkListenerThread::processEvent(Event evt)
     emit dataAvailable();
 }
 
-void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader, const QByteArray& byteArray)
+void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader,
+                                          const QByteArray& byteArray)
 {
     const QString uri(messageHeader.uri);
 
@@ -189,6 +185,8 @@ void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader, co
             pixelStreamUri_ = uri;
             emit receivedAddPixelStreamSource(uri, socketDescriptor_);
         }
+        else
+            put_flog(LOG_ERROR, "Error: PixelStream already opened!");
         break;
 
     case MESSAGE_TYPE_PIXELSTREAM_FINISH_FRAME:
@@ -242,7 +240,8 @@ void NetworkListenerThread::handlePixelStreamMessage(const QString& uri, const Q
     }
     else
     {
-        put_flog(LOG_INFO, "received PixelStreamSegement from incorrect uri: %s", uri.toLocal8Bit().constData());
+        put_flog(LOG_INFO, "received PixelStreamSegement from incorrect uri: %s",
+                 uri.toLocal8Bit().constData());
     }
 }
 
@@ -268,30 +267,16 @@ void NetworkListenerThread::sendProtocolVersion()
 {
     const int32_t protocolVersion = NETWORK_PROTOCOL_VERSION;
     tcpSocket_->write((char *)&protocolVersion, sizeof(int32_t));
-
-    tcpSocket_->flush();
-
-    while(tcpSocket_->bytesToWrite() > 0)
-    {
-        tcpSocket_->waitForBytesWritten();
-    }
+    flushSocket();
 }
 
 void NetworkListenerThread::sendBindReply(const bool successful)
 {
-    // send message header
     MessageHeader mh(MESSAGE_TYPE_BIND_EVENTS_REPLY, sizeof(bool));
     send(mh);
 
     tcpSocket_->write((const char *)&successful, sizeof(bool));
-
-    // we want the message to be sent immediately
-    tcpSocket_->flush();
-
-    while(tcpSocket_->bytesToWrite() > 0)
-    {
-        tcpSocket_->waitForBytesWritten();
-    }
+    flushSocket();
 }
 
 void NetworkListenerThread::send(const Event& evt)
@@ -304,27 +289,14 @@ void NetworkListenerThread::send(const Event& evt)
         QDataStream stream(tcpSocket_);
         stream << evt;
     }
-    // we want the message to be sent immediately
-    tcpSocket_->flush();
-
-    while(tcpSocket_->bytesToWrite() > 0)
-    {
-        tcpSocket_->waitForBytesWritten();
-    }
+    flushSocket();
 }
 
 void NetworkListenerThread::sendQuit()
 {
     MessageHeader mh(MESSAGE_TYPE_QUIT, 0);
     send(mh);
-
-    // we want the message to be sent immediately
-    tcpSocket_->flush();
-
-    while(tcpSocket_->bytesToWrite() > 0)
-    {
-        tcpSocket_->waitForBytesWritten();
-    }
+    flushSocket();
 }
 
 bool NetworkListenerThread::send(const MessageHeader& messageHeader)
@@ -333,4 +305,11 @@ bool NetworkListenerThread::send(const MessageHeader& messageHeader)
     stream << messageHeader;
 
     return stream.status() == QDataStream::Ok;
+}
+
+void NetworkListenerThread::flushSocket()
+{
+    tcpSocket_->flush();
+    while(tcpSocket_->bytesToWrite() > 0)
+        tcpSocket_->waitForBytesWritten();
 }

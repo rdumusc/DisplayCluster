@@ -37,14 +37,16 @@
 /*********************************************************************/
 
 #include "DisplayGroupGraphicsScene.h"
-#include "globals.h"
-#include "Options.h"
-#include "configuration/Configuration.h"
-#include "DisplayGroupManager.h"
-#include "Marker.h"
 
-DisplayGroupGraphicsScene::DisplayGroupGraphicsScene(DisplayGroupManagerPtr displayGroup)
-    : displayGroup_(displayGroup)
+#include "globals.h"
+#include "configuration/Configuration.h"
+
+#include <QGraphicsRectItem>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QGraphicsSceneMouseEvent>
+
+DisplayGroupGraphicsScene::DisplayGroupGraphicsScene()
 {
     setSceneRect(0., 0., 1., 1.);
 
@@ -53,9 +55,6 @@ DisplayGroupGraphicsScene::DisplayGroupGraphicsScene(DisplayGroupManagerPtr disp
 
     // add rectangles for the tiles
     refreshTileRects();
-
-    // get marker for this scene
-    markers_.push_back( displayGroup_->getNewMarker( ));
 }
 
 void DisplayGroupGraphicsScene::refreshTileRects()
@@ -84,10 +83,8 @@ void DisplayGroupGraphicsScene::refreshTileRects()
     QBrush brush = QBrush(QColor(0, 0, 0, 32));
 
     // clear existing tile rects
-    for(unsigned int i=0; i<tileRects_.size(); i++)
-    {
-        delete tileRects_[i];
-    }
+    for(TileRectItems::iterator it = tileRects_.begin(); it != tileRects_.end(); ++it)
+        delete *it;
 
     tileRects_.clear();
 
@@ -116,25 +113,6 @@ bool DisplayGroupGraphicsScene::event(QEvent *evt)
 {
     switch( evt->type())
     {
-    case QEvent::TouchBegin:
-    case QEvent::TouchUpdate:
-    case QEvent::TouchEnd:
-    {
-        if( g_configuration->getOptions()->getShowTouchPoints( ))
-        {
-            QTouchEvent* touchEvent = static_cast< QTouchEvent* >( evt );
-
-            while( markers_.size() < size_t( touchEvent->touchPoints().size( )))
-                markers_.push_back( displayGroup_->getNewMarker( ));
-
-            for( int i = 0; i < touchEvent->touchPoints().size(); ++i )
-            {
-                markers_[i]->setPosition(touchEvent->touchPoints()[i].normalizedPos().x(),
-                                         touchEvent->touchPoints()[i].normalizedPos().y());
-            }
-        }
-        return QGraphicsScene::event(evt);
-    }
     case QEvent::KeyPress:
     {
         QKeyEvent *k = static_cast<QKeyEvent*>(evt);
@@ -157,21 +135,15 @@ bool DisplayGroupGraphicsScene::event(QEvent *evt)
 
 void DisplayGroupGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent * mouseEvent)
 {
-    markers_[0]->setPosition(mouseEvent->scenePos().x(), mouseEvent->scenePos().y());
-
     QGraphicsScene::mouseMoveEvent(mouseEvent);
 }
 
 void DisplayGroupGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent * mouseEvent)
 {
-    markers_[0]->setPosition(mouseEvent->scenePos().x(), mouseEvent->scenePos().y());
-
     QGraphicsScene::mousePressEvent(mouseEvent);
 }
 
 void DisplayGroupGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent * mouseEvent)
 {
-    markers_[0]->setPosition(mouseEvent->scenePos().x(), mouseEvent->scenePos().y());
-
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
 }

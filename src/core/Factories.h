@@ -51,6 +51,8 @@
 #include "Movie.h"
 #include "PixelStream.h"
 
+#include <QObject>
+
 /**
  * A set of Factory<T> for all valid ContentTypes.
  *
@@ -59,11 +61,16 @@
  * It implements a basic garbage collection strategy for FactoryObjects
  * that are no longer referenced/accessed.
  */
-class Factories
+class Factories : public QObject
 {
+    Q_OBJECT
+
 public:
-    /** Constructor */
-    Factories(RenderContext& renderContext);
+    /**
+     * Constructor
+     * @param func the callback function when a new object in a factory was created
+     */
+    Factories(const Factory<FactoryObject>::NewObjectFunc& func);
 
     /**
      * Get the factory object associated to a given Content.
@@ -87,6 +94,12 @@ public:
     /** Clear all Factories (useful on shutdown). */
     void clear();
 
+    /** Update the objects before rendering. */
+    void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+
+    /** Update the objects after rendering. */
+    void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+
     //@{
     /** Getters for specific Factory types. */
     Factory<Texture> & getTextureFactory();
@@ -98,6 +111,16 @@ public:
     Factory<Movie> & getMovieFactory();
     Factory<PixelStream> & getPixelStreamFactory();
     //@}
+
+public slots:
+    /**
+     * Update a PixelStream with the given frame.
+     *
+     * If the PixelStream for the frame uri does not exist, it is created.
+     * The object accessed or created will not be garbage collected this frame.
+     * @see clearStaleFactoryObjects()
+     */
+    void updatePixelStream(PixelStreamFramePtr frame);
 
 private:
     uint64_t frameIndex_;

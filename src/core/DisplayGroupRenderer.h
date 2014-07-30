@@ -42,19 +42,21 @@
 
 #include "types.h"
 
-#include "ContentWindowRenderer.h"
-#include "MarkerRenderer.h"
 #include "Renderable.h"
-
+#include "ContentWindowRenderer.h"
 #if ENABLE_SKELETON_SUPPORT
 #include "SkeletonRenderer.h"
 #endif
 
+#include <QObject>
+
 /**
  * Renders a DisplayGroup.
  */
-class DisplayGroupRenderer : public Renderable
+class DisplayGroupRenderer : public QObject, public Renderable
 {
+    Q_OBJECT
+
 public:
     /** Constructor */
     DisplayGroupRenderer(FactoriesPtr factories);
@@ -65,6 +67,7 @@ public:
      */
     void render() override;
 
+public slots:
     /**
      * Set the DisplayGroup to render, replacing the previous one.
      * @see render()
@@ -75,14 +78,12 @@ private:
     FactoriesPtr factories_;
     DisplayGroupManagerPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
-    MarkerRenderer markerRenderer_;
 #if ENABLE_SKELETON_SUPPORT
     SkeletonRenderer skeletonRenderer_;
 #endif
 
     void renderBackgroundContent(ContentWindowManagerPtr backgroundContentWindow);
     void renderContentWindows(ContentWindowManagerPtrs contentWindowManagers);
-    void renderMarkers(const MarkerPtrs& markers);
 };
 
 #endif // DISPLAYGROUPRENDERER_H

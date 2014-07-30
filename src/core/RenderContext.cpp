@@ -88,6 +88,14 @@ size_t RenderContext::getGLWindowCount() const
     return glWindows_.size();
 }
 
+void RenderContext::addRenderable(RenderablePtr renderable)
+{
+    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
+    {
+        glWindow->addRenderable(renderable);
+    }
+}
+
 bool RenderContext::isRegionVisible(const QRectF& region) const
 {
     BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)

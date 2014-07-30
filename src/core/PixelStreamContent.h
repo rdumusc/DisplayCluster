@@ -56,7 +56,7 @@ class PixelStreamContent : public Content
         **/
         bool readMetadata() override;
 
-        void advance(FactoriesPtr factories, ContentWindowManagerPtr window, const boost::posix_time::time_duration) override;
+        void preRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
 
     private:
         friend class boost::serialization::access;
