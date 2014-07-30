@@ -17,7 +17,7 @@ dcPath = None
 if 'DISPLAYCLUSTER_DIR' in os.environ:
     dcPath = os.environ['DISPLAYCLUSTER_DIR']
 else:
-    print 'could not get DISPLAYCLUSTER_DIR!'
+    print('could not get DISPLAYCLUSTER_DIR!')
     exit(-3)
 
 # get rank from appropriate MPI API environment variable
@@ -34,7 +34,7 @@ elif 'PMI_ID' in os.environ:
 elif 'PMI_RANK' in os.environ:
     myRank = int(os.environ['PMI_RANK'])
 else:
-    print 'could not determine MPI rank!'
+    print('could not determine MPI rank!')
     exit(-4)
 
 if myRank == 0:
@@ -55,7 +55,7 @@ else:
         elems = doc.findall('.//process')
 
         if len(elems) < myRank:
-            print 'could not find process element for rank ' + str(myRank)
+            print('could not find process element for rank ' + str(myRank))
             exit(-5)
 
         elem = elems[myRank - 1]
@@ -67,7 +67,7 @@ else:
         else:
             os.environ['DISPLAY'] = ':0'
     except:
-        print 'Error processing configuration.xml. Make sure you have created a configuration.xml and put it in ' + dcPath + '/. An example is provided in the examples/ directory.'
+        print('Error processing configuration.xml. Make sure you have created a configuration.xml and put it in ' + dcPath + '/. An example is provided in the examples/ directory.')
         exit(-6)
 
 
