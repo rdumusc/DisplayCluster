@@ -57,7 +57,7 @@ class MarkerRenderer : public QObject, public Renderable
 
 public:
     /** Constructor */
-    MarkerRenderer(OptionsPtr options);
+    MarkerRenderer();
 
     /** Render the markers. */
     void render() override;
@@ -73,7 +73,6 @@ private:
     GLTexture2D texture_;
     GLQuad quad_;
     MarkersPtr markers_;
-    OptionsPtr options_;
 
     bool generateTexture();
     void render(const Marker& marker);

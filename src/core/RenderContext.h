@@ -42,6 +42,7 @@
 #include "types.h"
 
 #include <QRectF>
+#include <QColor>
 
 class WallConfiguration;
 
@@ -60,6 +61,9 @@ public:
     /** Destructor. */
     ~RenderContext();
 
+    /** Set the background color of all windows. */
+    void setBackgroundColor(const QColor& color);
+
     GLWindowPtr getGLWindow(const int index=0) const;
     GLWindowPtr getActiveGLWindow() const;
     size_t getGLWindowCount() const;
@@ -76,18 +80,11 @@ public:
     /** Swap GL buffers on all windows. */
     void swapBuffers();
 
-    /** Get the display options that change during runtime. */
-    OptionsPtr getOptions() const;
-
-    /** Update options (performs a copy) */
-    void updateOptions(OptionsPtr options);
-
 private:
     void setupOpenGLWindows(const WallConfiguration& configuration);
 
     GLWindowPtrs glWindows_;
     GLWindowPtr activeGLWindow_;
-    OptionsPtr options_;
 };
 
 #endif

@@ -43,7 +43,6 @@
 
 #include "globals.h"
 #include "configuration/Configuration.h"
-#include "Options.h"
 
 #include "log.h"
 
@@ -52,17 +51,13 @@
 // this is a fraction of the tiled display width of 1
 #define MARKER_WIDTH 0.005
 
-MarkerRenderer::MarkerRenderer(OptionsPtr options)
+MarkerRenderer::MarkerRenderer()
     : markers_(new Markers)
-    , options_(options)
 {
 }
 
 void MarkerRenderer::render()
 {
-    if (!options_->getShowTouchPoints())
-        return;
-
     const MarkersMap& map = markers_->getMarkers();
     for(MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it)
         render(it->second);

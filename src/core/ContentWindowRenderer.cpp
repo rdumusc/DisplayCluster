@@ -54,9 +54,12 @@
 #define CONTEXT_VIEW_BORDER_WIDTH   5.f
 #define WINDOW_BORDER_WIDTH_PIXELS  5.f
 
-ContentWindowRenderer::ContentWindowRenderer(FactoriesPtr factories, OptionsPtr options)
+ContentWindowRenderer::ContentWindowRenderer(FactoriesPtr factories)
     : factories_(factories)
-    , options_(options)
+    , showWindowBorders_(true)
+    , showZoomContext_(false)
+    , showSegmentBorders_(false)
+    , showSegmentStatistics_(false)
 {
     quad_.setEnableTexture(false);
 }
@@ -66,24 +69,32 @@ void ContentWindowRenderer::render()
     if(!window_)
         return;
 
-    bool showWindowBorders = true;
-    bool showZoomContext = false;
+    renderContent();
 
-    if(g_configuration)
-    {
-        showWindowBorders = options_->getShowWindowBorders();
-        showZoomContext = options_->getShowZoomContext();
-    }
-
-    renderContent(showZoomContext);
-
-    if(showWindowBorders || window_->selected())
+    if(showWindowBorders_ || window_->selected())
         renderWindowBorder();
 }
 
 void ContentWindowRenderer::setContentWindow(ContentWindowManagerPtr window)
 {
     window_ = window;
+}
+
+void ContentWindowRenderer::setShowWindowBorders(const bool show)
+{
+    showWindowBorders_ = show;
+}
+
+void ContentWindowRenderer::setShowZoomContext(const bool show)
+{
+    showZoomContext_ = show;
+}
+
+void ContentWindowRenderer::setPixelStreamOptions(const bool showSegmentBorders,
+                                                  const bool showSegmentStatistics)
+{
+    showSegmentBorders_ = showSegmentBorders;
+    showSegmentStatistics_ = showSegmentStatistics;
 }
 
 void ContentWindowRenderer::renderWindowBorder()
@@ -111,7 +122,7 @@ void ContentWindowRenderer::renderWindowBorder()
     glPopAttrib();
 }
 
-void ContentWindowRenderer::renderContent(const bool showZoomContext)
+void ContentWindowRenderer::renderContent()
 {
     const QRectF winCoord = window_->getCoordinates();
     const QRectF texCoord = getTexCoord();
@@ -124,9 +135,14 @@ void ContentWindowRenderer::renderContent(const bool showZoomContext)
     glScalef(winCoord.width(), winCoord.height(), 1.f);
 
     FactoryObjectPtr object = factories_->getFactoryObject(window_->getContent());
+
+    PixelStream* pixelStream = dynamic_cast< PixelStream* >(object.get());
+    if(pixelStream)
+        pixelStream->setRenderingOptions(showSegmentBorders_, showSegmentStatistics_);
+
     object->render(texCoord);
 
-    if(showZoomContext && window_->getZoom() > 1.)
+    if(showZoomContext_ && window_->getZoom() > 1.)
         renderContextView(object, texCoord);
 
     glPopMatrix();

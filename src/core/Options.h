@@ -61,9 +61,6 @@ public:
     /** Constructor */
     Options();
 
-    /** Copy assignement */
-    void copy(const Options& other);
-
     //@{
     /** Public getters */
     bool getShowWindowBorders() const;

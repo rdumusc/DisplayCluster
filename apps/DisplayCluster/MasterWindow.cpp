@@ -107,6 +107,7 @@ void MasterWindow::setupMasterWindowUI()
     QMenu * fileMenu = menuBar()->addMenu("&File");
     QMenu * editMenu = menuBar()->addMenu("&Edit");
     QMenu * viewMenu = menuBar()->addMenu("&View");
+    QMenu * toolsMenu = menuBar()->addMenu("&Tools");
     QMenu * viewStreamingMenu = viewMenu->addMenu("&Streaming");
 #if ENABLE_PYTHON_SUPPORT
     // add Window menu for Python console. if we add any other entries to it we'll need to remove the #if
@@ -242,7 +243,6 @@ void MasterWindow::setupMasterWindowUI()
     fileMenu->addAction(clearContentsAction);
     fileMenu->addAction(saveStateAction);
     fileMenu->addAction(loadStateAction);
-    fileMenu->addAction(computeImagePyramidAction);
     fileMenu->addAction(quitAction);
     editMenu->addAction(backgroundAction);
     viewMenu->addAction(showWindowBordersAction);
@@ -251,6 +251,7 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction(showZoomContextAction);
     viewStreamingMenu->addAction(showStreamingSegmentsAction);
     viewStreamingMenu->addAction(showStreamingStatisticsAction);
+    toolsMenu->addAction(computeImagePyramidAction);
 
 #if ENABLE_PYTHON_SUPPORT
     windowMenu->addAction(pythonConsoleAction);

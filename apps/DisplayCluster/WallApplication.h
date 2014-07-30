@@ -42,6 +42,7 @@
 
 #include "types.h"
 #include "SwapSyncObject.h"
+#include "RenderController.h"
 
 #include <QApplication>
 #include <QThread>
@@ -79,33 +80,27 @@ signals:
 
 private slots:
     void renderFrame();
-    void updateQuit();
-    void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
-    void updateOptions(OptionsPtr options);
-    void updateMarkers(MarkersPtr markers);
 
 private:
-    boost::scoped_ptr<RenderContext> renderContext_;
+    boost::scoped_ptr<WallConfiguration> config_;
+    RenderContextPtr renderContext_;
+    boost::scoped_ptr<RenderController> renderController_;
+    FactoriesPtr factories_;
+
     boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
     boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
     boost::scoped_ptr<WallToWallChannel> wallChannel_;
-    boost::scoped_ptr<WallConfiguration> config_;
-    FactoriesPtr factories_;
+
     QThread mpiSendThread_;
     QThread mpiReceiveThread_;
 
-    SwapSyncObject<bool> syncQuit_;
-    SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
-    SwapSyncObject<OptionsPtr> syncOptions_;
-    SwapSyncObject<MarkersPtr> syncMarkers_;
-
     bool createConfig(const QString& filename, const int rank);
     void initRenderContext();
-    void setupTestPattern(const int rank);
     void initMPIConnection(MPIChannelPtr worldChannel);
-    void startRendering();
-    void onNewObject(FactoryObject& object);
 
+    void startRendering();
+
+    void onNewObject(FactoryObject& object);
     void syncObjects();
     void preRenderUpdate();
     void postRenderUpdate();

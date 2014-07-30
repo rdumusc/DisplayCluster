@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,90 +37,60 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXEL_STREAM_H
-#define PIXEL_STREAM_H
+#ifndef RENDERCONTROLLER_H
+#define RENDERCONTROLLER_H
 
-#include "FactoryObject.h"
-#include "PixelStreamSegment.h"
-#include "SwapSyncObject.h"
 #include "types.h"
 
+#include "SwapSyncObject.h"
+
 #include <QObject>
-#include <QRectF>
-#include <QString>
-#include <boost/shared_ptr.hpp>
-#include <vector>
 
-class PixelStreamSegmentRenderer;
-class PixelStreamSegmentDecoder;
-class WallToWallChannel;
-typedef boost::shared_ptr<PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
-typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRendererPtr;
+class WallConfiguration;
 
-class PixelStream : public QObject, public FactoryObject
+/**
+ * Setup the scene and control the rendering options during runtime.
+ */
+class RenderController : public QObject
 {
     Q_OBJECT
 
 public:
-    PixelStream(const QString& uri);
+    /** Constructor */
+    RenderController(RenderContextPtr renderContext, FactoriesPtr factories);
 
-    void getDimensions(int &width, int &height) const override;
+    /** Setup the test pattern */
+    void setupTestPattern(const int rank, const WallConfiguration& config);
 
-    void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
-    void render(const QRectF& texCoords) override;
+    /** Get the DisplayGroup */
+    DisplayGroupManagerPtr getDisplayGroup() const;
 
-    void setNewFrame(const PixelStreamFramePtr frame);
+    /** Synchronize the objects */
+    void synchronizeObjects(const SyncFunction& versionCheckFunc);
 
-    void setRenderingOptions(const bool showSegmentBorders,
-                             const bool showSegmentStatistics);
+    /**  Do we need to stop rendering. */
+    bool quitRendering() const;
 
-signals:
-    void requestFrame(const QString uri);
+public slots:
+    void updateQuit();
+    void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
+    void updateOptions(OptionsPtr options);
+    void updateMarkers(MarkersPtr markers);
 
 private:
-    void sync(WallToWallChannel& wallToWallChannel);
+    RenderContextPtr renderContext_;
 
-    SwapSyncObject<PixelStreamFramePtr> syncPixelStreamFrame_;
+    DisplayGroupRendererPtr displayGroupRenderer_;
+    MarkerRendererPtr markerRenderer_;
+    QList<RenderablePtr> testPatterns_;
+    RenderablePtr fpsRenderer_;
 
-    // pixel stream identifier
-    QString uri_;
+    SwapSyncObject<bool> syncQuit_;
+    SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
+    SwapSyncObject<OptionsPtr> syncOptions_;
+    SwapSyncObject<MarkersPtr> syncMarkers_;
 
-    // dimensions of entire pixel stream
-    unsigned int width_;
-    unsigned int height_;
-
-    // The front buffer is decoded by the frameDecoders and then used to upload the frameRenderers
-    PixelStreamSegments frontBuffer_;
-    // The back buffer contains the next frame to process (last frame received)
-    PixelStreamSegments backBuffer_;
-    bool buffersSwapped_;
-
-    // The list of decoded images for the next frame
-    std::vector<PixelStreamSegmentDecoderPtr> frameDecoders_;
-
-    // For each segment, object for image decoding, rendering and storing parameters
-    std::vector<PixelStreamSegmentRendererPtr> segmentRenderers_;
-
-    // The coordinates of the ContentWindow of this PixelStream
-    QRectF contentWindowRect_;
-
-    bool showSegmentBorders_;
-    bool showSegmentStatistics_;
-
-    void updateRenderers(const PixelStreamSegments& segments);
-    void updateVisibleTextures(const QRectF& windowRect);
-    void swapBuffers();
-    void recomputeDimensions(const PixelStreamSegments& segments);
-    void decodeVisibleTextures(const QRectF& windowRect);
-
-    void adjustFrameDecodersCount(const size_t count);
-    void adjustSegmentRendererCount(const size_t count);
-
-    bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
-
-    bool isVisible(const QRect& segment, const QRectF& windowRect);
-    bool isVisible(const PixelStreamSegment& segment, const QRectF& windowRect);
+    void setRenderOptions(OptionsPtr options);
 };
 
-
-#endif
+#endif // RENDERCONTROLLER_H

@@ -37,30 +37,29 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef RENDERABLE_H
-#define RENDERABLE_H
+#ifndef FPSRENDERER_H
+#define FPSRENDERER_H
 
-/** An abstract renderable object */
-class Renderable
+#include "types.h"
+
+#include "Renderable.h"
+#include "FpsCounter.h"
+
+/**
+ * Displays rendering performance using an FpsCounter
+ */
+class FpsRenderer : public Renderable
 {
 public:
     /** Constructor. */
-    Renderable() : visible_(true) {}
-
-    /** Virtual destructor. */
-    virtual ~Renderable() {}
+    FpsRenderer(RenderContextPtr renderContext);
 
     /** Render the object. */
-    virtual void render() = 0;
-
-    /** Check if the object is visible. */
-    bool isVisible() const { return visible_; }
-
-    /** Change the visibility of this object. */
-    void setVisible(const bool visible) { visible_ = visible; }
+    void render() override;
 
 private:
-    bool visible_;
+    FpsCounter fpsCounter_;
+    RenderContextPtr renderContext_;
 };
 
-#endif // RENDERABLE_H
+#endif // FPSRENDERER_H

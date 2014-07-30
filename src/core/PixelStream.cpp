@@ -40,7 +40,6 @@
 #include "globals.h"
 #include "ContentWindowManager.h"
 #include "configuration/Configuration.h"
-#include "Options.h"
 #include "WallToWallChannel.h"
 #include "RenderContext.h"
 #include "log.h"
@@ -53,12 +52,15 @@
 using dc::PixelStreamSegmentParameters;
 
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 
 PixelStream::PixelStream(const QString &uri)
     : uri_(uri)
     , width_(0)
     , height_ (0)
     , buffersSwapped_(false)
+    , showSegmentBorders_(false)
+    , showSegmentStatistics_(false)
 {
 }
 
@@ -170,19 +172,13 @@ void PixelStream::decodeVisibleTextures(const QRectF& windowRect)
 
 void PixelStream::render(const QRectF&)
 {
-    OptionsPtr options = renderContext_->getOptions();
-    const bool showSegmentBorders = options->getShowStreamingSegments();
-    const bool showSegmentStatistics = options->getShowStreamingStatistics();
-
     glPushMatrix();
     glScalef(1.f/(float)width_, 1.f/(float)height_, 0.f);
 
-    for(std::vector<PixelStreamSegmentRendererPtr>::iterator it=segmentRenderers_.begin(); it != segmentRenderers_.end(); ++it)
+    BOOST_FOREACH(PixelStreamSegmentRendererPtr renderer, segmentRenderers_)
     {
-        if (isVisible( (*it)->getRect(), contentWindowRect_ ))
-        {
-            (*it)->render(showSegmentBorders, showSegmentStatistics);
-        }
+        if (isVisible(renderer->getRect(), contentWindowRect_))
+            renderer->render(showSegmentBorders_, showSegmentStatistics_);
     }
 
     glPopMatrix();
@@ -211,6 +207,13 @@ void PixelStream::adjustSegmentRendererCount(const size_t count)
 void PixelStream::setNewFrame(const PixelStreamFramePtr frame)
 {
     syncPixelStreamFrame_.update(frame);
+}
+
+void PixelStream::setRenderingOptions(const bool showSegmentBorders,
+                                      const bool showSegmentStatistics)
+{
+    showSegmentBorders_ = showSegmentBorders;
+    showSegmentStatistics_ = showSegmentStatistics;
 }
 
 void PixelStream::sync(WallToWallChannel& wallToWallChannel)

@@ -41,11 +41,9 @@
 #include "log.h"
 #include "globals.h"
 #include "configuration/WallConfiguration.h"
-#include "Options.h"
 #include "Renderable.h"
 
 #include <QtOpenGL>
-#include <boost/shared_ptr.hpp>
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
@@ -57,16 +55,15 @@
     #include <GL/glu.h>
 #endif
 
-GLWindow::GLWindow(const int tileIndex, QRect windowRect, OptionsPtr options, QGLWidget* shareWidget)
+GLWindow::GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget)
   : QGLWidget(0, shareWidget)
-  , configuration_(static_cast<WallConfiguration*>(g_configuration))
-  , options_(options)
+  , backgroundColor_(Qt::black)
   , tileIndex_(tileIndex)
-  , left_(0)
-  , right_(0)
-  , bottom_(0)
-  , top_(0)
 {
+    const WallConfiguration* configuration(static_cast<const WallConfiguration*>(g_configuration));
+    const QPoint index = configuration->getGlobalScreenIndex(tileIndex_);
+    normalizedCoordinates_ = configuration->getNormalizedScreenRect(index);
+
     setGeometry(windowRect);
     setCursor(Qt::BlankCursor);
 
@@ -93,9 +90,9 @@ void GLWindow::addRenderable(RenderablePtr renderable)
     renderables_.append(renderable);
 }
 
-void GLWindow::setTestPattern(RenderablePtr testPattern)
+void GLWindow::setBackgroundColor(const QColor& color)
 {
-    testPattern_ = testPattern;
+    backgroundColor_ = color;
 }
 
 void GLWindow::initializeGL()
@@ -107,20 +104,14 @@ void GLWindow::initializeGL()
 
 void GLWindow::paintGL()
 {
-    clear(options_->getBackgroundColor());
+    clear(backgroundColor_);
     setOrthographicView();
 
-    if(options_->getShowTestPattern())
-    {
-        testPattern_->render();
-        return;
-    }
-
     foreach (RenderablePtr renderable, renderables_)
-        renderable->render();
-
-    if (options_->getShowStreamingStatistics())
-        drawFps();
+    {
+        if (renderable->isVisible())
+            renderable->render();
+    }
 }
 
 void GLWindow::resizeGL(int w, int h)
@@ -136,7 +127,8 @@ void GLWindow::resizeGL(int w, int h)
 
 void GLWindow::clear(const QColor& clearColor)
 {
-    glClearColor(clearColor.redF(), clearColor.greenF(), clearColor.blueF(), clearColor.alpha());
+    glClearColor(clearColor.redF(), clearColor.greenF(),
+                 clearColor.blueF(), clearColor.alpha());
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -145,10 +137,8 @@ void GLWindow::setOrthographicView()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    const QPoint tileIndex = configuration_->getGlobalScreenIndex(tileIndex_);
-    const QRectF screen = configuration_->getNormalizedScreenRect(tileIndex);
-
-    gluOrtho2D(screen.left(), screen.right(), screen.bottom(), screen.top());
+    gluOrtho2D(normalizedCoordinates_.left(), normalizedCoordinates_.right(),
+               normalizedCoordinates_.bottom(), normalizedCoordinates_.top());
     glPushMatrix();
 
     glMatrixMode(GL_MODELVIEW);
@@ -157,27 +147,7 @@ void GLWindow::setOrthographicView()
 
 bool GLWindow::isRegionVisible(const QRectF& region) const
 {
-    const QRectF screenRect(left_, top_, right_-left_, bottom_-top_);
-
-    return screenRect.intersects(region);
-}
-
-void GLWindow::drawFps()
-{
-    fpsCounter_.tick();
-
-    const int fontSize = 32;
-    QFont textFont;
-    textFont.setPixelSize(fontSize);
-
-    glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT);
-
-    glDisable(GL_DEPTH_TEST);
-    glColor4f(0.,0.,1.,1.);
-
-    renderText(10, fontSize, fpsCounter_.toString(), textFont);
-
-    glPopAttrib();
+    return normalizedCoordinates_.intersects(region);
 }
 
 QRectF GLWindow::getProjectedPixelRect(const bool clampToViewportBorders)

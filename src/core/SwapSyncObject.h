@@ -57,7 +57,9 @@ public:
 
     /** Default constructor. */
     SwapSyncObject()
-        : version_(0)
+        : frontObject_()
+        , backObject_()
+        , version_(0)
     {}
 
     /** Default value constructor. */

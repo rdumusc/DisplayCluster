@@ -59,13 +59,21 @@ class DisplayGroupRenderer : public QObject, public Renderable
 
 public:
     /** Constructor */
-    DisplayGroupRenderer(FactoriesPtr factories, OptionsPtr options);
+    DisplayGroupRenderer(FactoriesPtr factories);
 
     /**
      * Render the associated DisplayGroup.
      * @see setDisplayGroup()
      */
     void render() override;
+
+#if ENABLE_SKELETON_SUPPORT
+    /** Show the skeletons. */
+    void setShowSkeleton(const bool show);
+#endif
+
+    /** Get the window renderer. */
+    ContentWindowRenderer& getWindowRenderer();
 
 public slots:
     /**
@@ -75,11 +83,10 @@ public slots:
     void setDisplayGroup(DisplayGroupManagerPtr displayGroup);
 
 private:
-    FactoriesPtr factories_;
     DisplayGroupManagerPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
-    OptionsPtr options_;
 #if ENABLE_SKELETON_SUPPORT
+    bool showSkeletons_;
     SkeletonRenderer skeletonRenderer_;
 #endif
 

@@ -51,20 +51,6 @@ Options::Options()
 {
 }
 
-void Options::copy(const Options& other)
-{
-    showWindowBorders_ = other.showWindowBorders_;
-    showTouchPoints_ = other.showTouchPoints_;
-    showTestPattern_ = other.showTestPattern_;
-    showZoomContext_ = other.showZoomContext_;
-    showStreamingSegments_ = other.showStreamingSegments_;
-    showStreamingStatistics_ = other.showStreamingStatistics_;
-    backgroundColor_ = other.backgroundColor_;
-#if ENABLE_SKELETON_SUPPORT
-    showSkeletons_ = other.showSkeletons_;
-#endif
-}
-
 bool Options::getShowWindowBorders() const
 {
     return showWindowBorders_;

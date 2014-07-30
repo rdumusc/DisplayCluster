@@ -43,7 +43,6 @@
 #include <QList>
 
 #include "types.h"
-#include "FpsCounter.h"
 
 class WallConfiguration;
 
@@ -60,8 +59,9 @@ public:
      * @param shareWidget An optional widget to share an existing GLContext.
      *                    A new GLContext is allocated if not provided.
      */
-    GLWindow(const int tileIndex, QRect windowRect,
-             OptionsPtr options, QGLWidget* shareWidget = 0);
+    GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget = 0);
+
+    /** Destructor. */
     ~GLWindow();
 
     /** Get the unique tile index identifier. */
@@ -70,8 +70,8 @@ public:
     /** Add an object to be rendered. */
     void addRenderable(RenderablePtr renderable);
 
-    /** Set the test pattern renderable */
-    void setTestPattern(RenderablePtr testPattern);
+    /** Set the background color */
+    void setBackgroundColor(const QColor& color);
 
     /**
      * Is the given region visible in this window.
@@ -100,25 +100,15 @@ protected:
     ///@}
 
 private:
-    const WallConfiguration* configuration_;
-    OptionsPtr options_;
-
+    QColor backgroundColor_;
     int tileIndex_;
 
-    // Postion and dimensions of the GLWindow in normalized Wall coordinates
-    double left_;
-    double right_;
-    double bottom_;
-    double top_;
-
-    FpsCounter fpsCounter_;
+    QRectF normalizedCoordinates_;
 
     QList<RenderablePtr> renderables_;
-    RenderablePtr testPattern_;
 
     void clear(const QColor& clearColor);
     void setOrthographicView();
-    void drawFps();
 };
 
 #endif

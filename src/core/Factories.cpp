@@ -113,6 +113,8 @@ void Factories::postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallCh
     ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
     if (backgroundWindow)
         backgroundWindow->getContent()->postRenderUpdate(*this, backgroundWindow, wallChannel);
+
+    clearStaleFactoryObjects();
 }
 
 FactoryObjectPtr Factories::getFactoryObject(ContentPtr content)

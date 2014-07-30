@@ -40,18 +40,24 @@
 
 #include "configuration/WallConfiguration.h"
 #include "GLWindow.h"
-#include "Options.h"
 
 #include <boost/foreach.hpp>
 
 RenderContext::RenderContext(const WallConfiguration& configuration)
-    : options_(new Options)
 {
     setupOpenGLWindows(configuration);
 }
 
 RenderContext::~RenderContext()
 {
+}
+
+void RenderContext::setBackgroundColor(const QColor& color)
+{
+    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
+    {
+        glWindow->setBackgroundColor(color);
+    }
 }
 
 void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
@@ -65,7 +71,7 @@ void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
         // share OpenGL context from the first GLWindow
         GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0].get();
 
-        GLWindowPtr glw(new GLWindow(i, windowRect, options_, shareWidget));
+        GLWindowPtr glw(new GLWindow(i, windowRect, shareWidget));
         glWindows_.push_back(glw);
 
         if(configuration.getFullscreen())
@@ -124,14 +130,4 @@ void RenderContext::swapBuffers()
         glWindow->makeCurrent();
         glWindow->swapBuffers();
     }
-}
-
-OptionsPtr RenderContext::getOptions() const
-{
-    return options_;
-}
-
-void RenderContext::updateOptions(OptionsPtr options)
-{
-    options_->copy(*options);
 }

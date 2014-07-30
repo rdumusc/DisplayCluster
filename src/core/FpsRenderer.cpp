@@ -37,30 +37,33 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef RENDERABLE_H
-#define RENDERABLE_H
+#include "FpsRenderer.h"
 
-/** An abstract renderable object */
-class Renderable
+#include "RenderContext.h"
+#include "GLWindow.h"
+
+#include <QtOpenGL/qgl.h>
+
+FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
+    : renderContext_(renderContext)
 {
-public:
-    /** Constructor. */
-    Renderable() : visible_(true) {}
+}
 
-    /** Virtual destructor. */
-    virtual ~Renderable() {}
+void FpsRenderer::render()
+{
+    fpsCounter_.tick();
 
-    /** Render the object. */
-    virtual void render() = 0;
+    const int fontSize = 32;
+    QFont textFont;
+    textFont.setPixelSize(fontSize);
 
-    /** Check if the object is visible. */
-    bool isVisible() const { return visible_; }
+    glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT);
 
-    /** Change the visibility of this object. */
-    void setVisible(const bool visible) { visible_ = visible; }
+    glDisable(GL_DEPTH_TEST);
+    glColor4f(0.,0.,1.,1.);
 
-private:
-    bool visible_;
-};
+    renderContext_->getActiveGLWindow()->renderText(10, fontSize, fpsCounter_.toString(), textFont);
 
-#endif // RENDERABLE_H
+    glPopAttrib();
+}
+
