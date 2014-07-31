@@ -83,7 +83,6 @@ private:
     QSpinBox ySpinBox_;
     QSpinBox widthSpinBox_;
     QSpinBox heightSpinBox_;
-    QCheckBox retinaBox_;
     QSpinBox frameRateSpinBox_;
     QLabel frameRateLabel_;
 
@@ -97,7 +96,6 @@ private:
     int y_;
     int width_;
     int height_;
-    float deviceScale_;
     /*@}*/
 
     QImage cursor_;
