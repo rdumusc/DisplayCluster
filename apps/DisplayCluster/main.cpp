@@ -43,6 +43,8 @@
 #include "WallApplication.h"
 #include "MasterApplication.h"
 
+#include <stdexcept>
+
 #include <boost/scoped_ptr.hpp>
 #include <QThreadPool>
 

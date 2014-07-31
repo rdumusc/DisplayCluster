@@ -81,6 +81,7 @@
 #include "ws/TextInputHandler.h"
 #include "ws/DisplayGroupManagerAdapter.h"
 
+#include <stdexcept>
 
 MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel)
     : QApplication(argc_, argv_)
@@ -172,7 +173,15 @@ void MasterApplication::startNetworkListener()
     if (networkListener_)
         return;
 
-    networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
+    try
+    {
+        networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Could not start NetworkListener. '%s'", e.what());
+        return;
+    }
 
     CommandHandler& handler = networkListener_->getCommandHandler();
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));

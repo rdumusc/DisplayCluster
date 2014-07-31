@@ -40,6 +40,9 @@
 
 #include "configuration/WallConfiguration.h"
 #include "GLWindow.h"
+#include "log.h"
+
+#include <stdexcept>
 
 #include <boost/foreach.hpp>
 
@@ -71,7 +74,16 @@ void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
         // share OpenGL context from the first GLWindow
         GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0].get();
 
-        GLWindowPtr glw(new GLWindow(i, windowRect, shareWidget));
+        GLWindowPtr glw;
+        try
+        {
+            glw.reset(new GLWindow(i, windowRect, shareWidget));
+        }
+        catch (const std::runtime_error& e)
+        {
+            put_flog(LOG_FATAL, "Error creating a GLWindow: '%s'", e.what());
+            throw std::runtime_error("Failed creating the GLWindows.");
+        }
         glWindows_.push_back(glw);
 
         if(configuration.getFullscreen())

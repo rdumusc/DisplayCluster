@@ -240,7 +240,7 @@ void NetworkListenerThread::handlePixelStreamMessage(const QString& uri, const Q
     }
     else
     {
-        put_flog(LOG_INFO, "received PixelStreamSegement from incorrect uri: %s",
+        put_flog(LOG_WARN, "received PixelStreamSegement from incorrect uri: %s",
                  uri.toLocal8Bit().constData());
     }
 }

@@ -46,6 +46,7 @@
 #include "CommandHandler.h"
 
 #include <QThread>
+#include <stdexcept>
 
 const int NetworkListener::defaultPortNumber_ = 1701;
 
@@ -56,8 +57,8 @@ NetworkListener::NetworkListener(PixelStreamWindowManager& windowManager, int po
 {
     if( !listen(QHostAddress::Any, port) )
     {
-        put_flog(LOG_FATAL, "could not listen on port %i", port);
-        exit(-1);
+        const QString err = QString("could not listen on port: %1").arg(port);
+        throw std::runtime_error(err.toStdString());
     }
 }
 

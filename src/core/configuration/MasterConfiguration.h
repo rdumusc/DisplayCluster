@@ -54,6 +54,7 @@ public:
     /**
      * @brief MasterConfiguration constructor
      * @param filename \see Configuration
+     * @throw std::runtime_error if the file could not be read
      */
     MasterConfiguration(const QString& filename);
 

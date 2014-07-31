@@ -71,6 +71,7 @@ public:
      * @param argc Command line argument count (required by QApplication)
      * @param argv Command line arguments (required by QApplication)
      * @param worldChannel The world MPI channel
+     * @throw std::runtime_error if an error occured during initialization
      */
     MasterApplication(int &argc, char **argv, MPIChannelPtr worldChannel);
 

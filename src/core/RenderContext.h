@@ -55,6 +55,7 @@ public:
     /**
      * Create a new RenderContext and initialize the GLWindows.
      * @param configuration The configuration that describes the window settings
+     * @throw std::runtime_error if the context initialization failed.
      */
     RenderContext(const WallConfiguration& configuration);
 

@@ -68,6 +68,7 @@ public:
      * @param argv Command line arguments (required by QApplication)
      * @param worldChannel The world MPI channel
      * @param wallChannel The wall MPI channel
+     * @throw std::runtime_error if an error occured during initialization
      */
     WallApplication(int &argc, char **argv, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel);
 

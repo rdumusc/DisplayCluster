@@ -53,6 +53,8 @@
 #include "RenderContext.h"
 #include "Factories.h"
 
+#include <stdexcept>
+
 #include <boost/bind.hpp>
 
 WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
@@ -103,7 +105,16 @@ void WallApplication::initRenderContext()
 {
     connect(this, SIGNAL(lastWindowClosed()), this, SLOT(quit()));
 
-    renderContext_.reset(new RenderContext(*config_));
+    try
+    {
+        renderContext_.reset(new RenderContext(*config_));
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Error creating the RenderContext: '%s'", e.what());
+        throw std::runtime_error("WallApplication: initialization failed.");
+    }
+
     factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
     renderController_.reset(new RenderController(renderContext_, factories_));
 }

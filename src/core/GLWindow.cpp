@@ -43,6 +43,8 @@
 #include "configuration/WallConfiguration.h"
 #include "Renderable.h"
 
+#include <stdexcept>
+
 #include <QtOpenGL>
 
 #ifdef __APPLE__
@@ -68,10 +70,7 @@ GLWindow::GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget
     setCursor(Qt::BlankCursor);
 
     if(shareWidget && !isSharing())
-    {
-        put_flog(LOG_FATAL, "failed to share OpenGL context");
-        exit(-1);
-    }
+        throw std::runtime_error("failed to share OpenGL context");
 
     setAutoBufferSwap(false);
 }

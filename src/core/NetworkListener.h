@@ -45,21 +45,37 @@ class PixelStreamDispatcher;
 class PixelStreamWindowManager;
 class CommandHandler;
 
+/**
+ * Listen to incoming PixelStream connections from dc::Stream clients.
+ */
 class NetworkListener : public QTcpServer
 {
     Q_OBJECT
 
 public:
+    /** The default port number used for dc::Stream connections. */
     static const int defaultPortNumber_;
 
+    /**
+     * Create a new server listening for dc::Stream connections.
+     * @param windowManager A manager to handle the creation of Stream windows.
+     * @param port The port to listen on. Must be available.
+     * @throw std::runtime_error if the server could not be started.
+     */
     NetworkListener(PixelStreamWindowManager& windowManager,
                     int port = defaultPortNumber_);
+
+    /** Destructor */
     ~NetworkListener();
 
+    /** Get the command handler. */
     CommandHandler& getCommandHandler() const;
+
+    /** Get the PixelStreamDispatcher. */
     PixelStreamDispatcher* getPixelStreamDispatcher() const;
 
 protected:
+    /** Re-implemented handling of connections from QTCPSocket. */
     void incomingConnection(int socketHandle) override;
 
 private:
