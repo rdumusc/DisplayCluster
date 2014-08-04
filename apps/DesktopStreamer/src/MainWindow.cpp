@@ -67,7 +67,6 @@ MainWindow::MainWindow()
     , y_(0)
     , width_(0)
     , height_(0)
-    , deviceScale_(1.f)
 {
     generateCursorImage();
     setupUI();
@@ -81,9 +80,7 @@ MainWindow::MainWindow()
 
 void MainWindow::generateCursorImage()
 {
-    cursor_ = QImage( CURSOR_IMAGE_FILE ).scaled( 20 * deviceScale_,
-                                                  20 * deviceScale_,
-                                                  Qt::KeepAspectRatio );
+    cursor_ = QImage( CURSOR_IMAGE_FILE ).scaled( 20, 20, Qt::KeepAspectRatio );
 }
 
 void MainWindow::setupUI()
@@ -99,7 +96,6 @@ void MainWindow::setupUI()
     connect(&ySpinBox_, SIGNAL(editingFinished()), this, SLOT(updateCoordinates()));
     connect(&widthSpinBox_, SIGNAL(editingFinished()), this, SLOT(updateCoordinates()));
     connect(&heightSpinBox_, SIGNAL(editingFinished()), this, SLOT(updateCoordinates()));
-    connect(&retinaBox_, SIGNAL(released()), this, SLOT(updateCoordinates()));
 
     hostnameLineEdit_.setText( DEFAULT_HOST_ADDRESS );
 
@@ -135,7 +131,6 @@ void MainWindow::setupUI()
     formLayout->addRow("Y", &ySpinBox_);
     formLayout->addRow("Width", &widthSpinBox_);
     formLayout->addRow("Height", &heightSpinBox_);
-    formLayout->addRow("Retina Display", &retinaBox_);
     formLayout->addRow("Max frame rate", &frameRateSpinBox_);
     formLayout->addRow("Actual frame rate", &frameRateLabel_);
 
@@ -255,12 +250,10 @@ void MainWindow::shareDesktopUpdate()
     QTime frameTime;
     frameTime.start();
 
-    const int w = width_ * deviceScale_;
-    const int h = height_ * deviceScale_;
-
     // take screenshot
-    QPixmap desktopPixmap =
-        QPixmap::grabWindow( QApplication::desktop()->winId(), x_, y_, w, h );
+    const QPixmap desktopPixmap =
+        QPixmap::grabWindow( QApplication::desktop()->winId(), x_, y_,
+                             width_, height_ );
 
     if( desktopPixmap.isNull( ))
     {
@@ -271,7 +264,7 @@ void MainWindow::shareDesktopUpdate()
     QImage image = desktopPixmap.toImage();
 
     // render mouse cursor
-    QPoint mousePos = ( QCursor::pos() - QPoint( x_, y_ )) * deviceScale_ -
+    QPoint mousePos = ( QCursor::pos() - QPoint( x_, y_ )) -
                         QPoint( cursor_.width()/2, cursor_.height()/2);
 
     QPainter painter( &image );
@@ -330,7 +323,6 @@ void MainWindow::updateCoordinates()
     y_ = ySpinBox_.value();
     width_ = widthSpinBox_.value();
     height_ = heightSpinBox_.value();
-    deviceScale_ = retinaBox_.checkState() ? 2.f : 1.f;
 
     generateCursorImage();
 
