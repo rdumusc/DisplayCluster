@@ -40,6 +40,8 @@
 #ifndef MPIHEADER_H
 #define MPIHEADER_H
 
+#include <stdint.h>
+
 /** The type of MPI message. */
 enum MPIMessageType
 {
