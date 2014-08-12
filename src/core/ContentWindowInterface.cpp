@@ -293,7 +293,7 @@ void ContentWindowInterface::adjustSize( const SizeState state,
         if( width > 1. )
         {
             height /= width;
-            width /= width;
+            width = 1.;
         }
 
         // center on the wall

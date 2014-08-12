@@ -56,5 +56,6 @@ QString getCommandTypeString( const CommandType type )
 
 CommandType getCommandType( const QString& typeString )
 {
-    return typemap.right.find( typeString )->second;
+    TypeMap::right_const_iterator i = typemap.right.find( typeString );
+    return i != typemap.right.end() ? i->second : COMMAND_TYPE_UNKNOWN;
 }

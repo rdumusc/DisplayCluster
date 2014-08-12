@@ -77,7 +77,7 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
     if( width > 1. )
     {
         height /= width;
-        width /= width;
+        width = 1.;
     }
 
     contentWindow->setSize( width, height );

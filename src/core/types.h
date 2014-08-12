@@ -58,7 +58,7 @@ class Renderable;
 class DisplayGroupRenderer;
 class MarkerRenderer;
 class FactoryObject;
-class PixelStreamFrame;
+struct PixelStreamFrame;
 class SkeletonState;
 
 namespace dc
