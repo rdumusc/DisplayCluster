@@ -22,6 +22,10 @@ if(APPLE)
   set(STREAMER_APP_NAME DesktopStreamer)
   set(STREAMER_ICON_FILE desktopstreamer.icns)
 
+  # Required to control AppNap on OSX >= 10.9
+  list(APPEND DESKTOP_STREAMER_LIBS "-framework Foundation")
+  list(APPEND DESKTOP_STREAMER_SRCS src/AppNapSuspender.mm)
+
   # set where in the bundle to put the icns file
   set_source_files_properties(${STREAMER_ICON_FILE}
     PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
