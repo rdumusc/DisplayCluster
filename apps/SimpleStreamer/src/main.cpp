@@ -4,6 +4,10 @@
 #ifdef __APPLE__
     #include <OpenGL/gl.h>
     #include <GLUT/glut.h>
+
+    // GLUT is deprecated in 10.9
+#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else
     #include <GL/gl.h>
     #include <GL/glut.h>

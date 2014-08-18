@@ -56,7 +56,7 @@ bool SVGContent::readMetadata()
     if(!file.exists() || !file.isReadable())
         return false;
 
-    const SVG svg(getURI());
+    SVG svg(getURI());
     if (!svg.isValid())
         return false;
 

@@ -47,13 +47,19 @@ namespace ut = boost::unit_test;
 #include <QWebFrame>
 #include <QWebPage>
 #include <QWebView>
+#include <QDir>
 
 #include "GlobalQtApp.h"
 
-#define TEST_PAGE_URL   "webgl_interaction.html"
+#define TEST_PAGE_URL   "/webgl_interaction.html"
 #define EMPTY_PAGE_URL  "about:blank"
 
 BOOST_GLOBAL_FIXTURE( GlobalQtApp );
+
+QString testPageURL()
+{
+    return "file://" + QDir::currentPath() + TEST_PAGE_URL;
+}
 
 BOOST_AUTO_TEST_CASE( test_webgl_support )
 {
@@ -64,7 +70,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_support )
     WebkitPixelStreamer* streamer = new WebkitPixelStreamer( QSize(640,480), EMPTY_PAGE_URL );
     QObject::connect( streamer->getView(), SIGNAL(loadFinished(bool)),
                       QApplication::instance(), SLOT(quit()));
-    streamer->setUrl( TEST_PAGE_URL );
+    streamer->setUrl( testPageURL( ));
     QApplication::instance()->exec();
 
     QWebPage* page = streamer->getView()->page();
@@ -107,7 +113,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_interaction )
     WebkitPixelStreamer* streamer = new WebkitPixelStreamer( QSize(640, 480), EMPTY_PAGE_URL );
     QObject::connect( streamer->getView(), SIGNAL(loadFinished(bool)),
                       QApplication::instance(), SLOT(quit()));
-    streamer->setUrl( TEST_PAGE_URL );
+    streamer->setUrl( testPageURL( ));
     QApplication::instance()->exec();
 
     QWebPage* page = streamer->getView()->page();
@@ -164,7 +170,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_click )
     WebkitPixelStreamer* streamer = new WebkitPixelStreamer( QSize(640, 480), EMPTY_PAGE_URL );
     QObject::connect( streamer->getView(), SIGNAL(loadFinished(bool)),
                       QApplication::instance(), SLOT(quit()));
-    streamer->setUrl( TEST_PAGE_URL );
+    streamer->setUrl( testPageURL( ));
     QApplication::instance()->exec();
 
     QWebPage* page = streamer->getView()->page();
@@ -204,7 +210,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_wheel )
     WebkitPixelStreamer* streamer = new WebkitPixelStreamer( QSize(640, 480), EMPTY_PAGE_URL );
     QObject::connect( streamer->getView(), SIGNAL(loadFinished(bool)),
                       QApplication::instance(), SLOT(quit()));
-    streamer->setUrl( TEST_PAGE_URL );
+    streamer->setUrl( testPageURL( ));
     QApplication::instance()->exec();
 
     QWebPage* page = streamer->getView()->page();
@@ -244,7 +250,7 @@ BOOST_AUTO_TEST_CASE( test_localstorage )
         return;
 
     // load the webgl website, exec() returns when loading is finished
-    WebkitPixelStreamer* streamer = new WebkitPixelStreamer( QSize(640, 480), TEST_PAGE_URL );
+    WebkitPixelStreamer* streamer = new WebkitPixelStreamer( QSize(640, 480), testPageURL( ));
     QObject::connect( streamer->getView(), SIGNAL(loadFinished(bool)),
                       QApplication::instance(), SLOT(quit()));
     QApplication::instance()->exec();
