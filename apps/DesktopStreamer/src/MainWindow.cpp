@@ -173,6 +173,9 @@ void MainWindow::startStreaming()
         return;
     }
 
+#ifdef __APPLE__
+    napSuspender_.suspend();
+#endif
     shareDesktopUpdateTimer_.start(SHARE_DESKTOP_UPDATE_DELAY);
 }
 
@@ -184,6 +187,9 @@ void MainWindow::stopStreaming()
     delete dcStream_;
     dcStream_ = 0;
 
+#ifdef __APPLE__
+    napSuspender_.resume();
+#endif
     emit streaming(false);
 }
 
@@ -193,7 +199,6 @@ void MainWindow::handleStreamingError(const QString& errorMessage)
     QMessageBox::warning(this, "Error", errorMessage, QMessageBox::Ok, QMessageBox::Ok);
 
     stopStreaming();
-
 }
 
 void MainWindow::closeEvent( QCloseEvent* closeEvt )

@@ -41,6 +41,10 @@
 
 #include <QtGui>
 
+#ifdef __APPLE__
+#include "AppNapSuspender.h"
+#endif
+
 namespace dc
 {
 class Stream;
@@ -104,6 +108,10 @@ private:
 
     // used for frame rate calculations
     std::vector<QTime> frameSentTimes_;
+
+#ifdef __APPLE__
+    AppNapSuspender napSuspender_;
+#endif
 
     void setupUI();
     void generateCursorImage();
