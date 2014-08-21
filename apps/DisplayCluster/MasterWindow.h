@@ -107,6 +107,7 @@ private slots:
 #if ENABLE_SKELETON_SUPPORT
     void setEnableSkeletonTracking(bool enable);
 #endif
+    void openAboutWidget();
 
 private:
     void setupMasterWindowUI();

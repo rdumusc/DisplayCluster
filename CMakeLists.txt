@@ -28,11 +28,17 @@ list(APPEND CPPCHECK_EXTRA_ARGS --suppress=preprocessorErrorDirective)
 # Fix for avutil: https://code.google.com/p/ffmpegsource/source/detail?r=311
 add_definitions(-D__STDC_CONSTANT_MACROS)
 
+option(FORCE_BUILD_DCCORE "Force build the core library" OFF)
+
 if(OPENGL_FOUND AND MPI_FOUND AND FFMPEG_FOUND AND FCGI_FOUND)
   include_directories(SYSTEM ${MPI_INCLUDE_PATH})
   set(BUILD_CORE_LIBRARY ON)
 else()
-  message( STATUS "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!" )
+  if(FORCE_BUILD_DCCORE)
+    message( FATAL_ERROR "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!" )
+  else()
+    message( STATUS "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!" )
+  endif()
 endif()
 
 if(TUIO_FOUND)
