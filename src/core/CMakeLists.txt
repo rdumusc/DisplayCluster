@@ -93,6 +93,7 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SRCS
+    ${COMMON_SOURCES}
     BackgroundWidget.cpp
     Command.cpp
     CommandHandler.cpp

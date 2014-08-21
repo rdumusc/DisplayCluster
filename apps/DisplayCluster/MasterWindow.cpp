@@ -43,6 +43,7 @@
 #include "Options.h"
 #include "configuration/MasterConfiguration.h"
 #include "log.h"
+#include "displaycluster/version.h"
 
 #include "ContentLoader.h"
 #include "ContentFactory.h"
@@ -108,6 +109,7 @@ void MasterWindow::setupMasterWindowUI()
 #if ENABLE_SKELETON_SUPPORT
     QMenu * skeletonMenu = menuBar()->addMenu("&Skeleton Tracking");
 #endif
+    QMenu * helpMenu = menuBar()->addMenu("&Help");
 
     // create tool bar
     QToolBar * toolbar = addToolBar("toolbar");
@@ -238,6 +240,10 @@ void MasterWindow::setupMasterWindowUI()
     connect(showSkeletonsAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowSkeletons(bool)));
 #endif
 
+    QAction * showAboutDialog = new QAction("About", this);
+    showAboutDialog->setStatusTip("About DisplayCluster");
+    connect(showAboutDialog, SIGNAL(triggered()), this, SLOT(openAboutWidget()));
+
     // add actions to menus
     fileMenu->addAction(openContentAction);
     fileMenu->addAction(openContentsDirectoryAction);
@@ -265,6 +271,8 @@ void MasterWindow::setupMasterWindowUI()
     skeletonMenu->addAction(enableSkeletonTrackingAction);
     skeletonMenu->addAction(showSkeletonsAction);
 #endif
+
+    helpMenu->addAction(showAboutDialog);
 
     // add actions to toolbar
     toolbar->addAction(openContentAction);
@@ -423,6 +431,18 @@ void MasterWindow::openWebBrowser()
     {
         emit openWebBrowser(QPointF(.5,.5), QSize(), url);
     }
+}
+
+void MasterWindow::openAboutWidget()
+{
+    const int revision = displaycluster::Version::getRevision();
+
+    std::ostringstream aboutMsg;
+    aboutMsg << "Current version: " << displaycluster::Version::getString();
+    aboutMsg << std::endl;
+    aboutMsg << "SCM revision: " << std::hex << revision << std::dec;
+
+    QMessageBox::about(this, "About Displaycluster", aboutMsg.str().c_str());
 }
 
 void MasterWindow::saveState()
