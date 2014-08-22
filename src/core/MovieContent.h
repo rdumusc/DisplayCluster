@@ -45,7 +45,8 @@
 class MovieContent : public Content
 {
 public:
-    MovieContent(QString uri = "") : Content(uri) { }
+    /** Create a MovieContent from the given uri. */
+    MovieContent(const QString& uri = "");
 
     /** Get the content type **/
     CONTENT_TYPE getType() override;
@@ -58,6 +59,9 @@ public:
 
     static const QStringList& getSupportedExtensions();
 
+    void preRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel& wallToWallChannel) override;
+    void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
+
 private:
     friend class boost::serialization::access;
 
@@ -67,8 +71,6 @@ private:
         // serialize base class information (with NVP for xml archives)
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
     }
-
-    void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
 };
 
 #endif

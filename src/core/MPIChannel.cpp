@@ -44,8 +44,6 @@
 
 #include "log.h"
 
-#define RANK0 0
-
 #define MPI_CHECK(func) {                                   \
     const int err = (func);                                 \
     if( err != MPI_SUCCESS )                                \
@@ -116,13 +114,24 @@ bool MPIChannel::isMessageAvailable(const int src)
     return (bool)flag;
 }
 
+bool MPIChannel::isValid(const int dest) const
+{
+    return dest != mpiRank_ && dest >= 0 && dest < mpiSize_;
+}
+
 void MPIChannel::send(const MPIHeader& header, const int dest)
 {
+    if (!isValid(dest))
+        return;
+
     MPI_CHECK(MPI_Send((void *)&header, sizeof(MPIHeader), MPI_BYTE, dest, 0, mpiComm_));
 }
 
 void MPIChannel::send(const MPIMessageType type, const std::string& serializedData, const int dest)
 {
+    if (!isValid(dest))
+        return;
+
     MPI_CHECK(MPI_Send((void*)serializedData.data(), serializedData.size(), MPI_BYTE, dest, type, mpiComm_));
 }
 
@@ -132,7 +141,7 @@ void MPIChannel::sendAll(const MPIMessageType type)
     mh.size = 0;
     mh.type = type;
 
-    for(int i=1; i<mpiSize_; ++i)
+    for(int i=0; i<mpiSize_; ++i)
         send(mh, i);
 }
 
@@ -142,11 +151,11 @@ void MPIChannel::broadcast(const MPIMessageType type, const std::string& seriali
     mh.size = serializedData.size();
     mh.type = type;
 
-    for(int i=1; i<mpiSize_; ++i)
+    for(int i=0; i<mpiSize_; ++i)
         send(mh, i);
 
     MPI_CHECK(MPI_Bcast((void *)serializedData.data(), serializedData.size(),
-                         MPI_BYTE, RANK0, mpiComm_));
+                         MPI_BYTE, mpiRank_, mpiComm_));
 }
 
 MPIHeader MPIChannel::receiveHeader(const int src)
@@ -174,9 +183,9 @@ void MPIChannel::receive(char* dataBuffer, const size_t messageSize, const int s
     MPI_CHECK(MPI_Recv((void *)dataBuffer, messageSize, MPI_BYTE, src, tag, mpiComm_, &status));
 }
 
-void MPIChannel::receiveBroadcast(char* dataBuffer, const size_t messageSize)
+void MPIChannel::receiveBroadcast(char* dataBuffer, const size_t messageSize, const int src)
 {
-    MPI_CHECK(MPI_Bcast((void *)dataBuffer, messageSize, MPI_BYTE, RANK0, mpiComm_));
+    MPI_CHECK(MPI_Bcast((void *)dataBuffer, messageSize, MPI_BYTE, src, mpiComm_));
 }
 
 std::vector<uint64_t> MPIChannel::gatherAll(const uint64_t value)

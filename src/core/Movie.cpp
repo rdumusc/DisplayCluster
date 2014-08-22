@@ -39,11 +39,14 @@
 #include "Movie.h"
 
 #include "FFMPEGMovie.h"
+#include "WallToWallChannel.h"
 
 Movie::Movie(QString uri)
     : ffmpegMovie_(new FFMPEGMovie(uri))
     , uri_(uri)
     , paused_(false)
+    , isVisible_(true)
+    , skippedLastFrame_(false)
 {}
 
 Movie::~Movie()
@@ -57,17 +60,41 @@ void Movie::getDimensions(int &width, int &height) const
     height = ffmpegMovie_->getHeight();
 }
 
-void Movie::nextFrame(const boost::posix_time::ptime now, const bool skipDecoding)
+void Movie::preRenderUpdate(WallToWallChannel& wallToWallChannel)
 {
     if(paused_)
         return;
 
-    elapsedTimer_.setCurrentTime(now);
+    elapsedTimer_.setCurrentTime(wallToWallChannel.getTime());
+    timestamp_ += elapsedTimer_.getElapsedTime();
 
-    ffmpegMovie_->update(elapsedTimer_.getElapsedTime(), skipDecoding);
+    skippedLastFrame_ = !isVisible_;
+    ffmpegMovie_->update(timestamp_, skippedLastFrame_);
+
+    // Get the current timestamp back from the FFMPEG movie.
+    timestamp_ = ffmpegMovie_->getTimestamp();
 
     if (ffmpegMovie_->isNewFrameAvailable())
         texture_.update(ffmpegMovie_->getData(), GL_RGBA);
+}
+
+void Movie::synchronizeTimestamp(WallToWallChannel& wallToWallChannel)
+{
+    // Elect a leader among processes which have decoded a frame
+    const int leader = wallToWallChannel.electLeader(!skippedLastFrame_);
+
+    if (leader < 0)
+        return;
+
+    if (leader == wallToWallChannel.getRank())
+        wallToWallChannel.broadcast(timestamp_);
+    else
+        timestamp_ = wallToWallChannel.receiveTimestampBroadcast(leader);
+}
+
+void Movie::postRenderUpdate(WallToWallChannel& wallToWallChannel)
+{
+    synchronizeTimestamp(wallToWallChannel);
 }
 
 bool Movie::generateTexture()
@@ -91,6 +118,11 @@ void Movie::render(const QRectF& texCoords)
     quad_.render();
 
     glPopAttrib();
+}
+
+void Movie::setVisible(const bool isVisible)
+{
+    isVisible_ = isVisible;
 }
 
 void Movie::setPause(const bool pause)

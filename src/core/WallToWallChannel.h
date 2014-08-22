@@ -82,6 +82,22 @@ public:
     /** Check that all processes have the same version of an object. */
     bool checkVersion(const uint64_t version) const;
 
+    /**
+     * Elect a leader amongst wall processes.
+     * @param isCandidate Is this process a candidate.
+     * @return the rank of the leader, or -1 if no leader could be elected.
+     */
+    int electLeader(const bool isCandidate);
+
+    /**
+     * Broadcast a timestamp.
+     * All other processes must recieve it with receiveTimestampBroadcast().
+     */
+    void broadcast(boost::posix_time::time_duration timestamp);
+
+    /** Receive a timestamp broadcasted by broadcast(timestamp). */
+    boost::posix_time::time_duration receiveTimestampBroadcast(const int src);
+
 private:
     MPIChannelPtr mpiChannel_;
     boost::posix_time::ptime timestamp_;
