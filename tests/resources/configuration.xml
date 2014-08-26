@@ -3,6 +3,7 @@
     <dock directory="/nfs4/bbp.epfl.ch/visualization/DisplayWall/media"/>
     <webservice port="10000" />
     <webbrowser defaultURL="http://bbp.epfl.ch" />
+    <masterProcess display=":1" host="bbplxviz03i" />
     <process display=":0.2" host="bbplxviz03i">
         <screen x="0" y="0" i="0" j="0"/>
     </process>

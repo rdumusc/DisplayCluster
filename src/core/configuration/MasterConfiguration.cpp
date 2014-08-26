@@ -40,8 +40,7 @@
 #include "MasterConfiguration.h"
 
 #include <QtXmlPatterns>
-
-#include "log.h"
+#include <stdexcept>
 
 #define DEFAULT_WEBSERVICE_PORT 8888
 #define TRIM_REGEX "[\\n\\t\\r]"
@@ -57,10 +56,7 @@ void MasterConfiguration::loadMasterSettings()
 {
     QXmlQuery query;
     if(!query.setFocus(QUrl(filename_)))
-    {
-        put_flog(LOG_FATAL, "failed to load %s", filename_.toLatin1().constData());
-        exit(-1);
-    }
+        throw std::runtime_error("Invalid configuration file: " + filename_.toStdString());
 
     loadDockStartDirectory(query);
     loadWebBrowserStartURL(query);

@@ -3,7 +3,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${CMAKE_BINARY_DIR}) ### for config.h ###
 
 set(MOC_HEADERS
-  Application.h
   MasterApplication.h
   MasterWindow.h
   WallApplication.h
@@ -11,7 +10,7 @@ set(MOC_HEADERS
 
 set(DISPLAYCLUSTER_FILES
   main.cpp
-  Application.cpp
+  CommandLineParameters.cpp
   MasterApplication.cpp
   MasterWindow.cpp
   WallApplication.cpp
@@ -27,6 +26,5 @@ target_link_libraries(displaycluster dccore dcwebservice)
 # install executable
 install(TARGETS displaycluster RUNTIME DESTINATION bin COMPONENT core)
 
-# install launchers
+# install launcher
 install(PROGRAMS startdisplaycluster DESTINATION bin COMPONENT core)
-install(PROGRAMS displaycluster.py   DESTINATION bin COMPONENT core)

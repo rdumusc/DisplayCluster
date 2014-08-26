@@ -62,7 +62,7 @@ public:
      * @param tileIndex The tile index of the display
      */
     TestPattern(QGLWidget* glWindow,
-                const WallConfiguration* configuration,
+                const WallConfiguration& configuration,
                 const int rank,
                 const int tileIndex);
 

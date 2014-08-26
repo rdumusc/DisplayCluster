@@ -39,9 +39,12 @@
 
 #include "MasterApplication.h"
 
+#include "log.h"
+#include "CommandLineParameters.h"
 #include "MasterWindow.h"
 #include "DisplayGroupManager.h"
 #include "ContentFactory.h"
+#include "globals.h"
 #include "configuration/MasterConfiguration.h"
 #include "MasterToWallChannel.h"
 #include "MasterFromWallChannel.h"
@@ -80,19 +83,23 @@
 
 
 MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel)
-    : Application(argc_, argv_)
+    : QApplication(argc_, argv_)
     , masterToWallChannel_(new MasterToWallChannel(worldChannel))
     , masterFromWallChannel_(new MasterFromWallChannel(worldChannel))
     , displayGroup_(new DisplayGroupManager)
     , markers_(new Markers)
 {
-    MasterConfiguration* config = new MasterConfiguration(getConfigFilename());
-    g_configuration = config;
+    CommandLineParameters options(argc_, argv_);
+    if (options.getHelp())
+        options.showSyntax();
 
-    if( argc_ == 2 )
-        StateSerializationHelper(displayGroup_).load( argv_[1] );
+    if (!createConfig(options.getConfigFilename()))
+        throw std::runtime_error("MasterApplication: initialization failed.");
 
-    init(config);
+    init();
+
+    if(!options.getSessionFilename().isEmpty())
+        StateSerializationHelper(displayGroup_).load(options.getSessionFilename());
 }
 
 MasterApplication::~MasterApplication()
@@ -119,18 +126,18 @@ MasterApplication::~MasterApplication()
     webServiceServer_->wait();
 }
 
-
-void MasterApplication::init(const MasterConfiguration* config)
+void MasterApplication::init()
 {
-    masterWindow_.reset(new MasterWindow(displayGroup_));
+    connect(this, SIGNAL(lastWindowClosed()), this, SLOT(quit()));
 
+    masterWindow_.reset(new MasterWindow(displayGroup_));
     pixelStreamWindowManager_.reset(new PixelStreamWindowManager(*displayGroup_));
 
     initPixelStreamLauncher();
-    startNetworkListener(config);
-    startWebservice(config->getWebServicePort());
+    startNetworkListener();
+    startWebservice(config_->getWebServicePort());
     initMPIConnection();
-    restoreBackground(config);
+    restoreBackground();
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     initTouchListener();
@@ -145,7 +152,22 @@ void MasterApplication::init(const MasterConfiguration* config)
 #endif
 }
 
-void MasterApplication::startNetworkListener(const MasterConfiguration* configuration)
+bool MasterApplication::createConfig(const QString& filename)
+{
+    try
+    {
+        config_.reset(new MasterConfiguration(filename));
+        g_configuration = config_.get();
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Could not load configuration. '%s'", e.what());
+        return false;
+    }
+    return true;
+}
+
+void MasterApplication::startNetworkListener()
 {
     if (networkListener_)
         return;
@@ -156,7 +178,7 @@ void MasterApplication::startNetworkListener(const MasterConfiguration* configur
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));
     handler.registerCommandHandler(new SessionCommandHandler(*displayGroup_));
 
-    const QString& url = configuration->getWebBrowserDefaultURL();
+    const QString& url = config_->getWebBrowserDefaultURL();
     handler.registerCommandHandler(new WebbrowserCommandHandler(
                                        *pixelStreamWindowManager_,
                                        *pixelStreamerLauncher_,
@@ -182,11 +204,11 @@ void MasterApplication::startWebservice(const int webServicePort)
     webServiceServer_->start();
 }
 
-void MasterApplication::restoreBackground(const MasterConfiguration* configuration)
+void MasterApplication::restoreBackground()
 {
-    configuration->getOptions()->setBackgroundColor( configuration->getBackgroundColor( ));
+    config_->getOptions()->setBackgroundColor( config_->getBackgroundColor( ));
 
-    const QString& backgroundUri = configuration->getBackgroundUri();
+    const QString& backgroundUri = config_->getBackgroundUri();
     if ( !backgroundUri.isEmpty( ))
     {
         ContentPtr content = ContentFactory::getContent( backgroundUri );

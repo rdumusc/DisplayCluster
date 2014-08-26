@@ -44,6 +44,8 @@
 #include <QDomElement>
 #include <QtXmlPatterns>
 
+#include <stdexcept>
+
 Configuration::Configuration(const QString &filename)
     : filename_(filename)
     , options_(new Options)
@@ -61,15 +63,9 @@ Configuration::Configuration(const QString &filename)
 
 void Configuration::load()
 {
-    put_flog(LOG_INFO, "loading %s", filename_.toLatin1().constData());
-
     QXmlQuery query;
-
     if(!query.setFocus(QUrl(filename_)))
-    {
-        put_flog(LOG_FATAL, "failed to load %s", filename_.toLatin1().constData());
-        exit(-1);
-    }
+        throw std::runtime_error("Invalid configuration file: " + filename_.toStdString());
 
     QString queryResult;
 
@@ -102,8 +98,6 @@ void Configuration::load()
     query.setQuery("string(/configuration/dimensions/@fullscreen)");
     if(query.evaluateTo(&queryResult))
         fullscreen_ = queryResult.toInt() != 0;
-
-    put_flog(LOG_INFO, "dimensions: numTilesWidth = %i, numTilesHeight = %i, screenWidth = %i, screenHeight = %i, mullionWidth = %i, mullionHeight = %i. fullscreen = %i", totalScreenCountX_, totalScreenCountY_, screenWidth_, screenHeight_, mullionWidth_, mullionHeight_, fullscreen_);
 
     // Background content URI
     query.setQuery("string(/configuration/background/@uri)");

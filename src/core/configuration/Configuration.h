@@ -65,10 +65,13 @@ class Configuration
 {
 public:
     /**
-     * @brief Configuration constructor
+     * Create a new configuration from an xml file
      * @param filename path to the xml configuration file
+     * @throw std::runtime_error if the file could not be read
      */
     Configuration(const QString& filename);
+
+    /** Destructor. */
     virtual ~Configuration() {}
 
     /** Get the configuration options that change during runtime. */
