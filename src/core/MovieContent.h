@@ -46,7 +46,7 @@ class MovieContent : public Content
 {
 public:
     /** Create a MovieContent from the given uri. */
-    MovieContent(const QString& uri = "");
+    explicit MovieContent(const QString& uri);
 
     /** Get the content type **/
     CONTENT_TYPE getType() override;
@@ -64,6 +64,9 @@ public:
 
 private:
     friend class boost::serialization::access;
+
+    // Default constructor required for boost::serialization
+    MovieContent() {}
 
     template<class Archive>
     void serialize(Archive & ar, const unsigned int)

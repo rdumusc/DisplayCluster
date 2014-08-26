@@ -45,7 +45,11 @@
 class SVGContent : public Content
 {
 public:
-    SVGContent(QString uri = "") : Content(uri) { }
+    /**
+     * Constructor.
+     * @param uri The uri of the svg document
+     */
+    explicit SVGContent(const QString& uri);
 
     /** Get the content type **/
     CONTENT_TYPE getType() override;
@@ -60,6 +64,9 @@ public:
 
 private:
     friend class boost::serialization::access;
+
+    // Default constructor required for boost::serialization
+    SVGContent() {}
 
     template<class Archive>
     void serialize(Archive & ar, const unsigned int)

@@ -47,37 +47,40 @@
  */
 class DynamicTextureContent : public Content
 {
-    public:
-        /**
-         * Create a DynamicTextureContent.
-         * @param uri The image or pyramid file.
-         */
-        DynamicTextureContent(QString uri = "");
+public:
+    /**
+     * Constructor.
+     * @param uri The image or pyramid file.
+     */
+    explicit DynamicTextureContent(const QString& uri);
 
-        /** Get the content type **/
-        CONTENT_TYPE getType() override;
+    /** Get the content type **/
+    CONTENT_TYPE getType() override;
 
-        /**
-         * Read texture informations from the source URI.
-         * @return true on success, false if the URI is invalid or an error occured.
-        **/
-        bool readMetadata() override;
+    /**
+     * Read texture informations from the source URI.
+     * @return true on success, false if the URI is invalid or an error occured.
+    **/
+    bool readMetadata() override;
 
-        static const QStringList& getSupportedExtensions();
+    static const QStringList& getSupportedExtensions();
 
-    private:
-        friend class boost::serialization::access;
+private:
+    friend class boost::serialization::access;
 
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int)
-        {
-            // serialize base class information (with NVP for xml archives)
-            ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
-        }
+    // Default constructor required for boost::serialization
+    DynamicTextureContent() {}
 
-        void preRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&) override;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int)
+    {
+        // serialize base class information (with NVP for xml archives)
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+    }
 
-        void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel&) override;
+    void preRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&) override;
+
+    void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel&) override;
 };
 
 #endif

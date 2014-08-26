@@ -49,10 +49,10 @@ class PDFContent : public Content
 
 public:
     /**
-     * Consturctor
-     * @param uri The uri of the pdf document
-    **/
-    PDFContent(const QString& uri = "");
+     * Constructor.
+     * @param uri The uri of the pdf document.
+     */
+    explicit PDFContent(const QString& uri);
 
     /** Get the content type **/
     CONTENT_TYPE getType() override;
@@ -77,6 +77,9 @@ signals:
 
 private:
     friend class boost::serialization::access;
+
+    // Default constructor required for boost::serialization
+    PDFContent() {}
 
     template<class Archive>
     void serialize(Archive & ar, const unsigned int)

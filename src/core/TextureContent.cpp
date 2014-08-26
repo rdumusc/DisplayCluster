@@ -44,6 +44,10 @@
 
 BOOST_CLASS_EXPORT_GUID(TextureContent, "TextureContent")
 
+TextureContent::TextureContent(const QString& uri)
+    : Content(uri)
+{}
+
 CONTENT_TYPE TextureContent::getType()
 {
     return CONTENT_TYPE_TEXTURE;
