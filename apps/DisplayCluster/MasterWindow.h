@@ -90,8 +90,8 @@ signals:
 protected:
     ///@{
     /** Drag events re-implemented from QMainWindow. */
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
     ///@}
 
 private slots:

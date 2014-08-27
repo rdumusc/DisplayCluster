@@ -94,7 +94,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SRCS
     ${COMMON_SOURCES}
-    BackgroundWidget.cpp
     Command.cpp
     CommandHandler.cpp
     CommandType.cpp
@@ -207,7 +206,6 @@ list(APPEND SRCS
 )
 
 list(APPEND MOC_HEADERS
-    BackgroundWidget.h
     CommandHandler.h
     Content.h
     ContentWindowInterface.h

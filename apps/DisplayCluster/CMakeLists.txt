@@ -2,7 +2,10 @@
 include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${CMAKE_BINARY_DIR}) ### for config.h ###
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
+
 set(MOC_HEADERS
+  BackgroundWidget.h
   MasterApplication.h
   MasterWindow.h
   WallApplication.h
@@ -10,6 +13,7 @@ set(MOC_HEADERS
 
 set(DISPLAYCLUSTER_FILES
   main.cpp
+  BackgroundWidget.cpp
   CommandLineParameters.cpp
   MasterApplication.cpp
   MasterWindow.cpp
