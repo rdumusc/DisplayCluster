@@ -133,7 +133,7 @@ void RenderController::setRenderOptions(OptionsPtr options)
     renderContext_->setBackgroundColor(options->getBackgroundColor());
 
     markerRenderer_->setVisible(options->getShowTouchPoints());
-    fpsRenderer_->setVisible(options->getShowStreamingStatistics());
+    fpsRenderer_->setVisible(options->getShowStatistics());
     foreach (RenderablePtr testPattern, testPatterns_)
         testPattern->setVisible(options->getShowTestPattern());
 
@@ -141,7 +141,7 @@ void RenderController::setRenderOptions(OptionsPtr options)
     winRenderer.setShowWindowBorders(options->getShowWindowBorders());
     winRenderer.setShowZoomContext(options->getShowZoomContext());
     winRenderer.setPixelStreamOptions(options->getShowStreamingSegments(),
-                                      options->getShowStreamingStatistics());
+                                      options->getShowStatistics());
 
 #if ENABLE_SKELETON_SUPPORT
     displayGroupRenderer_->setShowSkeleton(options->getShowSkeletons());

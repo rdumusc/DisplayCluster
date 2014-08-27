@@ -76,7 +76,7 @@ bool Options::getShowStreamingSegments() const
     return showStreamingSegments_;
 }
 
-bool Options::getShowStreamingStatistics() const
+bool Options::getShowStatistics() const
 {
     return showStreamingStatistics_;
 }
@@ -128,7 +128,7 @@ void Options::setShowStreamingSegments(bool set)
     emit(updated(shared_from_this()));
 }
 
-void Options::setShowStreamingStatistics(bool set)
+void Options::setShowStatistics(bool set)
 {
     showStreamingStatistics_ = set;
 

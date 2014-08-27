@@ -44,7 +44,6 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 
 #include "ContentWindowManager.h"
 

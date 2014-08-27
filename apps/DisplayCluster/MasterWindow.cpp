@@ -108,7 +108,6 @@ void MasterWindow::setupMasterWindowUI()
     QMenu * editMenu = menuBar()->addMenu("&Edit");
     QMenu * viewMenu = menuBar()->addMenu("&View");
     QMenu * toolsMenu = menuBar()->addMenu("&Tools");
-    QMenu * viewStreamingMenu = viewMenu->addMenu("&Streaming");
 #if ENABLE_PYTHON_SUPPORT
     // add Window menu for Python console. if we add any other entries to it we'll need to remove the #if
     QMenu * windowMenu = menuBar()->addMenu("&Window");
@@ -203,18 +202,18 @@ void MasterWindow::setupMasterWindowUI()
     connect(showZoomContextAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowZoomContext(bool)));
 
     // show streaming segments action
-    QAction * showStreamingSegmentsAction = new QAction("Show Segments", this);
-    showStreamingSegmentsAction->setStatusTip("Show segments");
+    QAction * showStreamingSegmentsAction = new QAction("Show Streaming Segments", this);
+    showStreamingSegmentsAction->setStatusTip("Show Streaming Segments");
     showStreamingSegmentsAction->setCheckable(true);
     showStreamingSegmentsAction->setChecked(options_->getShowStreamingSegments());
     connect(showStreamingSegmentsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStreamingSegments(bool)));
 
     // show streaming statistics action
-    QAction * showStreamingStatisticsAction = new QAction("Show Statistics", this);
-    showStreamingStatisticsAction->setStatusTip("Show statistics");
-    showStreamingStatisticsAction->setCheckable(true);
-    showStreamingStatisticsAction->setChecked(options_->getShowStreamingStatistics());
-    connect(showStreamingStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStreamingStatistics(bool)));
+    QAction * showStatisticsAction = new QAction("Show Statistics", this);
+    showStatisticsAction->setStatusTip("Show statistics");
+    showStatisticsAction->setCheckable(true);
+    showStatisticsAction->setChecked(options_->getShowStatistics());
+    connect(showStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStatistics(bool)));
 
 #if ENABLE_SKELETON_SUPPORT
     // enable skeleton tracking action
@@ -239,18 +238,18 @@ void MasterWindow::setupMasterWindowUI()
     // add actions to menus
     fileMenu->addAction(openContentAction);
     fileMenu->addAction(openContentsDirectoryAction);
+    fileMenu->addAction(loadStateAction);
+    fileMenu->addAction(saveStateAction);
     fileMenu->addAction(webbrowserAction);
     fileMenu->addAction(clearContentsAction);
-    fileMenu->addAction(saveStateAction);
-    fileMenu->addAction(loadStateAction);
     fileMenu->addAction(quitAction);
     editMenu->addAction(backgroundAction);
+    viewMenu->addAction(showStatisticsAction);
+    viewMenu->addAction(showStreamingSegmentsAction);
     viewMenu->addAction(showWindowBordersAction);
     viewMenu->addAction(showTouchPoints);
     viewMenu->addAction(showTestPatternAction);
     viewMenu->addAction(showZoomContextAction);
-    viewStreamingMenu->addAction(showStreamingSegmentsAction);
-    viewStreamingMenu->addAction(showStreamingStatisticsAction);
     toolsMenu->addAction(computeImagePyramidAction);
 
 #if ENABLE_PYTHON_SUPPORT
@@ -267,12 +266,11 @@ void MasterWindow::setupMasterWindowUI()
     // add actions to toolbar
     toolbar->addAction(openContentAction);
     toolbar->addAction(openContentsDirectoryAction);
-    toolbar->addAction(clearContentsAction);
-    toolbar->addAction(saveStateAction);
     toolbar->addAction(loadStateAction);
-    toolbar->addAction(computeImagePyramidAction);
-    toolbar->addAction(backgroundAction);
+    toolbar->addAction(saveStateAction);
     toolbar->addAction(webbrowserAction);
+    toolbar->addAction(clearContentsAction);
+    toolbar->addAction(backgroundAction);
 #if ENABLE_PYTHON_SUPPORT
     toolbar->addAction(pythonConsoleAction);
 #endif

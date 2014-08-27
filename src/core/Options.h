@@ -69,7 +69,7 @@ public:
     bool getShowTestPattern() const;
     bool getShowZoomContext() const;
     bool getShowStreamingSegments() const;
-    bool getShowStreamingStatistics() const;
+    bool getShowStatistics() const;
     QColor getBackgroundColor() const;
 #if ENABLE_SKELETON_SUPPORT
     bool getShowSkeletons() const;
@@ -84,7 +84,7 @@ public slots:
     void setShowTestPattern(bool set);
     void setShowZoomContext(bool set);
     void setShowStreamingSegments(bool set);
-    void setShowStreamingStatistics(bool set);
+    void setShowStatistics(bool set);
     void setBackgroundColor(QColor color);
 #if ENABLE_SKELETON_SUPPORT
     void setShowSkeletons(bool set);

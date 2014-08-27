@@ -130,7 +130,10 @@ void BackgroundWidget::reject()
     configuration_.setBackgroundColor(previousColor_);
     configuration_.setBackgroundUri(previousBackgroundURI_);
 
-    ContentPtr content = ContentFactory::getContent( previousBackgroundURI_ );
+    ContentPtr content;
+    if (!previousBackgroundURI_.isEmpty())
+        content = ContentFactory::getContent(previousBackgroundURI_);
+
     emit backgroundContentChanged(content);
     emit backgroundColorChanged(previousColor_);
 
