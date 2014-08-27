@@ -173,8 +173,9 @@ public:
      * @see receiveHeader()
      * @param dataBuffer The target data buffer
      * @param messageSize The number of bytes to receive
+     * @param src The source process
      */
-    void receiveBroadcast(char* dataBuffer, const size_t messageSize);
+    void receiveBroadcast(char* dataBuffer, const size_t messageSize, const int src);
 
     /**
      * Gather the values accross all the processes.
@@ -190,6 +191,7 @@ private:
     int mpiSize_;
 
     void send(const MPIHeader& header, const int dest);
+    bool isValid(const int dest) const;
 };
 
 #endif // MPICHANNEL_H

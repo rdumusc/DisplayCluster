@@ -44,6 +44,8 @@
 
 #include <boost/date_time/posix_time/time_serialize.hpp>
 
+#define RANK0 0
+
 WallToWallChannel::WallToWallChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
 {
@@ -71,7 +73,7 @@ boost::posix_time::ptime WallToWallChannel::getTime() const
 
 void WallToWallChannel::synchronizeClock()
 {
-    if(mpiChannel_->getRank() == 0)
+    if(mpiChannel_->getRank() == RANK0)
         sendClock();
     else
         receiveClock();
@@ -94,9 +96,46 @@ bool WallToWallChannel::checkVersion(const uint64_t version) const
     return true;
 }
 
+int WallToWallChannel::electLeader(const bool isCandidate)
+{
+    const int status = isCandidate ? (1 << getRank()) : 0;
+    int globalStatus = globalSum(status);
+
+    if(globalStatus <= 0)
+        return -1;
+
+    int leader = 0;
+    while (globalStatus > 1)
+    {
+        globalStatus = globalStatus >> 1;
+        ++leader;
+    }
+    return leader;
+}
+
+void WallToWallChannel::broadcast(boost::posix_time::time_duration timestamp)
+{
+    const std::string& serializedString = buffer_.serialize(timestamp);
+
+    mpiChannel_->broadcast(MPI_MESSAGE_TYPE_TIMESTAMP, serializedString);
+}
+
+boost::posix_time::time_duration WallToWallChannel::receiveTimestampBroadcast(const int src)
+{
+    MPIHeader header = mpiChannel_->receiveHeader(src);
+    assert(header.type == MPI_MESSAGE_TYPE_TIMESTAMP);
+
+    buffer_.setSize(header.size);
+    mpiChannel_->receiveBroadcast(buffer_.data(), buffer_.size(), src);
+
+    boost::posix_time::time_duration timestamp;
+    buffer_.deserialize(timestamp);
+    return timestamp;
+}
+
 void WallToWallChannel::sendClock()
 {
-    assert(mpiChannel_->getRank() == 0);
+    assert(mpiChannel_->getRank() == RANK0);
 
     timestamp_ = boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time());
 
@@ -107,13 +146,13 @@ void WallToWallChannel::sendClock()
 
 void WallToWallChannel::receiveClock()
 {
-    assert(mpiChannel_->getRank() != 0);
+    assert(mpiChannel_->getRank() != RANK0);
 
-    MPIHeader header = mpiChannel_->receiveHeader(0);
+    MPIHeader header = mpiChannel_->receiveHeader(RANK0);
     assert(header.type == MPI_MESSAGE_TYPE_FRAME_CLOCK);
 
     buffer_.setSize(header.size);
-    mpiChannel_->receiveBroadcast(buffer_.data(), buffer_.size());
+    mpiChannel_->receiveBroadcast(buffer_.data(), buffer_.size(), RANK0);
     buffer_.deserialize(timestamp_);
 }
 

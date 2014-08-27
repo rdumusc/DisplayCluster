@@ -46,6 +46,8 @@
 #include "Markers.h"
 #include "PixelStreamFrame.h"
 
+#define RANK0 0
+
 WallFromMasterChannel::WallFromMasterChannel(MPIChannelPtr mpiChannel)
     : mpiChannel_(mpiChannel)
     , processMessages_(true)
@@ -54,12 +56,12 @@ WallFromMasterChannel::WallFromMasterChannel(MPIChannelPtr mpiChannel)
 
 bool WallFromMasterChannel::isMessageAvailable()
 {
-    return mpiChannel_->isMessageAvailable(0);
+    return mpiChannel_->isMessageAvailable(RANK0);
 }
 
 void WallFromMasterChannel::receiveMessage()
 {
-    MPIHeader mh = mpiChannel_->receiveHeader(0);
+    MPIHeader mh = mpiChannel_->receiveHeader(RANK0);
 
     switch (mh.type)
     {
@@ -96,7 +98,7 @@ T WallFromMasterChannel::receiveBroadcast(const size_t messageSize)
     T object;
 
     buffer_.setSize(messageSize);
-    mpiChannel_->receiveBroadcast(buffer_.data(), messageSize);
+    mpiChannel_->receiveBroadcast(buffer_.data(), messageSize, RANK0);
     buffer_.deserialize(object);
 
     return object;

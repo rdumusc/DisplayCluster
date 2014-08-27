@@ -99,10 +99,10 @@ public:
 
     /**
      * Update the internal timestamp to play the movie.
-     * @param timeSinceLastFrame Time increment.
-     * @param skipDecoding Only increment the timestamp, don't read/decode the movie yet.
+     * @param timestamp The desired timestamp.
+     * @param skipDecoding Only update the timestamp without reading or decoding the movie.
      */
-    void update(const boost::posix_time::time_duration timeSinceLastFrame, const bool skipDecoding);
+    void update(const boost::posix_time::time_duration timestamp, const bool skipDecoding);
 
     /**
      * Is there a new frame available.
@@ -118,6 +118,9 @@ public:
 
     /** Get the movie duration in seconds. May be unavailable for some movies. */
     double getDuration() const;
+
+    /** Get the current timestamp. */
+    boost::posix_time::time_duration getTimestamp() const;
 
     /**
      * Jump to a random position in the movie.

@@ -44,29 +44,37 @@
 
 class PixelStreamContent : public Content
 {
-    public:
-        PixelStreamContent(const QString& uri = "") : Content(uri) { }
+public:
+    /**
+     * Constructor.
+     * @param uri The unique stream identifier.
+     */
+    explicit PixelStreamContent(const QString& uri);
 
-        /** Get the content type **/
-        CONTENT_TYPE getType() override;
+    /** Get the content type **/
+    CONTENT_TYPE getType() override;
 
-        /**
-         * Content method overload, not used for PixelStreams.
-         * @return always returns true
-        **/
-        bool readMetadata() override;
+    /**
+     * Content method overload, not used for PixelStreams.
+     * @return always returns true
+    **/
+    bool readMetadata() override;
 
-        void preRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
+    void preRenderUpdate(Factories& factories, ContentWindowManagerPtr window,
+                         WallToWallChannel& wallToWallChannel) override;
 
-    private:
-        friend class boost::serialization::access;
+private:
+    friend class boost::serialization::access;
 
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int)
-        {
-            // serialize base class information (with NVP for xml archives)
-            ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
-        }
+    // Default constructor required for boost::serialization
+    PixelStreamContent() {}
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int)
+    {
+        // serialize base class information (with NVP for xml archives)
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+    }
 };
 
 #endif

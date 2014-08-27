@@ -179,7 +179,7 @@ int main(int argc, char **argv)
         {
             const MPIHeader header = mpiChannel.receiveHeader(RANK0);
             buffer.setSize(header.size);
-            mpiChannel.receiveBroadcast(buffer.data(), header.size);
+            mpiChannel.receiveBroadcast(buffer.data(), header.size, RANK0);
         }
         ++counter;
     }

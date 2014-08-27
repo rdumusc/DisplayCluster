@@ -52,7 +52,7 @@ void FactoryObject::setRenderContext(RenderContext* renderContext)
     renderContext_ = renderContext;
 }
 
-RenderContext*FactoryObject::getRenderContext() const
+RenderContext* FactoryObject::getRenderContext() const
 {
     return renderContext_;
 }

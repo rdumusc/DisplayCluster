@@ -45,6 +45,10 @@
 
 BOOST_CLASS_EXPORT_GUID(SVGContent, "SVGContent")
 
+SVGContent::SVGContent(const QString& uri)
+    : Content(uri)
+{}
+
 CONTENT_TYPE SVGContent::getType()
 {
     return CONTENT_TYPE_SVG;

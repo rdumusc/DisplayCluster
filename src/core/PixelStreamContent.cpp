@@ -44,6 +44,10 @@
 
 BOOST_CLASS_EXPORT_GUID(PixelStreamContent, "PixelStreamContent")
 
+PixelStreamContent::PixelStreamContent(const QString& uri)
+    : Content(uri)
+{}
+
 CONTENT_TYPE PixelStreamContent::getType()
 {
     return CONTENT_TYPE_PIXEL_STREAM;

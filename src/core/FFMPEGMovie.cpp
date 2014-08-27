@@ -222,6 +222,11 @@ double FFMPEGMovie::getDuration() const
     return std::max(duration, 0.0);
 }
 
+boost::posix_time::time_duration FFMPEGMovie::getTimestamp() const
+{
+    return timePosition_;
+}
+
 bool FFMPEGMovie::jumpTo(const double timePosInSeconds)
 {
     newFrameAvailable_ = false;
@@ -242,14 +247,15 @@ bool FFMPEGMovie::jumpTo(const double timePosInSeconds)
     return true;
 }
 
-void FFMPEGMovie::update(const boost::posix_time::time_duration timeSinceLastFrame, const bool skipDecoding)
+void FFMPEGMovie::update(const boost::posix_time::time_duration timestamp, const bool skipDecoding)
 {
     newFrameAvailable_ = false;
 
     // If decoding is slower than frame rate, slow down decoding speed
+    const boost::posix_time::time_duration timeSinceLastFrame = timestamp - timePosition_;
     const double timeIncrementInSec = timeSinceLastFrame.total_microseconds() / MICROSEC;
     if (timeIncrementInSec < frameDurationInSeconds_)
-        timePosition_ += timeSinceLastFrame;
+        timePosition_ = timestamp;
     else
     {
         const double factor = frameDurationInSeconds_ / timeIncrementInSec;

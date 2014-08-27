@@ -49,6 +49,11 @@
 #include <boost/serialization/export.hpp>
 BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
 
+MovieContent::MovieContent(const QString& uri)
+    : Content(uri)
+{
+}
+
 CONTENT_TYPE MovieContent::getType()
 {
     return CONTENT_TYPE_MOVIE;
@@ -81,7 +86,26 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
+void MovieContent::preRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel &wallToWallChannel)
+{
+    // Stop decoding when the window is moving.
+    // This is to avoid saccades when reaching a new GLWindow.
+    // The decoding resumes when the movement is finished.
+    if( blockAdvance_ )
+        return;
+
+    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject(getURI());
+
+    movie->setPause( window->getControlState() & STATE_PAUSED );
+    movie->setLoop( window->getControlState() & STATE_LOOP );
+
+    const RenderContext* renderContext = movie->getRenderContext();
+    movie->setVisible(renderContext->isRegionVisible(window->getCoordinates()));
+
+    movie->preRenderUpdate( wallToWallChannel );
+}
+
+void MovieContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel& wallToWallChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
@@ -89,11 +113,5 @@ void MovieContent::postRenderUpdate(Factories& factories, ContentWindowManagerPt
         return;
 
     boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject(getURI());
-
-    // skip a frame if the Content rectangle is not visible in any window; otherwise decode normally
-    const bool skipDecoding = !movie->getRenderContext()->isRegionVisible(window->getCoordinates());
-
-    movie->setPause( window->getControlState() & STATE_PAUSED );
-    movie->setLoop( window->getControlState() & STATE_LOOP );
-    movie->nextFrame(wallToWallChannel.getTime(), skipDecoding);
+    movie->postRenderUpdate( wallToWallChannel );
 }
