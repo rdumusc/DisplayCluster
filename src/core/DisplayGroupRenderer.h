@@ -67,6 +67,14 @@ public:
      */
     void render() override;
 
+#if ENABLE_SKELETON_SUPPORT
+    /** Show the skeletons. */
+    void setShowSkeleton(const bool show);
+#endif
+
+    /** Get the window renderer. */
+    ContentWindowRenderer& getWindowRenderer();
+
 public slots:
     /**
      * Set the DisplayGroup to render, replacing the previous one.
@@ -75,10 +83,10 @@ public slots:
     void setDisplayGroup(DisplayGroupManagerPtr displayGroup);
 
 private:
-    FactoriesPtr factories_;
     DisplayGroupManagerPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
 #if ENABLE_SKELETON_SUPPORT
+    bool showSkeletons_;
     SkeletonRenderer skeletonRenderer_;
 #endif
 

@@ -70,13 +70,29 @@ public:
      */
     void setContentWindow(ContentWindowManagerPtr window);
 
+    /** Display the window borders. */
+    void setShowWindowBorders(const bool show);
+
+    /** Display the zoom context. */
+    void setShowZoomContext(const bool show);
+
+    /** Set PixelStream rendering options. */
+    void setPixelStreamOptions(const bool showSegmentBorders,
+                               const bool showSegmentStatistics);
+
 private:
     FactoriesPtr factories_;
     ContentWindowManagerPtr window_;
     GLQuad quad_;
 
+    bool showWindowBorders_;
+    bool showZoomContext_;
+
+    bool showSegmentBorders_;
+    bool showSegmentStatistics_;
+
     void renderWindowBorder();
-    void renderContent(const bool showZoomContext);
+    void renderContent();
     void renderContextView(FactoryObjectPtr object, const QRectF& texCoord);
     QRectF getTexCoord() const;
 

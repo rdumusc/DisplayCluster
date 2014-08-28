@@ -44,8 +44,10 @@
 #include "Marker.h"
 
 DisplayGroupRenderer::DisplayGroupRenderer(FactoriesPtr factories)
-    : factories_(factories)
-    , windowRenderer_(factories)
+    : windowRenderer_(factories)
+#if ENABLE_SKELETON_SUPPORT
+    , showSkeletons_(true)
+#endif
 {
 }
 
@@ -58,10 +60,22 @@ void DisplayGroupRenderer::render()
     renderContentWindows(displayGroup_->getContentWindowManagers());
 
 #if ENABLE_SKELETON_SUPPORT
-    if (g_configuration->getOptions()->getShowSkeletons())
+    if (showSkeletons_)
         skeletonRenderer_.render(displayGroup_->getSkeletons());
 #endif
 }
+
+ContentWindowRenderer& DisplayGroupRenderer::getWindowRenderer()
+{
+    return windowRenderer_;
+}
+
+#if ENABLE_SKELETON_SUPPORT
+void DisplayGroupRenderer::setShowSkeleton(const bool show)
+{
+    showSkeletons_ = show;
+}
+#endif
 
 void DisplayGroupRenderer::setDisplayGroup(DisplayGroupManagerPtr displayGroup)
 {

@@ -42,6 +42,7 @@
 #include "types.h"
 
 #include <QRectF>
+#include <QColor>
 
 class WallConfiguration;
 
@@ -54,11 +55,15 @@ public:
     /**
      * Create a new RenderContext and initialize the GLWindows.
      * @param configuration The configuration that describes the window settings
+     * @throw std::runtime_error if the context initialization failed.
      */
     RenderContext(const WallConfiguration& configuration);
 
     /** Destructor. */
     ~RenderContext();
+
+    /** Set the background color of all windows. */
+    void setBackgroundColor(const QColor& color);
 
     GLWindowPtr getGLWindow(const int index=0) const;
     GLWindowPtr getActiveGLWindow() const;

@@ -55,6 +55,7 @@ public:
      * @brief WallConfiguration
      * @param filename \see Configuration
      * @param processIndex MPI index in the range [1;n] of the process
+     * @throw std::runtime_error if the file could not be read
      */
     WallConfiguration(const QString &filename, const int processIndex);
 

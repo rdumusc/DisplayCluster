@@ -78,18 +78,9 @@ public:
      * If the object does not exist, it is created.
      * Objects not accessed during two consecutive frames are deleted using
      * a garbage collection mechanism.
-     * @see clearStaleFactoryObjects()
+     * @see postRenderUpdate()
      */
     FactoryObjectPtr getFactoryObject(ContentPtr content);
-
-    /**
-     * Garbarge-collect unused objects.
-     *
-     * Only call this function once per frame.
-     * This will delete all FactoryObjects which have not been accessed since
-     * this method was last called.
-     */
-    void clearStaleFactoryObjects();
 
     /** Clear all Factories (useful on shutdown). */
     void clear();
@@ -97,7 +88,7 @@ public:
     /** Update the objects before rendering. */
     void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
 
-    /** Update the objects after rendering. */
+    /** Update the objects after rendering and garbarge-collect unused ones. */
     void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
 
     //@{
@@ -123,6 +114,15 @@ public slots:
     void updatePixelStream(PixelStreamFramePtr frame);
 
 private:
+    /**
+     * Garbarge-collect unused objects.
+     *
+     * Only call this function once per frame.
+     * This will delete all FactoryObjects which have not been accessed since
+     * this method was last called.
+     */
+    void clearStaleFactoryObjects();
+
     uint64_t frameIndex_;
 
     Factory<Texture> textureFactory_;

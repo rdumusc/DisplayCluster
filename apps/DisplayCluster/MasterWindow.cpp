@@ -72,6 +72,7 @@
 MasterWindow::MasterWindow(DisplayGroupManagerPtr displayGroup)
     : QMainWindow()
     , displayGroup_(displayGroup)
+    , options_(new Options)
     , backgroundWidget_(0)
 {
 #if ENABLE_PYTHON_SUPPORT
@@ -95,12 +96,18 @@ DisplayGroupGraphicsView* MasterWindow::getGraphicsView()
     return dggv_->getGraphicsView();
 }
 
+OptionsPtr MasterWindow::getOptions() const
+{
+    return options_;
+}
+
 void MasterWindow::setupMasterWindowUI()
 {
     // create menus in menu bar
     QMenu * fileMenu = menuBar()->addMenu("&File");
+    QMenu * editMenu = menuBar()->addMenu("&Edit");
     QMenu * viewMenu = menuBar()->addMenu("&View");
-    QMenu * viewStreamingMenu = viewMenu->addMenu("&Streaming");
+    QMenu * toolsMenu = menuBar()->addMenu("&Tools");
 #if ENABLE_PYTHON_SUPPORT
     // add Window menu for Python console. if we add any other entries to it we'll need to remove the #if
     QMenu * windowMenu = menuBar()->addMenu("&Window");
@@ -166,63 +173,47 @@ void MasterWindow::setupMasterWindowUI()
     quitAction->setStatusTip("Quit application");
     connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
-    OptionsPtr options = g_configuration->getOptions();
-
     // show window borders action
     QAction * showWindowBordersAction = new QAction("Show Window Borders", this);
     showWindowBordersAction->setStatusTip("Show window borders");
     showWindowBordersAction->setCheckable(true);
-    showWindowBordersAction->setChecked(options->getShowWindowBorders());
-    connect(showWindowBordersAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowWindowBorders(bool)));
+    showWindowBordersAction->setChecked(options_->getShowWindowBorders());
+    connect(showWindowBordersAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowWindowBorders(bool)));
 
     // show touch points action
     QAction * showTouchPoints = new QAction("Show Touch Points", this);
     showTouchPoints->setStatusTip("Show touch points");
     showTouchPoints->setCheckable(true);
-    showTouchPoints->setChecked(options->getShowTouchPoints());
-    connect(showTouchPoints, SIGNAL(toggled(bool)), options.get(), SLOT(setShowTouchPoints(bool)));
-
-    // show movie controls action
-    QAction * showMovieControlsAction = new QAction("Show Movie Controls", this);
-    showMovieControlsAction->setStatusTip("Show movie controls");
-    showMovieControlsAction->setCheckable(true);
-    showMovieControlsAction->setChecked(options->getShowMovieControls());
-    connect(showMovieControlsAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowMovieControls(bool)));
+    showTouchPoints->setChecked(options_->getShowTouchPoints());
+    connect(showTouchPoints, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowTouchPoints(bool)));
 
     // show test pattern action
     QAction * showTestPatternAction = new QAction("Show Test Pattern", this);
     showTestPatternAction->setStatusTip("Show test pattern");
     showTestPatternAction->setCheckable(true);
-    showTestPatternAction->setChecked(options->getShowTestPattern());
-    connect(showTestPatternAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowTestPattern(bool)));
-
-    // enable mullion compensation action
-    QAction * enableMullionCompensationAction = new QAction("Enable Mullion Compensation", this);
-    enableMullionCompensationAction->setStatusTip("Enable mullion compensation");
-    enableMullionCompensationAction->setCheckable(true);
-    enableMullionCompensationAction->setChecked(options->getEnableMullionCompensation());
-    connect(enableMullionCompensationAction, SIGNAL(toggled(bool)), options.get(), SLOT(setEnableMullionCompensation(bool)));
+    showTestPatternAction->setChecked(options_->getShowTestPattern());
+    connect(showTestPatternAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowTestPattern(bool)));
 
     // show zoom context action
     QAction * showZoomContextAction = new QAction("Show Zoom Context", this);
     showZoomContextAction->setStatusTip("Show zoom context");
     showZoomContextAction->setCheckable(true);
-    showZoomContextAction->setChecked(options->getShowZoomContext());
-    connect(showZoomContextAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowZoomContext(bool)));
+    showZoomContextAction->setChecked(options_->getShowZoomContext());
+    connect(showZoomContextAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowZoomContext(bool)));
 
     // show streaming segments action
-    QAction * showStreamingSegmentsAction = new QAction("Show Segments", this);
-    showStreamingSegmentsAction->setStatusTip("Show segments");
+    QAction * showStreamingSegmentsAction = new QAction("Show Streaming Segments", this);
+    showStreamingSegmentsAction->setStatusTip("Show Streaming Segments");
     showStreamingSegmentsAction->setCheckable(true);
-    showStreamingSegmentsAction->setChecked(options->getShowStreamingSegments());
-    connect(showStreamingSegmentsAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowStreamingSegments(bool)));
+    showStreamingSegmentsAction->setChecked(options_->getShowStreamingSegments());
+    connect(showStreamingSegmentsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStreamingSegments(bool)));
 
     // show streaming statistics action
-    QAction * showStreamingStatisticsAction = new QAction("Show Statistics", this);
-    showStreamingStatisticsAction->setStatusTip("Show statistics");
-    showStreamingStatisticsAction->setCheckable(true);
-    showStreamingStatisticsAction->setChecked(options->getShowStreamingStatistics());
-    connect(showStreamingStatisticsAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowStreamingStatistics(bool)));
+    QAction * showStatisticsAction = new QAction("Show Statistics", this);
+    showStatisticsAction->setStatusTip("Show statistics");
+    showStatisticsAction->setCheckable(true);
+    showStatisticsAction->setChecked(options_->getShowStatistics());
+    connect(showStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStatistics(bool)));
 
 #if ENABLE_SKELETON_SUPPORT
     // enable skeleton tracking action
@@ -247,21 +238,19 @@ void MasterWindow::setupMasterWindowUI()
     // add actions to menus
     fileMenu->addAction(openContentAction);
     fileMenu->addAction(openContentsDirectoryAction);
+    fileMenu->addAction(loadStateAction);
+    fileMenu->addAction(saveStateAction);
     fileMenu->addAction(webbrowserAction);
     fileMenu->addAction(clearContentsAction);
-    fileMenu->addAction(saveStateAction);
-    fileMenu->addAction(loadStateAction);
-    fileMenu->addAction(computeImagePyramidAction);
     fileMenu->addAction(quitAction);
-    viewMenu->addAction(backgroundAction);
+    editMenu->addAction(backgroundAction);
+    viewMenu->addAction(showStatisticsAction);
+    viewMenu->addAction(showStreamingSegmentsAction);
     viewMenu->addAction(showWindowBordersAction);
     viewMenu->addAction(showTouchPoints);
-    viewMenu->addAction(showMovieControlsAction);
     viewMenu->addAction(showTestPatternAction);
-    viewMenu->addAction(enableMullionCompensationAction);
     viewMenu->addAction(showZoomContextAction);
-    viewStreamingMenu->addAction(showStreamingSegmentsAction);
-    viewStreamingMenu->addAction(showStreamingStatisticsAction);
+    toolsMenu->addAction(computeImagePyramidAction);
 
 #if ENABLE_PYTHON_SUPPORT
     windowMenu->addAction(pythonConsoleAction);
@@ -277,12 +266,11 @@ void MasterWindow::setupMasterWindowUI()
     // add actions to toolbar
     toolbar->addAction(openContentAction);
     toolbar->addAction(openContentsDirectoryAction);
-    toolbar->addAction(clearContentsAction);
-    toolbar->addAction(saveStateAction);
     toolbar->addAction(loadStateAction);
-    toolbar->addAction(computeImagePyramidAction);
-    toolbar->addAction(backgroundAction);
+    toolbar->addAction(saveStateAction);
     toolbar->addAction(webbrowserAction);
+    toolbar->addAction(clearContentsAction);
+    toolbar->addAction(backgroundAction);
 #if ENABLE_PYTHON_SUPPORT
     toolbar->addAction(pythonConsoleAction);
 #endif
@@ -298,7 +286,7 @@ void MasterWindow::setupMasterWindowUI()
             this, SIGNAL(hideDock()));
     connect(dggv_->getGraphicsView(), SIGNAL(backgroundTapAndHold(QPointF)),
             this, SLOT(openDock(QPointF)));
-    connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
+    connect(options_.get(), SIGNAL(updated(OptionsPtr)),
             dggv_, SLOT(optionsUpdated(OptionsPtr)));
 
     // create contents dock widget
@@ -413,7 +401,7 @@ void MasterWindow::showBackgroundWidget()
         backgroundWidget_->setModal(true);
 
         connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),
-                g_configuration->getOptions().get(), SLOT(setBackgroundColor(QColor)));
+                options_.get(), SLOT(setBackgroundColor(QColor)));
         connect(backgroundWidget_, SIGNAL(backgroundContentChanged(ContentPtr)),
                 displayGroup_.get(), SLOT(setBackgroundContent(ContentPtr)));
     }

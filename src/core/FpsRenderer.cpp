@@ -37,74 +37,33 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef WALLAPPLICATION_H
-#define WALLAPPLICATION_H
+#include "FpsRenderer.h"
 
-#include "types.h"
-#include "SwapSyncObject.h"
-#include "RenderController.h"
+#include "RenderContext.h"
+#include "GLWindow.h"
 
-#include <QApplication>
-#include <QThread>
-#include <boost/scoped_ptr.hpp>
+#include <QtOpenGL/qgl.h>
 
-class WallConfiguration;
-class RenderContext;
-class WallFromMasterChannel;
-class WallToMasterChannel;
-class WallToWallChannel;
-
-/**
- * The main application for Wall processes.
- */
-class WallApplication : public QApplication
+FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
+    : renderContext_(renderContext)
 {
-    Q_OBJECT
+}
 
-public:
-    /**
-     * Constructor
-     * @param argc Command line argument count (required by QApplication)
-     * @param argv Command line arguments (required by QApplication)
-     * @param worldChannel The world MPI channel
-     * @param wallChannel The wall MPI channel
-     * @throw std::runtime_error if an error occured during initialization
-     */
-    WallApplication(int &argc, char **argv, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel);
+void FpsRenderer::render()
+{
+    fpsCounter_.tick();
 
-    /** Destructor */
-    virtual ~WallApplication();
+    const int fontSize = 32;
+    QFont textFont;
+    textFont.setPixelSize(fontSize);
 
-signals:
-    /** Emitted when a frame is finished to trigger the next frame. */
-    void frameFinished();
+    glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT);
 
-private slots:
-    void renderFrame();
+    glDisable(GL_DEPTH_TEST);
+    glColor4f(0.,0.,1.,1.);
 
-private:
-    boost::scoped_ptr<WallConfiguration> config_;
-    RenderContextPtr renderContext_;
-    boost::scoped_ptr<RenderController> renderController_;
-    FactoriesPtr factories_;
+    renderContext_->getActiveGLWindow()->renderText(10, fontSize, fpsCounter_.toString(), textFont);
 
-    boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
-    boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
-    boost::scoped_ptr<WallToWallChannel> wallChannel_;
+    glPopAttrib();
+}
 
-    QThread mpiSendThread_;
-    QThread mpiReceiveThread_;
-
-    bool createConfig(const QString& filename, const int rank);
-    void initRenderContext();
-    void initMPIConnection(MPIChannelPtr worldChannel);
-
-    void startRendering();
-
-    void onNewObject(FactoryObject& object);
-    void syncObjects();
-    void preRenderUpdate();
-    void postRenderUpdate();
-};
-
-#endif // WALLAPPLICATION_H

@@ -87,7 +87,7 @@ void PixelStreamerLauncher::openWebBrowser(const QPointF pos, const QSize size, 
 
     processes_[uri] = new QProcess(this);
     if ( !processes_[uri]->startDetached(program, options.getCommandLineArguments(), QDir::currentPath( )))
-        put_flog(LOG_WARN, "Browser process could not be started!");
+        put_flog(LOG_ERROR, "Browser process could not be started!");
 }
 
 void PixelStreamerLauncher::openDock(const QPointF pos, const QSize size, const QString rootDir)
@@ -103,7 +103,7 @@ void PixelStreamerLauncher::openDock(const QPointF pos, const QSize size, const 
     if( !processes_.count(uri) )
     {
         if( !createDock(dockSize, rootDir))
-            put_flog(LOG_WARN, "Dock process could not be started!");
+            put_flog(LOG_ERROR, "Dock process could not be started!");
     }
 }
 

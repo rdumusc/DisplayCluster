@@ -44,11 +44,23 @@
 class Renderable
 {
 public:
+    /** Constructor. */
+    Renderable() : visible_(true) {}
+
     /** Virtual destructor. */
     virtual ~Renderable() {}
 
     /** Render the object. */
     virtual void render() = 0;
+
+    /** Check if the object is visible. */
+    bool isVisible() const { return visible_; }
+
+    /** Change the visibility of this object. */
+    void setVisible(const bool visible) { visible_ = visible; }
+
+private:
+    bool visible_;
 };
 
 #endif // RENDERABLE_H

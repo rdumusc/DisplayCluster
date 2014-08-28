@@ -69,6 +69,9 @@ public:
     /** Get the GraphicsView used for touch interaction. */
     DisplayGroupGraphicsView* getGraphicsView();
 
+    /** Get the display options that change during runtime. */
+    OptionsPtr getOptions() const;
+
 signals:
     /** Emitted when users want to open a dock. */
     void openDock(QPointF pos, QSize size, QString rootDir);
@@ -87,8 +90,8 @@ signals:
 protected:
     ///@{
     /** Drag events re-implemented from QMainWindow. */
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
     ///@}
 
 private slots:
@@ -122,6 +125,7 @@ private:
     QString extractStateFile(const QMimeData *mimeData);
 
     DisplayGroupManagerPtr displayGroup_;
+    OptionsPtr options_;
     BackgroundWidget* backgroundWidget_;
     DisplayGroupGraphicsViewProxy* dggv_;
 };

@@ -41,9 +41,7 @@
 Options::Options()
     : showWindowBorders_(false)
     , showTouchPoints_(false)
-    , showMovieControls_(true)
     , showTestPattern_(false)
-    , enableMullionCompensation_(true)
     , showZoomContext_(true)
     , showStreamingSegments_(false)
     , showStreamingStatistics_(false)
@@ -63,19 +61,9 @@ bool Options::getShowTouchPoints() const
     return showTouchPoints_;
 }
 
-bool Options::getShowMovieControls() const
-{
-    return showMovieControls_;
-}
-
 bool Options::getShowTestPattern() const
 {
     return showTestPattern_;
-}
-
-bool Options::getEnableMullionCompensation() const
-{
-    return enableMullionCompensation_;
 }
 
 bool Options::getShowZoomContext() const
@@ -88,7 +76,7 @@ bool Options::getShowStreamingSegments() const
     return showStreamingSegments_;
 }
 
-bool Options::getShowStreamingStatistics() const
+bool Options::getShowStatistics() const
 {
     return showStreamingStatistics_;
 }
@@ -119,23 +107,9 @@ void Options::setShowTouchPoints(bool set)
     emit(updated(shared_from_this()));
 }
 
-void Options::setShowMovieControls(bool set)
-{
-    showMovieControls_ = set;
-
-    emit(updated(shared_from_this()));
-}
-
 void Options::setShowTestPattern(bool set)
 {
     showTestPattern_ = set;
-
-    emit(updated(shared_from_this()));
-}
-
-void Options::setEnableMullionCompensation(bool set)
-{
-    enableMullionCompensation_ = set;
 
     emit(updated(shared_from_this()));
 }
@@ -154,7 +128,7 @@ void Options::setShowStreamingSegments(bool set)
     emit(updated(shared_from_this()));
 }
 
-void Options::setShowStreamingStatistics(bool set)
+void Options::setShowStatistics(bool set)
 {
     showStreamingStatistics_ = set;
 

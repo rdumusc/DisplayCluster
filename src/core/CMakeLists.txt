@@ -94,7 +94,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SRCS
     ${COMMON_SOURCES}
-    BackgroundWidget.cpp
     Command.cpp
     CommandHandler.cpp
     CommandType.cpp
@@ -125,6 +124,7 @@ list(APPEND SRCS
     FFMPEGVideoFrameConverter.cpp
     FileCommandHandler.cpp
     FpsCounter.cpp
+    FpsRenderer.cpp
     GLQuad.cpp
     GLTexture2D.cpp
     GLWindow.cpp
@@ -160,6 +160,7 @@ list(APPEND SRCS
     PixelStreamSegmentRenderer.cpp
     PixelStreamWindowManager.cpp
     RenderContext.cpp
+    RenderController.cpp
     SessionCommandHandler.cpp
     State.cpp
     StatePreview.cpp
@@ -205,7 +206,6 @@ list(APPEND SRCS
 )
 
 list(APPEND MOC_HEADERS
-    BackgroundWidget.h
     CommandHandler.h
     Content.h
     ContentWindowInterface.h
@@ -228,6 +228,7 @@ list(APPEND MOC_HEADERS
     PixelStream.h
     PixelStreamDispatcher.h
     PixelStreamWindowManager.h
+    RenderController.h
     WallFromMasterChannel.h
     WallToMasterChannel.h
     WallToWallChannel.h

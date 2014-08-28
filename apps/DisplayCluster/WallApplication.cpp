@@ -41,28 +41,25 @@
 
 #include "log.h"
 #include "CommandLineParameters.h"
+
 #include "MPIChannel.h"
 #include "WallFromMasterChannel.h"
 #include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
+
 #include "globals.h"
 #include "configuration/WallConfiguration.h"
+
 #include "RenderContext.h"
 #include "Factories.h"
-#include "GLWindow.h"
-#include "TestPattern.h"
-#include "DisplayGroupManager.h"
-#include "DisplayGroupRenderer.h"
-#include "MarkerRenderer.h"
 
-#include <boost/make_shared.hpp>
+#include <stdexcept>
+
 #include <boost/bind.hpp>
 
 WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
     : QApplication(argc_, argv_)
     , wallChannel_(new WallToWallChannel(wallChannel))
-    , syncQuit_(false)
-    , syncDisplayGroup_(boost::make_shared<DisplayGroupManager>())
 {
     CommandLineParameters options(argc_, argv_);
     if (options.getHelp())
@@ -72,21 +69,21 @@ WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldCh
         throw std::runtime_error("WallApplication: initialization failed.");
 
     initRenderContext();
-    setupTestPattern(worldChannel->getRank());
+    renderController_->setupTestPattern(worldChannel->getRank(), *config_);
     initMPIConnection(worldChannel);
     startRendering();
 }
 
 WallApplication::~WallApplication()
 {
-    // Must be done before destructing the GLWindows to release GL objects
-    factories_->clear();
-
     mpiReceiveThread_.quit();
     mpiReceiveThread_.wait();
 
     mpiSendThread_.quit();
     mpiSendThread_.wait();
+
+    // Must be done before destructing the GLWindows to release GL objects
+    factories_->clear();
 }
 
 bool WallApplication::createConfig(const QString& filename, const int rank)
@@ -101,8 +98,6 @@ bool WallApplication::createConfig(const QString& filename, const int rank)
         put_flog(LOG_FATAL, "Could not load configuration. '%s'", e.what());
         return false;
     }
-    syncOptions_.setCallback(boost::bind(&Configuration::setOptions,
-                                         config_.get(), _1));
     return true;
 }
 
@@ -110,20 +105,18 @@ void WallApplication::initRenderContext()
 {
     connect(this, SIGNAL(lastWindowClosed()), this, SLOT(quit()));
 
-    renderContext_.reset(new RenderContext(*config_));
+    try
+    {
+        renderContext_.reset(new RenderContext(*config_));
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Error creating the RenderContext: '%s'", e.what());
+        throw std::runtime_error("WallApplication: initialization failed.");
+    }
+
     factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
-
-    DisplayGroupRendererPtr displayGroupRenderer(new DisplayGroupRenderer(factories_));
-    MarkerRendererPtr markerRenderer(new MarkerRenderer());
-
-    syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
-                                               displayGroupRenderer.get(), _1));
-
-    syncMarkers_.setCallback(boost::bind(&MarkerRenderer::setMarkers,
-                                          markerRenderer.get(), _1));
-
-    renderContext_->addRenderable(displayGroupRenderer);
-    renderContext_->addRenderable(markerRenderer);
+    renderController_.reset(new RenderController(renderContext_, factories_));
 }
 
 void WallApplication::onNewObject(FactoryObject& object)
@@ -139,19 +132,6 @@ void WallApplication::onNewObject(FactoryObject& object)
     }
 }
 
-void WallApplication::setupTestPattern(const int rank)
-{
-    for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
-    {
-        GLWindowPtr glWindow = renderContext_->getGLWindow(i);
-        RenderablePtr testPattern(new TestPattern(glWindow.get(),
-                                                  *config_,
-                                                  rank,
-                                                  glWindow->getTileIndex()));
-        glWindow->setTestPattern(testPattern);
-    }
-}
-
 void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
 {
     fromMasterChannel_.reset(new WallFromMasterChannel(worldChannel));
@@ -160,20 +140,20 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
     fromMasterChannel_->moveToThread(&mpiReceiveThread_);
     toMasterChannel_->moveToThread(&mpiSendThread_);
 
+    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
+            renderController_.get(), SLOT(updateQuit()));
+
     connect(fromMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
-            this, SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
+            renderController_.get(), SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
-            this, SLOT(updateOptions(OptionsPtr)));
+            renderController_.get(), SLOT(updateOptions(OptionsPtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
-            this, SLOT(updateMarkers(MarkersPtr)));
+            renderController_.get(), SLOT(updateMarkers(MarkersPtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
             factories_.get(), SLOT(updatePixelStream(PixelStreamFramePtr)));
-
-    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
-            this, SLOT(updateQuit()));
 
     connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
             toMasterChannel_.get(), SLOT(sendQuit()));
@@ -204,6 +184,9 @@ void WallApplication::renderFrame()
 
     postRenderUpdate();
 
+    if (renderController_->quitRendering())
+        quit();
+
     emit(frameFinished());
 }
 
@@ -211,7 +194,7 @@ void WallApplication::preRenderUpdate()
 {
     syncObjects();
     wallChannel_->synchronizeClock();
-    factories_->preRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
+    factories_->preRenderUpdate(*renderController_->getDisplayGroup(), *wallChannel_);
 }
 
 void WallApplication::syncObjects()
@@ -219,36 +202,10 @@ void WallApplication::syncObjects()
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, wallChannel_.get(), _1 );
 
-    syncQuit_.sync(versionCheckFunc);
-    if (syncQuit_.get())
-        quit();
-    syncDisplayGroup_.sync(versionCheckFunc);
-    syncMarkers_.sync(versionCheckFunc);
-    syncOptions_.sync(versionCheckFunc);
+    renderController_->synchronizeObjects(versionCheckFunc);
 }
 
 void WallApplication::postRenderUpdate()
 {
-    factories_->postRenderUpdate(*syncDisplayGroup_.get(), *wallChannel_);
-    factories_->clearStaleFactoryObjects();
-}
-
-void WallApplication::updateQuit()
-{
-    syncQuit_.update(true);
-}
-
-void WallApplication::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)
-{
-    syncDisplayGroup_.update(displayGroup);
-}
-
-void WallApplication::updateMarkers(MarkersPtr markers)
-{
-    syncMarkers_.update(markers);
-}
-
-void WallApplication::updateOptions(OptionsPtr options)
-{
-    syncOptions_.update(options);
+    factories_->postRenderUpdate(*renderController_->getDisplayGroup(), *wallChannel_);
 }

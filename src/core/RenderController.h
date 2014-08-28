@@ -37,74 +37,60 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef WALLAPPLICATION_H
-#define WALLAPPLICATION_H
+#ifndef RENDERCONTROLLER_H
+#define RENDERCONTROLLER_H
 
 #include "types.h"
-#include "SwapSyncObject.h"
-#include "RenderController.h"
 
-#include <QApplication>
-#include <QThread>
-#include <boost/scoped_ptr.hpp>
+#include "SwapSyncObject.h"
+
+#include <QObject>
 
 class WallConfiguration;
-class RenderContext;
-class WallFromMasterChannel;
-class WallToMasterChannel;
-class WallToWallChannel;
 
 /**
- * The main application for Wall processes.
+ * Setup the scene and control the rendering options during runtime.
  */
-class WallApplication : public QApplication
+class RenderController : public QObject
 {
     Q_OBJECT
 
 public:
-    /**
-     * Constructor
-     * @param argc Command line argument count (required by QApplication)
-     * @param argv Command line arguments (required by QApplication)
-     * @param worldChannel The world MPI channel
-     * @param wallChannel The wall MPI channel
-     * @throw std::runtime_error if an error occured during initialization
-     */
-    WallApplication(int &argc, char **argv, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel);
+    /** Constructor */
+    RenderController(RenderContextPtr renderContext, FactoriesPtr factories);
 
-    /** Destructor */
-    virtual ~WallApplication();
+    /** Setup the test pattern */
+    void setupTestPattern(const int rank, const WallConfiguration& config);
 
-signals:
-    /** Emitted when a frame is finished to trigger the next frame. */
-    void frameFinished();
+    /** Get the DisplayGroup */
+    DisplayGroupManagerPtr getDisplayGroup() const;
 
-private slots:
-    void renderFrame();
+    /** Synchronize the objects */
+    void synchronizeObjects(const SyncFunction& versionCheckFunc);
+
+    /**  Do we need to stop rendering. */
+    bool quitRendering() const;
+
+public slots:
+    void updateQuit();
+    void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
+    void updateOptions(OptionsPtr options);
+    void updateMarkers(MarkersPtr markers);
 
 private:
-    boost::scoped_ptr<WallConfiguration> config_;
     RenderContextPtr renderContext_;
-    boost::scoped_ptr<RenderController> renderController_;
-    FactoriesPtr factories_;
 
-    boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
-    boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
-    boost::scoped_ptr<WallToWallChannel> wallChannel_;
+    DisplayGroupRendererPtr displayGroupRenderer_;
+    MarkerRendererPtr markerRenderer_;
+    QList<RenderablePtr> testPatterns_;
+    RenderablePtr fpsRenderer_;
 
-    QThread mpiSendThread_;
-    QThread mpiReceiveThread_;
+    SwapSyncObject<bool> syncQuit_;
+    SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
+    SwapSyncObject<OptionsPtr> syncOptions_;
+    SwapSyncObject<MarkersPtr> syncMarkers_;
 
-    bool createConfig(const QString& filename, const int rank);
-    void initRenderContext();
-    void initMPIConnection(MPIChannelPtr worldChannel);
-
-    void startRendering();
-
-    void onNewObject(FactoryObject& object);
-    void syncObjects();
-    void preRenderUpdate();
-    void postRenderUpdate();
+    void setRenderOptions(OptionsPtr options);
 };
 
-#endif // WALLAPPLICATION_H
+#endif // RENDERCONTROLLER_H

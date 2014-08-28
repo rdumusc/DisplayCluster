@@ -48,7 +48,6 @@
 
 Configuration::Configuration(const QString &filename)
     : filename_(filename)
-    , options_(new Options)
     , totalScreenCountX_(0)
     , totalScreenCountY_(0)
     , screenWidth_(0)
@@ -116,17 +115,6 @@ void Configuration::load()
     }
 }
 
-
-OptionsPtr Configuration::getOptions() const
-{
-    return options_;
-}
-
-void Configuration::setOptions(OptionsPtr options)
-{
-    options_ = options;
-}
-
 int Configuration::getTotalScreenCountX() const
 {
     return totalScreenCountX_;
@@ -149,41 +137,49 @@ int Configuration::getScreenHeight() const
 
 int Configuration::getMullionWidth() const
 {
-    if(options_->getEnableMullionCompensation())
-    {
-        return mullionWidth_;
-    }
-    else
-    {
-        return 0;
-    }
+    return mullionWidth_;
 }
 
 int Configuration::getMullionHeight() const
 {
-    if(options_->getEnableMullionCompensation())
-    {
-        return mullionHeight_;
-    }
-    else
-    {
-        return 0;
-    }
+    return mullionHeight_;
 }
 
 int Configuration::getTotalWidth() const
 {
-    return totalScreenCountX_ * screenWidth_ + (totalScreenCountX_ - 1) * getMullionWidth();
+    return totalScreenCountX_ * screenWidth_ +
+           (totalScreenCountX_ - 1) * getMullionWidth();
 }
 
 int Configuration::getTotalHeight() const
 {
-    return totalScreenCountY_ * screenHeight_ + (totalScreenCountY_ - 1) * getMullionHeight();
+    return totalScreenCountY_ * screenHeight_ +
+            (totalScreenCountY_ - 1) * getMullionHeight();
 }
 
 double Configuration::getAspectRatio() const
 {
     return double(getTotalWidth()) / getTotalHeight();
+}
+
+QRectF Configuration::getNormalizedScreenRect(const QPoint& tileIndex) const
+{
+    assert(tileIndex.x() < totalScreenCountX_);
+    assert(tileIndex.y() < totalScreenCountY_);
+
+    const int xPos = tileIndex.x() * (screenWidth_ + mullionWidth_);
+    const int yPos = tileIndex.y() * (screenHeight_ + mullionHeight_);
+
+    // normalize to 0->1
+    const float totalWidth = (float)getTotalWidth();
+    const float totalHeight = (float)getTotalHeight();
+
+    const float screenLeft = (float)xPos / totalWidth;
+    const float screenTop = (float)yPos / totalHeight;
+    const float screenWidth = (float)screenWidth_ / totalWidth;
+    const float screenHeight = (float)screenHeight_ / totalHeight;
+
+    return QRectF(screenLeft, screenTop, screenWidth, screenHeight);
 }
 
 bool Configuration::getFullscreen() const

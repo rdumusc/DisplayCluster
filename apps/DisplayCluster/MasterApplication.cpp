@@ -81,6 +81,7 @@
 #include "ws/TextInputHandler.h"
 #include "ws/DisplayGroupManagerAdapter.h"
 
+#include <stdexcept>
 
 MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel)
     : QApplication(argc_, argv_)
@@ -172,7 +173,15 @@ void MasterApplication::startNetworkListener()
     if (networkListener_)
         return;
 
-    networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
+    try
+    {
+        networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
+    }
+    catch (const std::runtime_error& e)
+    {
+        put_flog(LOG_FATAL, "Could not start NetworkListener. '%s'", e.what());
+        return;
+    }
 
     CommandHandler& handler = networkListener_->getCommandHandler();
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));
@@ -206,7 +215,7 @@ void MasterApplication::startWebservice(const int webServicePort)
 
 void MasterApplication::restoreBackground()
 {
-    config_->getOptions()->setBackgroundColor( config_->getBackgroundColor( ));
+    masterWindow_->getOptions()->setBackgroundColor( config_->getBackgroundColor( ));
 
     const QString& backgroundUri = config_->getBackgroundUri();
     if ( !backgroundUri.isEmpty( ))
@@ -236,7 +245,7 @@ void MasterApplication::initMPIConnection()
     connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
             masterToWallChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
 
-    connect(g_configuration->getOptions().get(), SIGNAL(updated(OptionsPtr)),
+    connect(masterWindow_->getOptions().get(), SIGNAL(updated(OptionsPtr)),
             masterToWallChannel_.get(), SLOT(send(OptionsPtr)));
 
     connect(markers_.get(), SIGNAL(updated(MarkersPtr)),

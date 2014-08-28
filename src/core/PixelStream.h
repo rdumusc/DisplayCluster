@@ -70,6 +70,9 @@ public:
 
     void setNewFrame(const PixelStreamFramePtr frame);
 
+    void setRenderingOptions(const bool showSegmentBorders,
+                             const bool showSegmentStatistics);
+
 signals:
     void requestFrame(const QString uri);
 
@@ -99,6 +102,9 @@ private:
 
     // The coordinates of the ContentWindow of this PixelStream
     QRectF contentWindowRect_;
+
+    bool showSegmentBorders_;
+    bool showSegmentStatistics_;
 
     void updateRenderers(const PixelStreamSegments& segments);
     void updateVisibleTextures(const QRectF& windowRect);

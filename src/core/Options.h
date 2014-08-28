@@ -67,10 +67,9 @@ public:
     bool getShowTouchPoints() const;
     bool getShowMovieControls() const;
     bool getShowTestPattern() const;
-    bool getEnableMullionCompensation() const;
     bool getShowZoomContext() const;
     bool getShowStreamingSegments() const;
-    bool getShowStreamingStatistics() const;
+    bool getShowStatistics() const;
     QColor getBackgroundColor() const;
 #if ENABLE_SKELETON_SUPPORT
     bool getShowSkeletons() const;
@@ -82,12 +81,10 @@ public slots:
     /** Public setters. @see updated() */
     void setShowWindowBorders(bool set);
     void setShowTouchPoints(bool set);
-    void setShowMovieControls(bool set);
     void setShowTestPattern(bool set);
-    void setEnableMullionCompensation(bool set);
     void setShowZoomContext(bool set);
     void setShowStreamingSegments(bool set);
-    void setShowStreamingStatistics(bool set);
+    void setShowStatistics(bool set);
     void setBackgroundColor(QColor color);
 #if ENABLE_SKELETON_SUPPORT
     void setShowSkeletons(bool set);
@@ -106,9 +103,7 @@ private:
     {
         ar & showWindowBorders_;
         ar & showTouchPoints_;
-        ar & showMovieControls_;
         ar & showTestPattern_;
-        ar & enableMullionCompensation_;
         ar & showZoomContext_;
         ar & showStreamingSegments_;
         ar & showStreamingStatistics_;
@@ -120,9 +115,7 @@ private:
 
     bool showWindowBorders_;
     bool showTouchPoints_;
-    bool showMovieControls_;
     bool showTestPattern_;
-    bool enableMullionCompensation_;
     bool showZoomContext_;
     bool showStreamingSegments_;
     bool showStreamingStatistics_;

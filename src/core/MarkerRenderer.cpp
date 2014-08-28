@@ -43,7 +43,6 @@
 
 #include "globals.h"
 #include "configuration/Configuration.h"
-#include "Options.h"
 
 #include "log.h"
 
@@ -59,9 +58,6 @@ MarkerRenderer::MarkerRenderer()
 
 void MarkerRenderer::render()
 {
-    if (!g_configuration->getOptions()->getShowTouchPoints())
-        return;
-
     const MarkersMap& map = markers_->getMarkers();
     for(MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it)
         render(it->second);
