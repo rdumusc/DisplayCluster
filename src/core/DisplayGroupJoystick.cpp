@@ -37,14 +37,15 @@
 /*********************************************************************/
 
 #include "DisplayGroupJoystick.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowInterface.h"
 #include "ContentWindowManager.h"
 #include "Marker.h"
 
-DisplayGroupJoystick::DisplayGroupJoystick(boost::shared_ptr<DisplayGroupManager> displayGroupManager) : DisplayGroupInterface(displayGroupManager)
+DisplayGroupJoystick::DisplayGroupJoystick(DisplayGroupPtr displayGroup)
+    : DisplayGroupInterface(displayGroup)
 {
-    marker_ = displayGroupManager->getNewMarker();
+    marker_ = displayGroup->getNewMarker();
 
     // add ContentWindowInterfaces for existing ContentWindowManagers
     for(unsigned int i=0; i<contentWindowManagers_.size(); i++)

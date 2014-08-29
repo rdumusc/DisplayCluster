@@ -40,7 +40,7 @@
 #include "Factories.h"
 
 #include "Content.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 #include "PixelStreamFrame.h"
 
@@ -85,7 +85,7 @@ void Factories::clear()
     pixelStreamFactory_.clear();
 }
 
-void Factories::preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+void Factories::preRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel)
 {
     ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
 
@@ -100,7 +100,7 @@ void Factories::preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallCha
         backgroundWindow->getContent()->preRenderUpdate(*this, backgroundWindow, wallChannel);
 }
 
-void Factories::postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+void Factories::postRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel)
 {
     ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
 

@@ -42,7 +42,7 @@
 #include "log.h"
 #include "CommandLineParameters.h"
 #include "MasterWindow.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentFactory.h"
 #include "globals.h"
 #include "configuration/MasterConfiguration.h"
@@ -79,7 +79,7 @@
 #include "ws/WebServiceServer.h"
 #include "ws/TextInputDispatcher.h"
 #include "ws/TextInputHandler.h"
-#include "ws/DisplayGroupManagerAdapter.h"
+#include "ws/DisplayGroupAdapter.h"
 
 #include <stdexcept>
 
@@ -87,7 +87,7 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
     : QApplication(argc_, argv_)
     , masterToWallChannel_(new MasterToWallChannel(worldChannel))
     , masterFromWallChannel_(new MasterFromWallChannel(worldChannel))
-    , displayGroup_(new DisplayGroupManager)
+    , displayGroup_(new DisplayGroup)
     , markers_(new Markers)
 {
     CommandLineParameters options(argc_, argv_);
@@ -131,7 +131,7 @@ void MasterApplication::init()
 {
     connect(this, SIGNAL(lastWindowClosed()), this, SLOT(quit()));
 
-    masterWindow_.reset(new MasterWindow(displayGroup_));
+    masterWindow_.reset(new MasterWindow(displayGroup_, *config_));
     pixelStreamWindowManager_.reset(new PixelStreamWindowManager(*displayGroup_));
 
     initPixelStreamLauncher();
@@ -201,7 +201,7 @@ void MasterApplication::startWebservice(const int webServicePort)
 
     webServiceServer_.reset(new WebServiceServer(webServicePort));
 
-    DisplayGroupManagerAdapterPtr adapter(new DisplayGroupManagerAdapter(displayGroup_));
+    DisplayGroupAdapterPtr adapter(new DisplayGroupAdapter(displayGroup_));
     TextInputHandler* textInputHandler = new TextInputHandler(adapter);
     webServiceServer_->addHandler("/dcapi/textinput", dcWebservice::HandlerPtr(textInputHandler));
 
@@ -227,12 +227,12 @@ void MasterApplication::restoreBackground()
 
 void MasterApplication::initPixelStreamLauncher()
 {
-    pixelStreamerLauncher_.reset(new PixelStreamerLauncher(*pixelStreamWindowManager_));
+    pixelStreamerLauncher_.reset(new PixelStreamerLauncher(*pixelStreamWindowManager_, *config_));
 
     pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(openWebBrowser(QPointF,QSize,QString)),
-                                       SLOT(openWebBrowser(QPointF,QSize,QString)));
-    pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(openDock(QPointF,QSize,QString)),
-                                       SLOT(openDock(QPointF,QSize,QString)));
+                                    SLOT(openWebBrowser(QPointF,QSize,QString)));
+    pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(openDock(QPointF)),
+                                    SLOT(openDock(QPointF)));
     pixelStreamerLauncher_->connect(masterWindow_.get(), SIGNAL(hideDock()),
                                     SLOT(hideDock()));
 }
@@ -242,8 +242,8 @@ void MasterApplication::initMPIConnection()
     masterToWallChannel_->moveToThread(&mpiSendThread_);
     masterFromWallChannel_->moveToThread(&mpiReceiveThread_);
 
-    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupManagerPtr)),
-            masterToWallChannel_.get(), SLOT(send(DisplayGroupManagerPtr)));
+    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupPtr)),
+            masterToWallChannel_.get(), SLOT(send(DisplayGroupPtr)));
 
     connect(masterWindow_->getOptions().get(), SIGNAL(updated(OptionsPtr)),
             masterToWallChannel_.get(), SLOT(send(OptionsPtr)));

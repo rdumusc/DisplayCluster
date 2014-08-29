@@ -44,7 +44,7 @@ namespace ut = boost::unit_test;
 #include "MinimalGlobalQtApp.h"
 
 #include "ws/TextInputHandler.h"
-#include "ws/DisplayGroupManagerAdapter.h"
+#include "ws/DisplayGroupAdapter.h"
 
 #include "dcWebservice/Response.h"
 #include "dcWebservice/Request.h"
@@ -54,11 +54,11 @@ namespace ut = boost::unit_test;
 
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
-class MockDisplayGroupManagerAdapter : public DisplayGroupManagerAdapter
+class MockDisplayGroupAdapter : public DisplayGroupAdapter
 {
 public:
-    MockDisplayGroupManagerAdapter(bool hasWindowsReturnValue)
-        : DisplayGroupManagerAdapter(DisplayGroupManagerPtr())
+    MockDisplayGroupAdapter(bool hasWindowsReturnValue)
+        : DisplayGroupAdapter(DisplayGroupPtr())
         , hasWindows_(hasWindowsReturnValue)
     {}
 
@@ -72,7 +72,7 @@ private:
 
 BOOST_AUTO_TEST_CASE( testWhenRequestHasCharThenTextInputDispatcherReceivesIt )
 {
-    DisplayGroupManagerAdapterPtr adapter(new MockDisplayGroupManagerAdapter(true));
+    DisplayGroupAdapterPtr adapter(new MockDisplayGroupAdapter(true));
     TextInputHandler handler(adapter);
 
     MockTextInputDispatcher mockDispatcher;
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( testWhenRequestHasCharThenTextInputDispatcherReceivesIt )
 
 BOOST_AUTO_TEST_CASE( testWhenRequestIsStringThenReturnCodeIs200Ok )
 {
-    DisplayGroupManagerAdapterPtr adapter(new MockDisplayGroupManagerAdapter(true));
+    DisplayGroupAdapterPtr adapter(new MockDisplayGroupAdapter(true));
     TextInputHandler handler(adapter);
 
     dcWebservice::RequestPtr request(new dcWebservice::Request());
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE( testWhenRequestIsStringThenReturnCodeIs200Ok )
 
 BOOST_AUTO_TEST_CASE( testWhenRequestEmptyInvalidThenReturnCodeIs400 )
 {
-    DisplayGroupManagerAdapterPtr adapter(new MockDisplayGroupManagerAdapter(true));
+    DisplayGroupAdapterPtr adapter(new MockDisplayGroupAdapter(true));
     TextInputHandler handler(adapter);
 
     dcWebservice::RequestPtr request(new dcWebservice::Request());
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE( testWhenRequestEmptyInvalidThenReturnCodeIs400 )
 
 BOOST_AUTO_TEST_CASE( testWhenDisplayGroupHasNoWindowsThenReturnCodeIs404 )
 {
-    DisplayGroupManagerAdapterPtr adapter(new MockDisplayGroupManagerAdapter(false));
+    DisplayGroupAdapterPtr adapter(new MockDisplayGroupAdapter(false));
     TextInputHandler handler(adapter);
 
     dcWebservice::RequestPtr request(new dcWebservice::Request());

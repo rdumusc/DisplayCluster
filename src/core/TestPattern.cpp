@@ -39,21 +39,21 @@
 
 #include "TestPattern.h"
 
+#include "RenderContext.h"
 #include "configuration/WallConfiguration.h"
 
-#include <QString>
 #include <QFont>
-#include <QGLWidget>
+#include <QtOpenGL/qgl.h>
 
 #define FONT_SIZE   24
 #define LINE_WIDTH  10
 #define TEXT_POS_X  50
 
-TestPattern::TestPattern(QGLWidget* widget,
+TestPattern::TestPattern(RenderContextPtr renderContext,
                          const WallConfiguration& configuration,
                          const int rank,
                          const int tileIndex)
-    : glWindow_(widget)
+    : renderContext_(renderContext)
 {
     const QPoint globalScreenIndex = configuration.getGlobalScreenIndex(tileIndex);
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
@@ -112,5 +112,5 @@ void TestPattern::renderLabels()
 
     unsigned int pos = 0;
     foreach (QString label, labels_)
-        glWindow_->renderText(TEXT_POS_X, ++pos * FONT_SIZE, label, textFont);
+        renderContext_->renderText(TEXT_POS_X, ++pos * FONT_SIZE, label, textFont);
 }

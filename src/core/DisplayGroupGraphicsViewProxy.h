@@ -48,7 +48,7 @@ class DisplayGroupGraphicsViewProxy : public DisplayGroupInterface
     Q_OBJECT
 
 public:
-    DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup);
+    DisplayGroupGraphicsViewProxy(DisplayGroupPtr displayGroup);
     ~DisplayGroupGraphicsViewProxy();
 
     DisplayGroupGraphicsView* getGraphicsView();

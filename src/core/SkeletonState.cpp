@@ -58,7 +58,7 @@ inline float calculateDistance(SkeletonPoint& a, SkeletonPoint& b)
     return result;
 }
 
-SkeletonState::SkeletonState(DisplayGroupManagerPtr displayGroup)
+SkeletonState::SkeletonState(DisplayGroupPtr displayGroup)
 {
     if(g_mpiChannel->getRank() == 0)
     {

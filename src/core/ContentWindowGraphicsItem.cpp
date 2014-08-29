@@ -40,7 +40,7 @@
 #include "configuration/Configuration.h"
 #include "Content.h"
 #include "ContentWindowManager.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "DisplayGroupGraphicsView.h"
 #include "globals.h"
 #include "Options.h"

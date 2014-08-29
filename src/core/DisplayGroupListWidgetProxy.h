@@ -49,7 +49,7 @@ class DisplayGroupListWidgetProxy : public DisplayGroupInterface
     Q_OBJECT
 
 public:
-    DisplayGroupListWidgetProxy(DisplayGroupManagerPtr displayGroupManager);
+    DisplayGroupListWidgetProxy(DisplayGroupPtr displayGroup);
     ~DisplayGroupListWidgetProxy();
 
     QListWidget* getListWidget();

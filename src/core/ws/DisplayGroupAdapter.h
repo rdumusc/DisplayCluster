@@ -37,30 +37,28 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAYGROUPMANAGERADAPTER_H
-#define DISPLAYGROUPMANAGERADAPTER_H
-
-#include <QString>
+#ifndef DISPLAYGROUPADAPTER_H
+#define DISPLAYGROUPADAPTER_H
 
 #include "types.h"
 
 /**
- * Adapter class for DisplayGroupManager with virtual methods for unit testing.
+ * Adapter class for DisplayGroup with virtual methods for unit testing.
  */
-class DisplayGroupManagerAdapter
+class DisplayGroupAdapter
 {
 public:
     /** Constructor. */
-    DisplayGroupManagerAdapter(DisplayGroupManagerPtr displayGroupManager);
+    DisplayGroupAdapter(DisplayGroupPtr displayGroup);
 
     /** Destructor. */
-    virtual ~DisplayGroupManagerAdapter();
+    virtual ~DisplayGroupAdapter();
 
-    /** Does the DisplayGroupManager have any windows. */
+    /** Does the DisplayGroup have any windows. */
     virtual bool hasWindows() const;
 
 private:
-    DisplayGroupManagerPtr displayGroupManager_;
+    DisplayGroupPtr displayGroup_;
 };
 
-#endif // DISPLAYGROUPMANAGERADAPTER_H
+#endif // DISPLAYGROUPADAPTER_H

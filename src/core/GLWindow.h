@@ -44,8 +44,6 @@
 
 #include "types.h"
 
-class WallConfiguration;
-
 /**
  * An OpenGL window used by Wall applications to render contents.
  */
@@ -54,19 +52,17 @@ class GLWindow : public QGLWidget
 public:
     /**
      * Create a new window.
-     * @param tileIndex A unique index associated with this window.
-     * @param windowRect The position and dimensions for the window.
+     * @param normalizedCoordinates The normalized window coordinates.
+     * @param windowRect The position and dimensions for the window in pixels.
      * @param shareWidget An optional widget to share an existing GLContext.
      *                    A new GLContext is allocated if not provided.
      * @throw std::runtime_error if the initialization failed.
      */
-    GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget = 0);
+    GLWindow(const QRectF& normalizedCoordinates, const QRect& windowRect,
+             QGLWidget* shareWidget = 0);
 
     /** Destructor. */
     ~GLWindow();
-
-    /** Get the unique tile index identifier. */
-    int getTileIndex() const;
 
     /** Add an object to be rendered. */
     void addRenderable(RenderablePtr renderable);
@@ -89,6 +85,7 @@ public:
      * top-left corner.
      * @param clampToViewportBorders Clamp to the visible part of the region.
      * @return The region in pixel units.
+     * @deprecated
      */
     static QRectF getProjectedPixelRect(const bool clampToViewportBorders);
 
@@ -102,10 +99,7 @@ protected:
 
 private:
     QColor backgroundColor_;
-    int tileIndex_;
-
     QRectF normalizedCoordinates_;
-
     QList<RenderablePtr> renderables_;
 
     void clear(const QColor& clearColor);

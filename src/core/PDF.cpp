@@ -50,7 +50,6 @@
 #error PopplerPixelStreamer needs Qt4 or Qt5
 #endif
 
-#include "RenderContext.h"
 #include "GLWindow.h"
 #include "log.h"
 
@@ -157,8 +156,8 @@ void PDF::render(const QRectF& texCoords)
         return;
 
     // get on-screen and full rectangle corresponding to the window
-    const QRectF screenRect = renderContext_->getGLWindow()->getProjectedPixelRect(true);
-    const QRectF fullRect = renderContext_->getGLWindow()->getProjectedPixelRect(false);
+    const QRectF screenRect = GLWindow::getProjectedPixelRect(true);
+    const QRectF fullRect = GLWindow::getProjectedPixelRect(false);
 
     // if we're not visible or we don't have a valid SVG, we're done...
     if(screenRect.isEmpty())

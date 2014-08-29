@@ -40,7 +40,7 @@
 #include "WallFromMasterChannel.h"
 
 #include "MPIChannel.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 #include "Options.h"
 #include "Markers.h"
@@ -66,7 +66,7 @@ void WallFromMasterChannel::receiveMessage()
     switch (mh.type)
     {
     case MPI_MESSAGE_TYPE_DISPLAYGROUP:
-        emit received(receiveBroadcast<DisplayGroupManagerPtr>(mh.size));
+        emit received(receiveBroadcast<DisplayGroupPtr>(mh.size));
         break;
     case MPI_MESSAGE_TYPE_OPTIONS:
         emit received(receiveBroadcast<OptionsPtr>(mh.size));

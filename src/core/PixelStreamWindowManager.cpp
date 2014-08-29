@@ -41,14 +41,14 @@
 
 #include "configuration/Configuration.h"
 #include "ContentWindowManager.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "log.h"
 
-PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroupManager& displayGroupManager )
+PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
-    , displayGroupManager_( displayGroupManager )
+    , displayGroup_( displayGroup )
 {
-    connect(&displayGroupManager, SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface*)),
+    connect(&displayGroup, SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface*)),
             this, SLOT(onContentWindowManagerRemoved(ContentWindowManagerPtr,DisplayGroupInterface*)));
 }
 
@@ -137,7 +137,7 @@ void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
         contentWindow->adjustSize( SIZE_1TO1 );
     }
 
-    displayGroupManager_.addContentWindowManager( contentWindow );
+    displayGroup_.addContentWindowManager( contentWindow );
 }
 
 void PixelStreamWindowManager::closePixelStreamWindow( const QString& uri )
@@ -146,7 +146,7 @@ void PixelStreamWindowManager::closePixelStreamWindow( const QString& uri )
 
     ContentWindowManagerPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
-        displayGroupManager_.removeContentWindowManager( contentWindow );
+        displayGroup_.removeContentWindowManager( contentWindow );
 }
 
 void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusive,

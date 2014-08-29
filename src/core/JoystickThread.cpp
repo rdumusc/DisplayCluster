@@ -42,7 +42,7 @@
 #include "DisplayGroupJoystick.h"
 #include "ContentWindowInterface.h"
 
-JoystickThread::JoystickThread(DisplayGroupManagerPtr displayGroup)
+JoystickThread::JoystickThread(DisplayGroupPtr displayGroup)
     : displayGroup_(displayGroup)
 {
     moveToThread(this);

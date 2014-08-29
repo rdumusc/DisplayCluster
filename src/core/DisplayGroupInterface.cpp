@@ -38,35 +38,35 @@
 
 #include "DisplayGroupInterface.h"
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 
-DisplayGroupInterface::DisplayGroupInterface(DisplayGroupManagerPtr displayGroupManager)
-    : displayGroupManager_(displayGroupManager)
+DisplayGroupInterface::DisplayGroupInterface(DisplayGroupPtr displayGroup)
+    : displayGroup_(displayGroup)
 {
-    // copy all members from displayGroupManager
-    if(displayGroupManager)
-        contentWindowManagers_ = displayGroupManager->contentWindowManagers_;
+    // copy all members from displayGroup
+    if(displayGroup)
+        contentWindowManagers_ = displayGroup->contentWindowManagers_;
 
-    // connect signals from this to slots on the DisplayGroupManager
+    // connect signals from this to slots on the DisplayGroup
     // use queued connections for thread-safety
-    connect(this, SIGNAL(contentWindowManagerAdded(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroupManager.get(), SLOT(addContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroupManager.get(), SLOT(removeContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(contentWindowManagerMovedToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroupManager.get(), SLOT(moveContentWindowManagerToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentWindowManagerAdded(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroup.get(), SLOT(addContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroup.get(), SLOT(removeContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentWindowManagerMovedToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroup.get(), SLOT(moveContentWindowManagerToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
 
-    // connect signals on the DisplayGroupManager to slots on this
+    // connect signals on the DisplayGroup to slots on this
     // use queued connections for thread-safety
-    connect(displayGroupManager.get(), SIGNAL(contentWindowManagerAdded(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(addContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(displayGroupManager.get(), SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(removeContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(displayGroupManager.get(), SIGNAL(contentWindowManagerMovedToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(moveContentWindowManagerToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(displayGroup.get(), SIGNAL(contentWindowManagerAdded(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(addContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(displayGroup.get(), SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(removeContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(displayGroup.get(), SIGNAL(contentWindowManagerMovedToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(moveContentWindowManagerToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
 
     // destruction
-    connect(displayGroupManager.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
+    connect(displayGroup.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
 }
 
-DisplayGroupManagerPtr DisplayGroupInterface::getDisplayGroupManager()
+DisplayGroupPtr DisplayGroupInterface::getDisplayGroup()
 {
-    return displayGroupManager_.lock();
+    return displayGroup_.lock();
 }
 
 ContentWindowManagerPtrs DisplayGroupInterface::getContentWindowManagers()
@@ -110,7 +110,7 @@ void DisplayGroupInterface::addContentWindowManager(ContentWindowManagerPtr cont
 
     contentWindowManagers_.push_back(contentWindowManager);
 
-    if(source == NULL || dynamic_cast<DisplayGroupManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<DisplayGroup *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -143,7 +143,7 @@ void DisplayGroupInterface::removeContentWindowManager(ContentWindowManagerPtr c
         contentWindowManagers_.erase(it);
     }
 
-    if(source == NULL || dynamic_cast<DisplayGroupManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<DisplayGroup *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -174,7 +174,7 @@ void DisplayGroupInterface::moveContentWindowManagerToFront(ContentWindowManager
         contentWindowManagers_.push_back(contentWindowManager);
     }
 
-    if(source == NULL || dynamic_cast<DisplayGroupManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<DisplayGroup *>(this) != NULL)
     {
         if(source == NULL)
         {

@@ -46,10 +46,12 @@
 PixelStreamDispatcher::PixelStreamDispatcher(PixelStreamWindowManager& windowManager)
     : windowManager_(windowManager)
 {
-    // Connect with the DisplayGroupManager
-    connect(this, SIGNAL(openPixelStream(QString, QSize)), &windowManager, SLOT(openPixelStreamWindow(QString, QSize)));
-    connect(this, SIGNAL(deletePixelStream(QString)), &windowManager, SLOT(closePixelStreamWindow(QString)));
-    connect(&windowManager, SIGNAL(pixelStreamWindowClosed(QString)), this, SLOT(deleteStream(QString)));
+    connect(this, SIGNAL(openPixelStream(QString, QSize)),
+            &windowManager, SLOT(openPixelStreamWindow(QString, QSize)));
+    connect(this, SIGNAL(deletePixelStream(QString)),
+            &windowManager, SLOT(closePixelStreamWindow(QString)));
+    connect(&windowManager, SIGNAL(pixelStreamWindowClosed(QString)),
+            this, SLOT(deleteStream(QString)));
 }
 
 void PixelStreamDispatcher::addSource(const QString uri, const size_t sourceIndex)

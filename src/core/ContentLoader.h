@@ -47,7 +47,7 @@
 #include <QSizeF>
 
 /**
- * Helper class to open Content on a DisplayGroupManager.
+ * Helper class to open Content on a DisplayGroup.
  */
 class ContentLoader
 {
@@ -55,9 +55,9 @@ public:
     /**
      * Constructor.
      *
-     * @param displayGroupManager The target DisplayGroupManager for displaying the content.
+     * @param displayGroup The target DisplayGroup for displaying the content.
      */
-    ContentLoader(DisplayGroupManagerPtr displayGroupManager);
+    ContentLoader(DisplayGroupPtr displayGroup);
 
     /**
      * Load a Content from a file and create a window for it.
@@ -73,7 +73,7 @@ public:
               const QSizeF& windowSize = QSizeF());
 
 private:
-    DisplayGroupManagerPtr displayGroupManager_;
+    DisplayGroupPtr displayGroup_;
 };
 
 

@@ -40,11 +40,11 @@
 
 #include "DisplayGroupGraphicsView.h"
 #include "DisplayGroupGraphicsScene.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 #include "ContentWindowGraphicsItem.h"
 
-DisplayGroupGraphicsViewProxy::DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup)
+DisplayGroupGraphicsViewProxy::DisplayGroupGraphicsViewProxy(DisplayGroupPtr displayGroup)
     : DisplayGroupInterface(displayGroup)
     , graphicsView_(new DisplayGroupGraphicsView)
 {

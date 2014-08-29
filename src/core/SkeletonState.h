@@ -72,7 +72,7 @@ class DisplayGroupJoystick;
 class SkeletonState
 {
     public:
-        SkeletonState(DisplayGroupManagerPtr displayGroup);
+        SkeletonState(DisplayGroupPtr displayGroup);
 
         int update(Skeleton skeleton);
         void render();

@@ -97,7 +97,7 @@ void NetworkListener::incomingConnection(int socketHandle)
     connect(worker, SIGNAL(receivedCommand(QString,QString)),
             commandHandler_, SLOT(process(QString,QString)));
 
-    // DisplayGroupManager
+    // WindowManager
     connect( &windowManager_, SIGNAL( pixelStreamWindowClosed( QString )),
              worker, SLOT(pixelStreamerClosed( QString )));
     connect( &windowManager_,

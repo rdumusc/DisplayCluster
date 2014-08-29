@@ -47,7 +47,7 @@
 
 #include "types.h"
 
-class DisplayGroupManager;
+class DisplayGroup;
 class DisplayGroupInterface;
 class EventReceiver;
 
@@ -63,10 +63,10 @@ public:
     /**
      * Create a window manager that handles windows for streamers.
      *
-     * @param displayGroupManager the content windows of streamers will be added
-     *                            to and removed from this DisplayGroupManager
+     * @param displayGroup the content windows of streamers will be added
+     *                     to and removed from this DisplayGroup.
      */
-    PixelStreamWindowManager( DisplayGroupManager& displayGroupManager );
+    PixelStreamWindowManager( DisplayGroup& displayGroup );
 
     ~PixelStreamWindowManager();
 
@@ -86,7 +86,7 @@ public:
     /**
      * Remove the associated content window from the given stream. This should
      * usually happen automatically once the stream is closed or the content
-     * window is closed from the DisplayGroupManager.
+     * window is closed from the DisplayGroup.
      *
      * @param uri the URI of the streamer
      */
@@ -174,7 +174,7 @@ private slots:
                                         DisplayGroupInterface* source );
 
 private:
-    DisplayGroupManager& displayGroupManager_;
+    DisplayGroup& displayGroup_;
 
     typedef std::map<QString, ContentWindowManagerPtr> ContentWindowMap;
     ContentWindowMap streamerWindows_;

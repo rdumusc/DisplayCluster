@@ -39,16 +39,17 @@
 #ifndef DISPLAY_GROUP_PYTHON_H
 #define DISPLAY_GROUP_PYTHON_H
 
+#include "types.h"
 #include "DisplayGroupInterface.h"
 #include "ContentWindowManager.h"
 #include <QtGui>
 
-class DisplayGroupPython : public DisplayGroupInterface, public boost::enable_shared_from_this<DisplayGroupPython> {
+class DisplayGroupPython : public DisplayGroupInterface, public boost::enable_shared_from_this<DisplayGroupPython>
+{
     Q_OBJECT
 
-    public:
-
-        DisplayGroupPython(boost::shared_ptr<DisplayGroupManager> displayGroupManager);
+public:
+    DisplayGroupPython(DisplayGroupPtr displayGroup);
 };
 
 // needed for SIP
@@ -60,12 +61,12 @@ class pyDisplayGroupPython
 
         pyDisplayGroupPython()
         {
-            // attach to g_displayGroupManager on construction
+            // attach to g_displayGroup on construction
 
             // declared in main.cpp, but we don't want to bring in everything from main.h...
-            extern boost::shared_ptr<DisplayGroupManager> g_displayGroupManager;
+            extern DisplayGroupPtr g_displayGroup;
 
-            ptr_ = boost::shared_ptr<DisplayGroupPython>(new DisplayGroupPython(g_displayGroupManager));
+            ptr_ = boost::shared_ptr<DisplayGroupPython>(new DisplayGroupPython(g_displayGroup));
         }
 
         boost::shared_ptr<DisplayGroupPython> get()

@@ -38,7 +38,7 @@
 
 #include "ContentWindowManager.h"
 #include "Content.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentInteractionDelegate.h"
 #include "config.h"
 #include "log.h"
@@ -122,14 +122,14 @@ void ContentWindowManager::createInteractionDelegate()
     }
 }
 
-DisplayGroupManagerPtr ContentWindowManager::getDisplayGroupManager() const
+DisplayGroupPtr ContentWindowManager::getDisplayGroup() const
 {
-    return displayGroupManager_.lock();
+    return displayGroup_.lock();
 }
 
-void ContentWindowManager::setDisplayGroupManager(DisplayGroupManagerPtr displayGroupManager)
+void ContentWindowManager::setDisplayGroup(DisplayGroupPtr displayGroup)
 {
-    displayGroupManager_ = displayGroupManager;
+    displayGroup_ = displayGroup;
 }
 
 ContentInteractionDelegate& ContentWindowManager::getInteractionDelegate() const
@@ -143,9 +143,9 @@ void ContentWindowManager::moveToFront(ContentWindowInterface * source)
 
     if(source != this)
     {
-        DisplayGroupManagerPtr dgm = getDisplayGroupManager();
-        if (dgm)
-            dgm->moveContentWindowManagerToFront(shared_from_this());
+        DisplayGroupPtr displayGroup = getDisplayGroup();
+        if (displayGroup)
+            displayGroup->moveContentWindowManagerToFront(shared_from_this());
         else
             put_flog(LOG_DEBUG, "The DisplayGroupMangerPtr is invalid");
     }
@@ -157,7 +157,7 @@ void ContentWindowManager::close(ContentWindowInterface * source)
 
     if(source != this)
     {
-        getDisplayGroupManager()->removeContentWindowManager(shared_from_this());
+        getDisplayGroup()->removeContentWindowManager(shared_from_this());
     }
 }
 

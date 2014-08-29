@@ -39,11 +39,11 @@
 
 #include "ContentLoader.h"
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 
-ContentLoader::ContentLoader(DisplayGroupManagerPtr displayGroupManager)
-    : displayGroupManager_(displayGroupManager)
+ContentLoader::ContentLoader(DisplayGroupPtr displayGroup)
+    : displayGroup_(displayGroup)
 {
 }
 
@@ -60,7 +60,7 @@ bool ContentLoader::load(const QString& filename, const QPointF& windowCenterPos
 
     contentWindow->centerPositionAround(windowCenterPosition, true);
 
-    displayGroupManager_->addContentWindowManager( contentWindow );
+    displayGroup_->addContentWindowManager( contentWindow );
 
     return true;
 }

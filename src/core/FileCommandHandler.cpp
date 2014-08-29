@@ -40,7 +40,7 @@
 #include "FileCommandHandler.h"
 
 #include "Command.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentLoader.h"
 #include "ContentWindowManager.h"
 #include "StateSerializationHelper.h"
@@ -49,9 +49,9 @@
 
 #include <QFileInfo>
 
-FileCommandHandler::FileCommandHandler(DisplayGroupManagerPtr displayGroupManager,
+FileCommandHandler::FileCommandHandler(DisplayGroupPtr displayGroup,
                                        PixelStreamWindowManager& windowManager)
-    : displayGroupManager_(displayGroupManager)
+    : displayGroup_(displayGroup)
     , pixelStreamWindowManager_(windowManager)
 {
 }
@@ -68,11 +68,11 @@ void FileCommandHandler::handle(const Command& command, const QString& senderUri
 
     if( extension == "dcx" )
     {
-        StateSerializationHelper(displayGroupManager_).load(uri);
+        StateSerializationHelper(displayGroup_).load(uri);
     }
     else if ( ContentFactory::getSupportedExtensions().contains( extension ))
     {
-        ContentLoader loader(displayGroupManager_);
+        ContentLoader loader(displayGroup_);
 
         // Center the new content where the dock is
         // TODO: DISCL-230

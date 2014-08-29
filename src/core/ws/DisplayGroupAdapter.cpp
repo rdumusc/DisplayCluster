@@ -37,18 +37,18 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DisplayGroupManagerAdapter.h"
+#include "DisplayGroupAdapter.h"
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 
-DisplayGroupManagerAdapter::DisplayGroupManagerAdapter(DisplayGroupManagerPtr displayGroupManager)
-    : displayGroupManager_(displayGroupManager)
+DisplayGroupAdapter::DisplayGroupAdapter(DisplayGroupPtr displayGroup)
+    : displayGroup_(displayGroup)
 {}
 
-DisplayGroupManagerAdapter::~DisplayGroupManagerAdapter()
+DisplayGroupAdapter::~DisplayGroupAdapter()
 {}
 
-bool DisplayGroupManagerAdapter::hasWindows() const
+bool DisplayGroupAdapter::hasWindows() const
 {
-    return displayGroupManager_ && !displayGroupManager_->isEmpty();
+    return displayGroup_ && !displayGroup_->isEmpty();
 }

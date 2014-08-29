@@ -43,12 +43,13 @@
 #include "CommandLineOptions.h"
 
 #include "log.h"
-#include "globals.h"
 #include "PixelStreamWindowManager.h"
-#include "configuration/Configuration.h"
+#include "configuration/MasterConfiguration.h"
 
 #include <QCoreApplication>
 #include <QProcess>
+
+#define DOCK_WIDTH_RELATIVE_TO_WALL   0.175
 
 #ifdef _WIN32
 #define LOCALSTREAMER_BIN "localstreamer.exe"
@@ -58,8 +59,10 @@
 
 #define WEBBROWSER_DEFAULT_SIZE  QSize(1280, 1024)
 
-PixelStreamerLauncher::PixelStreamerLauncher(PixelStreamWindowManager& windowManager)
+PixelStreamerLauncher::PixelStreamerLauncher(PixelStreamWindowManager& windowManager,
+                                             const MasterConfiguration& config)
     : windowManager_(windowManager)
+    , config_(config)
 {
     connect(&windowManager_, SIGNAL(pixelStreamWindowClosed(QString)),
             this, SLOT(dereferenceLocalStreamer(QString)), Qt::QueuedConnection);
@@ -72,8 +75,8 @@ void PixelStreamerLauncher::openWebBrowser(const QPointF pos, const QSize size, 
 
     const QSize viewportSize = !size.isEmpty() ? size : WEBBROWSER_DEFAULT_SIZE;
 
-    const QSizeF normalizedSize( (double)viewportSize.width() / g_configuration->getTotalWidth(),
-                                 (double)viewportSize.height() / g_configuration->getTotalHeight());
+    const QSizeF normalizedSize( (double)viewportSize.width() / config_.getTotalWidth(),
+                                 (double)viewportSize.height() / config_.getTotalHeight());
     windowManager_.createContentWindow(uri, pos, normalizedSize);
 
     const QString program = QString("%1/%2").arg(QCoreApplication::applicationDirPath(), LOCALSTREAMER_BIN);
@@ -90,14 +93,22 @@ void PixelStreamerLauncher::openWebBrowser(const QPointF pos, const QSize size, 
         put_flog(LOG_ERROR, "Browser process could not be started!");
 }
 
+void PixelStreamerLauncher::openDock(const QPointF pos)
+{
+    const unsigned int dockWidth = config_.getTotalWidth()*DOCK_WIDTH_RELATIVE_TO_WALL;
+    const unsigned int dockHeight = dockWidth * DockPixelStreamer::getDefaultAspectRatio();
+
+    openDock(pos, QSize(dockWidth, dockHeight), config_.getDockStartDir());
+}
+
 void PixelStreamerLauncher::openDock(const QPointF pos, const QSize size, const QString rootDir)
 {
     const QString& uri = DockPixelStreamer::getUniqueURI();
 
     const QSize& dockSize = DockPixelStreamer::constrainSize(size);
 
-    const QSizeF normalizedSize( (double)dockSize.width() / g_configuration->getTotalWidth(),
-                                 (double)dockSize.height() / g_configuration->getTotalHeight());
+    const QSizeF normalizedSize( (double)dockSize.width() / config_.getTotalWidth(),
+                                 (double)dockSize.height() / config_.getTotalHeight());
     windowManager_.createContentWindow(uri, pos, normalizedSize);
 
     if( !processes_.count(uri) )

@@ -39,12 +39,12 @@
 
 #include "TextInputHandler.h"
 
-#include "ws/DisplayGroupManagerAdapter.h"
+#include "ws/DisplayGroupAdapter.h"
 #include "dcWebservice/Response.h"
 #include "dcWebservice/Request.h"
 
-TextInputHandler::TextInputHandler(DisplayGroupManagerAdapterPtr displayGroupManagerAdapter)
-    : displayGroupManagerAdapter_(displayGroupManagerAdapter)
+TextInputHandler::TextInputHandler(DisplayGroupAdapterPtr displayGroupAdapter)
+    : displayGroupAdapter_(displayGroupAdapter)
 {
 }
 
@@ -62,12 +62,12 @@ dcWebservice::ConstResponsePtr TextInputHandler::handle(const dcWebservice::Requ
         response->statusMsg = "Bad Request";
         response->body = "{\"code\":\"400\", \"msg\":\"Bad Request. Expected at least one character.\"}";
     }
-    else if (displayGroupManagerAdapter_->hasWindows())
+    else if (displayGroupAdapter_->hasWindows())
     {
-	for(std::string::const_iterator it = request.data.begin(); it != request.data.end(); ++it)
-	{
-	    emit receivedKeyInput(*it);
-	}
+    for(std::string::const_iterator it = request.data.begin(); it != request.data.end(); ++it)
+    {
+        emit receivedKeyInput(*it);
+    }
 
         response->statusCode = 200;
         response->statusMsg = "OK";

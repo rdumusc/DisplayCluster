@@ -42,7 +42,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 namespace ut = boost::unit_test;
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "PixelStreamWindowManager.h"
 #include "MinimalGlobalQtApp.h"
 #include "NetworkListener.h"
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE( testSocketConnection )
 {
     g_configuration = new MasterConfiguration( "configuration.xml" );
 
-    DisplayGroupManagerPtr displayGroup( new DisplayGroupManager);
+    DisplayGroupPtr displayGroup( new DisplayGroup);
     PixelStreamWindowManager pixelStreamWindowManager( *displayGroup );
     NetworkListener listener( pixelStreamWindowManager );
 #ifdef NTHREADS

@@ -36,8 +36,8 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_MANAGER_H
-#define DISPLAY_GROUP_MANAGER_H
+#ifndef DISPLAY_GROUP_H
+#define DISPLAY_GROUP_H
 
 #include "config.h"
 #include "types.h"
@@ -56,17 +56,17 @@
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class DisplayGroupManager : public DisplayGroupInterface,
-        public boost::enable_shared_from_this<DisplayGroupManager>
+class DisplayGroup : public DisplayGroupInterface,
+        public boost::enable_shared_from_this<DisplayGroup>
 {
     Q_OBJECT
 
 public:
     /** Constructor */
-    DisplayGroupManager();
+    DisplayGroup();
 
     /** Destructor */
-    ~DisplayGroupManager();
+    ~DisplayGroup();
 
     /** Get the background content window. */
     ContentWindowManagerPtr getBackgroundContentWindow() const;
@@ -90,7 +90,7 @@ public:
 
 signals:
     /** Emitted whenever the DisplayGroup is modified */
-    void modified(DisplayGroupManagerPtr displayGroup);
+    void modified(DisplayGroupPtr displayGroup);
 
 public slots:
     //@{

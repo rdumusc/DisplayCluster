@@ -45,8 +45,8 @@
 
 class Content;
 class ContentWindowManager;
-class DisplayGroupManager;
-class DisplayGroupManagerAdapter;
+class DisplayGroup;
+class DisplayGroupAdapter;
 class DynamicTexture;
 class Options;
 class Markers;
@@ -70,8 +70,8 @@ using dc::PixelStreamSegment;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindowManager > ContentWindowManagerPtr;
-typedef boost::shared_ptr< DisplayGroupManager > DisplayGroupManagerPtr;
-typedef boost::shared_ptr< DisplayGroupManagerAdapter > DisplayGroupManagerAdapterPtr;
+typedef boost::shared_ptr< DisplayGroup > DisplayGroupPtr;
+typedef boost::shared_ptr< DisplayGroupAdapter > DisplayGroupAdapterPtr;
 typedef boost::shared_ptr< DynamicTexture > DynamicTexturePtr;
 typedef boost::shared_ptr< Options > OptionsPtr;
 typedef boost::shared_ptr<Markers> MarkersPtr;

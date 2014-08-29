@@ -39,7 +39,7 @@
 
 #include "DisplayGroupRenderer.h"
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 #include "Marker.h"
 
@@ -77,7 +77,7 @@ void DisplayGroupRenderer::setShowSkeleton(const bool show)
 }
 #endif
 
-void DisplayGroupRenderer::setDisplayGroup(DisplayGroupManagerPtr displayGroup)
+void DisplayGroupRenderer::setDisplayGroup(DisplayGroupPtr displayGroup)
 {
     displayGroup_ = displayGroup;
 }

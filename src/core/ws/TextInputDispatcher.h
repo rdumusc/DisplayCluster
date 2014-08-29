@@ -55,10 +55,10 @@ class TextInputDispatcher : public QObject
 public:
     /**
      * Constructor.
-     * @param displayGroupManager The DisplayGroup which holds the target ContentWindowManager.
+     * @param displayGroup The DisplayGroup which holds the target ContentWindowManager.
      * @param parentObject An optional parent QObject
      */
-    TextInputDispatcher(DisplayGroupManagerPtr displayGroupManager, QObject *parentObject = 0);
+    TextInputDispatcher(DisplayGroupPtr displayGroup, QObject *parentObject = 0);
 
 public slots:
     /**
@@ -68,7 +68,7 @@ public slots:
     void sendKeyEventToActiveWindow(const char key) const;
 
 private:
-    DisplayGroupManagerPtr displayGroupManager_;
+    DisplayGroupPtr displayGroup_;
     AsciiToQtKeyCodeMapper keyMapper_;
 };
 

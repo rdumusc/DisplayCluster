@@ -63,7 +63,7 @@ public:
     void setupTestPattern(const int rank, const WallConfiguration& config);
 
     /** Get the DisplayGroup */
-    DisplayGroupManagerPtr getDisplayGroup() const;
+    DisplayGroupPtr getDisplayGroup() const;
 
     /** Synchronize the objects */
     void synchronizeObjects(const SyncFunction& versionCheckFunc);
@@ -73,7 +73,7 @@ public:
 
 public slots:
     void updateQuit();
-    void updateDisplayGroup(DisplayGroupManagerPtr displayGroup);
+    void updateDisplayGroup(DisplayGroupPtr displayGroup);
     void updateOptions(OptionsPtr options);
     void updateMarkers(MarkersPtr markers);
 
@@ -86,7 +86,7 @@ private:
     RenderablePtr fpsRenderer_;
 
     SwapSyncObject<bool> syncQuit_;
-    SwapSyncObject<DisplayGroupManagerPtr> syncDisplayGroup_;
+    SwapSyncObject<DisplayGroupPtr> syncDisplayGroup_;
     SwapSyncObject<OptionsPtr> syncOptions_;
     SwapSyncObject<MarkersPtr> syncMarkers_;
 

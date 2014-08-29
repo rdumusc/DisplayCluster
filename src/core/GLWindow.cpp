@@ -38,9 +38,6 @@
 
 #include "GLWindow.h"
 
-#include "log.h"
-#include "globals.h"
-#include "configuration/WallConfiguration.h"
 #include "Renderable.h"
 
 #include <stdexcept>
@@ -57,15 +54,11 @@
     #include <GL/glu.h>
 #endif
 
-GLWindow::GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget)
+GLWindow::GLWindow(const QRectF& normalizedCoordinates, const QRect& windowRect, QGLWidget* shareWidget)
   : QGLWidget(0, shareWidget)
   , backgroundColor_(Qt::black)
-  , tileIndex_(tileIndex)
+  , normalizedCoordinates_(normalizedCoordinates)
 {
-    const WallConfiguration* configuration(static_cast<const WallConfiguration*>(g_configuration));
-    const QPoint index = configuration->getGlobalScreenIndex(tileIndex_);
-    normalizedCoordinates_ = configuration->getNormalizedScreenRect(index);
-
     setGeometry(windowRect);
     setCursor(Qt::BlankCursor);
 
@@ -77,11 +70,6 @@ GLWindow::GLWindow(const int tileIndex, QRect windowRect, QGLWidget* shareWidget
 
 GLWindow::~GLWindow()
 {
-}
-
-int GLWindow::getTileIndex() const
-{
-    return tileIndex_;
 }
 
 void GLWindow::addRenderable(RenderablePtr renderable)

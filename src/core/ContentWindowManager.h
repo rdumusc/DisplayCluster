@@ -50,7 +50,7 @@
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 
-class DisplayGroupManager;
+class DisplayGroup;
 class ContentInteractionDelegate;
 
 /**
@@ -84,10 +84,10 @@ public:
     void setContent(ContentPtr content);
 
     /** Get the parent DisplayGroup of this window. */
-    DisplayGroupManagerPtr getDisplayGroupManager() const;
+    DisplayGroupPtr getDisplayGroup() const;
 
     /** Set a reference on the parent DisplayGroup of this window. */
-    void setDisplayGroupManager(DisplayGroupManagerPtr displayGroupManager);
+    void setDisplayGroup(DisplayGroupPtr displayGroup);
 
     /**
      * Get the interaction delegate.
@@ -133,7 +133,7 @@ protected:
     void serialize(Archive & ar, const unsigned int)
     {
         ar & content_;
-        ar & displayGroupManager_;
+        ar & displayGroup_;
         ar & contentWidth_;
         ar & contentHeight_;
         ar & coordinates_;
@@ -163,7 +163,7 @@ protected:
 private:
     ContentPtr content_;
 
-    boost::weak_ptr<DisplayGroupManager> displayGroupManager_;
+    boost::weak_ptr<DisplayGroup> displayGroup_;
 
     // Rank0: Delegate to handle user inputs
     boost::scoped_ptr<ContentInteractionDelegate> interactionDelegate_;

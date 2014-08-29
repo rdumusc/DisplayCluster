@@ -42,7 +42,7 @@
 namespace ut = boost::unit_test;
 
 #include "ContentWindowManager.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "Options.h"
 #include "PixelStreamWindowManager.h"
 #include "configuration/MasterConfiguration.h"
@@ -56,10 +56,10 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 {
-    DisplayGroupManagerPtr displayGroupManager( new DisplayGroupManager );
+    DisplayGroupPtr displayGroup( new DisplayGroup );
     g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
 
-    PixelStreamWindowManager windowManager( *displayGroupManager );
+    PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
     const QPointF pos( .4, .3 );
@@ -84,10 +84,10 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 
 BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 {
-    DisplayGroupManagerPtr displayGroupManager( new DisplayGroupManager );
+    DisplayGroupPtr displayGroup( new DisplayGroup );
     g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
 
-    PixelStreamWindowManager windowManager( *displayGroupManager );
+    PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
     const QPointF pos( .4, .3 );
@@ -122,10 +122,10 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 
 BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
 {
-    DisplayGroupManagerPtr displayGroupManager( new DisplayGroupManager );
+    DisplayGroupPtr displayGroup( new DisplayGroup );
     g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
 
-    PixelStreamWindowManager windowManager( *displayGroupManager );
+    PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
     const QPointF pos( .5, .5 ); // window will be positioned centerred

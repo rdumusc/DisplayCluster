@@ -47,6 +47,7 @@
 #include <boost/foreach.hpp>
 
 RenderContext::RenderContext(const WallConfiguration& configuration)
+    : activeGLWindowIndex_(-1)
 {
     setupOpenGLWindows(configuration);
 }
@@ -67,9 +68,12 @@ void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
 {
     for(int i=0; i<configuration.getScreenCount(); ++i)
     {
-        QRect windowRect = QRect(configuration.getScreenPosition(i),
-                                 QSize(configuration.getScreenWidth(),
-                                       configuration.getScreenHeight()));
+        const QPoint screenIndex = configuration.getGlobalScreenIndex(i);
+        const QRectF normalizedCoordinates = configuration.getNormalizedScreenRect(screenIndex);
+
+        const QRect windowRect = QRect(configuration.getScreenPosition(i),
+                                       QSize(configuration.getScreenWidth(),
+                                             configuration.getScreenHeight()));
 
         // share OpenGL context from the first GLWindow
         GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0].get();
@@ -77,7 +81,7 @@ void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
         GLWindowPtr glw;
         try
         {
-            glw.reset(new GLWindow(i, windowRect, shareWidget));
+            glw.reset(new GLWindow(normalizedCoordinates, windowRect, shareWidget));
         }
         catch (const std::runtime_error& e)
         {
@@ -98,14 +102,26 @@ GLWindowPtr RenderContext::getGLWindow(const int index) const
     return glWindows_[index];
 }
 
-GLWindowPtr RenderContext::getActiveGLWindow() const
-{
-    return activeGLWindow_;
-}
-
 size_t RenderContext::getGLWindowCount() const
 {
     return glWindows_.size();
+}
+
+int RenderContext::getActiveGLWindowIndex() const
+{
+    return activeGLWindowIndex_;
+}
+
+void RenderContext::renderText(const int x, const int y, const QString& str,
+                               const QFont& font)
+{
+    activeGLWindow_->renderText(x, y, str, font);
+}
+
+void RenderContext::renderText(const double x, const double y, const double z,
+                               const QString& str, const QFont& font)
+{
+    activeGLWindow_->renderText(x, y, z, str, font);
 }
 
 void RenderContext::addRenderable(RenderablePtr renderable)
@@ -128,10 +144,12 @@ bool RenderContext::isRegionVisible(const QRectF& region) const
 
 void RenderContext::updateGLWindows()
 {
+    activeGLWindowIndex_ = 0;
     BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
     {
         activeGLWindow_ = glWindow;
         glWindow->updateGL();
+        ++activeGLWindowIndex_;
     }
 }
 

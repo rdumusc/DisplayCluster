@@ -36,29 +36,29 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 
 #include "ContentWindowManager.h"
 
 #include "log.h"
 #include <boost/foreach.hpp>
 
-DisplayGroupManager::DisplayGroupManager()
+DisplayGroup::DisplayGroup()
 {
 }
 
-DisplayGroupManager::~DisplayGroupManager()
+DisplayGroup::~DisplayGroup()
 {
 }
 
 #if ENABLE_SKELETON_SUPPORT
-SkeletonStatePtrs DisplayGroupManager::getSkeletons()
+SkeletonStatePtrs DisplayGroup::getSkeletons()
 {
     return skeletons_;
 }
 #endif
 
-void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroup::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
 {
     BOOST_FOREACH(ContentWindowManagerPtr existingWindow, contentWindowManagers_)
     {
@@ -73,14 +73,14 @@ void DisplayGroupManager::addContentWindowManager(ContentWindowManagerPtr conten
 
     if(source != this)
     {
-        contentWindowManager->setDisplayGroupManager(shared_from_this());
+        contentWindowManager->setDisplayGroup(shared_from_this());
         watchChanges(contentWindowManager);
 
         emit modified(shared_from_this());
     }
 }
 
-void DisplayGroupManager::watchChanges(ContentWindowManagerPtr contentWindow)
+void DisplayGroup::watchChanges(ContentWindowManagerPtr contentWindow)
 {
     // Don't call sendDisplayGroup() on movedToFront() or destroyed() since it happens already
     connect(contentWindow.get(), SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)),
@@ -101,7 +101,7 @@ void DisplayGroupManager::watchChanges(ContentWindowManagerPtr contentWindow)
             this, SLOT(sendDisplayGroup()));
 }
 
-void DisplayGroupManager::removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroup::removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
 {
     DisplayGroupInterface::removeContentWindowManager(contentWindowManager, source);
 
@@ -111,13 +111,13 @@ void DisplayGroupManager::removeContentWindowManager(ContentWindowManagerPtr con
         disconnect(contentWindowManager.get(), 0, this, 0);
 
         // set null display group in content window manager object
-        contentWindowManager->setDisplayGroupManager(DisplayGroupManagerPtr());
+        contentWindowManager->setDisplayGroup(DisplayGroupPtr());
 
         emit modified(shared_from_this());
     }
 }
 
-void DisplayGroupManager::moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroup::moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
 {
     DisplayGroupInterface::moveContentWindowManagerToFront(contentWindowManager, source);
 
@@ -127,13 +127,13 @@ void DisplayGroupManager::moveContentWindowManagerToFront(ContentWindowManagerPt
     }
 }
 
-void DisplayGroupManager::setBackgroundContent(ContentPtr content)
+void DisplayGroup::setBackgroundContent(ContentPtr content)
 {
     if (content)
     {
         backgroundContent_ = ContentWindowManagerPtr(new ContentWindowManager(content));
         // set display group in content window manager object
-        backgroundContent_->setDisplayGroupManager(shared_from_this());
+        backgroundContent_->setDisplayGroup(shared_from_this());
         backgroundContent_->adjustSize( SIZE_FULLSCREEN );
         watchChanges(backgroundContent_);
     }
@@ -145,17 +145,17 @@ void DisplayGroupManager::setBackgroundContent(ContentPtr content)
     emit modified(shared_from_this());
 }
 
-ContentWindowManagerPtr DisplayGroupManager::getBackgroundContentWindow() const
+ContentWindowManagerPtr DisplayGroup::getBackgroundContentWindow() const
 {
     return backgroundContent_;
 }
 
-bool DisplayGroupManager::isEmpty() const
+bool DisplayGroup::isEmpty() const
 {
     return contentWindowManagers_.empty();
 }
 
-ContentWindowManagerPtr DisplayGroupManager::getActiveWindow() const
+ContentWindowManagerPtr DisplayGroup::getActiveWindow() const
 {
     if (isEmpty())
         return ContentWindowManagerPtr();
@@ -163,13 +163,13 @@ ContentWindowManagerPtr DisplayGroupManager::getActiveWindow() const
     return contentWindowManagers_.back();
 }
 
-void DisplayGroupManager::sendDisplayGroup()
+void DisplayGroup::sendDisplayGroup()
 {
     emit modified(shared_from_this());
 }
 
 #if ENABLE_SKELETON_SUPPORT
-void DisplayGroupManager::setSkeletons(SkeletonStatePtrs skeletons)
+void DisplayGroup::setSkeletons(SkeletonStatePtrs skeletons)
 {
     skeletons_ = skeletons;
 

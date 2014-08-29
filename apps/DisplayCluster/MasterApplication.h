@@ -92,7 +92,7 @@ private:
     boost::scoped_ptr<MultiTouchListener> touchListener_;
 #endif
 
-    DisplayGroupManagerPtr displayGroup_;
+    DisplayGroupPtr displayGroup_;
     MarkersPtr markers_;
 
     QThread mpiSendThread_;

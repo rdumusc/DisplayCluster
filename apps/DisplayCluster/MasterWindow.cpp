@@ -39,20 +39,17 @@
 
 #include "MasterWindow.h"
 
-#include "globals.h"
 #include "Options.h"
-#include "configuration/MasterConfiguration.h"
 #include "log.h"
 #include "displaycluster/version.h"
 
 #include "ContentLoader.h"
 #include "ContentFactory.h"
 #include "StateSerializationHelper.h"
-#include "localstreamer/DockPixelStreamer.h"
 
 #include "DynamicTexture.h"
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowManager.h"
 #include "DisplayGroupGraphicsViewProxy.h"
 #include "DisplayGroupGraphicsView.h"
@@ -67,14 +64,19 @@
 
 #define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
 
-#define DOCK_WIDTH_RELATIVE_TO_WALL   0.175
-
-MasterWindow::MasterWindow(DisplayGroupManagerPtr displayGroup)
+MasterWindow::MasterWindow(DisplayGroupPtr displayGroup,
+                           Configuration& configuration)
     : QMainWindow()
     , displayGroup_(displayGroup)
     , options_(new Options)
-    , backgroundWidget_(0)
+    , backgroundWidget_(new BackgroundWidget(configuration, this))
 {
+    backgroundWidget_->setModal(true);
+    connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),
+            options_.get(), SLOT(setBackgroundColor(QColor)));
+    connect(backgroundWidget_, SIGNAL(backgroundContentChanged(ContentPtr)),
+            displayGroup_.get(), SLOT(setBackgroundContent(ContentPtr)));
+
 #if ENABLE_PYTHON_SUPPORT
     PythonConsole::init();
 #endif
@@ -154,7 +156,7 @@ void MasterWindow::setupMasterWindowUI()
     // load background content action
     QAction * backgroundAction = new QAction("Background", this);
     backgroundAction->setStatusTip("Select the background color and content");
-    connect(backgroundAction, SIGNAL(triggered()), this, SLOT(showBackgroundWidget()));
+    connect(backgroundAction, SIGNAL(triggered()), backgroundWidget_, SLOT(show()));
 
     // Open webbrowser action
     QAction * webbrowserAction = new QAction("Web Browser", this);
@@ -285,7 +287,7 @@ void MasterWindow::setupMasterWindowUI()
     connect(dggv_->getGraphicsView(), SIGNAL(backgroundTap(QPointF)),
             this, SIGNAL(hideDock()));
     connect(dggv_->getGraphicsView(), SIGNAL(backgroundTapAndHold(QPointF)),
-            this, SLOT(openDock(QPointF)));
+            this, SIGNAL(openDock(QPointF)));
     connect(options_.get(), SIGNAL(updated(OptionsPtr)),
             dggv_, SLOT(optionsUpdated(OptionsPtr)));
 
@@ -391,22 +393,6 @@ void MasterWindow::openContentsDirectory()
 
         addContentDirectory(directoryName, gridX, gridY);
     }
-}
-
-void MasterWindow::showBackgroundWidget()
-{
-    if(!backgroundWidget_)
-    {
-        backgroundWidget_ = new BackgroundWidget(*g_configuration, this);
-        backgroundWidget_->setModal(true);
-
-        connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),
-                options_.get(), SLOT(setBackgroundColor(QColor)));
-        connect(backgroundWidget_, SIGNAL(backgroundContentChanged(ContentPtr)),
-                displayGroup_.get(), SLOT(setBackgroundContent(ContentPtr)));
-    }
-
-    backgroundWidget_->show();
 }
 
 void MasterWindow::openWebBrowser()
@@ -590,14 +576,3 @@ void MasterWindow::dropEvent(QDropEvent* dropEvt)
 
     dropEvt->acceptProposedAction();
 }
-
-void MasterWindow::openDock(const QPointF position)
-{
-    const unsigned int dockWidth = g_configuration->getTotalWidth()*DOCK_WIDTH_RELATIVE_TO_WALL;
-    const unsigned int dockHeight = dockWidth * DockPixelStreamer::getDefaultAspectRatio();
-
-    const QString& dockRootDir = static_cast<MasterConfiguration*>(g_configuration)->getDockStartDir();
-
-    emit openDock(position, QSize(dockWidth, dockHeight), dockRootDir);
-}
-

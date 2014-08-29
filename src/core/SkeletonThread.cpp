@@ -44,7 +44,7 @@
 // an identifier for a UID that is not applicable
 const unsigned int NA_UID = 9999;
 
-SkeletonThread::SkeletonThread(DisplayGroupManagerPtr displayGroup)
+SkeletonThread::SkeletonThread(DisplayGroupPtr displayGroup)
    : displayGroup_(displayGroup)
 {
     moveToThread(this);

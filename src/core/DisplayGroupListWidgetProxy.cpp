@@ -44,8 +44,8 @@
 
 #include <QListWidget>
 
-DisplayGroupListWidgetProxy::DisplayGroupListWidgetProxy(DisplayGroupManagerPtr displayGroupManager)
-    : DisplayGroupInterface(displayGroupManager)
+DisplayGroupListWidgetProxy::DisplayGroupListWidgetProxy(DisplayGroupPtr displayGroup)
+    : DisplayGroupInterface(displayGroup)
     , listWidget_(new QListWidget())
 {
     connect(listWidget_, SIGNAL(itemClicked(QListWidgetItem * )), this, SLOT(moveListWidgetItemToFront(QListWidgetItem *)));

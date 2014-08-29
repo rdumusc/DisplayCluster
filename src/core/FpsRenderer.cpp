@@ -44,6 +44,10 @@
 
 #include <QtOpenGL/qgl.h>
 
+#define TEXT_POS_X 10
+#define TEXT_POS_Y 32
+#define TEXT_SIZE_PX 32
+
 FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
     : renderContext_(renderContext)
 {
@@ -53,16 +57,15 @@ void FpsRenderer::render()
 {
     fpsCounter_.tick();
 
-    const int fontSize = 32;
     QFont textFont;
-    textFont.setPixelSize(fontSize);
+    textFont.setPixelSize(TEXT_SIZE_PX);
 
     glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_CURRENT_BIT);
 
     glDisable(GL_DEPTH_TEST);
     glColor4f(0.,0.,1.,1.);
 
-    renderContext_->getActiveGLWindow()->renderText(10, fontSize, fpsCounter_.toString(), textFont);
+    renderContext_->renderText(TEXT_POS_X, TEXT_POS_Y, fpsCounter_.toString(), textFont);
 
     glPopAttrib();
 }

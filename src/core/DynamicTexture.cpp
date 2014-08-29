@@ -79,7 +79,6 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
     // if we're a child...
     if(parent)
     {
-        setRenderContext(parent->getRenderContext());
         depth_ = parent->depth_ + 1;
 
         // append childIndex to parent's path to form this object's path
@@ -337,13 +336,13 @@ bool DynamicTexture::isVisibleInCurrentGLView()
 {
     // TODO This objects visibility should be determined by using the GLWindow
     // as a pre-render step, not retro-fitted in here!
-    const QRectF screenRect = renderContext_->getGLWindow()->getProjectedPixelRect(true);
+    const QRectF screenRect = GLWindow::getProjectedPixelRect(true);
     return screenRect.width()*screenRect.height() > 0.;
 }
 
 bool DynamicTexture::isResolutionSufficientForCurrentGLView()
 {
-    const QRectF fullRect = renderContext_->getGLWindow()->getProjectedPixelRect(false);
+    const QRectF fullRect = GLWindow::getProjectedPixelRect(false);
     return fullRect.width() <= TEXTURE_SIZE && fullRect.height() <= TEXTURE_SIZE;
 }
 

@@ -45,7 +45,7 @@
 #include <QUuid>
 #include <boost/weak_ptr.hpp>
 
-class DisplayGroupManager;
+class DisplayGroup;
 class ContentWindowManager;
 
 class DisplayGroupInterface : public QObject
@@ -55,9 +55,9 @@ class DisplayGroupInterface : public QObject
     public:
 
         DisplayGroupInterface() { }
-        DisplayGroupInterface(DisplayGroupManagerPtr displayGroupManager);
+        DisplayGroupInterface(DisplayGroupPtr displayGroup);
 
-        DisplayGroupManagerPtr getDisplayGroupManager();
+        DisplayGroupPtr getDisplayGroup();
 
         ContentWindowManagerPtrs getContentWindowManagers();
         ContentWindowManagerPtr getContentWindowManager(const QUuid& id) const;
@@ -86,8 +86,8 @@ class DisplayGroupInterface : public QObject
 
     protected:
 
-        // optional: reference to DisplayGroupManager for non-DisplayGroupManager objects
-        boost::weak_ptr<DisplayGroupManager> displayGroupManager_;
+        // optional: reference to DisplayGroup for non-DisplayGroup objects
+        boost::weak_ptr<DisplayGroup> displayGroup_;
 
         // vector of all of its content window managers
         ContentWindowManagerPtrs contentWindowManagers_;
