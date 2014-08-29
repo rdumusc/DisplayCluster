@@ -62,8 +62,7 @@ class MasterWindow : public QMainWindow
 
 public:
     /** Constructor. */
-    MasterWindow(DisplayGroupPtr displayGroup,
-                 Configuration& configuration);
+    MasterWindow(DisplayGroupPtr displayGroup, Configuration& config);
 
     /** Destructor. */
     ~MasterWindow();

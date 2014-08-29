@@ -43,12 +43,12 @@
 #include <QtGui>
 #include <boost/shared_ptr.hpp>
 
-class ContentWindowManager;
+class ContentWindow;
 
 class ContentWindowGraphicsItem : public QGraphicsObject, public ContentWindowInterface
 {
 public:
-    ContentWindowGraphicsItem(ContentWindowManagerPtr contentWindowManager);
+    ContentWindowGraphicsItem(ContentWindowPtr contentWindow);
     virtual ~ContentWindowGraphicsItem();
 
     // QGraphicsRectItem painting

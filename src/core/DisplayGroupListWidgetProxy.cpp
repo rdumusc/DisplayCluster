@@ -38,7 +38,7 @@
 
 #include "DisplayGroupListWidgetProxy.h"
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "Content.h"
 #include "ContentWindowListWidgetItem.h"
 
@@ -61,9 +61,9 @@ QListWidget* DisplayGroupListWidgetProxy::getListWidget()
     return listWidget_;
 }
 
-void DisplayGroupListWidgetProxy::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupListWidgetProxy::addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::addContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::addContentWindow(contentWindow, source);
 
     if(source != this)
     {
@@ -73,9 +73,9 @@ void DisplayGroupListWidgetProxy::addContentWindowManager(ContentWindowManagerPt
     }
 }
 
-void DisplayGroupListWidgetProxy::removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupListWidgetProxy::removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::removeContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::removeContentWindow(contentWindow, source);
 
     if(source != this)
     {
@@ -83,9 +83,9 @@ void DisplayGroupListWidgetProxy::removeContentWindowManager(ContentWindowManage
     }
 }
 
-void DisplayGroupListWidgetProxy::moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupListWidgetProxy::moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::moveContentWindowManagerToFront(contentWindowManager, source);
+    DisplayGroupInterface::moveContentWindowToFront(contentWindow, source);
 
     if(source != this)
     {
@@ -105,11 +105,11 @@ void DisplayGroupListWidgetProxy::refreshListWidget()
 {
     listWidget_->clear();
 
-    for(unsigned int i=0; i<contentWindowManagers_.size(); i++)
+    for(unsigned int i=0; i<contentWindows_.size(); i++)
     {
         // add to list view
-        ContentWindowListWidgetItem * newItem = new ContentWindowListWidgetItem(contentWindowManagers_[i]);
-        newItem->setText(contentWindowManagers_[i]->getContent()->getURI());
+        ContentWindowListWidgetItem * newItem = new ContentWindowListWidgetItem(contentWindows_[i]);
+        newItem->setText(contentWindows_[i]->getContent()->getURI());
 
         listWidget_->insertItem(0, newItem);
     }

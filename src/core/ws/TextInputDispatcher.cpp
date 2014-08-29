@@ -40,7 +40,7 @@
 #include "TextInputDispatcher.h"
 
 #include "DisplayGroup.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 
 #include "Event.h"
 using dc::Event;
@@ -54,7 +54,7 @@ TextInputDispatcher::TextInputDispatcher(DisplayGroupPtr displayGroup,
 
 void TextInputDispatcher::sendKeyEventToActiveWindow(const char key) const
 {
-    ContentWindowManagerPtr window = displayGroup_->getActiveWindow();
+    ContentWindowPtr window = displayGroup_->getActiveWindow();
     if (!window)
         return;
 

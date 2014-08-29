@@ -45,7 +45,7 @@
 #include <QImage>
 #include "types.h"
 
-class ContentWindowManager;
+class ContentWindow;
 
 /**
  * A state preview is a thumbnail image saved alongside a state file.
@@ -70,11 +70,11 @@ public:
     QImage getImage() const;
 
     /**
-     * Generate the preview image from a list of ContentWindowManagers.
+     * Generate the preview image from a list of ContentWindows.
      * @param wallDimensions the total dimensions of the wall in pixels, used to position the contents
-     * @param contentWindowManagers the contents to include in the preview
+     * @param contentWindows the contents to include in the preview
      */
-    void generateImage(const QSize& wallDimensions, const ContentWindowManagerPtrs& contentWindowManagers);
+    void generateImage(const QSize& wallDimensions, const ContentWindowPtrs& contentWindows);
 
     /**
      * Save the thumbnail created by generateImage() to a file based on the state file name.

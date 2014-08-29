@@ -41,7 +41,7 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "Options.h"
 #include "PixelStreamWindowManager.h"
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     const QPointF pos( .4, .3 );
     const QSizeF size( .1, .2 );
 
-    ContentWindowManagerPtr window = windowManager.createContentWindow( uri, pos, size );
+    ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     const QSize pixels( g_configuration->getTotalWidth() * size.width(),
                         g_configuration->getTotalHeight() * size.height( ));
 
-    ContentWindowManagerPtr window = windowManager.createContentWindow( uri, pos, size );
+    ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
                         g_configuration->getTotalHeight() * size.height( ));
 
     windowManager.openPixelStreamWindow( uri, pixels );
-    ContentWindowManagerPtr window = windowManager.getContentWindow( uri );
+    ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
     ContentPtr content = window->getContent();

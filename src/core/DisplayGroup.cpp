@@ -38,7 +38,7 @@
 
 #include "DisplayGroup.h"
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 
 #include "log.h"
 #include <boost/foreach.hpp>
@@ -58,29 +58,29 @@ SkeletonStatePtrs DisplayGroup::getSkeletons()
 }
 #endif
 
-void DisplayGroup::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroup::addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    BOOST_FOREACH(ContentWindowManagerPtr existingWindow, contentWindowManagers_)
+    BOOST_FOREACH(ContentWindowPtr existingWindow, contentWindows_)
     {
-        if (contentWindowManager->getID() == existingWindow->getID())
+        if (contentWindow->getID() == existingWindow->getID())
         {
             put_flog(LOG_WARN, "A window with the same id already exists!");
             return;
         }
     }
 
-    DisplayGroupInterface::addContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::addContentWindow(contentWindow, source);
 
     if(source != this)
     {
-        contentWindowManager->setDisplayGroup(shared_from_this());
-        watchChanges(contentWindowManager);
+        contentWindow->setDisplayGroup(shared_from_this());
+        watchChanges(contentWindow);
 
         emit modified(shared_from_this());
     }
 }
 
-void DisplayGroup::watchChanges(ContentWindowManagerPtr contentWindow)
+void DisplayGroup::watchChanges(ContentWindowPtr contentWindow)
 {
     // Don't call sendDisplayGroup() on movedToFront() or destroyed() since it happens already
     connect(contentWindow.get(), SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)),
@@ -101,25 +101,25 @@ void DisplayGroup::watchChanges(ContentWindowManagerPtr contentWindow)
             this, SLOT(sendDisplayGroup()));
 }
 
-void DisplayGroup::removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroup::removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::removeContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::removeContentWindow(contentWindow, source);
 
     if(source != this)
     {
         // disconnect any existing connections with the window
-        disconnect(contentWindowManager.get(), 0, this, 0);
+        disconnect(contentWindow.get(), 0, this, 0);
 
         // set null display group in content window manager object
-        contentWindowManager->setDisplayGroup(DisplayGroupPtr());
+        contentWindow->setDisplayGroup(DisplayGroupPtr());
 
         emit modified(shared_from_this());
     }
 }
 
-void DisplayGroup::moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroup::moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::moveContentWindowManagerToFront(contentWindowManager, source);
+    DisplayGroupInterface::moveContentWindowToFront(contentWindow, source);
 
     if(source != this)
     {
@@ -131,7 +131,7 @@ void DisplayGroup::setBackgroundContent(ContentPtr content)
 {
     if (content)
     {
-        backgroundContent_ = ContentWindowManagerPtr(new ContentWindowManager(content));
+        backgroundContent_ = ContentWindowPtr(new ContentWindow(content));
         // set display group in content window manager object
         backgroundContent_->setDisplayGroup(shared_from_this());
         backgroundContent_->adjustSize( SIZE_FULLSCREEN );
@@ -139,28 +139,28 @@ void DisplayGroup::setBackgroundContent(ContentPtr content)
     }
     else
     {
-        backgroundContent_ = ContentWindowManagerPtr();
+        backgroundContent_ = ContentWindowPtr();
     }
 
     emit modified(shared_from_this());
 }
 
-ContentWindowManagerPtr DisplayGroup::getBackgroundContentWindow() const
+ContentWindowPtr DisplayGroup::getBackgroundContentWindow() const
 {
     return backgroundContent_;
 }
 
 bool DisplayGroup::isEmpty() const
 {
-    return contentWindowManagers_.empty();
+    return contentWindows_.empty();
 }
 
-ContentWindowManagerPtr DisplayGroup::getActiveWindow() const
+ContentWindowPtr DisplayGroup::getActiveWindow() const
 {
     if (isEmpty())
-        return ContentWindowManagerPtr();
+        return ContentWindowPtr();
 
-    return contentWindowManagers_.back();
+    return contentWindows_.back();
 }
 
 void DisplayGroup::sendDisplayGroup()

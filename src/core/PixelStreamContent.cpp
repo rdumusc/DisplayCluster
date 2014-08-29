@@ -37,7 +37,7 @@
 /*********************************************************************/
 
 #include "PixelStreamContent.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 #include "Factories.h"
@@ -58,7 +58,7 @@ bool PixelStreamContent::readMetadata()
     return true;
 }
 
-void PixelStreamContent::preRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel)
+void PixelStreamContent::preRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel)
 {
     const QRectF& windowRect = window->getCoordinates();
     factories.getPixelStreamFactory().getObject(getURI())->preRenderUpdate(windowRect, wallToWallChannel);

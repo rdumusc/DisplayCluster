@@ -41,7 +41,7 @@
 
 #include <QRectF>
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "log.h"
 
 #include "thumbnail/ThumbnailGeneratorFactory.h"
@@ -81,7 +81,7 @@ QString StatePreview::previewFilename() const
     return fileinfo.path() + "/" + fileinfo.completeBaseName() + getFileExtension();
 }
 
-void StatePreview::generateImage(const QSize& wallDimensions, const ContentWindowManagerPtrs &contentWindowManagers)
+void StatePreview::generateImage(const QSize& wallDimensions, const ContentWindowPtrs &contentWindows)
 {
     QSize previewDimension(wallDimensions);
     previewDimension.scale(QSize(PREVIEW_IMAGE_SIZE, PREVIEW_IMAGE_SIZE), Qt::KeepAspectRatio);
@@ -94,13 +94,13 @@ void StatePreview::generateImage(const QSize& wallDimensions, const ContentWindo
     QPainter painter(&preview);
     const QSize contentThumbnailSize(CONTENT_THUMBNAIL_SIZE, CONTENT_THUMBNAIL_SIZE);
 
-    for(size_t i=0; i<contentWindowManagers.size(); i++)
+    for(size_t i=0; i<contentWindows.size(); i++)
     {
-        ContentWindowManager* contentWindow = contentWindowManagers[i].get();
+        ContentWindow* contentWindow = contentWindows[i].get();
         if (contentWindow->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM)
         {
             // Use ThumbnailFactory to generate thumbnails for the Contents
-            const QString& filename = contentWindowManagers[i]->getContent()->getURI();
+            const QString& filename = contentWindows[i]->getContent()->getURI();
             QImage image = ThumbnailGeneratorFactory::getGenerator(filename, contentThumbnailSize)->generate(filename);
 
             double x, y, w ,h;

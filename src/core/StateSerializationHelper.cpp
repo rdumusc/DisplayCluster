@@ -61,7 +61,7 @@ StateSerializationHelper::StateSerializationHelper(DisplayGroupPtr displayGroup)
 
 bool StateSerializationHelper::save(const QString& filename, const bool generatePreview)
 {
-    ContentWindowManagerPtrs contentWindows = displayGroup_->getContentWindowManagers();
+    ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
 
     if (generatePreview)
     {
@@ -94,7 +94,7 @@ bool StateSerializationHelper::load(const QString& filename)
     // For backward compatibility, try to load the file as a legacy state file first
     if( state.legacyLoadXML( filename ))
     {
-        displayGroup_->setContentWindowManagers(state.getContentWindows());
+        displayGroup_->setContentWindows(state.getContentWindows());
         return true;
     }
 
@@ -115,19 +115,19 @@ bool StateSerializationHelper::load(const QString& filename)
     }
     ifs.close();
 
-    ContentWindowManagerPtrs contentWindows = state.getContentWindows();
+    ContentWindowPtrs contentWindows = state.getContentWindows();
     validate(contentWindows);
 
-    displayGroup_->setContentWindowManagers(contentWindows);
+    displayGroup_->setContentWindows(contentWindows);
     return true;
 }
 
-void StateSerializationHelper::validate(ContentWindowManagerPtrs& contentWindows) const
+void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
 {
-    ContentWindowManagerPtrs validContentWindows;
+    ContentWindowPtrs validContentWindows;
     validContentWindows.reserve(contentWindows.size());
 
-    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    BOOST_FOREACH(ContentWindowPtr contentWindow, contentWindows)
     {
         if (!contentWindow->getContent())
         {
@@ -146,12 +146,12 @@ void StateSerializationHelper::validate(ContentWindowManagerPtrs& contentWindows
     contentWindows = validContentWindows;
 }
 
-bool StateSerializationHelper::isPixelStream(ContentWindowManagerPtr contentWindow) const
+bool StateSerializationHelper::isPixelStream(ContentWindowPtr contentWindow) const
 {
     return contentWindow->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM;
 }
 
-void StateSerializationHelper::finalize(ContentWindowManagerPtr contentWindow) const
+void StateSerializationHelper::finalize(ContentWindowPtr contentWindow) const
 {
     // Refresh content informations. Files can have changed since the State was saved.
     if (contentWindow->getContent()->readMetadata())

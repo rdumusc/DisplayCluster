@@ -3,5 +3,5 @@
 %Import QtGui/QtGuimod.sip
 
 %Include Content.sip
-%Include ContentWindowManager.sip
+%Include ContentWindow.sip
 %Include DisplayGroupPython.sip

@@ -53,7 +53,7 @@
 class WallToWallChannel;
 
 /**
- * An abstract Content displayed in a ContentWindowManager.
+ * An abstract Content displayed in a ContentWindow.
  *
  * This class does not actually hold any content data because it
  * is meant to be sent through MPI to Rank>0 processes.
@@ -92,10 +92,10 @@ class Content : public QObject
         void blockAdvance( bool block ) { blockAdvance_ = block; }
 
         /** Re-implement this method to update or synchronize before rendering. */
-        virtual void preRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel&) { }
+        virtual void preRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
 
         /** Re-implement this method to update or synchronize after rendering. */
-        virtual void postRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel&) { }
+        virtual void postRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
 
     signals:
         /** Emitted when dimensions have changed */

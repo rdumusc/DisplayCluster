@@ -102,7 +102,7 @@ void PDFContent::previousPage()
     }
 }
 
-void PDFContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel&)
+void PDFContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&)
 {
     factories.getPDFFactory().getObject(getURI())->setPage(pageNumber_);
 }

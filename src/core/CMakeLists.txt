@@ -102,7 +102,7 @@ list(APPEND SRCS
     ContentLoader.cpp
     ContentType.cpp
     ContentInteractionDelegate.cpp
-    ContentWindowManager.cpp
+    ContentWindow.cpp
     ContentWindowRenderer.cpp
     ContentWindowInterface.cpp
     ContentWindowGraphicsItem.cpp
@@ -209,7 +209,7 @@ list(APPEND MOC_HEADERS
     CommandHandler.h
     Content.h
     ContentWindowInterface.h
-    ContentWindowManager.h
+    ContentWindow.h
     DisplayGroup.h
     DisplayGroupInterface.h
     DisplayGroupGraphicsView.h

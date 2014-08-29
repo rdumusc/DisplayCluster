@@ -45,7 +45,7 @@
 class ZoomInteractionDelegate : public ContentInteractionDelegate
 {
 public:
-    ZoomInteractionDelegate(ContentWindowManager& contentWindow);
+    ZoomInteractionDelegate(ContentWindow& contentWindow);
 
     void pan(PanGesture *gesture);
     void pinch(PinchGesture *gesture);

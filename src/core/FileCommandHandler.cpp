@@ -42,7 +42,7 @@
 #include "Command.h"
 #include "DisplayGroup.h"
 #include "ContentLoader.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "StateSerializationHelper.h"
 #include "PixelStreamWindowManager.h"
 #include "log.h"
@@ -77,7 +77,7 @@ void FileCommandHandler::handle(const Command& command, const QString& senderUri
         // Center the new content where the dock is
         // TODO: DISCL-230
         QPointF position;
-        ContentWindowManagerPtr parentWindow = pixelStreamWindowManager_.getContentWindow(senderUri);
+        ContentWindowPtr parentWindow = pixelStreamWindowManager_.getContentWindow(senderUri);
         if( parentWindow )
             position = parentWindow->getWindowCenterPosition();
         loader.load(uri, position);

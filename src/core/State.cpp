@@ -39,7 +39,7 @@
 
 #include "State.h"
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "log.h"
 
 #include <QtXml/QtXml>
@@ -52,12 +52,12 @@ State::State()
 {
 }
 
-State::State(const ContentWindowManagerPtrs& contentWindows)
+State::State(const ContentWindowPtrs& contentWindows)
     : contentWindows_(contentWindows)
 {
 }
 
-const ContentWindowManagerPtrs& State::getContentWindows() const
+const ContentWindowPtrs& State::getContentWindows() const
 {
     return contentWindows_;
 }
@@ -95,9 +95,9 @@ bool State::legacyLoadXML( const QString& filename)
         if( !content )
             continue;
 
-        ContentWindowManagerPtr contentWindowManager = restoreContent_( query, content, i );
-        if( contentWindowManager )
-            contentWindows_.push_back( contentWindowManager );
+        ContentWindowPtr contentWindow = restoreContent_( query, content, i );
+        if( contentWindow )
+            contentWindows_.push_back( contentWindow );
     }
 
     return true;
@@ -147,7 +147,7 @@ ContentPtr State::loadContent_( QXmlQuery& query, const int index ) const
     return ContentFactory::getContent(uri);
 }
 
-ContentWindowManagerPtr State::restoreContent_( QXmlQuery& query,
+ContentWindowPtr State::restoreContent_( QXmlQuery& query,
                                                 ContentPtr content,
                                                 const int index ) const
 {
@@ -212,28 +212,28 @@ ContentWindowManagerPtr State::restoreContent_( QXmlQuery& query,
         zoom = qstring.toDouble();
     }
 
-    ContentWindowManagerPtr contentWindowManager(new ContentWindowManager(content));
+    ContentWindowPtr contentWindow(new ContentWindow(content));
 
     // now, apply settings if we got them from the XML file
     if(x != -1. || y != -1.)
     {
-        contentWindowManager->setPosition(x, y);
+        contentWindow->setPosition(x, y);
     }
 
     if(w != -1. || h != -1.)
     {
-        contentWindowManager->setSize(w, h);
+        contentWindow->setSize(w, h);
     }
 
     // zoom needs to be set before center because of clamping
     if(zoom != -1.)
     {
-        contentWindowManager->setZoom(zoom);
+        contentWindow->setZoom(zoom);
     }
 
     if(centerX != -1. || centerY != -1.)
     {
-        contentWindowManager->setCenter(centerX, centerY);
+        contentWindow->setCenter(centerX, centerY);
     }
-    return contentWindowManager;
+    return contentWindow;
 }

@@ -69,11 +69,11 @@ public:
     ~DisplayGroup();
 
     /** Get the background content window. */
-    ContentWindowManagerPtr getBackgroundContentWindow() const;
+    ContentWindowPtr getBackgroundContentWindow() const;
 
     /**
      * Is the DisplayGroup empty.
-     * @return true if the DisplayGroup has no ContentWindowManager, false otherwise.
+     * @return true if the DisplayGroup has no ContentWindow, false otherwise.
      */
     bool isEmpty() const;
 
@@ -82,7 +82,7 @@ public:
      * @return A shared pointer to the active window. Can be empty if there is
      *         no Window available. @see isEmpty().
      */
-    ContentWindowManagerPtr getActiveWindow() const;
+    ContentWindowPtr getActiveWindow() const;
 
 #if ENABLE_SKELETON_SUPPORT
     SkeletonStatePtrs getSkeletons();
@@ -95,9 +95,9 @@ signals:
 public slots:
     //@{
     /** Re-implemented from DisplayGroupInterface */
-    void addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    void removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
+    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
+    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
+    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
     //@}
 
     /**
@@ -120,16 +120,16 @@ private:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int)
     {
-        ar & contentWindowManagers_;
+        ar & contentWindows_;
         ar & backgroundContent_;
 #if ENABLE_SKELETON_SUPPORT
         ar & skeletons_;
 #endif
     }
 
-    void watchChanges(ContentWindowManagerPtr contentWindow);
+    void watchChanges(ContentWindowPtr contentWindow);
 
-    ContentWindowManagerPtr backgroundContent_;
+    ContentWindowPtr backgroundContent_;
 
 #if ENABLE_SKELETON_SUPPORT
     SkeletonStatePtrs skeletons_;

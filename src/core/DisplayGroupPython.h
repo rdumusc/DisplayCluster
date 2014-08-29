@@ -41,7 +41,7 @@
 
 #include "types.h"
 #include "DisplayGroupInterface.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include <QtGui>
 
 class DisplayGroupPython : public DisplayGroupInterface, public boost::enable_shared_from_this<DisplayGroupPython>
@@ -74,19 +74,19 @@ class pyDisplayGroupPython
             return ptr_;
         }
 
-        void addContentWindowManager(pyContentWindowManager pcwm)
+        void addContentWindow(pyContentWindow pcwm)
         {
-            get()->addContentWindowManager(pcwm.get());
+            get()->addContentWindow(pcwm.get());
         }
 
-        void removeContentWindowManager(pyContentWindowManager pcwm)
+        void removeContentWindow(pyContentWindow pcwm)
         {
-            get()->removeContentWindowManager(pcwm.get());
+            get()->removeContentWindow(pcwm.get());
         }
 
-        void moveContentWindowManagerToFront(pyContentWindowManager pcwm)
+        void moveContentWindowToFront(pyContentWindow pcwm)
         {
-            get()->moveContentWindowManagerToFront(pcwm.get());
+            get()->moveContentWindowToFront(pcwm.get());
         }
 
         void saveState(const char * filename)
@@ -103,14 +103,14 @@ class pyDisplayGroupPython
             get()->loadState(filenameString);
         }
 
-        int getNumContentWindowManagers()
+        int getNumContentWindows()
         {
-            return get()->getContentWindowManagers().size();
+            return get()->getContentWindows().size();
         }
 
-        pyContentWindowManager getPyContentWindowManager(int index)
+        pyContentWindow getPyContentWindow(int index)
         {
-            return pyContentWindowManager(get()->getContentWindowManagers()[index]);
+            return pyContentWindow(get()->getContentWindows()[index]);
         }
 
     private:

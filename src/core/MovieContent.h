@@ -59,8 +59,8 @@ public:
 
     static const QStringList& getSupportedExtensions();
 
-    void preRenderUpdate(Factories&, ContentWindowManagerPtr, WallToWallChannel& wallToWallChannel) override;
-    void postRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel& wallToWallChannel) override;
+    void preRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel& wallToWallChannel) override;
+    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
 
 private:
     friend class boost::serialization::access;

@@ -73,9 +73,9 @@ public:
 private:
     DisplayGroupPtr displayGroup_;
 
-    void validate(ContentWindowManagerPtrs& contentWindows) const;
-    void finalize(ContentWindowManagerPtr contentWindow) const;
-    bool isPixelStream(ContentWindowManagerPtr contentWindow) const;
+    void validate(ContentWindowPtrs& contentWindows) const;
+    void finalize(ContentWindowPtr contentWindow) const;
+    bool isPixelStream(ContentWindowPtr contentWindow) const;
 };
 
 #endif // STATESERIALIZATIONHELPER_H

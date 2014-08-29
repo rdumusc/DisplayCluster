@@ -44,7 +44,7 @@
 #include <QKeyEvent>
 #include <QObject>
 
-class ContentWindowManager;
+class ContentWindow;
 class DoubleTapGesture;
 class PanGesture;
 class PinchGesture;
@@ -57,7 +57,7 @@ class ContentInteractionDelegate
 {
 public:
 
-    ContentInteractionDelegate(ContentWindowManager& contentWindow);
+    ContentInteractionDelegate(ContentWindow& contentWindow);
     virtual ~ContentInteractionDelegate();
 
     // Main entry point for gesture events
@@ -82,13 +82,13 @@ public:
 
 protected:
 
-    ContentWindowManager& contentWindowManager_;
+    ContentWindow& contentWindow_;
 
     double adaptZoomFactor(double pinchGestureScaleFactor);
 
 private:
 
-    // Touch gestures when ContentWindowManager is not in interaction mode
+    // Touch gestures when ContentWindow is not in interaction mode
     void doubleTapUnselected( DoubleTapGesture* gesture );
     void tapAndHoldUnselected( QTapAndHoldGesture* gesture );
     void panUnselected( PanGesture* gesture );

@@ -60,7 +60,7 @@ public:
     **/
     bool readMetadata() override;
 
-    void preRenderUpdate(Factories& factories, ContentWindowManagerPtr window,
+    void preRenderUpdate(Factories& factories, ContentWindowPtr window,
                          WallToWallChannel& wallToWallChannel) override;
 
 private:

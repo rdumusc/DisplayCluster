@@ -86,13 +86,13 @@ class ContentWindowInterface : public QObject
         };
 
         ContentWindowInterface();
-        ContentWindowInterface(ContentWindowManagerPtr contentWindowManager);
+        ContentWindowInterface(ContentWindowPtr contentWindow);
 
         /** @return the unique identifier for this window. */
         const QUuid& getID() const;
 
         /** Get the ContentWindowManger associated to this object if it has one, otherwise returns 0. */
-        ContentWindowManagerPtr getContentWindowManager();
+        ContentWindowPtr getContentWindow();
 
         /** Get content dimensions in pixels. */
         void getContentDimensions(int &contentWidth, int &contentHeight);
@@ -155,7 +155,7 @@ class ContentWindowInterface : public QObject
     public slots:
 
         // these methods set the local copies of the state variables if source != this
-        // they will emit signals if source == 0 or if this is a ContentWindowManager object
+        // they will emit signals if source == 0 or if this is a ContentWindow object
         // the source argument should not be provided by users -- only by these functions
         virtual void adjustSize( const SizeState state, ContentWindowInterface* source = 0 );
         virtual void setContentDimensions(int contentWidth, int contentHeight, ContentWindowInterface* source = 0);
@@ -172,8 +172,8 @@ class ContentWindowInterface : public QObject
 
     signals:
 
-        // emitting these signals will trigger updates on the corresponding ContentWindowManager
-        // as well as all other ContentWindowInterfaces to that ContentWindowManager
+        // emitting these signals will trigger updates on the corresponding ContentWindow
+        // as well as all other ContentWindowInterfaces to that ContentWindow
         void contentDimensionsChanged(int contentWidth, int contentHeight, ContentWindowInterface * source);
         void coordinatesChanged(QRectF coordinates, ContentWindowInterface * source);
         void positionChanged(double x, double y, ContentWindowInterface * source);
@@ -191,8 +191,8 @@ class ContentWindowInterface : public QObject
 
         const QUuid uuid_;
 
-        // optional: reference to ContentWindowManager for non-ContentWindowManager objects
-        boost::weak_ptr<ContentWindowManager> contentWindowManager_;
+        // optional: reference to ContentWindow for non-ContentWindow objects
+        boost::weak_ptr<ContentWindow> contentWindow_;
 
         // content dimensions in pixels
         // TODO remove those (DISCL-231)

@@ -44,7 +44,7 @@
 #include <boost/shared_ptr.hpp>
 
 class Content;
-class ContentWindowManager;
+class ContentWindow;
 class DisplayGroup;
 class DisplayGroupAdapter;
 class DynamicTexture;
@@ -69,27 +69,27 @@ struct PixelStreamSegment;
 using dc::PixelStreamSegment;
 
 typedef boost::shared_ptr< Content > ContentPtr;
-typedef boost::shared_ptr< ContentWindowManager > ContentWindowManagerPtr;
+typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;
 typedef boost::shared_ptr< DisplayGroup > DisplayGroupPtr;
 typedef boost::shared_ptr< DisplayGroupAdapter > DisplayGroupAdapterPtr;
 typedef boost::shared_ptr< DynamicTexture > DynamicTexturePtr;
 typedef boost::shared_ptr< Options > OptionsPtr;
-typedef boost::shared_ptr<Markers> MarkersPtr;
-typedef boost::shared_ptr<GLWindow> GLWindowPtr;
-typedef boost::shared_ptr<MPIChannel> MPIChannelPtr;
-typedef boost::shared_ptr<Factories> FactoriesPtr;
-typedef boost::shared_ptr<Renderable> RenderablePtr;
-typedef boost::shared_ptr<RenderContext> RenderContextPtr;
-typedef boost::shared_ptr<DisplayGroupRenderer> DisplayGroupRendererPtr;
-typedef boost::shared_ptr<MarkerRenderer> MarkerRendererPtr;
-typedef boost::shared_ptr<FactoryObject> FactoryObjectPtr;
-typedef boost::shared_ptr<PixelStreamFrame> PixelStreamFramePtr;
-typedef boost::shared_ptr<SkeletonState> SkeletonStatePtr;
+typedef boost::shared_ptr< Markers > MarkersPtr;
+typedef boost::shared_ptr< GLWindow > GLWindowPtr;
+typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
+typedef boost::shared_ptr< Factories > FactoriesPtr;
+typedef boost::shared_ptr< Renderable > RenderablePtr;
+typedef boost::shared_ptr< RenderContext > RenderContextPtr;
+typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
+typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
+typedef boost::shared_ptr< FactoryObject > FactoryObjectPtr;
+typedef boost::shared_ptr< PixelStreamFrame > PixelStreamFramePtr;
+typedef boost::shared_ptr< SkeletonState > SkeletonStatePtr;
 
-typedef std::vector< ContentWindowManagerPtr > ContentWindowManagerPtrs;
-typedef std::vector<GLWindowPtr> GLWindowPtrs;
-typedef std::vector<PixelStreamSegment> PixelStreamSegments;
-typedef std::vector<SkeletonStatePtr> SkeletonStatePtrs;
+typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
+typedef std::vector< GLWindowPtr > GLWindowPtrs;
+typedef std::vector< PixelStreamSegment > PixelStreamSegments;
+typedef std::vector< SkeletonStatePtr > SkeletonStatePtrs;
 
 
 #endif

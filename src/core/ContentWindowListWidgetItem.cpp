@@ -37,9 +37,8 @@
 /*********************************************************************/
 
 #include "ContentWindowListWidgetItem.h"
-#include "ContentWindowManager.h"
 
-ContentWindowListWidgetItem::ContentWindowListWidgetItem(ContentWindowManagerPtr contentWindowManager) : ContentWindowInterface(contentWindowManager)
+ContentWindowListWidgetItem::ContentWindowListWidgetItem(ContentWindowPtr contentWindow)
+    : ContentWindowInterface(contentWindow)
 {
-
 }

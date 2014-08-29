@@ -40,7 +40,7 @@
 
 #include "Movie.h"
 #include "FFMPEGMovie.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "RenderContext.h"
 #include "Factories.h"
 #include "WallToWallChannel.h"
@@ -86,7 +86,7 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::preRenderUpdate(Factories& factories, ContentWindowManagerPtr window, WallToWallChannel &wallToWallChannel)
+void MovieContent::preRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel &wallToWallChannel)
 {
     // Stop decoding when the window is moving.
     // This is to avoid saccades when reaching a new GLWindow.
@@ -105,7 +105,7 @@ void MovieContent::preRenderUpdate(Factories& factories, ContentWindowManagerPtr
     movie->preRenderUpdate( wallToWallChannel );
 }
 
-void MovieContent::postRenderUpdate(Factories& factories, ContentWindowManagerPtr, WallToWallChannel& wallToWallChannel)
+void MovieContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel& wallToWallChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished

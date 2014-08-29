@@ -90,8 +90,8 @@ private:
     SkeletonRenderer skeletonRenderer_;
 #endif
 
-    void renderBackgroundContent(ContentWindowManagerPtr backgroundContentWindow);
-    void renderContentWindows(ContentWindowManagerPtrs contentWindowManagers);
+    void renderBackgroundContent(ContentWindowPtr backgroundContentWindow);
+    void renderContentWindows(ContentWindowPtrs contentWindows);
 };
 
 #endif // DISPLAYGROUPRENDERER_H

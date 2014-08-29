@@ -39,7 +39,7 @@
 #include "ContentWindowGraphicsItem.h"
 #include "configuration/Configuration.h"
 #include "Content.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "DisplayGroupGraphicsView.h"
 #include "globals.h"
@@ -51,8 +51,8 @@
 
 qreal ContentWindowGraphicsItem::zCounter_ = 0;
 
-ContentWindowGraphicsItem::ContentWindowGraphicsItem(ContentWindowManagerPtr contentWindowManager)
-    : ContentWindowInterface(contentWindowManager)
+ContentWindowGraphicsItem::ContentWindowGraphicsItem(ContentWindowPtr contentWindow)
+    : ContentWindowInterface(contentWindow)
     , resizing_(false)
     , moving_(false)
 {
@@ -83,7 +83,7 @@ QRectF ContentWindowGraphicsItem::boundingRect() const
 
 void ContentWindowGraphicsItem::paint(QPainter * painter, const QStyleOptionGraphicsItem* , QWidget* )
 {
-    if( !getContentWindowManager( ))
+    if( !getContentWindow( ))
         return;
 
     drawFrame_( painter );
@@ -176,7 +176,7 @@ bool ContentWindowGraphicsItem::sceneEvent( QEvent* event )
     {
     case QEvent::Gesture:
     {
-        ContentWindowManagerPtr contentWindow = getContentWindowManager();
+        ContentWindowPtr contentWindow = getContentWindow();
         if( !contentWindow )
             return false;
         contentWindow->getInteractionDelegate().gestureEvent( static_cast< QGestureEvent* >( event ));
@@ -226,7 +226,7 @@ void ContentWindowGraphicsItem::mouseMoveEvent(QGraphicsSceneMouseEvent * event)
     }
     else
     {
-        ContentWindowManagerPtr contentWindow = getContentWindowManager();
+        ContentWindowPtr contentWindow = getContentWindow();
         if(contentWindow)
         {
             // Zoom or forward event depending on type
@@ -270,7 +270,7 @@ void ContentWindowGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent * event
     // move to the front of the GUI display
     moveToFront();
 
-    ContentWindowManagerPtr contentWindow = getContentWindowManager();
+    ContentWindowPtr contentWindow = getContentWindow();
     if (!contentWindow)
         return;
 
@@ -332,7 +332,7 @@ void ContentWindowGraphicsItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * eve
     resizing_ = false;
     moving_ = false;
 
-    ContentWindowManagerPtr contentWindow = getContentWindowManager();
+    ContentWindowPtr contentWindow = getContentWindow();
 
     if( contentWindow )
     {
@@ -359,7 +359,7 @@ void ContentWindowGraphicsItem::wheelEvent(QGraphicsSceneWheelEvent * event)
         return;
     }
 
-    ContentWindowManagerPtr contentWindow = getContentWindowManager();
+    ContentWindowPtr contentWindow = getContentWindow();
 
     if( contentWindow )
     {
@@ -383,7 +383,7 @@ void ContentWindowGraphicsItem::keyPressEvent(QKeyEvent *event)
 {
     if (selected())
     {
-        ContentWindowManagerPtr contentWindow = getContentWindowManager();
+        ContentWindowPtr contentWindow = getContentWindow();
 
         if( contentWindow )
         {
@@ -396,7 +396,7 @@ void ContentWindowGraphicsItem::keyReleaseEvent(QKeyEvent *event)
 {
     if (selected())
     {
-        ContentWindowManagerPtr contentWindow = getContentWindowManager();
+        ContentWindowPtr contentWindow = getContentWindow();
 
         if( contentWindow )
         {
@@ -449,26 +449,26 @@ void ContentWindowGraphicsItem::drawFullscreenButton_( QPainter* painter )
 
 void ContentWindowGraphicsItem::drawMovieControls_( QPainter* painter )
 {
-    ContentWindowManagerPtr contentWindowManager = getContentWindowManager();
+    ContentWindowPtr contentWindow = getContentWindow();
 
     float buttonWidth, buttonHeight;
     getButtonDimensions(buttonWidth, buttonHeight);
 
     QPen pen;
 
-    if( contentWindowManager->getContent()->getType() == CONTENT_TYPE_MOVIE )
+    if( contentWindow->getContent()->getType() == CONTENT_TYPE_MOVIE )
     {
         // play/pause
         QRectF playPauseRect(coordinates_.x() + coordinates_.width()/2 - buttonWidth, coordinates_.y() + coordinates_.height() - buttonHeight,
                               buttonWidth, buttonHeight);
-        pen.setColor(QColor(contentWindowManager->getControlState() & STATE_PAUSED ? 128 :200,0,0));
+        pen.setColor(QColor(contentWindow->getControlState() & STATE_PAUSED ? 128 :200,0,0));
         painter->setPen(pen);
         painter->fillRect(playPauseRect, pen.color());
 
         // loop
         QRectF loopRect(coordinates_.x() + coordinates_.width()/2, coordinates_.y() + coordinates_.height() - buttonHeight,
                         buttonWidth, buttonHeight);
-        pen.setColor(QColor(0,contentWindowManager->getControlState() & STATE_LOOP ? 200 :128,0));
+        pen.setColor(QColor(0,contentWindow->getControlState() & STATE_LOOP ? 200 :128,0));
         painter->setPen(pen);
         painter->fillRect(loopRect, pen.color());
     }
@@ -476,7 +476,7 @@ void ContentWindowGraphicsItem::drawMovieControls_( QPainter* painter )
 
 void ContentWindowGraphicsItem::drawTextLabel_( QPainter* painter )
 {
-    ContentWindowManagerPtr contentWindowManager = getContentWindowManager();
+    ContentWindowPtr contentWindow = getContentWindow();
 
     float buttonWidth, buttonHeight;
     getButtonDimensions(buttonWidth, buttonHeight);
@@ -522,7 +522,7 @@ void ContentWindowGraphicsItem::drawTextLabel_( QPainter* painter )
                                      coordinates_.height() / verticalTextScale);
 
     // get the label and render it
-    QString label(contentWindowManager->getContent()->getURI());
+    QString label(contentWindow->getContent()->getURI());
     QString labelSection = label.section("/", -1, -1).prepend(" ");
     painter->drawText(textBoundingRect, Qt::AlignLeft | Qt::AlignTop, labelSection);
 

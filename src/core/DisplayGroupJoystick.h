@@ -52,9 +52,9 @@ public:
     DisplayGroupJoystick(DisplayGroupPtr displayGroup);
 
     // re-implemented DisplayGroupInterface slots
-    void addContentWindowManager(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source=NULL);
-    void removeContentWindowManager(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source=NULL);
-    void moveContentWindowManagerToFront(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source=NULL);
+    void addContentWindow(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source=NULL);
+    void removeContentWindow(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source=NULL);
+    void moveContentWindowToFront(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source=NULL);
 
     boost::shared_ptr<Marker> getMarker();
     std::vector<boost::shared_ptr<ContentWindowInterface> > getContentWindowInterfaces();

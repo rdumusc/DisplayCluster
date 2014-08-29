@@ -37,7 +37,7 @@
 /*********************************************************************/
 
 #include "ContentWindowInterface.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "globals.h"
 #include "configuration/Configuration.h"
 #include "MPIChannel.h"
@@ -58,9 +58,9 @@ ContentWindowInterface::ContentWindowInterface()
     , eventReceiversCount_( 0 )
 {}
 
-ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWindowManager)
-    : uuid_(contentWindowManager ? contentWindowManager->getID() : QUuid::createUuid())
-    , contentWindowManager_(contentWindowManager)
+ContentWindowInterface::ContentWindowInterface(ContentWindowPtr contentWindow)
+    : uuid_(contentWindow ? contentWindow->getID() : QUuid::createUuid())
+    , contentWindow_(contentWindow)
     , contentWidth_(0)
     , contentHeight_(0)
     , centerX_(0)
@@ -71,49 +71,49 @@ ContentWindowInterface::ContentWindowInterface(ContentWindowManagerPtr contentWi
     , controlState_( STATE_PAUSED )
     , eventReceiversCount_( 0 )
 {
-    // copy all members from contentWindowManager
-    if(contentWindowManager)
+    // copy all members from contentWindow
+    if(contentWindow)
     {
-        contentWidth_ = contentWindowManager->contentWidth_;
-        contentHeight_ = contentWindowManager->contentHeight_;
-        coordinates_ = contentWindowManager->coordinates_;
-        centerX_ = contentWindowManager->centerX_;
-        centerY_ = contentWindowManager->centerY_;
-        zoom_ = contentWindowManager->zoom_;
-        sizeState_ = contentWindowManager->sizeState_;
-        controlState_ = contentWindowManager->controlState_;
-        windowState_ = contentWindowManager->windowState_;
-        latestEvent_ = contentWindowManager->latestEvent_;
+        contentWidth_ = contentWindow->contentWidth_;
+        contentHeight_ = contentWindow->contentHeight_;
+        coordinates_ = contentWindow->coordinates_;
+        centerX_ = contentWindow->centerX_;
+        centerY_ = contentWindow->centerY_;
+        zoom_ = contentWindow->zoom_;
+        sizeState_ = contentWindow->sizeState_;
+        controlState_ = contentWindow->controlState_;
+        windowState_ = contentWindow->windowState_;
+        latestEvent_ = contentWindow->latestEvent_;
     }
 
-    // connect signals from this to slots on the ContentWindowManager
+    // connect signals from this to slots on the ContentWindow
     // use queued connections for thread-safety
-    connect(this, SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setContentDimensions(int, int, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(coordinatesChanged(QRectF, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setCoordinates(QRectF, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(positionChanged(double, double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setPosition(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(sizeChanged(double, double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setSize(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(centerChanged(double, double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setCenter(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(zoomChanged(double, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(eventChanged(Event, ContentWindowInterface *)), contentWindowManager.get(), SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(movedToFront(ContentWindowInterface *)), contentWindowManager.get(), SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(closed(ContentWindowInterface *)), contentWindowManager.get(), SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)), contentWindow.get(), SLOT(setContentDimensions(int, int, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(coordinatesChanged(QRectF, ContentWindowInterface *)), contentWindow.get(), SLOT(setCoordinates(QRectF, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(positionChanged(double, double, ContentWindowInterface *)), contentWindow.get(), SLOT(setPosition(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(sizeChanged(double, double, ContentWindowInterface *)), contentWindow.get(), SLOT(setSize(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(centerChanged(double, double, ContentWindowInterface *)), contentWindow.get(), SLOT(setCenter(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(zoomChanged(double, ContentWindowInterface *)), contentWindow.get(), SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), contentWindow.get(), SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(eventChanged(Event, ContentWindowInterface *)), contentWindow.get(), SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(movedToFront(ContentWindowInterface *)), contentWindow.get(), SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(closed(ContentWindowInterface *)), contentWindow.get(), SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
 
-    // connect signals on the ContentWindowManager object to slots on this
+    // connect signals on the ContentWindow object to slots on this
     // use queued connections for thread-safety
-    connect(contentWindowManager.get(), SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)), this, SLOT(setContentDimensions(int, int, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(coordinatesChanged(QRectF, ContentWindowInterface *)), this, SLOT(setCoordinates(QRectF, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(positionChanged(double, double, ContentWindowInterface *)), this, SLOT(setPosition(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(sizeChanged(double, double, ContentWindowInterface *)), this, SLOT(setSize(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(centerChanged(double, double, ContentWindowInterface *)), this, SLOT(setCenter(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(zoomChanged(double, ContentWindowInterface *)), this, SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), this, SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(eventChanged(Event, ContentWindowInterface *)), this, SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(movedToFront(ContentWindowInterface *)), this, SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
-    connect(contentWindowManager.get(), SIGNAL(closed(ContentWindowInterface *)), this, SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)), this, SLOT(setContentDimensions(int, int, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(coordinatesChanged(QRectF, ContentWindowInterface *)), this, SLOT(setCoordinates(QRectF, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(positionChanged(double, double, ContentWindowInterface *)), this, SLOT(setPosition(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(sizeChanged(double, double, ContentWindowInterface *)), this, SLOT(setSize(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(centerChanged(double, double, ContentWindowInterface *)), this, SLOT(setCenter(double, double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(zoomChanged(double, ContentWindowInterface *)), this, SLOT(setZoom(double, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)), this, SLOT(setWindowState(ContentWindowInterface::WindowState, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(eventChanged(Event, ContentWindowInterface *)), this, SLOT(setEvent(Event, ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(movedToFront(ContentWindowInterface *)), this, SLOT(moveToFront(ContentWindowInterface *)), Qt::QueuedConnection);
+    connect(contentWindow.get(), SIGNAL(closed(ContentWindowInterface *)), this, SLOT(close(ContentWindowInterface *)), Qt::QueuedConnection);
 
     // destruction
-    connect(contentWindowManager.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
+    connect(contentWindow.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
 }
 
 const QUuid& ContentWindowInterface::getID() const
@@ -121,9 +121,9 @@ const QUuid& ContentWindowInterface::getID() const
     return uuid_;
 }
 
-ContentWindowManagerPtr ContentWindowInterface::getContentWindowManager()
+ContentWindowPtr ContentWindowInterface::getContentWindow()
 {
-    return contentWindowManager_.lock();
+    return contentWindow_.lock();
 }
 
 void ContentWindowInterface::getContentDimensions(int &contentWidth, int &contentHeight)
@@ -251,7 +251,7 @@ void ContentWindowInterface::fixAspectRatio(ContentWindowInterface * source)
         coordinates_.setWidth( w );
         coordinates_.setHeight( h );
 
-        if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+        if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
             setSize(coordinates_.width(), coordinates_.height());
     }
 }
@@ -320,7 +320,7 @@ void ContentWindowInterface::setContentDimensions(int contentWidth, int contentH
     contentWidth_ = contentWidth;
     contentHeight_ = contentHeight;
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -344,7 +344,7 @@ void ContentWindowInterface::setCoordinates(QRectF coordinates, ContentWindowInt
     else
         coordinates_.moveTo( coordinates.x(), coordinates.y( ));
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -368,7 +368,7 @@ void ContentWindowInterface::setPosition(double x, double y, ContentWindowInterf
 
     coordinates_.moveTo( x, y );
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -393,7 +393,7 @@ void ContentWindowInterface::setSize(double w, double h, ContentWindowInterface 
         coordinates_.setHeight( h );
     }
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -473,7 +473,7 @@ void ContentWindowInterface::setCenter(double centerX, double centerY, ContentWi
         centerY_ = 1. - tH + 0.5 / zoom_;
     }
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -530,7 +530,7 @@ void ContentWindowInterface::setZoom(double zoom, ContentWindowInterface * sourc
         setCenter(centerX_, centerY_);
     }
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -550,7 +550,7 @@ void ContentWindowInterface::setWindowState(ContentWindowInterface::WindowState 
 
     windowState_ = windowState;
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -570,7 +570,7 @@ void ContentWindowInterface::setEvent(Event event_, ContentWindowInterface * sou
 
     latestEvent_ = event_;
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -588,7 +588,7 @@ void ContentWindowInterface::moveToFront(ContentWindowInterface * source)
         return;
     }
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {
@@ -606,7 +606,7 @@ void ContentWindowInterface::close(ContentWindowInterface * source)
         return;
     }
 
-    if(source == NULL || dynamic_cast<ContentWindowManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<ContentWindow *>(this) != NULL)
     {
         if(source == NULL)
         {

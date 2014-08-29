@@ -46,7 +46,7 @@ namespace ut = boost::unit_test;
 #include "types.h"
 #include "Content.h"
 #include "DummyContent.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 
 #define PLEASE_REMOVE_ME
 
@@ -77,9 +77,9 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
         dummyContent->dummyParam_ = DUMMY_PARAM_VALUE;
 
         content->setDimensions( CONTENT_WIDTH, CONTENT_HEIGHT );
-        ContentWindowManagerPtr window( new ContentWindowManager(content) );
+        ContentWindowPtr window( new ContentWindow(content) );
 
-        ContentWindowManagerPtrs contentWindows;
+        ContentWindowPtrs contentWindows;
         contentWindows.push_back(window);
         State state(contentWindows);
         boost::archive::xml_oarchive oa(ss);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
     }
 
     // Deserialize
-    ContentWindowManagerPtrs contentWindows;
+    ContentWindowPtrs contentWindows;
     {
         State state;
         boost::archive::xml_iarchive ia(ss);

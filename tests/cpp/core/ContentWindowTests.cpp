@@ -37,13 +37,13 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#define BOOST_TEST_MODULE ContentWindowManagerTests
+#define BOOST_TEST_MODULE ContentWindowTests
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
 #include <globals.h>
 #include <Options.h>
-#include <ContentWindowManager.h>
+#include <ContentWindow.h>
 #include <configuration/MasterConfiguration.h>
 
 #include "MinimalGlobalQtApp.h"
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( testInitialSize )
 
     ContentPtr content( new DummyContent );
     content->setDimensions( WIDTH, HEIGHT );
-    ContentWindowManager window( content );
+    ContentWindow window( content );
 
     const QRectF& coords = window.getCoordinates();
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE( testFullScreenSize )
 
     ContentPtr content( new DummyContent );
     content->setDimensions( WIDTH, HEIGHT );
-    ContentWindowManager window( content );
+    ContentWindow window( content );
 
     window.toggleFullscreen();
 
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
 
     ContentPtr content( new DummyContent );
     content->setDimensions( WIDTH, HEIGHT );
-    ContentWindowManager window( content );
+    ContentWindow window( content );
 
     QRectF target( 0.9, 0.7, 0.2, 1 );
     target.setHeight( target.width() * g_configuration->getAspectRatio());
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE( testValidID )
 
     ContentPtr content( new DummyContent );
     content->setDimensions( WIDTH, HEIGHT );
-    ContentWindowManager window( content );
+    ContentWindow window( content );
 
     BOOST_CHECK( window.getID() != QUuid());
 
@@ -160,10 +160,10 @@ BOOST_AUTO_TEST_CASE( testUniqueID )
     ContentPtr content( new DummyContent );
     content->setDimensions( WIDTH, HEIGHT );
 
-    ContentWindowManager window1( content );
+    ContentWindow window1( content );
     BOOST_CHECK( window1.getID() != QUuid());
 
-    ContentWindowManager window2( content );
+    ContentWindow window2( content );
     BOOST_CHECK( window2.getID() != QUuid());
 
     BOOST_CHECK( window1.getID() != window2.getID());
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE( testSetContent )
     ContentPtr content( new DummyContent );
     content->setDimensions( WIDTH, HEIGHT );
 
-    ContentWindowManager window;
+    ContentWindow window;
     BOOST_CHECK(!window.getContent());
 
     int contentWidth, contentHeight;

@@ -41,7 +41,7 @@
 
 #include "MPIChannel.h"
 #include "DisplayGroup.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "Options.h"
 #include "Markers.h"
 #include "PixelStreamFrame.h"

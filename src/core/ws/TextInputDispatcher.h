@@ -46,7 +46,7 @@
 #include "AsciiToQtKeyCodeMapper.h"
 
 /**
- * Dispatch text input from the WebServiceServer thread to the active ContentWindowManager.
+ * Dispatch text input from the WebServiceServer thread to the active ContentWindow.
  */
 class TextInputDispatcher : public QObject
 {
@@ -55,7 +55,7 @@ class TextInputDispatcher : public QObject
 public:
     /**
      * Constructor.
-     * @param displayGroup The DisplayGroup which holds the target ContentWindowManager.
+     * @param displayGroup The DisplayGroup which holds the target ContentWindow.
      * @param parentObject An optional parent QObject
      */
     TextInputDispatcher(DisplayGroupPtr displayGroup, QObject *parentObject = 0);

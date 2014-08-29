@@ -50,7 +50,7 @@
 #include "DynamicTexture.h"
 
 #include "DisplayGroup.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "DisplayGroupGraphicsViewProxy.h"
 #include "DisplayGroupGraphicsView.h"
 #include "DisplayGroupListWidgetProxy.h"
@@ -64,12 +64,11 @@
 
 #define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
 
-MasterWindow::MasterWindow(DisplayGroupPtr displayGroup,
-                           Configuration& configuration)
+MasterWindow::MasterWindow(DisplayGroupPtr displayGroup, Configuration& config)
     : QMainWindow()
     , displayGroup_(displayGroup)
     , options_(new Options)
-    , backgroundWidget_(new BackgroundWidget(configuration, this))
+    , backgroundWidget_(new BackgroundWidget(config, this))
 {
     backgroundWidget_->setModal(true);
     connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),
