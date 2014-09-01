@@ -9,6 +9,7 @@ set(MOC_HEADERS
   MasterApplication.h
   MasterWindow.h
   WallApplication.h
+  WebbrowserWidget.h
 )
 
 set(DISPLAYCLUSTER_FILES
@@ -18,6 +19,7 @@ set(DISPLAYCLUSTER_FILES
   MasterApplication.cpp
   MasterWindow.cpp
   WallApplication.cpp
+  WebbrowserWidget.cpp
 )
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})

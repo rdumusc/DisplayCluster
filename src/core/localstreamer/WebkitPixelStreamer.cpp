@@ -85,7 +85,7 @@ WebkitPixelStreamer::~WebkitPixelStreamer()
     timer_.stop();
 }
 
-void WebkitPixelStreamer::setUrl(QString url)
+void WebkitPixelStreamer::setUrl(const QString& url)
 {
     QMutexLocker locker(&mutex_);
 
@@ -257,7 +257,8 @@ void WebkitPixelStreamer::processViewSizeChange(const Event &sizeEvent)
 
 void WebkitPixelStreamer::setSize(const QSize& webpageSize)
 {
-    QSize newSize( std::max(webpageSize.width(), WEBPAGE_MIN_WIDTH), std::max(webpageSize.height(), WEBPAGE_MIN_HEIGHT) );
+    const QSize newSize(std::max(webpageSize.width(), WEBPAGE_MIN_WIDTH),
+                        std::max(webpageSize.height(), WEBPAGE_MIN_HEIGHT));
 
     webView_.page()->setViewportSize( newSize );
 }

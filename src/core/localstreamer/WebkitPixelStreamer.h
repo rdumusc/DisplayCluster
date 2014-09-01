@@ -85,7 +85,7 @@ public:
      *
      * @param url The address of the webpage to load.
      */
-    void setUrl(QString url);
+    void setUrl(const QString& url);
 
     /** Get the QWebView used internally by the streamer. */
     const QWebView* getView() const;

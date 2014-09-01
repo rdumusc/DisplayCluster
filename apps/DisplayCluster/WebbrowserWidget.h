@@ -37,96 +37,37 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MASTERWINDOW_H
-#define MASTERWINDOW_H
+#ifndef WEBBROWSERWIDGET_H
+#define WEBBROWSERWIDGET_H
 
-#include "config.h"
-#include "types.h"
+#include <QDialog>
 
-#include <QMainWindow>
-#include <QMimeData>
-
-class BackgroundWidget;
-class Configuration;
-class DisplayGroupGraphicsViewProxy;
-class DisplayGroupGraphicsView;
-class WebbrowserWidget;
+class QLineEdit;
+class QSpinBox;
 
 /**
- * The main UI window for Master applications.
- *
- * It lets users control the contents displayed on the wall.
+ * Dialog for opening a new webbrowser window.
  */
-class MasterWindow : public QMainWindow
+class WebbrowserWidget : public QDialog
 {
     Q_OBJECT
 
 public:
     /** Constructor. */
-    MasterWindow(DisplayGroupPtr displayGroup, Configuration& config);
-
-    /** Destructor. */
-    ~MasterWindow();
-
-    /** Get the GraphicsView used for touch interaction. */
-    DisplayGroupGraphicsView* getGraphicsView();
-
-    /** Get the display options that change during runtime. */
-    OptionsPtr getOptions() const;
+    explicit WebbrowserWidget(QWidget* parent = 0);
 
 signals:
-    /** Emitted when users want to open a dock. */
-    void openDock(QPointF pos);
-
-    /** Emitted when users want to hide the dock. */
-    void hideDock();
-
     /** Emitted when users want to open a webbrowser. */
     void openWebBrowser(QPointF pos, QSize size, QString url);
 
-#if ENABLE_SKELETON_SUPPORT
-    void enableSkeletonTracking();
-    void disableSkeletonTracking();
-#endif
-
-protected:
-    ///@{
-    /** Drag events re-implemented from QMainWindow. */
-    void dragEnterEvent(QDragEnterEvent *event) override;
-    void dropEvent(QDropEvent *event) override;
-    ///@}
-
-private slots:
-    void openContent();
-    void openContentsDirectory();
-
-    void saveState();
-    void loadState();
-
-    void computeImagePyramid();
-
-#if ENABLE_SKELETON_SUPPORT
-    void setEnableSkeletonTracking(bool enable);
-#endif
-    void openAboutWidget();
+public slots:
+    /** Store the new settings and close the widget */
+    void accept() override;
 
 private:
-    void setupMasterWindowUI();
-
-    void addContentDirectory(const QString &directoryName, unsigned int gridX=0, unsigned int gridY=0);
-    void loadState(const QString &filename);
-
-    void estimateGridSize(unsigned int numElem, unsigned int& gridX, unsigned int& gridY);
-
-    QStringList extractValidContentUrls(const QMimeData* mimeData);
-    QStringList extractFolderUrls(const QMimeData *mimeData);
-    QString extractStateFile(const QMimeData *mimeData);
-
-    DisplayGroupPtr displayGroup_;
-    OptionsPtr options_;
-    BackgroundWidget* backgroundWidget_;
-    WebbrowserWidget* webbrowserWidget_;
-    DisplayGroupGraphicsViewProxy* dggv_;
+    QLineEdit* urlLineEdit_;
+    QSpinBox* widthSpinBox_;
+    QSpinBox* heightSpinBox_;
 };
 
-#endif // MASTERWINDOW_H
+#endif // WEBBROWSERWIDGET_H

@@ -37,96 +37,80 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MASTERWINDOW_H
-#define MASTERWINDOW_H
+#include "WebbrowserWidget.h"
 
-#include "config.h"
-#include "types.h"
+#include <QtGui>
 
-#include <QMainWindow>
-#include <QMimeData>
+#define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
 
-class BackgroundWidget;
-class Configuration;
-class DisplayGroupGraphicsViewProxy;
-class DisplayGroupGraphicsView;
-class WebbrowserWidget;
+#define SPIN_BOX_MIN_VALUE 0
+#define SPIN_BOX_MAX_VALUE 10000
 
-/**
- * The main UI window for Master applications.
- *
- * It lets users control the contents displayed on the wall.
- */
-class MasterWindow : public QMainWindow
+#define WEBBROWSER_DEFAULT_WIDTH 1280
+#define WEBBROWSER_DEFAULT_HEIGHT 1024
+
+WebbrowserWidget::WebbrowserWidget(QWidget* parent_)
+    : QDialog(parent_)
+    , widthSpinBox_(0)
+    , heightSpinBox_(0)
 {
-    Q_OBJECT
+    setWindowTitle(tr("Open Webbrowser"));
 
-public:
-    /** Constructor. */
-    MasterWindow(DisplayGroupPtr displayGroup, Configuration& config);
+    // URL input
 
-    /** Destructor. */
-    ~MasterWindow();
+    QLabel* urlLabel = new QLabel("Url: ", this);
+    urlLineEdit_ = new QLineEdit(WEBBROWSER_DEFAULT_URL, this);
+    urlLabel->setBuddy(urlLineEdit_);
 
-    /** Get the GraphicsView used for touch interaction. */
-    DisplayGroupGraphicsView* getGraphicsView();
+    // Standard buttons
 
-    /** Get the display options that change during runtime. */
-    OptionsPtr getOptions() const;
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok |
+                                                       QDialogButtonBox::Cancel,
+                                                       Qt::Horizontal, this);
 
-signals:
-    /** Emitted when users want to open a dock. */
-    void openDock(QPointF pos);
+    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 
-    /** Emitted when users want to hide the dock. */
-    void hideDock();
+    // Webbrowser dimensions
 
-    /** Emitted when users want to open a webbrowser. */
-    void openWebBrowser(QPointF pos, QSize size, QString url);
+    QLabel* widthLabel = new QLabel("Width: ", this);
 
-#if ENABLE_SKELETON_SUPPORT
-    void enableSkeletonTracking();
-    void disableSkeletonTracking();
-#endif
+    widthSpinBox_ = new QSpinBox(this);
+    widthSpinBox_->setMinimum(SPIN_BOX_MIN_VALUE);
+    widthSpinBox_->setMaximum(SPIN_BOX_MAX_VALUE);
+    widthSpinBox_->setValue(WEBBROWSER_DEFAULT_WIDTH);
 
-protected:
-    ///@{
-    /** Drag events re-implemented from QMainWindow. */
-    void dragEnterEvent(QDragEnterEvent *event) override;
-    void dropEvent(QDropEvent *event) override;
-    ///@}
+    QLabel* heightLabel = new QLabel("Height: ", this);
 
-private slots:
-    void openContent();
-    void openContentsDirectory();
+    heightSpinBox_ = new QSpinBox(this);
+    heightSpinBox_->setMinimum(SPIN_BOX_MIN_VALUE);
+    heightSpinBox_->setMaximum(SPIN_BOX_MAX_VALUE);
+    heightSpinBox_->setValue(WEBBROWSER_DEFAULT_HEIGHT);
 
-    void saveState();
-    void loadState();
+    // Layout
 
-    void computeImagePyramid();
+    QGridLayout *gridLayout = new QGridLayout;
+    gridLayout->setColumnStretch(1, 1);
+    gridLayout->setColumnMinimumWidth(1, 250);
+    setLayout(gridLayout);
 
-#if ENABLE_SKELETON_SUPPORT
-    void setEnableSkeletonTracking(bool enable);
-#endif
-    void openAboutWidget();
+    gridLayout->addWidget(urlLabel, 0, 0);
+    gridLayout->addWidget(urlLineEdit_, 0, 1);
 
-private:
-    void setupMasterWindowUI();
+    gridLayout->addWidget(widthLabel, 1, 0);
+    gridLayout->addWidget(widthSpinBox_, 1, 1);
 
-    void addContentDirectory(const QString &directoryName, unsigned int gridX=0, unsigned int gridY=0);
-    void loadState(const QString &filename);
+    gridLayout->addWidget(heightLabel, 2, 0);
+    gridLayout->addWidget(heightSpinBox_, 2, 1);
 
-    void estimateGridSize(unsigned int numElem, unsigned int& gridX, unsigned int& gridY);
+    gridLayout->addWidget(buttonBox, 3, 1);
+}
 
-    QStringList extractValidContentUrls(const QMimeData* mimeData);
-    QStringList extractFolderUrls(const QMimeData *mimeData);
-    QString extractStateFile(const QMimeData *mimeData);
+void WebbrowserWidget::accept()
+{
+    const QSize dimensions(widthSpinBox_->value(), heightSpinBox_->value());
 
-    DisplayGroupPtr displayGroup_;
-    OptionsPtr options_;
-    BackgroundWidget* backgroundWidget_;
-    WebbrowserWidget* webbrowserWidget_;
-    DisplayGroupGraphicsViewProxy* dggv_;
-};
+    emit openWebBrowser(QPointF(.5,.5), dimensions, urlLineEdit_->text());
 
-#endif // MASTERWINDOW_H
+    QDialog::accept();
+}

@@ -55,6 +55,7 @@
 #include "DisplayGroupGraphicsView.h"
 #include "DisplayGroupListWidgetProxy.h"
 #include "BackgroundWidget.h"
+#include "WebbrowserWidget.h"
 
 #if ENABLE_PYTHON_SUPPORT
     #include "PythonConsole.h"
@@ -62,19 +63,21 @@
 
 #include <QtGui>
 
-#define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
-
 MasterWindow::MasterWindow(DisplayGroupPtr displayGroup, Configuration& config)
     : QMainWindow()
     , displayGroup_(displayGroup)
     , options_(new Options)
     , backgroundWidget_(new BackgroundWidget(config, this))
+    , webbrowserWidget_(new WebbrowserWidget(this))
 {
     backgroundWidget_->setModal(true);
     connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),
             options_.get(), SLOT(setBackgroundColor(QColor)));
     connect(backgroundWidget_, SIGNAL(backgroundContentChanged(ContentPtr)),
             displayGroup_.get(), SLOT(setBackgroundContent(ContentPtr)));
+
+    connect(webbrowserWidget_, SIGNAL(openWebBrowser(QPointF,QSize,QString)),
+            this, SIGNAL(openWebBrowser(QPointF,QSize,QString)));
 
 #if ENABLE_PYTHON_SUPPORT
     PythonConsole::init();
@@ -160,7 +163,7 @@ void MasterWindow::setupMasterWindowUI()
     // Open webbrowser action
     QAction * webbrowserAction = new QAction("Web Browser", this);
     webbrowserAction->setStatusTip("Open a web browser");
-    connect(webbrowserAction, SIGNAL(triggered()), this, SLOT(openWebBrowser()));
+    connect(webbrowserAction, SIGNAL(triggered()), webbrowserWidget_, SLOT(show()));
 
 #if ENABLE_PYTHON_SUPPORT
     // Python console action
@@ -391,18 +394,6 @@ void MasterWindow::openContentsDirectory()
         assert( gridX >= 0 && gridY >= 0 );
 
         addContentDirectory(directoryName, gridX, gridY);
-    }
-}
-
-void MasterWindow::openWebBrowser()
-{
-    bool ok;
-    const QString url = QInputDialog::getText(this, tr("New WebBrowser Content"),
-                                              tr("URL:"), QLineEdit::Normal,
-                                              WEBBROWSER_DEFAULT_URL, &ok);
-    if (ok && !url.isEmpty())
-    {
-        emit openWebBrowser(QPointF(.5,.5), QSize(), url);
     }
 }
 
