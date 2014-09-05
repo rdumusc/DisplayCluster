@@ -42,6 +42,7 @@
 #include "State.h"
 #include "StatePreview.h"
 #include "DisplayGroup.h"
+#include "ContentFactory.h"
 
 #include "globals.h"
 #include "configuration/Configuration.h"

@@ -235,11 +235,11 @@ void MasterWindow::setupMasterWindowUI()
     dggv_ = new DisplayGroupGraphicsView(this);
     mainWidget->addTab((QWidget *)dggv_, "Display group 0");
     // Forward DisplayGroup events
-    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr)),
             dggv_, SLOT(addContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr)),
             dggv_, SLOT(removeContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr)),
             dggv_, SLOT(moveContentWindowToFront(ContentWindowPtr)));
     // Forward background touch events
     connect(dggv_, SIGNAL(backgroundTap(QPointF)), this, SIGNAL(hideDock()));
@@ -257,11 +257,11 @@ void MasterWindow::setupMasterWindowUI()
     // add the list widget
     DisplayGroupListWidget* dglwp = new DisplayGroupListWidget(this);
     // Forward DisplayGroup events
-    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr)),
             dglwp, SLOT(addContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr)),
             dglwp, SLOT(removeContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr)),
             dglwp, SLOT(moveContentWindowToFront(ContentWindowPtr)));
     contentsLayout->addWidget(dglwp);
 }

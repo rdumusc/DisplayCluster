@@ -62,7 +62,6 @@ list(APPEND SRCS
     ContentWindowListWidgetItem.cpp
     DisplayGroup.cpp
     DisplayGroupRenderer.cpp
-    DisplayGroupInterface.cpp
     DisplayGroupGraphicsScene.cpp
     DisplayGroupGraphicsView.cpp
     DisplayGroupListWidget.cpp
@@ -163,7 +162,6 @@ list(APPEND MOC_HEADERS
     ContentWindowInterface.h
     ContentWindow.h
     DisplayGroup.h
-    DisplayGroupInterface.h
     DisplayGroupGraphicsView.h
     DisplayGroupListWidget.h
     DisplayGroupRenderer.h

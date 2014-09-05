@@ -39,20 +39,20 @@
 #ifndef DISPLAY_GROUP_H
 #define DISPLAY_GROUP_H
 
-#include "config.h"
 #include "types.h"
-
-#include "DisplayGroupInterface.h"
 
 #include <boost/serialization/access.hpp>
 #include <boost/enable_shared_from_this.hpp>
+
+#include <QObject>
+#include <QUuid>
 
 /**
  * A collection of ContentWindows.
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class DisplayGroup : public DisplayGroupInterface,
+class DisplayGroup : public QObject,
         public boost::enable_shared_from_this<DisplayGroup>
 {
     Q_OBJECT
@@ -62,7 +62,16 @@ public:
     DisplayGroup();
 
     /** Destructor */
-    ~DisplayGroup();
+    virtual ~DisplayGroup();
+
+    /** Add a content window. */
+    void addContentWindow( ContentWindowPtr contentWindow );
+
+    /** Remove a content window. */
+    void removeContentWindow( ContentWindowPtr contentWindow );
+
+    /** Move a content window to the front. */
+    void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
     /** Get the background content window. */
     ContentWindowPtr getBackgroundContentWindow() const;
@@ -76,28 +85,46 @@ public:
     /**
      * Get the active window.
      * @return A shared pointer to the active window. Can be empty if there is
-     *         no Window available. @see isEmpty().
+     *         no Window available.
+     * @see isEmpty().
      */
     ContentWindowPtr getActiveWindow() const;
 
-signals:
-    /** Emitted whenever the DisplayGroup is modified */
-    void modified(DisplayGroupPtr displayGroup);
+    /** Get all windows. */
+    ContentWindowPtrs getContentWindows() const;
+
+    /** Get a single window by its id */
+    ContentWindowPtr getContentWindow( const QUuid& id ) const;
+
+    /**
+     * Replace the content windows.
+     * @param contentWindows The list of windows to set.
+     */
+    void setContentWindows( ContentWindowPtrs contentWindows );
 
 public slots:
-    //@{
-    /** Re-implemented from DisplayGroupInterface */
-    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    //@}
+    /** Clear all ContentWindows */
+    void clear();
 
     /**
      * Set the background content.
      * @param content The content to set.
      *                A null pointer removes the current background.
      */
-    void setBackgroundContent(ContentPtr content);
+    void setBackgroundContent( ContentPtr content );
+
+signals:
+    /** Emitted whenever the DisplayGroup is modified */
+    void modified( DisplayGroupPtr displayGroup );
+
+    /** Emitted when a content window is added. */
+    void contentWindowAdded( ContentWindowPtr contentWindow );
+
+    /** Emitted when a content window is removed. */
+    void contentWindowRemoved( ContentWindowPtr contentWindow );
+
+    /** Emitted when a content window is moved to the front. */
+    void contentWindowMovedToFront( ContentWindowPtr contentWindow );
 
 private slots:
     void sendDisplayGroup();
@@ -105,15 +132,16 @@ private slots:
 private:
     friend class boost::serialization::access;
 
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    template< class Archive >
+    void serialize( Archive & ar, const unsigned int )
     {
         ar & contentWindows_;
         ar & backgroundContent_;
     }
 
-    void watchChanges(ContentWindowPtr contentWindow);
+    void watchChanges( ContentWindowPtr contentWindow );
 
+    ContentWindowPtrs contentWindows_;
     ContentWindowPtr backgroundContent_;
 };
 

@@ -166,7 +166,6 @@ private slots:
      *
      * @param contentWindow the content window that might be associated
      *                      to a streamer
-     * @param source not interesting here
      */
     void onContentWindowRemoved( ContentWindowPtr contentWindow );
 

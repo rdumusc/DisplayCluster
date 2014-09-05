@@ -41,6 +41,7 @@
 
 #include "configuration/Configuration.h"
 #include "ContentWindow.h"
+#include "ContentFactory.h"
 #include "DisplayGroup.h"
 #include "log.h"
 
@@ -48,7 +49,7 @@ PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
     , displayGroup_( displayGroup )
 {
-    connect(&displayGroup, SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface*)),
+    connect(&displayGroup, SIGNAL(contentWindowRemoved(ContentWindowPtr)),
             this, SLOT(onContentWindowRemoved(ContentWindowPtr)));
 }
 

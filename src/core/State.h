@@ -91,8 +91,8 @@ private:
     /** Legacy methods. @deprecated */
     bool checkVersion_( QXmlQuery& query ) const;
     ContentPtr loadContent_( QXmlQuery& query, const int index ) const;
-    ContentWindowPtr restoreContent_( QXmlQuery& query,
-                                             ContentPtr content, const int index ) const;
+    ContentWindowPtr restoreContent_( QXmlQuery& query, ContentPtr content,
+                                      const int index ) const;
 };
 
 #endif

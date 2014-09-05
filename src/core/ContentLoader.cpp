@@ -41,6 +41,7 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
+#include "ContentFactory.h"
 
 ContentLoader::ContentLoader(DisplayGroupPtr displayGroup)
     : displayGroup_(displayGroup)

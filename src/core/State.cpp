@@ -40,13 +40,13 @@
 #include "State.h"
 
 #include "ContentWindow.h"
+#include "ContentFactory.h"
 #include "log.h"
 
 #include <QtXml/QtXml>
 #include <QtXmlPatterns/QXmlQuery>
 
 #define LEGACY_STATE_FILE_VERSION_NUMBER 1
-
 
 State::State()
 {
@@ -147,9 +147,8 @@ ContentPtr State::loadContent_( QXmlQuery& query, const int index ) const
     return ContentFactory::getContent(uri);
 }
 
-ContentWindowPtr State::restoreContent_( QXmlQuery& query,
-                                                ContentPtr content,
-                                                const int index ) const
+ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,
+                                         const int index ) const
 {
     double x, y, w, h, centerX, centerY, zoom;
     x = y = w = h = centerX = centerY = zoom = -1.;

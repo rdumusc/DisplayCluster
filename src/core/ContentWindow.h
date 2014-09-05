@@ -40,7 +40,7 @@
 #define CONTENT_WINDOW_H
 
 #include "ContentWindowInterface.h"
-#include "Content.h" // need pyContent for pyContentWindow
+#include "Content.h" // needed for serialization
 
 #include "serializationHelpers.h"
 
@@ -170,38 +170,5 @@ private:
 };
 
 DECLARE_SERIALIZE_FOR_XML(ContentWindow)
-
-// typedef needed for SIP
-typedef ContentWindowPtr pContentWindow;
-
-class pyContentWindow
-{
-public:
-
-    pyContentWindow(pyContent content)
-    {
-        ContentWindowPtr contentWindow(new ContentWindow(content.get()));
-        ptr_ = contentWindow;
-    }
-
-    pyContentWindow(ContentWindowPtr contentWindow)
-    {
-        ptr_ = contentWindow;
-    }
-
-    ContentWindowPtr get()
-    {
-        return ptr_;
-    }
-
-    pyContent getPyContent()
-    {
-        return pyContent(get()->getContent());
-    }
-
-private:
-
-    ContentWindowPtr ptr_;
-};
 
 #endif

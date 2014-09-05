@@ -40,7 +40,6 @@
 #define CONTENT_H
 
 #include "types.h"
-#include "ContentFactory.h"
 #include "ContentType.h"
 
 #include <boost/serialization/access.hpp>
@@ -49,6 +48,8 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+#include <QObject>
 
 class WallToWallChannel;
 
@@ -65,96 +66,63 @@ class Content : public QObject
 {
     Q_OBJECT
 
-    public:
-        /** Constructor **/
-        Content(QString uri = "");
+public:
+    /** Constructor **/
+    Content(QString uri = "");
 
-        /** Get the content URI **/
-        const QString& getURI() const;
+    /** Get the content URI **/
+    const QString& getURI() const;
 
-        /** Get the content type **/
-        virtual CONTENT_TYPE getType() = 0;
+    /** Get the content type **/
+    virtual CONTENT_TYPE getType() = 0;
 
-        /**
-         * Read content metadata from the data source.
-         * Used on Rank0 for file-based content types to refresh data from source URI.
-         * @return true if the informations could be read.
-        **/
-        virtual bool readMetadata() = 0;
+    /**
+     * Read content metadata from the data source.
+     * Used on Rank0 for file-based content types to refresh data from source URI.
+     * @return true if the informations could be read.
+    **/
+    virtual bool readMetadata() = 0;
 
-        /** Get the dimensions. */
-        void getDimensions(int &width, int &height);
+    /** Get the dimensions. */
+    void getDimensions(int &width, int &height);
 
-        /** Set the dimensions. */
-        void setDimensions(int width, int height);
+    /** Set the dimensions. */
+    void setDimensions(int width, int height);
 
-        /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
-        void blockAdvance( bool block ) { blockAdvance_ = block; }
+    /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
+    void blockAdvance( bool block ) { blockAdvance_ = block; }
 
-        /** Re-implement this method to update or synchronize before rendering. */
-        virtual void preRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
+    /** Re-implement this method to update or synchronize before rendering. */
+    virtual void preRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
 
-        /** Re-implement this method to update or synchronize after rendering. */
-        virtual void postRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
+    /** Re-implement this method to update or synchronize after rendering. */
+    virtual void postRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
 
-    signals:
-        /** Emitted when dimensions have changed */
-        void dimensionsChanged(int width, int height);
+signals:
+    /** Emitted when dimensions have changed */
+    void dimensionsChanged(int width, int height);
 
-        /** Emitted by any Content subclass when its state has been modified */
-        void modified();
+    /** Emitted by any Content subclass when its state has been modified */
+    void modified();
 
-    protected:
-        friend class boost::serialization::access;
+protected:
+    friend class boost::serialization::access;
 
-        template<class Archive>
-        void serialize(Archive & ar, const unsigned int)
-        {
-            ar & boost::serialization::make_nvp("uri", uri_);
-            ar & boost::serialization::make_nvp("width", width_);
-            ar & boost::serialization::make_nvp("height", height_);
-            ar & boost::serialization::make_nvp("block_advance", blockAdvance_);
-        }
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int)
+    {
+        ar & boost::serialization::make_nvp("uri", uri_);
+        ar & boost::serialization::make_nvp("width", width_);
+        ar & boost::serialization::make_nvp("height", height_);
+        ar & boost::serialization::make_nvp("block_advance", blockAdvance_);
+    }
 
-        QString uri_;
-        int width_;
-        int height_;
-        bool blockAdvance_;
+    QString uri_;
+    int width_;
+    int height_;
+    bool blockAdvance_;
 };
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT(Content)
-
-// typedef needed for SIP
-typedef ContentPtr pContent;
-
-class pyContent {
-
-    public:
-
-        pyContent(const char * str)
-        {
-            ContentPtr c(ContentFactory::getContent(QString::fromAscii(str)));
-            ptr_ = c;
-        }
-
-        pyContent(ContentPtr c)
-        {
-            ptr_ = c;
-        }
-
-        ContentPtr get()
-        {
-            return ptr_;
-        }
-
-        const char * getURI()
-        {
-            return ptr_->getURI().toAscii();
-        }
-
-    protected:
-
-        ContentPtr ptr_;
-};
 
 #endif
