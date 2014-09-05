@@ -108,18 +108,18 @@ bool SVG::setImageData(const QByteArray& imageData)
 void SVG::render(const QRectF& texCoords)
 {
     // get on-screen and full rectangle corresponding to the window in pixel units
-    const QRectF screenRect = renderContext_->getGLWindow()->getProjectedPixelRect(true);
-    const QRectF fullRect = renderContext_->getGLWindow()->getProjectedPixelRect(false); // maps to [tX, tY, tW, tH]
+    const QRectF screenRect = GLWindow::getProjectedPixelRect(true);
+    const QRectF fullRect = GLWindow::getProjectedPixelRect(false); // maps to [tX, tY, tW, tH]
 
     // If we're not visible or we don't have a valid SVG, we're done.
     if(screenRect.isEmpty() || !svgRenderer_.isValid())
     {
-        textureData_.erase(renderContext_->getActiveGLWindow()->getTileIndex());
+        textureData_.erase(renderContext_->getActiveGLWindowIndex());
         return;
     }
 
     // Get the texture for the current GLWindow
-    SVGTextureData& textureData = textureData_[renderContext_->getActiveGLWindow()->getTileIndex()];
+    SVGTextureData& textureData = textureData_[renderContext_->getActiveGLWindowIndex()];
 
     const QRectF textureRect = computeTextureRect(screenRect, fullRect, texCoords);
     const QSize textureSize(round(screenRect.width()), round(screenRect.height()));

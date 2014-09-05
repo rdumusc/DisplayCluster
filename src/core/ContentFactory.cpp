@@ -52,7 +52,7 @@
 #include "MovieContent.h"
 #if ENABLE_PDF_SUPPORT
 #  include "PDFContent.h"
-#  include "DisplayGroupManager.h"
+#  include "DisplayGroup.h"
 #endif
 #include "PixelStreamContent.h"
 

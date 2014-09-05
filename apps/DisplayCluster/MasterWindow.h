@@ -47,8 +47,10 @@
 #include <QMimeData>
 
 class BackgroundWidget;
+class Configuration;
 class DisplayGroupGraphicsViewProxy;
 class DisplayGroupGraphicsView;
+class WebbrowserWidget;
 
 /**
  * The main UI window for Master applications.
@@ -61,7 +63,7 @@ class MasterWindow : public QMainWindow
 
 public:
     /** Constructor. */
-    MasterWindow(DisplayGroupManagerPtr displayGroup);
+    MasterWindow(DisplayGroupPtr displayGroup, Configuration& config);
 
     /** Destructor. */
     ~MasterWindow();
@@ -74,7 +76,7 @@ public:
 
 signals:
     /** Emitted when users want to open a dock. */
-    void openDock(QPointF pos, QSize size, QString rootDir);
+    void openDock(QPointF pos);
 
     /** Emitted when users want to hide the dock. */
     void hideDock();
@@ -102,10 +104,6 @@ private slots:
     void loadState();
 
     void computeImagePyramid();
-    void showBackgroundWidget();
-
-    void openWebBrowser();
-    void openDock(const QPointF position);
 
 #if ENABLE_SKELETON_SUPPORT
     void setEnableSkeletonTracking(bool enable);
@@ -124,9 +122,10 @@ private:
     QStringList extractFolderUrls(const QMimeData *mimeData);
     QString extractStateFile(const QMimeData *mimeData);
 
-    DisplayGroupManagerPtr displayGroup_;
+    DisplayGroupPtr displayGroup_;
     OptionsPtr options_;
     BackgroundWidget* backgroundWidget_;
+    WebbrowserWidget* webbrowserWidget_;
     DisplayGroupGraphicsViewProxy* dggv_;
 };
 

@@ -68,7 +68,7 @@ public:
      * Set the ContentWindow to be rendered.
      * @see render()
      */
-    void setContentWindow(ContentWindowManagerPtr window);
+    void setContentWindow(ContentWindowPtr window);
 
     /** Display the window borders. */
     void setShowWindowBorders(const bool show);
@@ -82,7 +82,7 @@ public:
 
 private:
     FactoriesPtr factories_;
-    ContentWindowManagerPtr window_;
+    ContentWindowPtr window_;
     GLQuad quad_;
 
     bool showWindowBorders_;

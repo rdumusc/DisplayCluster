@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,38 +37,18 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_LIST_WIDGET_PROXY_H
-#define DISPLAY_GROUP_LIST_WIDGET_PROXY_H
+#include "DisplayGroupAdapter.h"
 
-#include "DisplayGroupInterface.h"
+#include "DisplayGroup.h"
 
-class QListWidget;
-class QListWidgetItem;
+DisplayGroupAdapter::DisplayGroupAdapter(DisplayGroupPtr displayGroup)
+    : displayGroup_(displayGroup)
+{}
 
-class DisplayGroupListWidgetProxy : public DisplayGroupInterface
+DisplayGroupAdapter::~DisplayGroupAdapter()
+{}
+
+bool DisplayGroupAdapter::hasWindows() const
 {
-    Q_OBJECT
-
-public:
-    DisplayGroupListWidgetProxy(DisplayGroupPtr displayGroup);
-    ~DisplayGroupListWidgetProxy();
-
-    QListWidget* getListWidget();
-
-    // re-implemented DisplayGroupInterface slots
-    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-
-private slots:
-    void moveListWidgetItemToFront(QListWidgetItem * item);
-
-private:
-    // we make this a member since we can't have multiple inheritance of QObject and still use signals/slots
-    // see the "Diamond problem"
-    QListWidget* listWidget_;
-
-    void refreshListWidget();
-};
-
-#endif
+    return displayGroup_ && !displayGroup_->isEmpty();
+}

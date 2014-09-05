@@ -92,7 +92,7 @@ class JoystickThread : public QThread {
 
     public:
 
-        JoystickThread(DisplayGroupManagerPtr displayGroup);
+        JoystickThread(DisplayGroupPtr displayGroup);
         ~JoystickThread();
 
     protected:
@@ -114,7 +114,7 @@ class JoystickThread : public QThread {
         std::vector<boost::shared_ptr<DisplayGroupJoystick> > displayGroupJoysticks_;
         std::vector<JoystickState> states_;
 
-        DisplayGroupManagerPtr displayGroup_;
+        DisplayGroupPtr displayGroup_;
 
         void joystickMoveMarker(int index, float dx, float dy);
         void joystickPan(int index, float dx, float dy);

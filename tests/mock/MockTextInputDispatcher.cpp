@@ -40,7 +40,7 @@
 #include "MockTextInputDispatcher.h"
 
 MockTextInputDispatcher::MockTextInputDispatcher(QObject *parentObject)
-    : TextInputDispatcher(DisplayGroupManagerPtr(), parentObject)
+    : TextInputDispatcher(DisplayGroupPtr(), parentObject)
     , key_('0')
 {
 }

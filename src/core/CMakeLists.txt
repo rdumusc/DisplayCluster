@@ -102,12 +102,12 @@ list(APPEND SRCS
     ContentLoader.cpp
     ContentType.cpp
     ContentInteractionDelegate.cpp
-    ContentWindowManager.cpp
+    ContentWindow.cpp
     ContentWindowRenderer.cpp
     ContentWindowInterface.cpp
     ContentWindowGraphicsItem.cpp
     ContentWindowListWidgetItem.cpp
-    DisplayGroupManager.cpp
+    DisplayGroup.cpp
     DisplayGroupRenderer.cpp
     DisplayGroupInterface.cpp
     DisplayGroupGraphicsScene.cpp
@@ -199,7 +199,7 @@ list(APPEND SRCS
     thumbnail/ThumbnailGenerator.cpp
     thumbnail/ThumbnailGeneratorFactory.cpp
     ws/AsciiToQtKeyCodeMapper.cpp
-    ws/DisplayGroupManagerAdapter.cpp
+    ws/DisplayGroupAdapter.cpp
     ws/TextInputDispatcher.cpp
     ws/TextInputHandler.cpp
     ws/WebServiceServer.cpp
@@ -209,8 +209,8 @@ list(APPEND MOC_HEADERS
     CommandHandler.h
     Content.h
     ContentWindowInterface.h
-    ContentWindowManager.h
-    DisplayGroupManager.h
+    ContentWindow.h
+    DisplayGroup.h
     DisplayGroupInterface.h
     DisplayGroupGraphicsView.h
     DisplayGroupGraphicsViewProxy.h

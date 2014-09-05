@@ -53,9 +53,9 @@ public:
     /**
      * Constructor
      *
-     * @param displayGroupManager The DisplayGroupManager to be saved or restored.
+     * @param displayGroup The DisplayGroup to be saved or restored.
      */
-    StateSerializationHelper(DisplayGroupManagerPtr displayGroupManager);
+    StateSerializationHelper(DisplayGroupPtr displayGroup);
 
     /**
      * Save the state of the application.
@@ -71,11 +71,11 @@ public:
     bool load(const QString& filename);
 
 private:
-    DisplayGroupManagerPtr displayGroupManager_;
+    DisplayGroupPtr displayGroup_;
 
-    void validate(ContentWindowManagerPtrs& contentWindows) const;
-    void finalize(ContentWindowManagerPtr contentWindow) const;
-    bool isPixelStream(ContentWindowManagerPtr contentWindow) const;
+    void validate(ContentWindowPtrs& contentWindows) const;
+    void finalize(ContentWindowPtr contentWindow) const;
+    bool isPixelStream(ContentWindowPtr contentWindow) const;
 };
 
 #endif // STATESERIALIZATIONHELPER_H

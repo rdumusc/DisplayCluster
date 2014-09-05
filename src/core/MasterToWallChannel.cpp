@@ -40,8 +40,8 @@
 #include "MasterToWallChannel.h"
 
 #include "MPIChannel.h"
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 #include "Options.h"
 #include "Markers.h"
 #include "PixelStreamFrame.h"
@@ -59,7 +59,7 @@ void MasterToWallChannel::broadcast(const T& object, const MPIMessageType type)
     mpiChannel_->broadcast(type, serializedString);
 }
 
-void MasterToWallChannel::send(DisplayGroupManagerPtr displayGroup)
+void MasterToWallChannel::send(DisplayGroupPtr displayGroup)
 {
     broadcast(displayGroup, MPI_MESSAGE_TYPE_DISPLAYGROUP);
 }

@@ -71,12 +71,12 @@ public:
     virtual void render(const QRectF& textCoord) = 0;
 
     /**
-     * Set the render context to render the object on Rank 1-N
+     * Set the render context.
      * @param renderContext The render context
      */
     void setRenderContext(RenderContext* renderContext);
 
-    /** Get the render context (only set on Rank 1-N) */
+    /** Get the render context. */
     RenderContext* getRenderContext() const;
 
     /**

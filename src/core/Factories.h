@@ -86,10 +86,10 @@ public:
     void clear();
 
     /** Update the objects before rendering. */
-    void preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+    void preRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel);
 
     /** Update the objects after rendering and garbarge-collect unused ones. */
-    void postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel);
+    void postRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel);
 
     //@{
     /** Getters for specific Factory types. */

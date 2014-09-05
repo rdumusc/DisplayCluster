@@ -143,8 +143,8 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
     connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
             renderController_.get(), SLOT(updateQuit()));
 
-    connect(fromMasterChannel_.get(), SIGNAL(received(DisplayGroupManagerPtr)),
-            renderController_.get(), SLOT(updateDisplayGroup(DisplayGroupManagerPtr)));
+    connect(fromMasterChannel_.get(), SIGNAL(received(DisplayGroupPtr)),
+            renderController_.get(), SLOT(updateDisplayGroup(DisplayGroupPtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
             renderController_.get(), SLOT(updateOptions(OptionsPtr)));

@@ -54,7 +54,7 @@ class TouchListener : public TUIO::TuioListener
 {
     public:
 
-        TouchListener(DisplayGroupManagerPtr displayGroup);
+        TouchListener(DisplayGroupPtr displayGroup);
 
         void addTuioObject(TUIO::TuioObject *tobj);
         void updateTuioObject(TUIO::TuioObject *tobj);

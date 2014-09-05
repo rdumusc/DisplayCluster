@@ -47,7 +47,6 @@
 
 #include "types.h"
 
-class DisplayGroupManager;
 class DisplayGroupInterface;
 class EventReceiver;
 
@@ -63,10 +62,10 @@ public:
     /**
      * Create a window manager that handles windows for streamers.
      *
-     * @param displayGroupManager the content windows of streamers will be added
-     *                            to and removed from this DisplayGroupManager
+     * @param displayGroup the content windows of streamers will be added
+     *                     to and removed from this DisplayGroup.
      */
-    PixelStreamWindowManager( DisplayGroupManager& displayGroupManager );
+    PixelStreamWindowManager( DisplayGroup& displayGroup );
 
     ~PixelStreamWindowManager();
 
@@ -79,14 +78,14 @@ public:
      * @param size the desired normalized size of the window
      * @return the window of the streamer. Is never NULL.
      */
-    ContentWindowManagerPtr createContentWindow( const QString& uri,
-                                                 const QPointF& pos,
-                                                 const QSizeF& size );
+    ContentWindowPtr createContentWindow( const QString& uri,
+                                          const QPointF& pos,
+                                          const QSizeF& size );
 
     /**
      * Remove the associated content window from the given stream. This should
      * usually happen automatically once the stream is closed or the content
-     * window is closed from the DisplayGroupManager.
+     * window is closed from the DisplayGroup.
      *
      * @param uri the URI of the streamer
      */
@@ -97,7 +96,7 @@ public:
      * @return the associated window of the given streamer. Can be NULL.
      * @todo This should not be public! See DISCL-230
      */
-    ContentWindowManagerPtr getContentWindow( const QString& uri ) const;
+    ContentWindowPtr getContentWindow( const QString& uri ) const;
 
     /**
      * Update the dimension of the content (and maybe the window) when the size
@@ -166,17 +165,17 @@ private slots:
     /**
      * This will close the streamer that is associated with the given window.
      *
-     * @param contentWindowManager the content window that might be associated
+     * @param contentWindow the content window that might be associated
      *                             to a streamer
      * @param source not interesting here
      */
-    void onContentWindowManagerRemoved( ContentWindowManagerPtr contentWindowManager,
-                                        DisplayGroupInterface* source );
+    void onContentWindowRemoved( ContentWindowPtr contentWindow,
+                                 DisplayGroupInterface* source );
 
 private:
-    DisplayGroupManager& displayGroupManager_;
+    DisplayGroup& displayGroup_;
 
-    typedef std::map<QString, ContentWindowManagerPtr> ContentWindowMap;
+    typedef std::map<QString, ContentWindowPtr> ContentWindowMap;
     ContentWindowMap streamerWindows_;
 };
 

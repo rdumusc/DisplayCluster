@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,38 +37,28 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_LIST_WIDGET_PROXY_H
-#define DISPLAY_GROUP_LIST_WIDGET_PROXY_H
+#ifndef DISPLAYGROUPADAPTER_H
+#define DISPLAYGROUPADAPTER_H
 
-#include "DisplayGroupInterface.h"
+#include "types.h"
 
-class QListWidget;
-class QListWidgetItem;
-
-class DisplayGroupListWidgetProxy : public DisplayGroupInterface
+/**
+ * Adapter class for DisplayGroup with virtual methods for unit testing.
+ */
+class DisplayGroupAdapter
 {
-    Q_OBJECT
-
 public:
-    DisplayGroupListWidgetProxy(DisplayGroupPtr displayGroup);
-    ~DisplayGroupListWidgetProxy();
+    /** Constructor. */
+    DisplayGroupAdapter(DisplayGroupPtr displayGroup);
 
-    QListWidget* getListWidget();
+    /** Destructor. */
+    virtual ~DisplayGroupAdapter();
 
-    // re-implemented DisplayGroupInterface slots
-    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-
-private slots:
-    void moveListWidgetItemToFront(QListWidgetItem * item);
+    /** Does the DisplayGroup have any windows. */
+    virtual bool hasWindows() const;
 
 private:
-    // we make this a member since we can't have multiple inheritance of QObject and still use signals/slots
-    // see the "Diamond problem"
-    QListWidget* listWidget_;
-
-    void refreshListWidget();
+    DisplayGroupPtr displayGroup_;
 };
 
-#endif
+#endif // DISPLAYGROUPADAPTER_H

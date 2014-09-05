@@ -39,8 +39,8 @@
 
 #include "DisplayGroupRenderer.h"
 
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 #include "Marker.h"
 
 DisplayGroupRenderer::DisplayGroupRenderer(FactoriesPtr factories)
@@ -57,7 +57,7 @@ void DisplayGroupRenderer::render()
         return;
 
     renderBackgroundContent(displayGroup_->getBackgroundContentWindow());
-    renderContentWindows(displayGroup_->getContentWindowManagers());
+    renderContentWindows(displayGroup_->getContentWindows());
 
 #if ENABLE_SKELETON_SUPPORT
     if (showSkeletons_)
@@ -77,12 +77,12 @@ void DisplayGroupRenderer::setShowSkeleton(const bool show)
 }
 #endif
 
-void DisplayGroupRenderer::setDisplayGroup(DisplayGroupManagerPtr displayGroup)
+void DisplayGroupRenderer::setDisplayGroup(DisplayGroupPtr displayGroup)
 {
     displayGroup_ = displayGroup;
 }
 
-void DisplayGroupRenderer::renderBackgroundContent(ContentWindowManagerPtr backgroundContentWindow)
+void DisplayGroupRenderer::renderBackgroundContent(ContentWindowPtr backgroundContentWindow)
 {
     // Render background content window
     if (backgroundContentWindow)
@@ -97,11 +97,11 @@ void DisplayGroupRenderer::renderBackgroundContent(ContentWindowManagerPtr backg
     }
 }
 
-void DisplayGroupRenderer::renderContentWindows(ContentWindowManagerPtrs contentWindowManagers)
+void DisplayGroupRenderer::renderContentWindows(ContentWindowPtrs contentWindows)
 {
-    const unsigned int windowCount = contentWindowManagers.size();
+    const unsigned int windowCount = contentWindows.size();
     unsigned int i = 0;
-    for(ContentWindowManagerPtrs::iterator it = contentWindowManagers.begin(); it != contentWindowManagers.end(); ++it)
+    for(ContentWindowPtrs::iterator it = contentWindows.begin(); it != contentWindows.end(); ++it)
     {
         // It is currently not possible to cull windows that are invisible as this conflics
         // with the "garbage collection" mechanism for Contents. In fact, "stale" objects are objects

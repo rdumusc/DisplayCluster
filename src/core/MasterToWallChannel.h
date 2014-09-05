@@ -62,7 +62,7 @@ public slots:
      * Send the given DisplayGroup to the wall processes.
      * @param displayGroup The DisplayGroup to send
      */
-    void send(DisplayGroupManagerPtr displayGroup);
+    void send(DisplayGroupPtr displayGroup);
 
     /**
      * Send the given Options to the wall processes.

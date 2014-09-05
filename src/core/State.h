@@ -45,7 +45,7 @@
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/vector.hpp>
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 
 class QString;
 class QXmlQuery;
@@ -65,10 +65,10 @@ public:
      * Constructor
      * @param contentWindows a list of contentWindows to serialize
      */
-    State(const ContentWindowManagerPtrs& contentWindows);
+    State(const ContentWindowPtrs& contentWindows);
 
     /** Get the content windows */
-    const ContentWindowManagerPtrs& getContentWindows() const;
+    const ContentWindowPtrs& getContentWindows() const;
 
     /**
      * @deprecated
@@ -86,12 +86,12 @@ private:
         ar & boost::serialization::make_nvp("contentWindows", contentWindows_);
     }
 
-    ContentWindowManagerPtrs contentWindows_;
+    ContentWindowPtrs contentWindows_;
 
     /** Legacy methods. @deprecated */
     bool checkVersion_( QXmlQuery& query ) const;
     ContentPtr loadContent_( QXmlQuery& query, const int index ) const;
-    ContentWindowManagerPtr restoreContent_( QXmlQuery& query,
+    ContentWindowPtr restoreContent_( QXmlQuery& query,
                                              ContentPtr content, const int index ) const;
 };
 

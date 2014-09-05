@@ -40,30 +40,31 @@
 #define DISPLAY_GROUP_JOYSTICK_H
 
 #include "DisplayGroupInterface.h"
+#include "types.h"
 
 class Marker;
 class ContentWindowInterface;
 
-class DisplayGroupJoystick : public DisplayGroupInterface {
+class DisplayGroupJoystick : public DisplayGroupInterface
+{
+public:
 
-    public:
+    DisplayGroupJoystick(DisplayGroupPtr displayGroup);
 
-        DisplayGroupJoystick(boost::shared_ptr<DisplayGroupManager> displayGroupManager);
+    // re-implemented DisplayGroupInterface slots
+    void addContentWindow(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source=NULL);
+    void removeContentWindow(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source=NULL);
+    void moveContentWindowToFront(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source=NULL);
 
-        // re-implemented DisplayGroupInterface slots
-        void addContentWindowManager(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source=NULL);
-        void removeContentWindowManager(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source=NULL);
-        void moveContentWindowManagerToFront(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source=NULL);
+    boost::shared_ptr<Marker> getMarker();
+    std::vector<boost::shared_ptr<ContentWindowInterface> > getContentWindowInterfaces();
 
-        boost::shared_ptr<Marker> getMarker();
-        std::vector<boost::shared_ptr<ContentWindowInterface> > getContentWindowInterfaces();
+    boost::shared_ptr<ContentWindowInterface> getContentWindowInterfaceUnderMarker();
 
-        boost::shared_ptr<ContentWindowInterface> getContentWindowInterfaceUnderMarker();
+private:
 
-    private:
-
-        boost::shared_ptr<Marker> marker_;
-        std::vector<boost::shared_ptr<ContentWindowInterface> > contentWindowInterfaces_;
+    boost::shared_ptr<Marker> marker_;
+    std::vector<boost::shared_ptr<ContentWindowInterface> > contentWindowInterfaces_;
 };
 
 #endif

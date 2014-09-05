@@ -38,7 +38,7 @@
 /*********************************************************************/
 
 #include "PixelStreamInteractionDelegate.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "globals.h"
 #include "configuration/Configuration.h"
 #include "gestures/DoubleTapGesture.h"
@@ -47,7 +47,7 @@
 
 #define WHEEL_EVENT_FACTOR 1440.0
 
-PixelStreamInteractionDelegate::PixelStreamInteractionDelegate(ContentWindowManager& contentWindow)
+PixelStreamInteractionDelegate::PixelStreamInteractionDelegate(ContentWindow& contentWindow)
     : ContentInteractionDelegate(contentWindow)
 {
 }
@@ -61,7 +61,7 @@ void PixelStreamInteractionDelegate::tap(QTapGesture *gesture)
         event.mouseLeft = true;
         event.type = Event::EVT_CLICK;
 
-        contentWindowManager_.setEvent(event);
+        contentWindow_.setEvent(event);
     }
 }
 
@@ -72,7 +72,7 @@ void PixelStreamInteractionDelegate::doubleTap(DoubleTapGesture *gesture)
     event.mouseLeft = true;
     event.type = Event::EVT_DOUBLECLICK;
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::pan(PanGesture *gesture)
@@ -100,7 +100,7 @@ void PixelStreamInteractionDelegate::pan(PanGesture *gesture)
         break;
     }
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::swipe(QSwipeGesture *gesture)
@@ -126,7 +126,7 @@ void PixelStreamInteractionDelegate::swipe(QSwipeGesture *gesture)
 
     if (event.type != Event::EVT_NONE)
     {
-        contentWindowManager_.setEvent(event);
+        contentWindow_.setEvent(event);
     }
 }
 
@@ -140,7 +140,7 @@ void PixelStreamInteractionDelegate::pinch(PinchGesture *gesture)
     event.dy = (factor - 1.f) * g_configuration->getTotalWidth();
     event.type = Event::EVT_WHEEL;
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 
@@ -151,7 +151,7 @@ void PixelStreamInteractionDelegate::mouseMoveEvent(QGraphicsSceneMouseEvent *mo
 
     setMouseMoveNormalizedDelta(mouseEvent, event);
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -161,7 +161,7 @@ void PixelStreamInteractionDelegate::mousePressEvent(QGraphicsSceneMouseEvent *m
 
     mousePressPos_ = mouseEvent->pos();
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -169,7 +169,7 @@ void PixelStreamInteractionDelegate::mouseDoubleClickEvent(QGraphicsSceneMouseEv
     Event event = getMouseEvent(mouseEvent);
     event.type = Event::EVT_DOUBLECLICK;
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -177,14 +177,14 @@ void PixelStreamInteractionDelegate::mouseReleaseEvent(QGraphicsSceneMouseEvent 
     Event event = getMouseEvent(mouseEvent);
     event.type = Event::EVT_RELEASE;
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 
     // Also generate a click event if releasing the button in place
     if ( fabs(mousePressPos_.x() - mouseEvent->pos().x()) < std::numeric_limits< float >::epsilon() &&
          fabs(mousePressPos_.y() - mouseEvent->pos().y()) < std::numeric_limits< float >::epsilon() )
     {
         event.type = Event::EVT_CLICK;
-        contentWindowManager_.setEvent(event);
+        contentWindow_.setEvent(event);
     }
 }
 
@@ -205,31 +205,31 @@ void PixelStreamInteractionDelegate::wheelEvent(QGraphicsSceneWheelEvent* evt)
         event.dy = 0.;
     }
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::keyPressEvent(QKeyEvent* keyEvent)
 {
-    Event event = contentWindowManager_.getEvent();
+    Event event = contentWindow_.getEvent();
     event.type = Event::EVT_KEY_PRESS;
     event.key = keyEvent->key();
     event.modifiers = keyEvent->modifiers();
     strncpy( event.text, keyEvent->text().toStdString().c_str(),
              sizeof( event.text ));
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 void PixelStreamInteractionDelegate::keyReleaseEvent(QKeyEvent *keyEvent)
 {
-    Event event = contentWindowManager_.getEvent();
+    Event event = contentWindow_.getEvent();
     event.type = Event::EVT_KEY_RELEASE;
     event.key = keyEvent->key();
     event.modifiers = keyEvent->modifiers();
     strncpy( event.text, keyEvent->text().toStdString().c_str(),
              sizeof( event.text ));
 
-    contentWindowManager_.setEvent(event);
+    contentWindow_.setEvent(event);
 }
 
 template <typename T>
@@ -237,7 +237,7 @@ Event PixelStreamInteractionDelegate::getMouseEvent(const T* qtEvent)
 {
     // Bounding rectangle
     double x, y, w, h;
-    contentWindowManager_.getCoordinates(x, y, w, h);
+    contentWindow_.getCoordinates(x, y, w, h);
 
     QPointF eventPos = qtEvent->pos();
 
@@ -258,7 +258,7 @@ void PixelStreamInteractionDelegate::setMouseMoveNormalizedDelta(const QGraphics
 {
     // Bounding rectangle
     double w, h;
-    contentWindowManager_.getSize(w, h);
+    contentWindow_.getSize(w, h);
 
     event.dx = (mouseEvent->pos().x() - mouseEvent->lastPos().x()) / w;
     event.dy = (mouseEvent->pos().y() - mouseEvent->lastPos().y()) / h;
@@ -272,7 +272,7 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const T *gesture)
 {
     // Window coordinates (normalized units)
     double x, y, w, h;
-    contentWindowManager_.getCoordinates(x, y, w, h);
+    contentWindow_.getCoordinates(x, y, w, h);
 
     // For (almost) all QGestures, position() is the normalized position (on the wall / QGraphicsView)
     Event event;
@@ -287,7 +287,7 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const QTapGesture *gesture
 {
     // Window coordinates (normalized units)
     double x, y, w, h;
-    contentWindowManager_.getCoordinates(x, y, w, h);
+    contentWindow_.getCoordinates(x, y, w, h);
 
     // Overall wall dimensions (in pixels)
     const double tWidth = g_configuration->getTotalWidth();
@@ -306,7 +306,7 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const PinchGesture *gestur
 {
     // Window coordinates (normalized units)
     double x, y, w, h;
-    contentWindowManager_.getCoordinates(x, y, w, h);
+    contentWindow_.getCoordinates(x, y, w, h);
 
     // For PinchGesture, normalizedCenterPoint() is the normalized position (on the wall / QGraphicsView)
     Event event;
@@ -321,7 +321,7 @@ void PixelStreamInteractionDelegate::setPanGestureNormalizedDelta(const PanGestu
 {
     // Bounding rectangle
     double w, h;
-    contentWindowManager_.getSize(w, h);
+    contentWindow_.getSize(w, h);
 
     // Touchpad dimensions
     const double tWidth = g_configuration->getTotalWidth();

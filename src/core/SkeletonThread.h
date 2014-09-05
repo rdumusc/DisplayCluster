@@ -58,7 +58,7 @@ class SkeletonThread : public QThread {
 
     public:
 
-        SkeletonThread(DisplayGroupManagerPtr displayGroup);
+        SkeletonThread(DisplayGroupPtr displayGroup);
 
         std::vector<boost::shared_ptr<SkeletonState> > getSkeletons();
 
@@ -83,7 +83,7 @@ class SkeletonThread : public QThread {
 
         QTimer timer_;
 
-        DisplayGroupManagerPtr displayGroup_;
+        DisplayGroupPtr displayGroup_;
 
         // the skeleton tracking sensor
         boost::shared_ptr<SkeletonSensor> sensor_;

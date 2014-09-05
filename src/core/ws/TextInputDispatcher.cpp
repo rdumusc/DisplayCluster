@@ -39,22 +39,22 @@
 
 #include "TextInputDispatcher.h"
 
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 
 #include "Event.h"
 using dc::Event;
 
-TextInputDispatcher::TextInputDispatcher(DisplayGroupManagerPtr displayGroupManager,
+TextInputDispatcher::TextInputDispatcher(DisplayGroupPtr displayGroup,
                                          QObject *parentObject)
     : QObject(parentObject)
-    , displayGroupManager_(displayGroupManager)
+    , displayGroup_(displayGroup)
 {
 }
 
 void TextInputDispatcher::sendKeyEventToActiveWindow(const char key) const
 {
-    ContentWindowManagerPtr window = displayGroupManager_->getActiveWindow();
+    ContentWindowPtr window = displayGroup_->getActiveWindow();
     if (!window)
         return;
 

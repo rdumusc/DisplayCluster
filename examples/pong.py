@@ -3,9 +3,9 @@ import time
 from pydc import *
 
 c = pyContent(os.environ['DISPLAYCLUSTER_DIR'] + "/examples/pong.jpg")
-cw = pyContentWindowManager(c)
+cw = pyContentWindow(c)
 dg = pyDisplayGroupPython()
-dg.addContentWindowManager(cw)
+dg.addContentWindow(cw)
 
 def pong(seconds=30.0, sleepInterval=1.0/30.0, dx=1.0/500.0, dy=1.0/500.0):
 

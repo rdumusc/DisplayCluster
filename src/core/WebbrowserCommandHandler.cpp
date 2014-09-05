@@ -42,7 +42,7 @@
 #include "Command.h"
 #include "localstreamer/PixelStreamerLauncher.h"
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "PixelStreamWindowManager.h"
 
 WebbrowserCommandHandler::WebbrowserCommandHandler(PixelStreamWindowManager& windowManager,
@@ -70,7 +70,7 @@ void WebbrowserCommandHandler::handle(const Command& command, const QString& sen
 
     // Center the new content where the dock is
     // TODO: DISCL-230
-    ContentWindowManagerPtr parentWindow = windowManager_.getContentWindow(senderUri);
+    ContentWindowPtr parentWindow = windowManager_.getContentWindow(senderUri);
     if (parentWindow)
         position = parentWindow->getCoordinates().center();
 

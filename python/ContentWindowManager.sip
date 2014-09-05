@@ -1,26 +1,26 @@
-class pContentWindowManager
+class pContentWindow
 {
 %TypeHeaderCode
-#include <ContentWindowManager.h>
+#include <ContentWindow.h>
 %End
 };
 
-class pyContentWindowManager
+class pyContentWindow
 {
 %TypeHeaderCode
-#include <ContentWindowManager.h>
+#include <ContentWindow.h>
 %End
 
   public:
-    pyContentWindowManager(pyContent);
+    pyContentWindow(pyContent);
 
-    pContentWindowManager get();
+    pContentWindow get();
 
     pyContent getPyContent();
 
     void getCoordinates();
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     double x, y, w, h;
     win->getCoordinates(x, y, w, h);
     return Py_BuildValue("(dddd)", x, y, w, h);
@@ -28,7 +28,7 @@ class pyContentWindowManager
 
     void getPosition();
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     double x, y;
     win->getPosition(x, y);
     return Py_BuildValue("(dd)", x, y);
@@ -36,7 +36,7 @@ class pyContentWindowManager
 
     void getSize();
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     double x, y, w, h;
     win->getCoordinates(x, y, w, h);
     return Py_BuildValue("(dd)", w, h);
@@ -44,7 +44,7 @@ class pyContentWindowManager
 
     void getCenter();
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     double x, y;
     win->getCenter(x, y);
     return Py_BuildValue("(dd)", x, y);
@@ -62,49 +62,49 @@ class pyContentWindowManager
 
     void setCoordinates(double i, double j, double k, double l);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     win->setCoordinates(a0, a1, a2, a3);
 %End
 
     void setPosition(double i, double j);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     win->setPosition(a0, a1);
 %End
 
     void setSize(double i, double j);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     win->setSize(a0, a1);
 %End
 
     void scaleSize(double f);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     win->scaleSize(a0);
 %End
 
     void setCenter(double i, double j);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     sipCpp->get()->setCenter(a0, a1);
 %End
 
     void setZoom(double z);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     sipCpp->get()->setZoom(a0);
 %End
 
     void setSelected(int s);
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     sipCpp->get()->setSelected(a0 == 1 ? true : false);
 %End
 
     void moveToFront();
 %MethodCode
-    pContentWindowManager win = sipCpp->get();
+    pContentWindow win = sipCpp->get();
     sipCpp->get()->moveToFront();
 %End
 };

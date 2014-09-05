@@ -40,13 +40,13 @@
 #include "SessionCommandHandler.h"
 
 #include "Command.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "log.h"
 
 #define CLEARALL_COMMAND "clearall"
 
-SessionCommandHandler::SessionCommandHandler(DisplayGroupManager& displayGroupManager)
-    : displayGroupManager_(displayGroupManager)
+SessionCommandHandler::SessionCommandHandler(DisplayGroup& displayGroup)
+    : displayGroup_(displayGroup)
 {
 }
 
@@ -60,7 +60,7 @@ void SessionCommandHandler::handle(const Command& command, const QString&)
     const QString& arguments = command.getArguments();
 
     if (arguments == CLEARALL_COMMAND)
-        displayGroupManager_.clear();
+        displayGroup_.clear();
     else
         put_flog( LOG_ERROR, "Invalid Session command received: '%s'",
                   arguments.toStdString().c_str());

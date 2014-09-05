@@ -40,16 +40,12 @@
 #define CONTENT_WINDOW_LIST_WIDGET_ITEM_H
 
 #include "ContentWindowInterface.h"
-#include <QtGui>
-#include <boost/shared_ptr.hpp>
+#include <QListWidgetItem>
 
-class ContentWindowManager;
-
-class ContentWindowListWidgetItem : public QListWidgetItem, public ContentWindowInterface {
-
+class ContentWindowListWidgetItem : public QListWidgetItem, public ContentWindowInterface
+{
     public:
-
-        ContentWindowListWidgetItem(ContentWindowManagerPtr contentWindowManager);
+        ContentWindowListWidgetItem(ContentWindowPtr contentWindow);
 };
 
 #endif

@@ -40,11 +40,11 @@
 
 #include "DisplayGroupGraphicsView.h"
 #include "DisplayGroupGraphicsScene.h"
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 #include "ContentWindowGraphicsItem.h"
 
-DisplayGroupGraphicsViewProxy::DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup)
+DisplayGroupGraphicsViewProxy::DisplayGroupGraphicsViewProxy(DisplayGroupPtr displayGroup)
     : DisplayGroupInterface(displayGroup)
     , graphicsView_(new DisplayGroupGraphicsView)
 {
@@ -60,24 +60,24 @@ DisplayGroupGraphicsView * DisplayGroupGraphicsViewProxy::getGraphicsView()
     return graphicsView_;
 }
 
-void DisplayGroupGraphicsViewProxy::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupGraphicsViewProxy::addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::addContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::addContentWindow(contentWindow, source);
 
     if(source != this)
     {
-        ContentWindowGraphicsItem * cwgi = new ContentWindowGraphicsItem(contentWindowManager);
+        ContentWindowGraphicsItem * cwgi = new ContentWindowGraphicsItem(contentWindow);
         graphicsView_->scene()->addItem((QGraphicsItem *)cwgi);
     }
 }
 
-void DisplayGroupGraphicsViewProxy::removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupGraphicsViewProxy::removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::removeContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::removeContentWindow(contentWindow, source);
 
     if(source != this)
     {
-        // find ContentWindowGraphicsItem associated with contentWindowManager
+        // find ContentWindowGraphicsItem associated with contentWindow
         QList<QGraphicsItem *> itemsList = graphicsView_->scene()->items();
 
         for(int i=0; i<itemsList.size(); i++)
@@ -85,7 +85,7 @@ void DisplayGroupGraphicsViewProxy::removeContentWindowManager(ContentWindowMana
             // need dynamic cast to make sure this is actually a CWGI
             ContentWindowGraphicsItem * cwgi = dynamic_cast<ContentWindowGraphicsItem *>(itemsList.at(i));
 
-            if(cwgi && cwgi->getContentWindowManager() == contentWindowManager)
+            if(cwgi && cwgi->getContentWindow() == contentWindow)
             {
                 graphicsView_->scene()->removeItem(itemsList.at(i));
             }
@@ -95,17 +95,17 @@ void DisplayGroupGraphicsViewProxy::removeContentWindowManager(ContentWindowMana
     // Qt WAR: when all items with grabbed gestures are removed, the viewport
     // also looses any registered gestures, which harms our dock to open...
     // <qt-source>/qgraphicsscene.cpp::ungrabGesture called in removeItemHelper()
-    if( getContentWindowManagers().empty( ))
+    if( getContentWindows().empty( ))
         graphicsView_->grabGestures();
 }
 
-void DisplayGroupGraphicsViewProxy::moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupGraphicsViewProxy::moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::moveContentWindowManagerToFront(contentWindowManager, source);
+    DisplayGroupInterface::moveContentWindowToFront(contentWindow, source);
 
     if(source != this)
     {
-        // find ContentWindowGraphicsItem associated with contentWindowManager
+        // find ContentWindowGraphicsItem associated with contentWindow
         QList<QGraphicsItem *> itemsList = graphicsView_->scene()->items();
 
         for(int i=0; i<itemsList.size(); i++)
@@ -113,7 +113,7 @@ void DisplayGroupGraphicsViewProxy::moveContentWindowManagerToFront(ContentWindo
             // need dynamic cast to make sure this is actually a CWGI
             ContentWindowGraphicsItem * cwgi = dynamic_cast<ContentWindowGraphicsItem *>(itemsList.at(i));
 
-            if(cwgi && cwgi->getContentWindowManager() == contentWindowManager)
+            if(cwgi && cwgi->getContentWindow() == contentWindow)
             {
                 // don't call cwgi->moveToFront() here or that'll lead to infinite recursion!
                 cwgi->setZToFront();

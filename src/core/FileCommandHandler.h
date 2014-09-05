@@ -52,9 +52,9 @@ class FileCommandHandler : public AbstractCommandHandler
 public:
     /**
      * Constructor
-     * @param displayGroupManager The target DisplayGroupManager for the commands.
+     * @param displayGroup The target DisplayGroup for the commands.
      */
-    FileCommandHandler(DisplayGroupManagerPtr displayGroupManager,
+    FileCommandHandler(DisplayGroupPtr displayGroup,
                        PixelStreamWindowManager& windowManager);
 
     /** Get the type of commands handled by the implementation. */
@@ -68,7 +68,7 @@ public:
     void handle(const Command& command, const QString& senderUri) override;
 
 private:
-    DisplayGroupManagerPtr displayGroupManager_;
+    DisplayGroupPtr displayGroup_;
     PixelStreamWindowManager& pixelStreamWindowManager_;
 };
 

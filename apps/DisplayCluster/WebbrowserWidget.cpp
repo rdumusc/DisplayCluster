@@ -37,30 +37,80 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAYGROUPMANAGERADAPTER_H
-#define DISPLAYGROUPMANAGERADAPTER_H
+#include "WebbrowserWidget.h"
 
-#include <QString>
+#include <QtGui>
 
-#include "types.h"
+#define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
 
-/**
- * Adapter class for DisplayGroupManager with virtual methods for unit testing.
- */
-class DisplayGroupManagerAdapter
+#define SPIN_BOX_MIN_VALUE 0
+#define SPIN_BOX_MAX_VALUE 10000
+
+#define WEBBROWSER_DEFAULT_WIDTH 1280
+#define WEBBROWSER_DEFAULT_HEIGHT 1024
+
+WebbrowserWidget::WebbrowserWidget(QWidget* parent_)
+    : QDialog(parent_)
+    , widthSpinBox_(0)
+    , heightSpinBox_(0)
 {
-public:
-    /** Constructor. */
-    DisplayGroupManagerAdapter(DisplayGroupManagerPtr displayGroupManager);
+    setWindowTitle(tr("Open Webbrowser"));
 
-    /** Destructor. */
-    virtual ~DisplayGroupManagerAdapter();
+    // URL input
 
-    /** Does the DisplayGroupManager have any windows. */
-    virtual bool hasWindows() const;
+    QLabel* urlLabel = new QLabel("Url: ", this);
+    urlLineEdit_ = new QLineEdit(WEBBROWSER_DEFAULT_URL, this);
+    urlLabel->setBuddy(urlLineEdit_);
 
-private:
-    DisplayGroupManagerPtr displayGroupManager_;
-};
+    // Standard buttons
 
-#endif // DISPLAYGROUPMANAGERADAPTER_H
+    QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok |
+                                                       QDialogButtonBox::Cancel,
+                                                       Qt::Horizontal, this);
+
+    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+
+    // Webbrowser dimensions
+
+    QLabel* widthLabel = new QLabel("Width: ", this);
+
+    widthSpinBox_ = new QSpinBox(this);
+    widthSpinBox_->setMinimum(SPIN_BOX_MIN_VALUE);
+    widthSpinBox_->setMaximum(SPIN_BOX_MAX_VALUE);
+    widthSpinBox_->setValue(WEBBROWSER_DEFAULT_WIDTH);
+
+    QLabel* heightLabel = new QLabel("Height: ", this);
+
+    heightSpinBox_ = new QSpinBox(this);
+    heightSpinBox_->setMinimum(SPIN_BOX_MIN_VALUE);
+    heightSpinBox_->setMaximum(SPIN_BOX_MAX_VALUE);
+    heightSpinBox_->setValue(WEBBROWSER_DEFAULT_HEIGHT);
+
+    // Layout
+
+    QGridLayout *gridLayout = new QGridLayout;
+    gridLayout->setColumnStretch(1, 1);
+    gridLayout->setColumnMinimumWidth(1, 250);
+    setLayout(gridLayout);
+
+    gridLayout->addWidget(urlLabel, 0, 0);
+    gridLayout->addWidget(urlLineEdit_, 0, 1);
+
+    gridLayout->addWidget(widthLabel, 1, 0);
+    gridLayout->addWidget(widthSpinBox_, 1, 1);
+
+    gridLayout->addWidget(heightLabel, 2, 0);
+    gridLayout->addWidget(heightSpinBox_, 2, 1);
+
+    gridLayout->addWidget(buttonBox, 3, 1);
+}
+
+void WebbrowserWidget::accept()
+{
+    const QSize dimensions(widthSpinBox_->value(), heightSpinBox_->value());
+
+    emit openWebBrowser(QPointF(.5,.5), dimensions, urlLineEdit_->text());
+
+    QDialog::accept();
+}

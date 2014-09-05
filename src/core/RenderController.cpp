@@ -47,7 +47,7 @@
 #include "TestPattern.h"
 #include "FpsRenderer.h"
 
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "Options.h"
 
 #include <boost/make_shared.hpp>
@@ -59,7 +59,7 @@ RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr 
     , markerRenderer_(new MarkerRenderer)
     , fpsRenderer_(new FpsRenderer(renderContext))
     , syncQuit_(false)
-    , syncDisplayGroup_(boost::make_shared<DisplayGroupManager>())
+    , syncDisplayGroup_(boost::make_shared<DisplayGroup>())
     , syncOptions_(boost::make_shared<Options>())
 {
     renderContext_->addRenderable(displayGroupRenderer_);
@@ -81,16 +81,15 @@ void RenderController::setupTestPattern(const int rank,
 {
     for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
     {
-        GLWindowPtr glWindow = renderContext_->getGLWindow(i);
-        RenderablePtr testPattern(new TestPattern(glWindow.get(), config, rank,
-                                                  glWindow->getTileIndex()));
+        RenderablePtr testPattern(new TestPattern(renderContext_, config, rank, i));
         testPattern->setVisible(false);
         testPatterns_.append(testPattern);
+        GLWindowPtr glWindow = renderContext_->getGLWindow(i);
         glWindow->addRenderable(testPattern);
     }
 }
 
-DisplayGroupManagerPtr RenderController::getDisplayGroup() const
+DisplayGroupPtr RenderController::getDisplayGroup() const
 {
     return syncDisplayGroup_.get();
 }
@@ -113,7 +112,7 @@ void RenderController::updateQuit()
     syncQuit_.update(true);
 }
 
-void RenderController::updateDisplayGroup(DisplayGroupManagerPtr displayGroup)
+void RenderController::updateDisplayGroup(DisplayGroupPtr displayGroup)
 {
     syncDisplayGroup_.update(displayGroup);
 }

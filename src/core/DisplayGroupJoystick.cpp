@@ -37,44 +37,45 @@
 /*********************************************************************/
 
 #include "DisplayGroupJoystick.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentWindowInterface.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "Marker.h"
 
-DisplayGroupJoystick::DisplayGroupJoystick(boost::shared_ptr<DisplayGroupManager> displayGroupManager) : DisplayGroupInterface(displayGroupManager)
+DisplayGroupJoystick::DisplayGroupJoystick(DisplayGroupPtr displayGroup)
+    : DisplayGroupInterface(displayGroup)
 {
-    marker_ = displayGroupManager->getNewMarker();
+    marker_ = displayGroup->getNewMarker();
 
-    // add ContentWindowInterfaces for existing ContentWindowManagers
-    for(unsigned int i=0; i<contentWindowManagers_.size(); i++)
+    // add ContentWindowInterfaces for existing ContentWindows
+    for(unsigned int i=0; i<contentWindows_.size(); i++)
     {
-        boost::shared_ptr<ContentWindowInterface> cwi(new ContentWindowInterface(contentWindowManagers_[i]));
+        boost::shared_ptr<ContentWindowInterface> cwi(new ContentWindowInterface(contentWindows_[i]));
         contentWindowInterfaces_.push_back(cwi);
     }
 }
 
-void DisplayGroupJoystick::addContentWindowManager(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupJoystick::addContentWindow(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::addContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::addContentWindow(contentWindow, source);
 
     if(source != this)
     {
-        boost::shared_ptr<ContentWindowInterface> cwi(new ContentWindowInterface(contentWindowManager));
+        boost::shared_ptr<ContentWindowInterface> cwi(new ContentWindowInterface(contentWindow));
         contentWindowInterfaces_.push_back(cwi);
     }
 
 }
 
-void DisplayGroupJoystick::removeContentWindowManager(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupJoystick::removeContentWindow(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::removeContentWindowManager(contentWindowManager, source);
+    DisplayGroupInterface::removeContentWindow(contentWindow, source);
 
     if(source != this)
     {
         for(unsigned int i=0; i<contentWindowInterfaces_.size(); i++)
         {
-            if(contentWindowInterfaces_[i]->getContentWindowManager() == contentWindowManager)
+            if(contentWindowInterfaces_[i]->getContentWindow() == contentWindow)
             {
                 contentWindowInterfaces_.erase(contentWindowInterfaces_.begin() + i);
                 return;
@@ -83,15 +84,15 @@ void DisplayGroupJoystick::removeContentWindowManager(boost::shared_ptr<ContentW
     }
 }
 
-void DisplayGroupJoystick::moveContentWindowManagerToFront(boost::shared_ptr<ContentWindowManager> contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupJoystick::moveContentWindowToFront(boost::shared_ptr<ContentWindow> contentWindow, DisplayGroupInterface * source)
 {
-    DisplayGroupInterface::moveContentWindowManagerToFront(contentWindowManager, source);
+    DisplayGroupInterface::moveContentWindowToFront(contentWindow, source);
 
     if(source != this)
     {
         for(unsigned int i=0; i<contentWindowInterfaces_.size(); i++)
         {
-            if(contentWindowInterfaces_[i]->getContentWindowManager() == contentWindowManager)
+            if(contentWindowInterfaces_[i]->getContentWindow() == contentWindow)
             {
                 boost::shared_ptr<ContentWindowInterface> cwi = contentWindowInterfaces_[i];
                 contentWindowInterfaces_.erase(contentWindowInterfaces_.begin() + i);

@@ -36,9 +36,9 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "Content.h"
-#include "DisplayGroupManager.h"
+#include "DisplayGroup.h"
 #include "ContentInteractionDelegate.h"
 #include "config.h"
 #include "log.h"
@@ -50,24 +50,24 @@
 #  include "PDFInteractionDelegate.h"
 #endif
 
-IMPLEMENT_SERIALIZE_FOR_XML(ContentWindowManager)
+IMPLEMENT_SERIALIZE_FOR_XML(ContentWindow)
 
-ContentWindowManager::ContentWindowManager()
+ContentWindow::ContentWindow()
 {
 }
 
-ContentWindowManager::ContentWindowManager(ContentPtr content)
+ContentWindow::ContentWindow(ContentPtr content)
 {
     setContent(content);
 
     adjustSize( SIZE_1TO1 );
 }
 
-ContentWindowManager::~ContentWindowManager()
+ContentWindow::~ContentWindow()
 {
 }
 
-void ContentWindowManager::setContent(ContentPtr content)
+void ContentWindow::setContent(ContentPtr content)
 {
     if(content_)
     {
@@ -93,12 +93,12 @@ void ContentWindowManager::setContent(ContentPtr content)
     createInteractionDelegate();
 }
 
-ContentPtr ContentWindowManager::getContent() const
+ContentPtr ContentWindow::getContent() const
 {
     return content_;
 }
 
-void ContentWindowManager::createInteractionDelegate()
+void ContentWindow::createInteractionDelegate()
 {
     if(!content_)
     {
@@ -122,52 +122,52 @@ void ContentWindowManager::createInteractionDelegate()
     }
 }
 
-DisplayGroupManagerPtr ContentWindowManager::getDisplayGroupManager() const
+DisplayGroupPtr ContentWindow::getDisplayGroup() const
 {
-    return displayGroupManager_.lock();
+    return displayGroup_.lock();
 }
 
-void ContentWindowManager::setDisplayGroupManager(DisplayGroupManagerPtr displayGroupManager)
+void ContentWindow::setDisplayGroup(DisplayGroupPtr displayGroup)
 {
-    displayGroupManager_ = displayGroupManager;
+    displayGroup_ = displayGroup;
 }
 
-ContentInteractionDelegate& ContentWindowManager::getInteractionDelegate() const
+ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const
 {
     return *interactionDelegate_;
 }
 
-void ContentWindowManager::moveToFront(ContentWindowInterface * source)
+void ContentWindow::moveToFront(ContentWindowInterface * source)
 {
     ContentWindowInterface::moveToFront(source);
 
     if(source != this)
     {
-        DisplayGroupManagerPtr dgm = getDisplayGroupManager();
-        if (dgm)
-            dgm->moveContentWindowManagerToFront(shared_from_this());
+        DisplayGroupPtr displayGroup = getDisplayGroup();
+        if (displayGroup)
+            displayGroup->moveContentWindowToFront(shared_from_this());
         else
             put_flog(LOG_DEBUG, "The DisplayGroupMangerPtr is invalid");
     }
 }
 
-void ContentWindowManager::close(ContentWindowInterface * source)
+void ContentWindow::close(ContentWindowInterface * source)
 {
     ContentWindowInterface::close(source);
 
     if(source != this)
     {
-        getDisplayGroupManager()->removeContentWindowManager(shared_from_this());
+        getDisplayGroup()->removeContentWindow(shared_from_this());
     }
 }
 
-QPointF ContentWindowManager::getWindowCenterPosition() const
+QPointF ContentWindow::getWindowCenterPosition() const
 {
     return QPointF(coordinates_.x() + 0.5 * coordinates_.width(),
                    coordinates_.y() + 0.5 * coordinates_.height());
 }
 
-void ContentWindowManager::centerPositionAround(const QPointF& position,
+void ContentWindow::centerPositionAround(const QPointF& position,
                                                 const bool constrainToWindowBorders)
 {
     if(position.isNull())

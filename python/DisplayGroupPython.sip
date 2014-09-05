@@ -16,12 +16,12 @@ class pyDisplayGroupPython
 
     pDisplayGroupPython get();
 
-    void addContentWindowManager(const pyContentWindowManager &);
-    void removeContentWindowManager(const pyContentWindowManager &);
-    void moveContentWindowManagerToFront(const pyContentWindowManager &);
+    void addContentWindow(const pyContentWindow &);
+    void removeContentWindow(const pyContentWindow &);
+    void moveContentWindowToFront(const pyContentWindow &);
     void saveState(const char * filename);
     void loadState(const char * filename);
 
-    int getNumContentWindowManagers();
-    pyContentWindowManager getPyContentWindowManager(int);
+    int getNumContentWindows();
+    pyContentWindow getPyContentWindow(int);
 };

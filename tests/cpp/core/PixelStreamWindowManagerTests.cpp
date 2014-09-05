@@ -41,8 +41,8 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
-#include "ContentWindowManager.h"
-#include "DisplayGroupManager.h"
+#include "ContentWindow.h"
+#include "DisplayGroup.h"
 #include "Options.h"
 #include "PixelStreamWindowManager.h"
 #include "configuration/MasterConfiguration.h"
@@ -56,16 +56,16 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 {
-    DisplayGroupManagerPtr displayGroupManager( new DisplayGroupManager );
+    DisplayGroupPtr displayGroup( new DisplayGroup );
     g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
 
-    PixelStreamWindowManager windowManager( *displayGroupManager );
+    PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
     const QPointF pos( .4, .3 );
     const QSizeF size( .1, .2 );
 
-    ContentWindowManagerPtr window = windowManager.createContentWindow( uri, pos, size );
+    ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
@@ -84,10 +84,10 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 
 BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 {
-    DisplayGroupManagerPtr displayGroupManager( new DisplayGroupManager );
+    DisplayGroupPtr displayGroup( new DisplayGroup );
     g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
 
-    PixelStreamWindowManager windowManager( *displayGroupManager );
+    PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
     const QPointF pos( .4, .3 );
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     const QSize pixels( g_configuration->getTotalWidth() * size.width(),
                         g_configuration->getTotalHeight() * size.height( ));
 
-    ContentWindowManagerPtr window = windowManager.createContentWindow( uri, pos, size );
+    ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
@@ -122,10 +122,10 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 
 BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
 {
-    DisplayGroupManagerPtr displayGroupManager( new DisplayGroupManager );
+    DisplayGroupPtr displayGroup( new DisplayGroup );
     g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
 
-    PixelStreamWindowManager windowManager( *displayGroupManager );
+    PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
     const QPointF pos( .5, .5 ); // window will be positioned centerred
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
                         g_configuration->getTotalHeight() * size.height( ));
 
     windowManager.openPixelStreamWindow( uri, pixels );
-    ContentWindowManagerPtr window = windowManager.getContentWindow( uri );
+    ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
     ContentPtr content = window->getContent();

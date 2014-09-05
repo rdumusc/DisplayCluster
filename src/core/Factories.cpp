@@ -40,8 +40,8 @@
 #include "Factories.h"
 
 #include "Content.h"
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 #include "PixelStreamFrame.h"
 
 #include <boost/foreach.hpp>
@@ -85,32 +85,32 @@ void Factories::clear()
     pixelStreamFactory_.clear();
 }
 
-void Factories::preRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+void Factories::preRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel)
 {
-    ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
+    ContentWindowPtrs contentWindows = displayGroup.getContentWindows();
 
     // note that if we have multiple ContentWindows for a single Content object,
     // we will call advance() multiple times per frame on that Content object...
-    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    BOOST_FOREACH(ContentWindowPtr contentWindow, contentWindows)
     {
         contentWindow->getContent()->preRenderUpdate(*this, contentWindow, wallChannel);
     }
-    ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
+    ContentWindowPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
     if (backgroundWindow)
         backgroundWindow->getContent()->preRenderUpdate(*this, backgroundWindow, wallChannel);
 }
 
-void Factories::postRenderUpdate(DisplayGroupManager& displayGroup, WallToWallChannel& wallChannel)
+void Factories::postRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel)
 {
-    ContentWindowManagerPtrs contentWindows = displayGroup.getContentWindowManagers();
+    ContentWindowPtrs contentWindows = displayGroup.getContentWindows();
 
     // note that if we have multiple ContentWindows for a single Content object,
     // we will call advance() multiple times per frame on that Content object...
-    BOOST_FOREACH(ContentWindowManagerPtr contentWindow, contentWindows)
+    BOOST_FOREACH(ContentWindowPtr contentWindow, contentWindows)
     {
         contentWindow->getContent()->postRenderUpdate(*this, contentWindow, wallChannel);
     }
-    ContentWindowManagerPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
+    ContentWindowPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
     if (backgroundWindow)
         backgroundWindow->getContent()->postRenderUpdate(*this, backgroundWindow, wallChannel);
 

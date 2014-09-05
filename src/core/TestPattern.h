@@ -40,13 +40,13 @@
 #ifndef TESTPATTERN_H
 #define TESTPATTERN_H
 
+#include "types.h"
 #include "Renderable.h"
 
 #include <QList>
 #include <QString>
 
 class WallConfiguration;
-class QGLWidget;
 
 /**
  * Render a test pattern to help setup and debug the display configuration.
@@ -56,12 +56,12 @@ class TestPattern : public Renderable
 public:
     /**
      * Constructor
-     * @param glWindow The associated QGLWidget (used for rendering text)
+     * @param renderContext The current render context (used for rendering text)
      * @param configuration The configuration to get information from
      * @param rank The rank of the process
      * @param tileIndex The tile index of the display
      */
-    TestPattern(QGLWidget* glWindow,
+    TestPattern(RenderContextPtr renderContext,
                 const WallConfiguration& configuration,
                 const int rank,
                 const int tileIndex);
@@ -71,7 +71,7 @@ public:
 
 private:
     QList<QString> labels_;
-    QGLWidget* glWindow_;
+    RenderContextPtr renderContext_;
 
     void renderCrossPattern();
     void renderLabels();

@@ -43,6 +43,7 @@
 
 #include <QRectF>
 #include <QColor>
+#include <QFont>
 
 class WallConfiguration;
 
@@ -65,9 +66,22 @@ public:
     /** Set the background color of all windows. */
     void setBackgroundColor(const QColor& color);
 
+    /** Get a specific GL window. */
     GLWindowPtr getGLWindow(const int index=0) const;
-    GLWindowPtr getActiveGLWindow() const;
+
+    /** Get the count of GL windows. */
     size_t getGLWindowCount() const;
+
+    /** Get the index of the active window during rendering. @deprecated */
+    int getActiveGLWindowIndex() const;
+
+    /** Render text. @see QGLWidget::renderText */
+    void renderText(const int x, const int y, const QString & str,
+                    const QFont& font);
+
+    /** Render text. @see QGLWidget::renderText */
+    void renderText(const double x, const double y, const double z,
+                    const QString & str, const QFont& font);
 
     /** Add an object to be rendered. */
     void addRenderable(RenderablePtr renderable);
@@ -86,6 +100,7 @@ private:
 
     GLWindowPtrs glWindows_;
     GLWindowPtr activeGLWindow_;
+    int activeGLWindowIndex_;
 };
 
 #endif

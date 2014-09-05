@@ -38,90 +38,90 @@
 
 #include "DisplayGroupInterface.h"
 
-#include "DisplayGroupManager.h"
-#include "ContentWindowManager.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 
-DisplayGroupInterface::DisplayGroupInterface(DisplayGroupManagerPtr displayGroupManager)
-    : displayGroupManager_(displayGroupManager)
+DisplayGroupInterface::DisplayGroupInterface(DisplayGroupPtr displayGroup)
+    : displayGroup_(displayGroup)
 {
-    // copy all members from displayGroupManager
-    if(displayGroupManager)
-        contentWindowManagers_ = displayGroupManager->contentWindowManagers_;
+    // copy all members from displayGroup
+    if(displayGroup)
+        contentWindows_ = displayGroup->contentWindows_;
 
-    // connect signals from this to slots on the DisplayGroupManager
+    // connect signals from this to slots on the DisplayGroup
     // use queued connections for thread-safety
-    connect(this, SIGNAL(contentWindowManagerAdded(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroupManager.get(), SLOT(addContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroupManager.get(), SLOT(removeContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(this, SIGNAL(contentWindowManagerMovedToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), displayGroupManager.get(), SLOT(moveContentWindowManagerToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentWindowAdded(ContentWindowPtr, DisplayGroupInterface *)), displayGroup.get(), SLOT(addContentWindow(ContentWindowPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface *)), displayGroup.get(), SLOT(removeContentWindow(ContentWindowPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(this, SIGNAL(contentWindowMovedToFront(ContentWindowPtr, DisplayGroupInterface *)), displayGroup.get(), SLOT(moveContentWindowToFront(ContentWindowPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
 
-    // connect signals on the DisplayGroupManager to slots on this
+    // connect signals on the DisplayGroup to slots on this
     // use queued connections for thread-safety
-    connect(displayGroupManager.get(), SIGNAL(contentWindowManagerAdded(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(addContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(displayGroupManager.get(), SIGNAL(contentWindowManagerRemoved(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(removeContentWindowManager(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
-    connect(displayGroupManager.get(), SIGNAL(contentWindowManagerMovedToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), this, SLOT(moveContentWindowManagerToFront(ContentWindowManagerPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(displayGroup.get(), SIGNAL(contentWindowAdded(ContentWindowPtr, DisplayGroupInterface *)), this, SLOT(addContentWindow(ContentWindowPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(displayGroup.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface *)), this, SLOT(removeContentWindow(ContentWindowPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
+    connect(displayGroup.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr, DisplayGroupInterface *)), this, SLOT(moveContentWindowToFront(ContentWindowPtr, DisplayGroupInterface *)), Qt::QueuedConnection);
 
     // destruction
-    connect(displayGroupManager.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
+    connect(displayGroup.get(), SIGNAL(destroyed(QObject *)), this, SLOT(deleteLater()));
 }
 
-DisplayGroupManagerPtr DisplayGroupInterface::getDisplayGroupManager()
+DisplayGroupPtr DisplayGroupInterface::getDisplayGroup()
 {
-    return displayGroupManager_.lock();
+    return displayGroup_.lock();
 }
 
-ContentWindowManagerPtrs DisplayGroupInterface::getContentWindowManagers()
+ContentWindowPtrs DisplayGroupInterface::getContentWindows()
 {
-    return contentWindowManagers_;
+    return contentWindows_;
 }
 
-ContentWindowManagerPtr DisplayGroupInterface::getContentWindowManager(const QUuid& id) const
+ContentWindowPtr DisplayGroupInterface::getContentWindow(const QUuid& id) const
 {
-    for(size_t i=0; i<contentWindowManagers_.size(); ++i)
+    for(size_t i=0; i<contentWindows_.size(); ++i)
     {
-        if( contentWindowManagers_[i]->getID() == id )
-            return contentWindowManagers_[i];
+        if( contentWindows_[i]->getID() == id )
+            return contentWindows_[i];
     }
 
-    return ContentWindowManagerPtr();
+    return ContentWindowPtr();
 }
 
-void DisplayGroupInterface::setContentWindowManagers(ContentWindowManagerPtrs contentWindowManagers)
+void DisplayGroupInterface::setContentWindows(ContentWindowPtrs contentWindows)
 {
     // remove existing content window managers
     clear();
 
     // add new content window managers
-    for(unsigned int i=0; i<contentWindowManagers.size(); i++)
-        addContentWindowManager(contentWindowManagers[i]);
+    for(unsigned int i=0; i<contentWindows.size(); i++)
+        addContentWindow(contentWindows[i]);
 }
 
 void DisplayGroupInterface::clear()
 {
-    while(!contentWindowManagers_.empty())
-        removeContentWindowManager(contentWindowManagers_[0]);
+    while(!contentWindows_.empty())
+        removeContentWindow(contentWindows_[0]);
 }
 
-void DisplayGroupInterface::addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupInterface::addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
     if(source == this)
     {
         return;
     }
 
-    contentWindowManagers_.push_back(contentWindowManager);
+    contentWindows_.push_back(contentWindow);
 
-    if(source == NULL || dynamic_cast<DisplayGroupManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<DisplayGroup *>(this) != NULL)
     {
         if(source == NULL)
         {
             source = this;
         }
 
-        emit(contentWindowManagerAdded(contentWindowManager, source));
+        emit(contentWindowAdded(contentWindow, source));
     }
 }
 
-void DisplayGroupInterface::removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupInterface::removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
     if(source == this)
     {
@@ -130,31 +130,31 @@ void DisplayGroupInterface::removeContentWindowManager(ContentWindowManagerPtr c
 
     Event closeEvent;
     closeEvent.type = Event::EVT_CLOSE;
-    contentWindowManager->setEvent( closeEvent );
+    contentWindow->setEvent( closeEvent );
 
     // find vector entry for content window manager
-    ContentWindowManagerPtrs::iterator it = find(contentWindowManagers_.begin(),
-                                                 contentWindowManagers_.end(), contentWindowManager);
+    ContentWindowPtrs::iterator it = find(contentWindows_.begin(),
+                                          contentWindows_.end(), contentWindow);
 
-    if(it != contentWindowManagers_.end())
+    if(it != contentWindows_.end())
     {
         // we found the entry
         // now, remove it
-        contentWindowManagers_.erase(it);
+        contentWindows_.erase(it);
     }
 
-    if(source == NULL || dynamic_cast<DisplayGroupManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<DisplayGroup *>(this) != NULL)
     {
         if(source == NULL)
         {
             source = this;
         }
 
-        emit(contentWindowManagerRemoved(contentWindowManager, source));
+        emit(contentWindowRemoved(contentWindow, source));
     }
 }
 
-void DisplayGroupInterface::moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface * source)
+void DisplayGroupInterface::moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
     if(source == this)
     {
@@ -162,25 +162,25 @@ void DisplayGroupInterface::moveContentWindowManagerToFront(ContentWindowManager
     }
 
     // find vector entry for content window manager
-    ContentWindowManagerPtrs::iterator it;
+    ContentWindowPtrs::iterator it;
 
-    it = find(contentWindowManagers_.begin(), contentWindowManagers_.end(), contentWindowManager);
+    it = find(contentWindows_.begin(), contentWindows_.end(), contentWindow);
 
-    if(it != contentWindowManagers_.end())
+    if(it != contentWindows_.end())
     {
         // we found the entry
         // now, move it to end of the list (last item rendered is on top)
-        contentWindowManagers_.erase(it);
-        contentWindowManagers_.push_back(contentWindowManager);
+        contentWindows_.erase(it);
+        contentWindows_.push_back(contentWindow);
     }
 
-    if(source == NULL || dynamic_cast<DisplayGroupManager *>(this) != NULL)
+    if(source == NULL || dynamic_cast<DisplayGroup *>(this) != NULL)
     {
         if(source == NULL)
         {
             source = this;
         }
 
-        emit(contentWindowManagerMovedToFront(contentWindowManager, source));
+        emit(contentWindowMovedToFront(contentWindow, source));
     }
 }

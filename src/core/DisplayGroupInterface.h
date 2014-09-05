@@ -45,52 +45,49 @@
 #include <QUuid>
 #include <boost/weak_ptr.hpp>
 
-class DisplayGroupManager;
-class ContentWindowManager;
-
 class DisplayGroupInterface : public QObject
 {
     Q_OBJECT
 
-    public:
+public:
 
-        DisplayGroupInterface() { }
-        DisplayGroupInterface(DisplayGroupManagerPtr displayGroupManager);
+    DisplayGroupInterface() { }
+    DisplayGroupInterface(DisplayGroupPtr displayGroup);
 
-        DisplayGroupManagerPtr getDisplayGroupManager();
+    DisplayGroupPtr getDisplayGroup();
 
-        ContentWindowManagerPtrs getContentWindowManagers();
-        ContentWindowManagerPtr getContentWindowManager(const QUuid& id) const;
+    ContentWindowPtrs getContentWindows();
+    ContentWindowPtr getContentWindow(const QUuid& id) const;
 
-        // remove all current ContentWindowManagers and add the vector of provided ContentWindowManagers
-        void setContentWindowManagers(ContentWindowManagerPtrs contentWindowManagers);
+    // remove all current ContentWindows and add the vector of provided ContentWindows
+    void setContentWindows(ContentWindowPtrs contentWindows);
 
-    public slots:
-        /** Clear all ContentWindows */
-        void clear();
+public slots:
+    /** Clear all ContentWindows */
+    void clear();
 
-        // these methods set the local copies of the state variables if source != this
-        // they will emit signals if source == 0 or if this is a DisplayGroup object
-        // the source argument should not be provided by users -- only by these functions
-        virtual void addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
-        virtual void removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
-        virtual void moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
+    // these methods set the local copies of the state variables if source != this
+    // they will emit signals if source == 0 or if this is a DisplayGroup object
+    // the source argument should not be provided by users -- only by these functions
+    virtual void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0);
+    virtual void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0);
+    virtual void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0);
 
-    signals:
+signals:
 
-        // emitting these signals will trigger updates on the corresponding DisplayGroup
-        // as well as all other DisplayGroupInterfaces to that DisplayGroup
-        void contentWindowManagerAdded(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
-        void contentWindowManagerRemoved(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
-        void contentWindowManagerMovedToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0);
+    // emitting these signals will trigger updates on the corresponding DisplayGroup
+    // as well as all other DisplayGroupInterfaces to that DisplayGroup
+    void contentWindowAdded(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0);
+    void contentWindowRemoved(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0);
+    void contentWindowMovedToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0);
 
-    protected:
+protected:
 
-        // optional: reference to DisplayGroupManager for non-DisplayGroupManager objects
-        boost::weak_ptr<DisplayGroupManager> displayGroupManager_;
+    // optional: reference to DisplayGroup for non-DisplayGroup objects
+    boost::weak_ptr<DisplayGroup> displayGroup_;
 
-        // vector of all of its content window managers
-        ContentWindowManagerPtrs contentWindowManagers_;
+    // vector of all of its content window managers
+    ContentWindowPtrs contentWindows_;
 };
 
 #endif

@@ -48,14 +48,14 @@ class DisplayGroupGraphicsViewProxy : public DisplayGroupInterface
     Q_OBJECT
 
 public:
-    DisplayGroupGraphicsViewProxy(DisplayGroupManagerPtr displayGroup);
+    DisplayGroupGraphicsViewProxy(DisplayGroupPtr displayGroup);
     ~DisplayGroupGraphicsViewProxy();
 
     DisplayGroupGraphicsView* getGraphicsView();
 
-    void addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    void removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
+    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
+    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
+    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
 
 public slots:
     void optionsUpdated(OptionsPtr options);

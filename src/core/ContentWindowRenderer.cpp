@@ -42,7 +42,7 @@
 #include "globals.h"
 #include "configuration/Configuration.h"
 #include "Options.h"
-#include "ContentWindowManager.h"
+#include "ContentWindow.h"
 #include "Content.h"
 #include "GLWindow.h"
 #include "Factories.h"
@@ -75,7 +75,7 @@ void ContentWindowRenderer::render()
         renderWindowBorder();
 }
 
-void ContentWindowRenderer::setContentWindow(ContentWindowManagerPtr window)
+void ContentWindowRenderer::setContentWindow(ContentWindowPtr window)
 {
     window_ = window;
 }

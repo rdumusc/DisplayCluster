@@ -80,18 +80,18 @@ public slots:
      * Set the DisplayGroup to render, replacing the previous one.
      * @see render()
      */
-    void setDisplayGroup(DisplayGroupManagerPtr displayGroup);
+    void setDisplayGroup(DisplayGroupPtr displayGroup);
 
 private:
-    DisplayGroupManagerPtr displayGroup_;
+    DisplayGroupPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
 #if ENABLE_SKELETON_SUPPORT
     bool showSkeletons_;
     SkeletonRenderer skeletonRenderer_;
 #endif
 
-    void renderBackgroundContent(ContentWindowManagerPtr backgroundContentWindow);
-    void renderContentWindows(ContentWindowManagerPtrs contentWindowManagers);
+    void renderBackgroundContent(ContentWindowPtr backgroundContentWindow);
+    void renderContentWindows(ContentWindowPtrs contentWindows);
 };
 
 #endif // DISPLAYGROUPRENDERER_H

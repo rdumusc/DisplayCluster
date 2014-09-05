@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,105 +37,37 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_MANAGER_H
-#define DISPLAY_GROUP_MANAGER_H
+#ifndef WEBBROWSERWIDGET_H
+#define WEBBROWSERWIDGET_H
 
-#include "config.h"
-#include "types.h"
+#include <QDialog>
 
-#include "DisplayGroupInterface.h"
-
-#if ENABLE_SKELETON_SUPPORT
-#include "SkeletonState.h"
-#endif
-
-#include <boost/serialization/access.hpp>
-#include <boost/enable_shared_from_this.hpp>
+class QLineEdit;
+class QSpinBox;
 
 /**
- * A collection of ContentWindows.
- *
- * Can be serialized and distributed to the Wall applications.
+ * Dialog for opening a new webbrowser window.
  */
-class DisplayGroupManager : public DisplayGroupInterface,
-        public boost::enable_shared_from_this<DisplayGroupManager>
+class WebbrowserWidget : public QDialog
 {
     Q_OBJECT
 
 public:
-    /** Constructor */
-    DisplayGroupManager();
-
-    /** Destructor */
-    ~DisplayGroupManager();
-
-    /** Get the background content window. */
-    ContentWindowManagerPtr getBackgroundContentWindow() const;
-
-    /**
-     * Is the DisplayGroup empty.
-     * @return true if the DisplayGroup has no ContentWindowManager, false otherwise.
-     */
-    bool isEmpty() const;
-
-    /**
-     * Get the active window.
-     * @return A shared pointer to the active window. Can be empty if there is
-     *         no Window available. @see isEmpty().
-     */
-    ContentWindowManagerPtr getActiveWindow() const;
-
-#if ENABLE_SKELETON_SUPPORT
-    SkeletonStatePtrs getSkeletons();
-#endif
+    /** Constructor. */
+    explicit WebbrowserWidget(QWidget* parent = 0);
 
 signals:
-    /** Emitted whenever the DisplayGroup is modified */
-    void modified(DisplayGroupManagerPtr displayGroup);
+    /** Emitted when users want to open a webbrowser. */
+    void openWebBrowser(QPointF pos, QSize size, QString url);
 
 public slots:
-    //@{
-    /** Re-implemented from DisplayGroupInterface */
-    void addContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    void removeContentWindowManager(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowManagerToFront(ContentWindowManagerPtr contentWindowManager, DisplayGroupInterface* source = 0) override;
-    //@}
-
-    /**
-     * Set the background content.
-     * @param content The content to set.
-     *                A null pointer removes the current background.
-     */
-    void setBackgroundContent(ContentPtr content);
-
-#if ENABLE_SKELETON_SUPPORT
-    void setSkeletons(SkeletonStatePtrs skeletons);
-#endif
-
-private slots:
-    void sendDisplayGroup();
+    /** Store the new settings and close the widget */
+    void accept() override;
 
 private:
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
-    {
-        ar & contentWindowManagers_;
-        ar & backgroundContent_;
-#if ENABLE_SKELETON_SUPPORT
-        ar & skeletons_;
-#endif
-    }
-
-    void watchChanges(ContentWindowManagerPtr contentWindow);
-
-    ContentWindowManagerPtr backgroundContent_;
-
-#if ENABLE_SKELETON_SUPPORT
-    SkeletonStatePtrs skeletons_;
-#endif
-
+    QLineEdit* urlLineEdit_;
+    QSpinBox* widthSpinBox_;
+    QSpinBox* heightSpinBox_;
 };
 
-#endif
+#endif // WEBBROWSERWIDGET_H

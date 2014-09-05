@@ -78,7 +78,7 @@ signals:
      * @see receiveMessage()
      * @param displayGroup The DisplayGroup that was received
      */
-    void received(DisplayGroupManagerPtr displayGroup);
+    void received(DisplayGroupPtr displayGroup);
 
     /**
      * Emitted when new Options were recieved

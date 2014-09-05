@@ -40,7 +40,6 @@
 
 #include "FpsCounter.h"
 #include "RenderContext.h"
-#include "GLWindow.h"
 
 PixelStreamSegmentRenderer::PixelStreamSegmentRenderer(RenderContext* renderContext)
     : renderContext_(renderContext)
@@ -162,5 +161,5 @@ void PixelStreamSegmentRenderer::drawSegmentStatistics()
 
     glDisable(GL_DEPTH_TEST);
     glColor4f(1.,0.,0.,1.);
-    renderContext_->getActiveGLWindow()->renderText(0.1, 0.95, 0., segmentStatistics->toString(), font);
+    renderContext_->renderText(0.1, 0.95, 0., segmentStatistics->toString(), font);
 }

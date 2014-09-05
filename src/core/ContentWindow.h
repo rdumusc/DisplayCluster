@@ -36,11 +36,11 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_MANAGER_H
-#define CONTENT_WINDOW_MANAGER_H
+#ifndef CONTENT_WINDOW_H
+#define CONTENT_WINDOW_H
 
 #include "ContentWindowInterface.h"
-#include "Content.h" // need pyContent for pyContentWindowManager
+#include "Content.h" // need pyContent for pyContentWindow
 
 #include "serializationHelpers.h"
 
@@ -50,7 +50,7 @@
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 
-class DisplayGroupManager;
+class DisplayGroup;
 class ContentInteractionDelegate;
 
 /**
@@ -58,24 +58,24 @@ class ContentInteractionDelegate;
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class ContentWindowManager : public ContentWindowInterface,
-        public boost::enable_shared_from_this<ContentWindowManager>
+class ContentWindow : public ContentWindowInterface,
+        public boost::enable_shared_from_this<ContentWindow>
 {
     Q_OBJECT
 
 public:
     /** No-argument constructor required for serialization. */
-    ContentWindowManager();
+    ContentWindow();
 
     /**
      * Create a new window.
      * @param content The Content for this window.
      * @note Rank0 only.
      */
-    ContentWindowManager(ContentPtr content);
+    ContentWindow(ContentPtr content);
 
     /** Destructor. */
-    virtual ~ContentWindowManager();
+    virtual ~ContentWindow();
 
     /** Get the content. */
     ContentPtr getContent() const;
@@ -84,10 +84,10 @@ public:
     void setContent(ContentPtr content);
 
     /** Get the parent DisplayGroup of this window. */
-    DisplayGroupManagerPtr getDisplayGroupManager() const;
+    DisplayGroupPtr getDisplayGroup() const;
 
     /** Set a reference on the parent DisplayGroup of this window. */
-    void setDisplayGroupManager(DisplayGroupManagerPtr displayGroupManager);
+    void setDisplayGroup(DisplayGroupPtr displayGroup);
 
     /**
      * Get the interaction delegate.
@@ -133,7 +133,7 @@ protected:
     void serialize(Archive & ar, const unsigned int)
     {
         ar & content_;
-        ar & displayGroupManager_;
+        ar & displayGroup_;
         ar & contentWidth_;
         ar & contentHeight_;
         ar & coordinates_;
@@ -163,33 +163,33 @@ protected:
 private:
     ContentPtr content_;
 
-    boost::weak_ptr<DisplayGroupManager> displayGroupManager_;
+    boost::weak_ptr<DisplayGroup> displayGroup_;
 
     // Rank0: Delegate to handle user inputs
     boost::scoped_ptr<ContentInteractionDelegate> interactionDelegate_;
 };
 
-DECLARE_SERIALIZE_FOR_XML(ContentWindowManager)
+DECLARE_SERIALIZE_FOR_XML(ContentWindow)
 
 // typedef needed for SIP
-typedef ContentWindowManagerPtr pContentWindowManager;
+typedef ContentWindowPtr pContentWindow;
 
-class pyContentWindowManager
+class pyContentWindow
 {
 public:
 
-    pyContentWindowManager(pyContent content)
+    pyContentWindow(pyContent content)
     {
-        ContentWindowManagerPtr contentWindow(new ContentWindowManager(content.get()));
+        ContentWindowPtr contentWindow(new ContentWindow(content.get()));
         ptr_ = contentWindow;
     }
 
-    pyContentWindowManager(ContentWindowManagerPtr contentWindow)
+    pyContentWindow(ContentWindowPtr contentWindow)
     {
         ptr_ = contentWindow;
     }
 
-    ContentWindowManagerPtr get()
+    ContentWindowPtr get()
     {
         return ptr_;
     }
@@ -201,7 +201,7 @@ public:
 
 private:
 
-    ContentWindowManagerPtr ptr_;
+    ContentWindowPtr ptr_;
 };
 
 #endif
