@@ -51,13 +51,6 @@ DisplayGroup::~DisplayGroup()
 {
 }
 
-#if ENABLE_SKELETON_SUPPORT
-SkeletonStatePtrs DisplayGroup::getSkeletons()
-{
-    return skeletons_;
-}
-#endif
-
 void DisplayGroup::addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
 {
     BOOST_FOREACH(ContentWindowPtr existingWindow, contentWindows_)
@@ -167,12 +160,3 @@ void DisplayGroup::sendDisplayGroup()
 {
     emit modified(shared_from_this());
 }
-
-#if ENABLE_SKELETON_SUPPORT
-void DisplayGroup::setSkeletons(SkeletonStatePtrs skeletons)
-{
-    skeletons_ = skeletons;
-
-    emit modified(shared_from_this());
-}
-#endif

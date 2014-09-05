@@ -55,16 +55,6 @@
     #include "MultiTouchListener.h"
 #endif
 
-#if ENABLE_JOYSTICK_SUPPORT
-    #include "JoystickThread.h"
-    #define JOYSTICK_THREAD_WAIT_TIME_USEC 1000
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-    #include "SkeletonThread.h"
-    #define SKELTON_THREAD_WAIT_TIME_USEC 1000
-#endif
-
 #include "NetworkListener.h"
 #include "localstreamer/PixelStreamerLauncher.h"
 #include "StateSerializationHelper.h"
@@ -113,16 +103,6 @@ MasterApplication::~MasterApplication()
     mpiReceiveThread_.quit();
     mpiReceiveThread_.wait();
 
-#if ENABLE_SKELETON_SUPPORT
-    skeletonThread_->stop();
-    skeletonThread_->wait();
-#endif
-
-#if ENABLE_JOYSTICK_SUPPORT
-    joystickThread_->stop();
-    joystickThread_->wait();
-#endif
-
     webServiceServer_->stop();
     webServiceServer_->wait();
 }
@@ -142,14 +122,6 @@ void MasterApplication::init()
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     initTouchListener();
-#endif
-
-#if ENABLE_JOYSTICK_SUPPORT
-    startJoystickThread();
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-    startSkeletonThread();
 #endif
 }
 
@@ -276,45 +248,5 @@ void MasterApplication::initTouchListener()
             markers_.get(), SLOT(updateMarker(int,QPointF)));
     connect(touchListener_.get(), SIGNAL(touchPointRemoved(int)),
             markers_.get(), SLOT(removeMarker(int)));
-}
-#endif
-
-#if ENABLE_JOYSTICK_SUPPORT
-void MasterApplication::startJoystickThread()
-{
-    // do this before the thread starts to avoid X callback race conditions
-    // we need SDL_INIT_VIDEO for events to work
-    if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
-    {
-        put_flog(LOG_ERROR, "could not initial SDL joystick subsystem");
-        return;
-    }
-
-    // create thread to monitor joystick events (all joysticks handled in same event queue)
-    joystickThread_.reset(new JoystickThread(displayGroup_));
-    joystickThread_->start();
-
-    // wait for thread to start
-    while(!joystickThread_->isRunning() || joystickThread_->isFinished())
-        usleep(JOYSTICK_THREAD_WAIT_TIME_USEC);
-}
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-void MasterApplication::startSkeletonThread()
-{
-    skeletonThread_.reset(new SkeletonThread(displayGroup_));
-    skeletonThread_->start();
-
-    // wait for thread to start
-    while( !skeletonThread_->isRunning() || skeletonThread_->isFinished() )
-        usleep(SKELTON_THREAD_WAIT_TIME_USEC);
-
-    connect(masterWindow_, SIGNAL(enableSkeletonTracking()), skeletonThread_, SLOT(startTimer()));
-    connect(masterWindow_, SIGNAL(disableSkeletonTracking()), skeletonThread_, SLOT(stopTimer()));
-
-    connect(skeletonThread_, SIGNAL(skeletonsUpdated(SkeletonStatePtrs)),
-            displayGroup_.get(), SLOT(setSkeletons(SkeletonStatePtrs)),
-            Qt::QueuedConnection);
 }
 #endif

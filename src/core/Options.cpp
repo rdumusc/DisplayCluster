@@ -45,9 +45,6 @@ Options::Options()
     , showZoomContext_(true)
     , showStreamingSegments_(false)
     , showStreamingStatistics_(false)
-#if ENABLE_SKELETON_SUPPORT
-    , showSkeletons_(true)
-#endif
 {
 }
 
@@ -85,13 +82,6 @@ QColor Options::getBackgroundColor() const
 {
     return backgroundColor_;
 }
-
-#if ENABLE_SKELETON_SUPPORT
-bool Options::getShowSkeletons() const
-{
-    return showSkeletons_;
-}
-#endif
 
 void Options::setShowWindowBorders(bool set)
 {
@@ -143,12 +133,3 @@ void Options::setBackgroundColor(QColor color)
 
     emit (updated(shared_from_this()));
 }
-
-#if ENABLE_SKELETON_SUPPORT
-void Options::setShowSkeletons(bool set)
-{
-    showSkeletons_ = set;
-
-    emit(updated(shared_from_this()));
-}
-#endif

@@ -71,9 +71,6 @@ public:
     bool getShowStreamingSegments() const;
     bool getShowStatistics() const;
     QColor getBackgroundColor() const;
-#if ENABLE_SKELETON_SUPPORT
-    bool getShowSkeletons() const;
-#endif
     //@}
 
 public slots:
@@ -86,9 +83,6 @@ public slots:
     void setShowStreamingSegments(bool set);
     void setShowStatistics(bool set);
     void setBackgroundColor(QColor color);
-#if ENABLE_SKELETON_SUPPORT
-    void setShowSkeletons(bool set);
-#endif
     //@}
 
 signals:
@@ -108,9 +102,6 @@ private:
         ar & showStreamingSegments_;
         ar & showStreamingStatistics_;
         ar & backgroundColor_;
-#if ENABLE_SKELETON_SUPPORT
-        ar & showSkeletons_;
-#endif
     }
 
     bool showWindowBorders_;
@@ -120,9 +111,6 @@ private:
     bool showStreamingSegments_;
     bool showStreamingStatistics_;
     QColor backgroundColor_;
-#if ENABLE_SKELETON_SUPPORT
-    bool showSkeletons_;
-#endif
 };
 
 #endif

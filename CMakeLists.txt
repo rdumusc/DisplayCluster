@@ -45,10 +45,6 @@ if(TUIO_FOUND)
   option(ENABLE_TUIO_TOUCH_LISTENER "Enable TUIO touch listener for multi-touch events" ON)
 endif()
 
-option(ENABLE_JOYSTICK_SUPPORT "Enable joystick support" OFF)
-option(ENABLE_SKELETON_SUPPORT "EXPERIMENTAL: Enable skeleton tracking interface support" OFF)
-option(ENABLE_PYTHON_SUPPORT "Enable Python support" OFF)
-
 if(POPPLER_FOUND)
   option(ENABLE_PDF_SUPPORT "Enable Pdf support using Poppler" ON)
 endif()

@@ -44,10 +44,6 @@
 
 #include "DisplayGroupInterface.h"
 
-#if ENABLE_SKELETON_SUPPORT
-#include "SkeletonState.h"
-#endif
-
 #include <boost/serialization/access.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -84,10 +80,6 @@ public:
      */
     ContentWindowPtr getActiveWindow() const;
 
-#if ENABLE_SKELETON_SUPPORT
-    SkeletonStatePtrs getSkeletons();
-#endif
-
 signals:
     /** Emitted whenever the DisplayGroup is modified */
     void modified(DisplayGroupPtr displayGroup);
@@ -107,10 +99,6 @@ public slots:
      */
     void setBackgroundContent(ContentPtr content);
 
-#if ENABLE_SKELETON_SUPPORT
-    void setSkeletons(SkeletonStatePtrs skeletons);
-#endif
-
 private slots:
     void sendDisplayGroup();
 
@@ -122,19 +110,11 @@ private:
     {
         ar & contentWindows_;
         ar & backgroundContent_;
-#if ENABLE_SKELETON_SUPPORT
-        ar & skeletons_;
-#endif
     }
 
     void watchChanges(ContentWindowPtr contentWindow);
 
     ContentWindowPtr backgroundContent_;
-
-#if ENABLE_SKELETON_SUPPORT
-    SkeletonStatePtrs skeletons_;
-#endif
-
 };
 
 #endif

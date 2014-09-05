@@ -64,9 +64,6 @@ struct MetaTypeRegistration
         qRegisterMetaType<PixelStreamSegment>("PixelStreamSegment");
         qRegisterMetaType<PixelStreamFramePtr>("PixelStreamFramePtr");
         qRegisterMetaType<ContentWindowInterface::WindowState>("ContentWindowInterface::WindowState");
-#if ENABLE_SKELETON_SUPPORT
-        qRegisterMetaType<SkeletonStatePtrs("SkeletonStatePtrs");
-#endif
     }
 };
 

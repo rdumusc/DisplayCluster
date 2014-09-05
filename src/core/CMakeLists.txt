@@ -29,53 +29,6 @@ if(ENABLE_TUIO_TOUCH_LISTENER)
   list(APPEND CORE_LIBRARY_LIBS ${X11_LIBRARIES})
 endif()
 
-if(ENABLE_JOYSTICK_SUPPORT)
-  find_package(SDL REQUIRED)
-  include_directories(${SDL_INCLUDE_DIR})
-  list(APPEND CORE_LIBRARY_LIBS ${SDL_LIBRARY})
-
-  set(SRCS ${SRCS} JoystickThread.cpp)
-  set(SRCS ${SRCS} DisplayGroupJoystick.cpp)
-
-  set(MOC_HEADERS ${MOC_HEADERS} JoystickThread.h)
-endif()
-
-if(ENABLE_SKELETON_SUPPORT)
-  find_package(OpenNI REQUIRED)
-  include_directories(SYSTEM ${OpenNI_INCLUDE_DIRS}) # use SYSTEM to suppress OpenNI compile warnings
-  list(APPEND CORE_LIBRARY_LIBS ${OpenNI_LIBRARIES})
-
-  list(APPEND SRCS
-    SkeletonThread.cpp
-    SkeletonSensor.cpp
-    SkeletonState.cpp
-    SkeletonRenderer.cpp
-  )
-
-  if(NOT ENABLE_JOYSTICK_SUPPORT)
-    list(APPEMD SRCS DisplayGroupJoystick.cpp)
-  endif()
-
-  set(MOC_HEADERS ${MOC_HEADERS} SkeletonThread.h)
-endif()
-
-if(ENABLE_PYTHON_SUPPORT)
-    find_package(PythonLibs REQUIRED)
-    include_directories(${PYTHON_INCLUDE_PATH}) # deprecated, but include for old CMake versions
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    list(APPEND CORE_LIBRARY_LIBS ${PYTHON_LIBRARIES})
-
-    find_package(PythonQt REQUIRED)
-    include_directories(${PythonQt_INCLUDE_DIRS})
-    list(APPEND CORE_LIBRARY_LIBS ${PythonQt_LIBRARIES})
-
-    set(SRCS ${SRCS} DisplayGroupPython.cpp)
-    set(SRCS ${SRCS} PythonConsole.cpp)
-
-    set(MOC_HEADERS ${MOC_HEADERS} DisplayGroupPython.h)
-    set(MOC_HEADERS ${MOC_HEADERS} PythonConsole.h)
-endif()
-
 if(ENABLE_PDF_SUPPORT)
   list(APPEND CORE_LIBRARY_LIBS ${POPPLER_LIBRARIES})
 
@@ -263,18 +216,3 @@ install(TARGETS dccore
     ARCHIVE DESTINATION lib COMPONENT dev
     RUNTIME DESTINATION bin COMPONENT core
     LIBRARY DESTINATION lib COMPONENT core)
-
-# build Python module if Python support is enabled
-if(ENABLE_PYTHON_SUPPORT)
-    add_custom_command(TARGET displaycluster POST_BUILD
-        COMMENT "Building Python module"
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/python
-        COMMAND python configure.py -I ${Boost_INCLUDE_DIRS}
-        COMMAND make
-        COMMAND mv pydc.so ${CMAKE_BINARY_DIR})
-endif()
-
-# install Python module
-if(ENABLE_PYTHON_SUPPORT)
-  install(FILES ${CMAKE_BINARY_DIR}/pydc.so DESTINATION python COMPONENT core)
-endif()
