@@ -39,9 +39,9 @@
 #ifndef DISPLAY_GROUP_GRAPHICS_VIEW_H
 #define DISPLAY_GROUP_GRAPHICS_VIEW_H
 
-#include <QGraphicsView>
-
 #include "types.h"
+
+#include <QGraphicsView>
 
 class QGesture;
 class QGestureEvent;
@@ -51,19 +51,25 @@ class QSwipeGesture;
 class QTapGesture;
 class QTapAndHoldGesture;
 
+/**
+ * An interactive graphical view of a DisplayGroup's ContentWindows.
+ */
 class DisplayGroupGraphicsView : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-    DisplayGroupGraphicsView();
+    DisplayGroupGraphicsView( QWidget* parent = 0 );
     virtual ~DisplayGroupGraphicsView();
 
-    void grabGestures();
+public slots:
+    void addContentWindow( ContentWindowPtr contentWindow );
+    void removeContentWindow( ContentWindowPtr contentWindow );
+    void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
 signals:
-    void backgroundTap(QPointF pos);
-    void backgroundTapAndHold(QPointF pos);
+    void backgroundTap( QPointF pos );
+    void backgroundTapAndHold( QPointF pos );
 
 protected:
     bool viewportEvent( QEvent* event ) override;
@@ -77,6 +83,7 @@ protected:
     void tapAndHold( QTapAndHoldGesture* gesture );
 
 private:
+    void grabGestures();
     QPointF getNormalizedPosition( const QGesture* gesture ) const;
     bool isOnBackground( const QPointF& position ) const;
 };

@@ -48,7 +48,6 @@
 
 class BackgroundWidget;
 class Configuration;
-class DisplayGroupGraphicsViewProxy;
 class DisplayGroupGraphicsView;
 class WebbrowserWidget;
 
@@ -126,7 +125,7 @@ private:
     OptionsPtr options_;
     BackgroundWidget* backgroundWidget_;
     WebbrowserWidget* webbrowserWidget_;
-    DisplayGroupGraphicsViewProxy* dggv_;
+    DisplayGroupGraphicsView* dggv_;
 };
 
 #endif // MASTERWINDOW_H

@@ -48,38 +48,36 @@
 #define DOUBLE_CLICK_DISTANCE 0.1 // recall this is the (0,0,1,1) coordinate system
 #define DOUBLE_CLICK_TIME 750 // ms
 
-class DisplayGroupGraphicsViewProxy;
+class DisplayGroupGraphicsView;
 
 class TouchListener : public TUIO::TuioListener
 {
-    public:
+public:
+    TouchListener( DisplayGroupGraphicsView* graphicsView );
 
-        TouchListener(DisplayGroupPtr displayGroup);
+    void addTuioObject(TUIO::TuioObject *tobj);
+    void updateTuioObject(TUIO::TuioObject *tobj);
+    void removeTuioObject(TUIO::TuioObject *tobj);
 
-        void addTuioObject(TUIO::TuioObject *tobj);
-        void updateTuioObject(TUIO::TuioObject *tobj);
-        void removeTuioObject(TUIO::TuioObject *tobj);
+    void addTuioCursor(TUIO::TuioCursor *tcur);
+    void updateTuioCursor(TUIO::TuioCursor *tcur);
+    void removeTuioCursor(TUIO::TuioCursor *tcur);
 
-        void addTuioCursor(TUIO::TuioCursor *tcur);
-        void updateTuioCursor(TUIO::TuioCursor *tcur);
-        void removeTuioCursor(TUIO::TuioCursor *tcur);
+    void refresh(TUIO::TuioTime frameTime);
 
-        void refresh(TUIO::TuioTime frameTime);
+private:
+    DisplayGroupGraphicsView* graphicsView_;
 
-    private:
+    TUIO::TuioClient client_;
+    QPointF lastPoint_;
+    QPointF cursorPos_;
 
-        DisplayGroupGraphicsViewProxy * graphicsViewProxy_;
+    // detect double-clicks and triple-clicks
+    QTime lastClickTime1_;
+    QPointF lastClickPoint1_;
 
-        TUIO::TuioClient client_;
-        QPointF lastPoint_;
-        QPointF cursorPos_;
-
-        // detect double-clicks and triple-clicks
-        QTime lastClickTime1_;
-        QPointF lastClickPoint1_;
-
-        QTime lastClickTime2_;
-        QPointF lastClickPoint2_;
+    QTime lastClickTime2_;
+    QPointF lastClickPoint2_;
 };
 
 #endif

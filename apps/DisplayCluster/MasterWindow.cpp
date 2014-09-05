@@ -51,9 +51,8 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
-#include "DisplayGroupGraphicsViewProxy.h"
 #include "DisplayGroupGraphicsView.h"
-#include "DisplayGroupListWidgetProxy.h"
+#include "DisplayGroupListWidget.h"
 #include "BackgroundWidget.h"
 #include "WebbrowserWidget.h"
 
@@ -97,7 +96,7 @@ MasterWindow::~MasterWindow()
 
 DisplayGroupGraphicsView* MasterWindow::getGraphicsView()
 {
-    return dggv_->getGraphicsView();
+    return dggv_;
 }
 
 OptionsPtr MasterWindow::getOptions() const
@@ -283,15 +282,19 @@ void MasterWindow::setupMasterWindowUI()
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    dggv_ = new DisplayGroupGraphicsViewProxy(displayGroup_);
-    mainWidget->addTab((QWidget *)dggv_->getGraphicsView(), "Display group 0");
+    dggv_ = new DisplayGroupGraphicsView(this);
+    mainWidget->addTab((QWidget *)dggv_, "Display group 0");
+    // Forward DisplayGroup events
+    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr, DisplayGroupInterface*)),
+            dggv_, SLOT(addContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface*)),
+            dggv_, SLOT(removeContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr, DisplayGroupInterface*)),
+            dggv_, SLOT(moveContentWindowToFront(ContentWindowPtr)));
     // Forward background touch events
-    connect(dggv_->getGraphicsView(), SIGNAL(backgroundTap(QPointF)),
-            this, SIGNAL(hideDock()));
-    connect(dggv_->getGraphicsView(), SIGNAL(backgroundTapAndHold(QPointF)),
+    connect(dggv_, SIGNAL(backgroundTap(QPointF)), this, SIGNAL(hideDock()));
+    connect(dggv_, SIGNAL(backgroundTapAndHold(QPointF)),
             this, SIGNAL(openDock(QPointF)));
-    connect(options_.get(), SIGNAL(updated(OptionsPtr)),
-            dggv_, SLOT(optionsUpdated(OptionsPtr)));
 
     // create contents dock widget
     QDockWidget * contentsDockWidget = new QDockWidget("Contents", this);
@@ -302,8 +305,15 @@ void MasterWindow::setupMasterWindowUI()
     addDockWidget(Qt::LeftDockWidgetArea, contentsDockWidget);
 
     // add the list widget
-    DisplayGroupListWidgetProxy * dglwp = new DisplayGroupListWidgetProxy(displayGroup_);
-    contentsLayout->addWidget(dglwp->getListWidget());
+    DisplayGroupListWidget* dglwp = new DisplayGroupListWidget(this);
+    // Forward DisplayGroup events
+    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr, DisplayGroupInterface*)),
+            dglwp, SLOT(addContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr, DisplayGroupInterface*)),
+            dglwp, SLOT(removeContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr, DisplayGroupInterface*)),
+            dglwp, SLOT(moveContentWindowToFront(ContentWindowPtr)));
+    contentsLayout->addWidget(dglwp);
 }
 
 void MasterWindow::openContent()

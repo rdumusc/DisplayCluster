@@ -36,34 +36,32 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_GRAPHICS_VIEW_PROXY_H
-#define DISPLAY_GROUP_GRAPHICS_VIEW_PROXY_H
+#ifndef DISPLAY_GROUP_LIST_WIDGET_H
+#define DISPLAY_GROUP_LIST_WIDGET_H
 
-#include "DisplayGroupInterface.h"
+#include "types.h"
 
-class DisplayGroupGraphicsView;
+#include <QListWidget>
 
-class DisplayGroupGraphicsViewProxy : public DisplayGroupInterface
+class QListWidgetItem;
+
+/**
+ * A list view of a DisplayGroup's ContentWindows.
+ */
+class DisplayGroupListWidget : public QListWidget
 {
     Q_OBJECT
 
 public:
-    DisplayGroupGraphicsViewProxy(DisplayGroupPtr displayGroup);
-    ~DisplayGroupGraphicsViewProxy();
-
-    DisplayGroupGraphicsView* getGraphicsView();
-
-    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
+    DisplayGroupListWidget( QWidget* parent = 0 );
 
 public slots:
-    void optionsUpdated(OptionsPtr options);
+    void addContentWindow( ContentWindowPtr contentWindow );
+    void removeContentWindow( ContentWindowPtr contentWindow );
+    void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
-private:
-    // we make this a member since we can't have multiple inheritance of QObject and still use signals/slots
-    // see the "Diamond problem"
-    DisplayGroupGraphicsView* graphicsView_;
+private slots:
+    void moveListWidgetItemToFront( QListWidgetItem* listWidgetItem );
 };
 
 #endif

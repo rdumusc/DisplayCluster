@@ -111,9 +111,8 @@ list(APPEND SRCS
     DisplayGroupRenderer.cpp
     DisplayGroupInterface.cpp
     DisplayGroupGraphicsScene.cpp
-    DisplayGroupGraphicsViewProxy.cpp
     DisplayGroupGraphicsView.cpp
-    DisplayGroupListWidgetProxy.cpp
+    DisplayGroupListWidget.cpp
     DynamicTexture.cpp
     DynamicTextureContent.cpp
     ElapsedTimer.cpp
@@ -213,8 +212,7 @@ list(APPEND MOC_HEADERS
     DisplayGroup.h
     DisplayGroupInterface.h
     DisplayGroupGraphicsView.h
-    DisplayGroupGraphicsViewProxy.h
-    DisplayGroupListWidgetProxy.h
+    DisplayGroupListWidget.h
     DisplayGroupRenderer.h
     EventReceiver.h
     Factories.h

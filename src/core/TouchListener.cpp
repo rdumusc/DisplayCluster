@@ -38,13 +38,12 @@
 
 #include "TouchListener.h"
 
-#include "DisplayGroupGraphicsViewProxy.h"
 #include "DisplayGroupGraphicsView.h"
 
 //#define TABLET_INTERACTION
 
-TouchListener::TouchListener(DisplayGroupPtr displayGroup)
-    : graphicsViewProxy_(new DisplayGroupGraphicsViewProxy(displayGroup))
+TouchListener::TouchListener( DisplayGroupGraphicsView* graphicsView )
+    : graphicsView_( graphicsView )
 {
     client_.addTuioListener(this);
     client_.connect();
@@ -132,7 +131,7 @@ void TouchListener::addTuioCursor(TUIO::TuioCursor *tcur)
         event->setModifiers(Qt::AltModifier);
 
         // post the event (thread-safe)
-        QApplication::postEvent(graphicsViewProxy_->getGraphicsView()->scene(), event);
+        QApplication::postEvent(graphicsView_->scene(), event);
     }
 #endif
 }
@@ -182,7 +181,7 @@ void TouchListener::updateTuioCursor(TUIO::TuioCursor *tcur)
     }
 
     // post the event (thread-safe)
-    QApplication::postEvent(graphicsViewProxy_->getGraphicsView()->scene(), event);
+    QApplication::postEvent(graphicsView_->scene(), event);
 
     // reset last point
     lastPoint_ = point;
@@ -215,7 +214,7 @@ void TouchListener::removeTuioCursor(TUIO::TuioCursor *tcur)
     }
 
     // post the event (thread-safe)
-    QApplication::postEvent(graphicsViewProxy_->getGraphicsView()->scene(), event);
+    QApplication::postEvent(graphicsView_->scene(), event);
 
     // reset last point
     lastPoint_ = point;
