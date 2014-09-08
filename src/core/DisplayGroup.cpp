@@ -51,98 +51,62 @@ DisplayGroup::~DisplayGroup()
 {
 }
 
-#if ENABLE_SKELETON_SUPPORT
-SkeletonStatePtrs DisplayGroup::getSkeletons()
+void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
 {
-    return skeletons_;
-}
-#endif
-
-void DisplayGroup::addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
-{
-    BOOST_FOREACH(ContentWindowPtr existingWindow, contentWindows_)
+    BOOST_FOREACH( ContentWindowPtr existingWindow, contentWindows_ )
     {
-        if (contentWindow->getID() == existingWindow->getID())
+        if ( contentWindow->getID() == existingWindow->getID( ))
         {
-            put_flog(LOG_WARN, "A window with the same id already exists!");
+            put_flog( LOG_WARN, "A window with the same id already exists!" );
             return;
         }
     }
 
-    DisplayGroupInterface::addContentWindow(contentWindow, source);
+    contentWindows_.push_back( contentWindow );
+    emit( contentWindowAdded( contentWindow ));
 
-    if(source != this)
-    {
-        contentWindow->setDisplayGroup(shared_from_this());
-        watchChanges(contentWindow);
+    contentWindow->setDisplayGroup( shared_from_this( ));
+    watchChanges( contentWindow );
 
-        emit modified(shared_from_this());
-    }
+    sendDisplayGroup();
 }
 
-void DisplayGroup::watchChanges(ContentWindowPtr contentWindow)
+void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
 {
-    // Don't call sendDisplayGroup() on movedToFront() or destroyed() since it happens already
-    connect(contentWindow.get(), SIGNAL(contentDimensionsChanged(int, int, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(coordinatesChanged(QRectF, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(positionChanged(double, double, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(sizeChanged(double, double, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(centerChanged(double, double, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(zoomChanged(double, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(windowStateChanged(ContentWindowInterface::WindowState, ContentWindowInterface *)),
-            this, SLOT(sendDisplayGroup()));
-    connect(contentWindow.get(), SIGNAL(contentModified()),
-            this, SLOT(sendDisplayGroup()));
+    Event closeEvent;
+    closeEvent.type = Event::EVT_CLOSE;
+    contentWindow->setEvent( closeEvent );
+
+    ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
+                                           contentWindows_.end(),
+                                           contentWindow );
+    if( it == contentWindows_.end( ))
+        return;
+
+    contentWindows_.erase( it );
+    emit( contentWindowRemoved( contentWindow ));
+
+    // disconnect any existing connections with the window
+    disconnect( contentWindow.get(), 0, this, 0 );
+    contentWindow->setDisplayGroup( DisplayGroupPtr( ));
+
+    sendDisplayGroup();
 }
 
-void DisplayGroup::removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
+void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
 {
-    DisplayGroupInterface::removeContentWindow(contentWindow, source);
+    ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
+                                           contentWindows_.end(),
+                                           contentWindow );
+    if( it == contentWindows_.end( ))
+        return;
 
-    if(source != this)
-    {
-        // disconnect any existing connections with the window
-        disconnect(contentWindow.get(), 0, this, 0);
+    // move it to end of the list (last item rendered is on top)
+    contentWindows_.erase( it );
+    contentWindows_.push_back( contentWindow );
 
-        // set null display group in content window manager object
-        contentWindow->setDisplayGroup(DisplayGroupPtr());
-
-        emit modified(shared_from_this());
-    }
-}
-
-void DisplayGroup::moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface * source)
-{
-    DisplayGroupInterface::moveContentWindowToFront(contentWindow, source);
-
-    if(source != this)
-    {
-        emit modified(shared_from_this());
-    }
-}
-
-void DisplayGroup::setBackgroundContent(ContentPtr content)
-{
-    if (content)
-    {
-        backgroundContent_ = ContentWindowPtr(new ContentWindow(content));
-        // set display group in content window manager object
-        backgroundContent_->setDisplayGroup(shared_from_this());
-        backgroundContent_->adjustSize( SIZE_FULLSCREEN );
-        watchChanges(backgroundContent_);
-    }
-    else
-    {
-        backgroundContent_ = ContentWindowPtr();
-    }
-
-    emit modified(shared_from_this());
+    emit( contentWindowMovedToFront( contentWindow ));
+    sendDisplayGroup();
 }
 
 ContentWindowPtr DisplayGroup::getBackgroundContentWindow() const
@@ -157,22 +121,88 @@ bool DisplayGroup::isEmpty() const
 
 ContentWindowPtr DisplayGroup::getActiveWindow() const
 {
-    if (isEmpty())
+    if ( isEmpty( ))
         return ContentWindowPtr();
 
     return contentWindows_.back();
 }
 
+ContentWindowPtrs DisplayGroup::getContentWindows() const
+{
+    return contentWindows_;
+}
+
+ContentWindowPtr DisplayGroup::getContentWindow( const QUuid& id ) const
+{
+    BOOST_FOREACH( ContentWindowPtr window, contentWindows_ )
+    {
+        if( window->getID() == id )
+            return window;
+    }
+    return ContentWindowPtr();
+}
+
+void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
+{
+    clear();
+
+    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
+    {
+        addContentWindow( window );
+    }
+}
+
+void DisplayGroup::clear()
+{
+    while( !contentWindows_.empty( ))
+        removeContentWindow( contentWindows_[0] );
+}
+
+void DisplayGroup::setBackgroundContent( ContentPtr content )
+{
+    if ( content )
+    {
+        backgroundContent_ = ContentWindowPtr( new ContentWindow( content ));
+        backgroundContent_->setDisplayGroup( shared_from_this( ));
+        backgroundContent_->adjustSize( SIZE_FULLSCREEN );
+        watchChanges( backgroundContent_ );
+    }
+    else
+    {
+        backgroundContent_ = ContentWindowPtr();
+    }
+
+    sendDisplayGroup();
+}
+
 void DisplayGroup::sendDisplayGroup()
 {
-    emit modified(shared_from_this());
+    emit modified( shared_from_this( ));
 }
 
-#if ENABLE_SKELETON_SUPPORT
-void DisplayGroup::setSkeletons(SkeletonStatePtrs skeletons)
+void DisplayGroup::watchChanges( ContentWindowPtr contentWindow )
 {
-    skeletons_ = skeletons;
-
-    emit modified(shared_from_this());
+    connect( contentWindow.get(),
+             SIGNAL( contentDimensionsChanged( int, int, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(),
+             SIGNAL( coordinatesChanged( QRectF, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(),
+             SIGNAL( positionChanged( double, double, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(),
+             SIGNAL( sizeChanged( double, double, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(),
+             SIGNAL( centerChanged( double, double, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(),
+             SIGNAL( zoomChanged( double, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(),
+             SIGNAL( windowStateChanged( ContentWindowInterface::WindowState, ContentWindowInterface* )),
+             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(), SIGNAL( contentModified( )),
+             this, SLOT( sendDisplayGroup( )));
 }
-#endif

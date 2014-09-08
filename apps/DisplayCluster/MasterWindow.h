@@ -40,7 +40,6 @@
 #ifndef MASTERWINDOW_H
 #define MASTERWINDOW_H
 
-#include "config.h"
 #include "types.h"
 
 #include <QMainWindow>
@@ -48,7 +47,6 @@
 
 class BackgroundWidget;
 class Configuration;
-class DisplayGroupGraphicsViewProxy;
 class DisplayGroupGraphicsView;
 class WebbrowserWidget;
 
@@ -84,11 +82,6 @@ signals:
     /** Emitted when users want to open a webbrowser. */
     void openWebBrowser(QPointF pos, QSize size, QString url);
 
-#if ENABLE_SKELETON_SUPPORT
-    void enableSkeletonTracking();
-    void disableSkeletonTracking();
-#endif
-
 protected:
     ///@{
     /** Drag events re-implemented from QMainWindow. */
@@ -105,9 +98,6 @@ private slots:
 
     void computeImagePyramid();
 
-#if ENABLE_SKELETON_SUPPORT
-    void setEnableSkeletonTracking(bool enable);
-#endif
     void openAboutWidget();
 
 private:
@@ -126,7 +116,7 @@ private:
     OptionsPtr options_;
     BackgroundWidget* backgroundWidget_;
     WebbrowserWidget* webbrowserWidget_;
-    DisplayGroupGraphicsViewProxy* dggv_;
+    DisplayGroupGraphicsView* dggv_;
 };
 
 #endif // MASTERWINDOW_H

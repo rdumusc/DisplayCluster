@@ -98,14 +98,6 @@ private:
     QThread mpiSendThread_;
     QThread mpiReceiveThread_;
 
-#if ENABLE_JOYSTICK_SUPPORT
-    boost::scoped_ptr<JoystickThread> joystickThread_;
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-    boost::scoped_ptr<SkeletonThread> skeletonThread_;
-#endif
-
     void init();
     bool createConfig(const QString& filename);
     void startNetworkListener();
@@ -116,14 +108,6 @@ private:
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     void initTouchListener();
-#endif
-
-#if ENABLE_JOYSTICK_SUPPORT
-    void startJoystickThread();
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-    void startSkeletonThread();
 #endif
 };
 

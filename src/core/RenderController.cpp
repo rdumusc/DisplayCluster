@@ -141,9 +141,5 @@ void RenderController::setRenderOptions(OptionsPtr options)
     winRenderer.setShowZoomContext(options->getShowZoomContext());
     winRenderer.setPixelStreamOptions(options->getShowStreamingSegments(),
                                       options->getShowStatistics());
-
-#if ENABLE_SKELETON_SUPPORT
-    displayGroupRenderer_->setShowSkeleton(options->getShowSkeletons());
-#endif
 }
 

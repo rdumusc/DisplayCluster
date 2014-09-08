@@ -40,6 +40,7 @@
 #include "ContentInteractionDelegate.h"
 
 #include "ContentWindow.h"
+#include "Content.h"
 #include "gestures/DoubleTapGesture.h"
 #include "gestures/DoubleTapGestureRecognizer.h"
 #include "gestures/PanGesture.h"

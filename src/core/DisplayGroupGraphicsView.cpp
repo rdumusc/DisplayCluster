@@ -49,18 +49,19 @@
 #include "gestures/PinchGesture.h"
 #include "gestures/PinchGestureRecognizer.h"
 
-DisplayGroupGraphicsView::DisplayGroupGraphicsView()
+DisplayGroupGraphicsView::DisplayGroupGraphicsView( QWidget* parent_ )
+    : QGraphicsView( parent_ )
 {
     // create and set scene for the view
-    setScene(new DisplayGroupGraphicsScene());
+    setScene( new DisplayGroupGraphicsScene( ));
 
     // force scene to be anchored at top left
-    setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    setAlignment( Qt::AlignLeft | Qt::AlignTop );
 
     // set attributes of the view
-    setInteractive(true);
-    setDragMode(QGraphicsView::RubberBandDrag);
-    setAcceptDrops(true);
+    setInteractive( true );
+    setDragMode( QGraphicsView::RubberBandDrag );
+    setAcceptDrops( true );
 
     grabGestures();
 }
@@ -72,9 +73,9 @@ DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
 
 void DisplayGroupGraphicsView::grabGestures()
 {
-    viewport()->grabGesture(Qt::TapGesture);
-    viewport()->grabGesture(Qt::TapAndHoldGesture);
-    viewport()->grabGesture(Qt::SwipeGesture);
+    viewport()->grabGesture( Qt::TapGesture );
+    viewport()->grabGesture( Qt::TapAndHoldGesture );
+    viewport()->grabGesture( Qt::SwipeGesture );
 }
 
 bool DisplayGroupGraphicsView::viewportEvent( QEvent* evt )
@@ -85,7 +86,7 @@ bool DisplayGroupGraphicsView::viewportEvent( QEvent* evt )
         gestureEvent( gesture );
         return QGraphicsView::viewportEvent( gesture );
     }
-    return QGraphicsView::viewportEvent(evt);
+    return QGraphicsView::viewportEvent( evt );
 }
 
 void DisplayGroupGraphicsView::gestureEvent( QGestureEvent* evt )
@@ -137,10 +138,10 @@ void DisplayGroupGraphicsView::tap( QTapGesture* gesture )
     if( gesture->state() != Qt::GestureFinished )
         return;
 
-    const QPointF position = getNormalizedPosition(gesture);
+    const QPointF position = getNormalizedPosition( gesture );
 
-    if (isOnBackground(position))
-        emit backgroundTap(position);
+    if ( isOnBackground( position ))
+        emit backgroundTap( position );
 }
 
 void DisplayGroupGraphicsView::tapAndHold( QTapAndHoldGesture* gesture )
@@ -148,21 +149,22 @@ void DisplayGroupGraphicsView::tapAndHold( QTapAndHoldGesture* gesture )
     if( gesture->state() != Qt::GestureFinished )
         return;
 
-    const QPointF position = getNormalizedPosition(gesture);
+    const QPointF position = getNormalizedPosition( gesture );
 
-    if (isOnBackground(position))
-        emit backgroundTapAndHold(position);
+    if ( isOnBackground( position ))
+        emit backgroundTapAndHold( position );
 }
 
-void DisplayGroupGraphicsView::resizeEvent(QResizeEvent * resizeEvt)
+void DisplayGroupGraphicsView::resizeEvent( QResizeEvent * resizeEvt )
 {
-    // compute the scene rectangle to show such that the aspect ratio corresponds to the actual aspect ratio of the tiled display
+    // compute the scene rectangle to show such that the aspect ratio
+    // corresponds to the actual aspect ratio of the tiled display
     const float tiledDisplayAspect = g_configuration->getAspectRatio();
     const float windowAspect = (float)width() / (float)height();
 
     float sceneWidth, sceneHeight;
 
-    if(tiledDisplayAspect >= windowAspect)
+    if( tiledDisplayAspect >= windowAspect )
     {
         sceneWidth = 1.;
         sceneHeight = tiledDisplayAspect / windowAspect;
@@ -176,10 +178,11 @@ void DisplayGroupGraphicsView::resizeEvent(QResizeEvent * resizeEvt)
     // make sure we have a small buffer around the (0,0,1,1) scene rectangle
     float border = 0.05;
 
-    sceneWidth = std::max(sceneWidth, (float)1.+border);
-    sceneHeight = std::max(sceneHeight, (float)1.+border);
+    sceneWidth = std::max( sceneWidth, (float)1. + border );
+    sceneHeight = std::max( sceneHeight, (float)1. + border );
 
-    setSceneRect(-(sceneWidth - 1.)/2., -(sceneHeight - 1.)/2., sceneWidth, sceneHeight);
+    setSceneRect( -(sceneWidth - 1.)/2., -(sceneHeight - 1.)/2.,
+                  sceneWidth, sceneHeight );
 
     fitInView(sceneRect());
 
@@ -209,3 +212,38 @@ bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
     return dynamic_cast< const ContentWindowGraphicsItem* >( item ) == 0;
 }
 
+void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow )
+{
+    ContentWindowGraphicsItem* cwgi = new ContentWindowGraphicsItem( contentWindow );
+    scene()->addItem( static_cast< QGraphicsItem* >( cwgi ) );
+}
+
+void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWindow )
+{
+    QList< QGraphicsItem* > itemsList = scene()->items();
+
+    foreach( QGraphicsItem* item, itemsList )
+    {
+        ContentWindowGraphicsItem* cwgi = dynamic_cast< ContentWindowGraphicsItem* >( item );
+        if( cwgi && cwgi->getContentWindow() == contentWindow )
+            scene()->removeItem( item );
+    }
+
+    // Qt WAR: when all items with grabbed gestures are removed, the viewport
+    // also looses any registered gestures, which harms our dock to open...
+    // <qt-source>/qgraphicsscene.cpp::ungrabGesture called in removeItemHelper()
+    if( scene()->items().empty( ))
+        grabGestures();
+}
+
+void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr contentWindow )
+{
+    QList< QGraphicsItem* > itemsList = scene()->items();
+
+    foreach( QGraphicsItem* item, itemsList )
+    {
+        ContentWindowGraphicsItem* cwgi = dynamic_cast< ContentWindowGraphicsItem* >( item );
+        if( cwgi && cwgi->getContentWindow() == contentWindow )
+            cwgi->setZToFront();
+    }
+}

@@ -45,9 +45,6 @@
 
 DisplayGroupRenderer::DisplayGroupRenderer(FactoriesPtr factories)
     : windowRenderer_(factories)
-#if ENABLE_SKELETON_SUPPORT
-    , showSkeletons_(true)
-#endif
 {
 }
 
@@ -58,24 +55,12 @@ void DisplayGroupRenderer::render()
 
     renderBackgroundContent(displayGroup_->getBackgroundContentWindow());
     renderContentWindows(displayGroup_->getContentWindows());
-
-#if ENABLE_SKELETON_SUPPORT
-    if (showSkeletons_)
-        skeletonRenderer_.render(displayGroup_->getSkeletons());
-#endif
 }
 
 ContentWindowRenderer& DisplayGroupRenderer::getWindowRenderer()
 {
     return windowRenderer_;
 }
-
-#if ENABLE_SKELETON_SUPPORT
-void DisplayGroupRenderer::setShowSkeleton(const bool show)
-{
-    showSkeletons_ = show;
-}
-#endif
 
 void DisplayGroupRenderer::setDisplayGroup(DisplayGroupPtr displayGroup)
 {

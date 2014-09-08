@@ -42,6 +42,7 @@
 #include "Command.h"
 #include "DisplayGroup.h"
 #include "ContentLoader.h"
+#include "ContentFactory.h"
 #include "ContentWindow.h"
 #include "StateSerializationHelper.h"
 #include "PixelStreamWindowManager.h"

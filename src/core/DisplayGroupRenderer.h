@@ -44,9 +44,6 @@
 
 #include "Renderable.h"
 #include "ContentWindowRenderer.h"
-#if ENABLE_SKELETON_SUPPORT
-#include "SkeletonRenderer.h"
-#endif
 
 #include <QObject>
 
@@ -67,11 +64,6 @@ public:
      */
     void render() override;
 
-#if ENABLE_SKELETON_SUPPORT
-    /** Show the skeletons. */
-    void setShowSkeleton(const bool show);
-#endif
-
     /** Get the window renderer. */
     ContentWindowRenderer& getWindowRenderer();
 
@@ -85,10 +77,6 @@ public slots:
 private:
     DisplayGroupPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
-#if ENABLE_SKELETON_SUPPORT
-    bool showSkeletons_;
-    SkeletonRenderer skeletonRenderer_;
-#endif
 
     void renderBackgroundContent(ContentWindowPtr backgroundContentWindow);
     void renderContentWindows(ContentWindowPtrs contentWindows);

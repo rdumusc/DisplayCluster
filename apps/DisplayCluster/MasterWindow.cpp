@@ -51,15 +51,10 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
-#include "DisplayGroupGraphicsViewProxy.h"
 #include "DisplayGroupGraphicsView.h"
-#include "DisplayGroupListWidgetProxy.h"
+#include "DisplayGroupListWidget.h"
 #include "BackgroundWidget.h"
 #include "WebbrowserWidget.h"
-
-#if ENABLE_PYTHON_SUPPORT
-    #include "PythonConsole.h"
-#endif
 
 #include <QtGui>
 
@@ -79,10 +74,6 @@ MasterWindow::MasterWindow(DisplayGroupPtr displayGroup, Configuration& config)
     connect(webbrowserWidget_, SIGNAL(openWebBrowser(QPointF,QSize,QString)),
             this, SIGNAL(openWebBrowser(QPointF,QSize,QString)));
 
-#if ENABLE_PYTHON_SUPPORT
-    PythonConsole::init();
-#endif
-
     resize(800,600);
     setAcceptDrops(true);
 
@@ -97,7 +88,7 @@ MasterWindow::~MasterWindow()
 
 DisplayGroupGraphicsView* MasterWindow::getGraphicsView()
 {
-    return dggv_->getGraphicsView();
+    return dggv_;
 }
 
 OptionsPtr MasterWindow::getOptions() const
@@ -112,14 +103,6 @@ void MasterWindow::setupMasterWindowUI()
     QMenu * editMenu = menuBar()->addMenu("&Edit");
     QMenu * viewMenu = menuBar()->addMenu("&View");
     QMenu * toolsMenu = menuBar()->addMenu("&Tools");
-#if ENABLE_PYTHON_SUPPORT
-    // add Window menu for Python console. if we add any other entries to it we'll need to remove the #if
-    QMenu * windowMenu = menuBar()->addMenu("&Window");
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-    QMenu * skeletonMenu = menuBar()->addMenu("&Skeleton Tracking");
-#endif
     QMenu * helpMenu = menuBar()->addMenu("&Help");
 
     // create tool bar
@@ -164,13 +147,6 @@ void MasterWindow::setupMasterWindowUI()
     QAction * webbrowserAction = new QAction("Web Browser", this);
     webbrowserAction->setStatusTip("Open a web browser");
     connect(webbrowserAction, SIGNAL(triggered()), webbrowserWidget_, SLOT(show()));
-
-#if ENABLE_PYTHON_SUPPORT
-    // Python console action
-    QAction * pythonConsoleAction = new QAction("Open Python Console", this);
-    pythonConsoleAction->setStatusTip("Open Python console");
-    connect(pythonConsoleAction, SIGNAL(triggered()), PythonConsole::self(), SLOT(show()));
-#endif
 
     // quit action
     QAction * quitAction = new QAction("Quit", this);
@@ -219,22 +195,6 @@ void MasterWindow::setupMasterWindowUI()
     showStatisticsAction->setChecked(options_->getShowStatistics());
     connect(showStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStatistics(bool)));
 
-#if ENABLE_SKELETON_SUPPORT
-    // enable skeleton tracking action
-    QAction * enableSkeletonTrackingAction = new QAction("Enable Skeleton Tracking", this);
-    enableSkeletonTrackingAction->setStatusTip("Enable skeleton tracking");
-    enableSkeletonTrackingAction->setCheckable(true);
-    enableSkeletonTrackingAction->setChecked(true); // timer is started by default
-    connect(enableSkeletonTrackingAction, SIGNAL(toggled(bool)), this, SLOT(setEnableSkeletonTracking(bool)));
-
-    // show skeletons action
-    QAction * showSkeletonsAction = new QAction("Show Skeletons", this);
-    showSkeletonsAction->setStatusTip("Show skeletons");
-    showSkeletonsAction->setCheckable(true);
-    showSkeletonsAction->setChecked(options->getShowSkeletons());
-    connect(showSkeletonsAction, SIGNAL(toggled(bool)), options.get(), SLOT(setShowSkeletons(bool)));
-#endif
-
     QAction * showAboutDialog = new QAction("About", this);
     showAboutDialog->setStatusTip("About DisplayCluster");
     connect(showAboutDialog, SIGNAL(triggered()), this, SLOT(openAboutWidget()));
@@ -256,15 +216,6 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction(showZoomContextAction);
     toolsMenu->addAction(computeImagePyramidAction);
 
-#if ENABLE_PYTHON_SUPPORT
-    windowMenu->addAction(pythonConsoleAction);
-#endif
-
-#if ENABLE_SKELETON_SUPPORT
-    skeletonMenu->addAction(enableSkeletonTrackingAction);
-    skeletonMenu->addAction(showSkeletonsAction);
-#endif
-
     helpMenu->addAction(showAboutDialog);
 
     // add actions to toolbar
@@ -275,23 +226,25 @@ void MasterWindow::setupMasterWindowUI()
     toolbar->addAction(webbrowserAction);
     toolbar->addAction(clearContentsAction);
     toolbar->addAction(backgroundAction);
-#if ENABLE_PYTHON_SUPPORT
-    toolbar->addAction(pythonConsoleAction);
-#endif
+
     // main widget / layout area
     QTabWidget * mainWidget = new QTabWidget();
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    dggv_ = new DisplayGroupGraphicsViewProxy(displayGroup_);
-    mainWidget->addTab((QWidget *)dggv_->getGraphicsView(), "Display group 0");
+    dggv_ = new DisplayGroupGraphicsView(this);
+    mainWidget->addTab((QWidget *)dggv_, "Display group 0");
+    // Forward DisplayGroup events
+    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr)),
+            dggv_, SLOT(addContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr)),
+            dggv_, SLOT(removeContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr)),
+            dggv_, SLOT(moveContentWindowToFront(ContentWindowPtr)));
     // Forward background touch events
-    connect(dggv_->getGraphicsView(), SIGNAL(backgroundTap(QPointF)),
-            this, SIGNAL(hideDock()));
-    connect(dggv_->getGraphicsView(), SIGNAL(backgroundTapAndHold(QPointF)),
+    connect(dggv_, SIGNAL(backgroundTap(QPointF)), this, SIGNAL(hideDock()));
+    connect(dggv_, SIGNAL(backgroundTapAndHold(QPointF)),
             this, SIGNAL(openDock(QPointF)));
-    connect(options_.get(), SIGNAL(updated(OptionsPtr)),
-            dggv_, SLOT(optionsUpdated(OptionsPtr)));
 
     // create contents dock widget
     QDockWidget * contentsDockWidget = new QDockWidget("Contents", this);
@@ -302,8 +255,15 @@ void MasterWindow::setupMasterWindowUI()
     addDockWidget(Qt::LeftDockWidgetArea, contentsDockWidget);
 
     // add the list widget
-    DisplayGroupListWidgetProxy * dglwp = new DisplayGroupListWidgetProxy(displayGroup_);
-    contentsLayout->addWidget(dglwp->getListWidget());
+    DisplayGroupListWidget* dglwp = new DisplayGroupListWidget(this);
+    // Forward DisplayGroup events
+    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr)),
+            dglwp, SLOT(addContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr)),
+            dglwp, SLOT(removeContentWindow(ContentWindowPtr)));
+    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr)),
+            dglwp, SLOT(moveContentWindowToFront(ContentWindowPtr)));
+    contentsLayout->addWidget(dglwp);
 }
 
 void MasterWindow::openContent()
@@ -469,16 +429,6 @@ void MasterWindow::computeImagePyramid()
         put_flog(LOG_DEBUG, "done");
     }
 }
-
-#if ENABLE_SKELETON_SUPPORT
-void MasterWindow::setEnableSkeletonTracking(bool enable)
-{
-    if(enable)
-        emit(enableSkeletonTracking());
-    else
-        emit(disableSkeletonTracking());
-}
-#endif
 
 QStringList MasterWindow::extractValidContentUrls(const QMimeData* mimeData)
 {

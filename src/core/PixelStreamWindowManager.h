@@ -47,7 +47,6 @@
 
 #include "types.h"
 
-class DisplayGroupInterface;
 class EventReceiver;
 
 /**
@@ -166,11 +165,9 @@ private slots:
      * This will close the streamer that is associated with the given window.
      *
      * @param contentWindow the content window that might be associated
-     *                             to a streamer
-     * @param source not interesting here
+     *                      to a streamer
      */
-    void onContentWindowRemoved( ContentWindowPtr contentWindow,
-                                 DisplayGroupInterface* source );
+    void onContentWindowRemoved( ContentWindowPtr contentWindow );
 
 private:
     DisplayGroup& displayGroup_;

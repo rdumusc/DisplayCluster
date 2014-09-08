@@ -60,7 +60,6 @@ class DisplayGroupRenderer;
 class MarkerRenderer;
 class FactoryObject;
 struct PixelStreamFrame;
-class SkeletonState;
 
 namespace dc
 {
@@ -84,12 +83,9 @@ typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
 typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
 typedef boost::shared_ptr< FactoryObject > FactoryObjectPtr;
 typedef boost::shared_ptr< PixelStreamFrame > PixelStreamFramePtr;
-typedef boost::shared_ptr< SkeletonState > SkeletonStatePtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< GLWindowPtr > GLWindowPtrs;
 typedef std::vector< PixelStreamSegment > PixelStreamSegments;
-typedef std::vector< SkeletonStatePtr > SkeletonStatePtrs;
-
 
 #endif

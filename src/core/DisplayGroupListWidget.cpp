@@ -36,38 +36,61 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_LIST_WIDGET_PROXY_H
-#define DISPLAY_GROUP_LIST_WIDGET_PROXY_H
+#include "DisplayGroupListWidget.h"
 
-#include "DisplayGroupInterface.h"
+#include "ContentWindow.h"
+#include "Content.h"
+#include "ContentWindowListWidgetItem.h"
 
-class QListWidget;
-class QListWidgetItem;
+#include <QListWidget>
 
-class DisplayGroupListWidgetProxy : public DisplayGroupInterface
+DisplayGroupListWidget::DisplayGroupListWidget( QWidget* parent_ )
+    : QListWidget( parent_ )
 {
-    Q_OBJECT
+    connect(this, SIGNAL( itemClicked( QListWidgetItem* )),
+            this, SLOT( moveListWidgetItemToFront( QListWidgetItem* )));
+}
 
-public:
-    DisplayGroupListWidgetProxy(DisplayGroupPtr displayGroup);
-    ~DisplayGroupListWidgetProxy();
+void DisplayGroupListWidget::addContentWindow( ContentWindowPtr contentWindow )
+{
+    ContentWindowListWidgetItem* newItem = new ContentWindowListWidgetItem( contentWindow );
+    newItem->setText( contentWindow->getContent()->getURI( ));
+    insertItem( 0, newItem );
+}
 
-    QListWidget* getListWidget();
+void DisplayGroupListWidget::removeContentWindow( ContentWindowPtr contentWindow )
+{
+    for( int i = 0; i < count(); ++i )
+    {
+        QListWidgetItem* listWidgetItem = item( i );
+        ContentWindowListWidgetItem* windowItem = dynamic_cast< ContentWindowListWidgetItem* >( listWidgetItem );
+        if( windowItem && windowItem->getContentWindow() == contentWindow )
+        {
+            takeItem( i );
+            delete listWidgetItem;
+            return;
+        }
+    }
+}
 
-    // re-implemented DisplayGroupInterface slots
-    void addContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void removeContentWindow(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
-    void moveContentWindowToFront(ContentWindowPtr contentWindow, DisplayGroupInterface* source = 0) override;
+void DisplayGroupListWidget::moveContentWindowToFront( ContentWindowPtr contentWindow )
+{
+    for( int i = 0; i < count(); ++i )
+    {
+        QListWidgetItem* listWidgetItem = item( i );
+        ContentWindowListWidgetItem* windowItem = dynamic_cast< ContentWindowListWidgetItem* >( listWidgetItem );
+        if( windowItem && windowItem->getContentWindow() == contentWindow )
+        {
+            takeItem( i );
+            insertItem( 0, listWidgetItem );
+            return;
+        }
+    }
+}
 
-private slots:
-    void moveListWidgetItemToFront(QListWidgetItem * item);
-
-private:
-    // we make this a member since we can't have multiple inheritance of QObject and still use signals/slots
-    // see the "Diamond problem"
-    QListWidget* listWidget_;
-
-    void refreshListWidget();
-};
-
-#endif
+void DisplayGroupListWidget::moveListWidgetItemToFront( QListWidgetItem* listWidgetItem )
+{
+    ContentWindowListWidgetItem* windowItem = dynamic_cast< ContentWindowListWidgetItem* >( listWidgetItem );
+    if( windowItem )
+        windowItem->moveToFront();
+}
