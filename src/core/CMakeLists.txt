@@ -19,8 +19,7 @@ list(APPEND CORE_LIBRARY_LIBS dcwebservice)
 if(ENABLE_TUIO_TOUCH_LISTENER)
   list(APPEND CORE_LIBRARY_LIBS ${TUIO_LIBRARIES})
 
-  list(APPEND SRCS MultiTouchListener.cpp
-                   TouchListener.cpp)
+  list(APPEND SRCS MultiTouchListener.cpp)
 
   list(APPEND MOC_HEADERS MultiTouchListener.h)
 
