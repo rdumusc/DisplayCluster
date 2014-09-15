@@ -92,5 +92,5 @@ void DisplayGroupListWidget::moveListWidgetItemToFront( QListWidgetItem* listWid
 {
     ContentWindowListWidgetItem* windowItem = dynamic_cast< ContentWindowListWidgetItem* >( listWidgetItem );
     if( windowItem )
-        windowItem->moveToFront();
+        windowItem->getContentWindow()->moveToFront();
 }

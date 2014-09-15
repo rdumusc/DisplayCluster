@@ -40,6 +40,7 @@
 
 #include "DisplayGroupGraphicsScene.h"
 #include "ContentWindowGraphicsItem.h"
+#include "ContentWindow.h"
 
 #include "globals.h"
 #include "configuration/Configuration.h"

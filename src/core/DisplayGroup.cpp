@@ -183,25 +183,25 @@ void DisplayGroup::sendDisplayGroup()
 void DisplayGroup::watchChanges( ContentWindowPtr contentWindow )
 {
     connect( contentWindow.get(),
-             SIGNAL( contentDimensionsChanged( int, int, ContentWindowInterface* )),
+             SIGNAL( contentDimensionsChanged( int, int )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(),
-             SIGNAL( coordinatesChanged( QRectF, ContentWindowInterface* )),
+             SIGNAL( coordinatesChanged( QRectF )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(),
-             SIGNAL( positionChanged( double, double, ContentWindowInterface* )),
+             SIGNAL( positionChanged( double, double )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(),
-             SIGNAL( sizeChanged( double, double, ContentWindowInterface* )),
+             SIGNAL( sizeChanged( double, double )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(),
-             SIGNAL( centerChanged( double, double, ContentWindowInterface* )),
+             SIGNAL( centerChanged( double, double )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(),
-             SIGNAL( zoomChanged( double, ContentWindowInterface* )),
+             SIGNAL( zoomChanged( double )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(),
-             SIGNAL( windowStateChanged( ContentWindowInterface::WindowState, ContentWindowInterface* )),
+             SIGNAL( windowStateChanged( ContentWindow::WindowState )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(), SIGNAL( contentModified( )),
              this, SLOT( sendDisplayGroup( )));

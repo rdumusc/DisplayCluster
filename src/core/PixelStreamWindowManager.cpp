@@ -166,7 +166,7 @@ void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusiv
             success = contentWindow->registerEventReceiver( receiver );
 
             if( success )
-                contentWindow->setWindowState( ContentWindowInterface::SELECTED );
+                contentWindow->setWindowState( ContentWindow::SELECTED );
         }
     }
     else

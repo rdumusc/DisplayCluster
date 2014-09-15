@@ -39,48 +39,63 @@
 #ifndef CONTENT_WINDOW_GRAPHICS_ITEM_H
 #define CONTENT_WINDOW_GRAPHICS_ITEM_H
 
-#include "ContentWindowInterface.h"
+#include "types.h"
+
 #include <QtGui>
-#include <boost/shared_ptr.hpp>
 
-class ContentWindow;
-
-class ContentWindowGraphicsItem : public QGraphicsObject, public ContentWindowInterface
+/**
+ * Represent a ContentWindow in a QListView.
+ */
+class ContentWindowGraphicsItem : public QGraphicsObject
 {
+    Q_OBJECT
+
 public:
-    ContentWindowGraphicsItem(ContentWindowPtr contentWindow);
+    /** Constructor. */
+    explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow );
+
+    /** Destructor. */
     virtual ~ContentWindowGraphicsItem();
 
-    // QGraphicsRectItem painting
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0) override;
+    /** Get the associated ContentWindow. */
+    ContentWindowPtr getContentWindow() const;
 
-    // re-implemented ContentWindowInterface slots
-    void adjustSize( const SizeState state, ContentWindowInterface* source = 0 ) override;
-    void setCoordinates(QRectF coordinates, ContentWindowInterface* source = 0) override;
-    void setPosition(double x, double y, ContentWindowInterface* source = 0) override;
-    void setSize(double w, double h, ContentWindowInterface* source = 0) override;
-    void setCenter(double centerX, double centerY, ContentWindowInterface* source = 0) override;
-    void setZoom(double zoom, ContentWindowInterface* source = 0) override;
-    void setWindowState(ContentWindowInterface::WindowState windowState, ContentWindowInterface* source = 0) override;
-    void setEvent(Event event, ContentWindowInterface* source = 0) override;
+public slots:
+    /** QGraphicsRectItem paint event */
+    void paint( QPainter* painter, const QStyleOptionGraphicsItem* option,
+                QWidget* widget = 0 ) override;
 
-    // increment the Z value of this item
+    /** Move this item to the front. */
     void setZToFront();
 
+    /** Used to trigger prepareGeometryChange() when window dimensions change */
+    void prepareToChangeGeometry();
+
 protected:
+    /** Get normalized window dimensions. */
     QRectF boundingRect() const override;
 
-    // QGraphicsRectItem events
-    bool sceneEvent(QEvent* event) override;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-    void wheelEvent(QGraphicsSceneWheelEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
+    ///@{
+    /** Re-implemented QGraphicsRectItem events. */
+    bool sceneEvent( QEvent* event ) override;
+    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
+    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
+    void keyPressEvent( QKeyEvent* event ) override;
+    void keyReleaseEvent( QKeyEvent* event ) override;
+    ///@}
 
 private:
+    void getButtonDimensions( float &width, float &height ) const;
+
+    bool hitCloseButton(const QPointF& hitPos ) const;
+    bool hitResizeButton( const QPointF& hitPos ) const;
+    bool hitFullscreenButton( const QPointF& hitPos ) const;
+    bool hitPauseButton( const QPointF& hitPos ) const;
+    bool hitLoopButton( const QPointF& hitPos ) const;
+
     void drawFrame_( QPainter* painter );
     void drawCloseButton_( QPainter* painter );
     void drawResizeIndicator_( QPainter* painter );
@@ -88,7 +103,7 @@ private:
     void drawMovieControls_( QPainter* painter );
     void drawTextLabel_( QPainter* painter );
 
-    // manipulation state
+    ContentWindowPtr contentWindow_;
     bool resizing_;
     bool moving_;
 

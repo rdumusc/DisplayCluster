@@ -42,7 +42,7 @@
 
 #include "PixelStreamSegment.h"
 #include "Event.h"
-#include "ContentWindowInterface.h"
+#include "ContentWindow.h"
 
 #include <QMetaType>
 
@@ -63,7 +63,7 @@ struct MetaTypeRegistration
         qRegisterMetaType<ContentWindowPtr>("ContentWindowPtr");
         qRegisterMetaType<PixelStreamSegment>("PixelStreamSegment");
         qRegisterMetaType<PixelStreamFramePtr>("PixelStreamFramePtr");
-        qRegisterMetaType<ContentWindowInterface::WindowState>("ContentWindowInterface::WindowState");
+        qRegisterMetaType<ContentWindow::WindowState>("ContentWindow::WindowState");
     }
 };
 
