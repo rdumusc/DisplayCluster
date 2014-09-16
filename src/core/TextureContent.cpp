@@ -59,8 +59,7 @@ bool TextureContent::readMetadata()
     if(!imageReader.canRead())
         return false;
 
-    width_ = imageReader.size().width();
-    height_ = imageReader.size().height();
+    size_ = imageReader.size();
     return true;
 }
 

@@ -50,6 +50,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <QObject>
+#include <QSize>
 
 class WallToWallChannel;
 
@@ -68,7 +69,7 @@ class Content : public QObject
 
 public:
     /** Constructor **/
-    Content(QString uri = "");
+    Content( const QString& uri );
 
     /** Get the content URI **/
     const QString& getURI() const;
@@ -84,23 +85,23 @@ public:
     virtual bool readMetadata() = 0;
 
     /** Get the dimensions. */
-    void getDimensions(int &width, int &height);
+    QSize getDimensions() const;
 
     /** Set the dimensions. */
-    void setDimensions(int width, int height);
+    void setDimensions( const QSize& dimensions );
 
     /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
     void blockAdvance( bool block ) { blockAdvance_ = block; }
 
     /** Re-implement this method to update or synchronize before rendering. */
-    virtual void preRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
+    virtual void preRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
 
     /** Re-implement this method to update or synchronize after rendering. */
-    virtual void postRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel&) { }
+    virtual void postRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
 
 signals:
     /** Emitted when dimensions have changed */
-    void dimensionsChanged(int width, int height);
+    void dimensionsChanged( int width, int height );
 
     /** Emitted by any Content subclass when its state has been modified */
     void modified();
@@ -108,21 +109,23 @@ signals:
 protected:
     friend class boost::serialization::access;
 
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    // Default constructor required for boost::serialization
+    Content() {}
+
+    template< class Archive >
+    void serialize( Archive & ar, const unsigned int )
     {
-        ar & boost::serialization::make_nvp("uri", uri_);
-        ar & boost::serialization::make_nvp("width", width_);
-        ar & boost::serialization::make_nvp("height", height_);
-        ar & boost::serialization::make_nvp("block_advance", blockAdvance_);
+        ar & boost::serialization::make_nvp( "uri", uri_ );
+        ar & boost::serialization::make_nvp( "width", size_.rwidth( ));
+        ar & boost::serialization::make_nvp( "height", size_.rheight( ));
+        ar & boost::serialization::make_nvp( "block_advance", blockAdvance_ );
     }
 
     QString uri_;
-    int width_;
-    int height_;
+    QSize size_;
     bool blockAdvance_;
 };
 
-BOOST_SERIALIZATION_ASSUME_ABSTRACT(Content)
+BOOST_SERIALIZATION_ASSUME_ABSTRACT( Content )
 
 #endif

@@ -124,29 +124,23 @@ public:
     /** @return the unique identifier for this window. */
     const QUuid& getID() const;
 
-    /** Get the ContentWindowManger associated to this object if it has one, otherwise returns 0. */
-    ContentWindowPtr getContentWindow();
-
-    /** Get content dimensions in pixels. */
-    void getContentDimensions( int &contentWidth, int &contentHeight );
-
     /** Get the normalized window coordiates. */
-    void getCoordinates( double &x, double &y, double &w, double &h );
+    void getCoordinates( double &x, double &y, double &w, double &h ) const;
 
     /** Get the normalized window coordiates. */
     QRectF getCoordinates() const;
 
     /** Get the normalized position. */
-    void getPosition( double &x, double &y );
+    void getPosition( double &x, double &y ) const;
 
     /** Get the normalized size. */
-    void getSize( double &w, double &h );
+    void getSize( double &w, double &h ) const;
 
     /** Get the normalized center position. */
-    void getCenter( double &centerX, double &centerY );
+    void getCenter( double &centerX, double &centerY ) const;
 
     /** Get the zoom factor [1;inf]. */
-    double getZoom();
+    double getZoom() const;
 
     /** Get the current size state. */
     SizeState getSizeState() const;
@@ -168,7 +162,7 @@ public:
     void toggleFullscreen();
 
     /** Get the window state. */
-    ContentWindow::WindowState getWindowState();
+    ContentWindow::WindowState getWindowState() const;
 
     /** Is the window selected. */
     bool selected() const { return windowState_ == SELECTED; }
@@ -207,7 +201,7 @@ public:
 
     void setPosition( const double x, const double y );
     void setSize( const double w, const double h );
-    void setCoordinates( const QRectF coordinates );
+    void setCoordinates( const QRectF& coordinates );
     void scaleSize( const double factor );
     void adjustSize( const SizeState state );
 
@@ -219,9 +213,6 @@ public:
 
     void moveToFront();
     void close();
-
-public slots:
-    void setContentDimensions( int contentWidth, int contentHeight );
 
 signals:
     /** Emitted when the Content signals that it has been modified. */
@@ -253,8 +244,6 @@ private:
     {
         ar & content_;
         ar & displayGroup_;
-        ar & contentWidth_;
-        ar & contentHeight_;
         ar & coordinates_;
         ar & centerX_;
         ar & centerY_;
@@ -267,9 +256,10 @@ private:
     template< class Archive >
     void serialize_for_xml( Archive & ar, const unsigned int )
     {
+        int contentWidth, contentHeight = 0; // For reading legacy archives
         ar & boost::serialization::make_nvp( "content", content_ );
-        ar & boost::serialization::make_nvp( "contentWidth", contentWidth_ );
-        ar & boost::serialization::make_nvp( "contentHeight", contentHeight_ );
+        ar & boost::serialization::make_nvp( "contentWidth", contentWidth );
+        ar & boost::serialization::make_nvp( "contentHeight", contentHeight );
         ar & boost::serialization::make_nvp( "coordinates", coordinates_ );
         ar & boost::serialization::make_nvp( "coordinatesBackup", coordinatesBackup_ );
         ar & boost::serialization::make_nvp( "centerX", centerX_ );
@@ -281,11 +271,6 @@ private:
 
     const QUuid uuid_;
 
-    // content dimensions in pixels
-    // TODO remove those (DISCL-231)
-    int contentWidth_;
-    int contentHeight_;
-
     // normalized window coordinates
     QRectF coordinates_;
     QRectF coordinatesBackup_;
@@ -293,7 +278,6 @@ private:
     // panning and zooming
     double centerX_;
     double centerY_;
-
     double zoom_;
 
     ContentWindow::WindowState windowState_;

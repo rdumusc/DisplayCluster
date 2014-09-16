@@ -149,7 +149,6 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
 
             const QRectF sceneRect = mapRectToScene( coordinates );
 
-            prepareGeometryChange();
             contentWindow_->setSize( sceneRect.width(), sceneRect.height( ));
         }
         else
@@ -159,7 +158,6 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
             const double new_x = boundingRect().x() + delta.x();
             const double new_y = boundingRect().y() + delta.y();
 
-            prepareGeometryChange();
             contentWindow_->setPosition( new_x, new_y );
         }
     }
@@ -176,8 +174,6 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
         event_->ignore();
         return;
     }
-
-    prepareGeometryChange();
 
     if( hitCloseButton( event_->pos( )))
     {
@@ -225,8 +221,6 @@ void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent*
         return;
     }
 
-    prepareGeometryChange();
-
     contentWindow_->toggleWindowState();
 
     QGraphicsItem::mouseDoubleClickEvent( event_ );
@@ -241,8 +235,6 @@ void ContentWindowGraphicsItem::mouseReleaseEvent( QGraphicsSceneMouseEvent* eve
 
     if( contentWindow_->selected( ))
         contentWindow_->getInteractionDelegate().mouseReleaseEvent( event_ );
-
-    prepareGeometryChange();
 
     QGraphicsItem::mouseReleaseEvent( event_ );
 }
@@ -262,10 +254,7 @@ void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
     if ( contentWindow_->selected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
     else
-    {
-        prepareGeometryChange();
         contentWindow_->scaleSize( 1. + (double)event_->delta() / ( 10. * STD_WHEEL_DELTA ));
-    }
 }
 
 void ContentWindowGraphicsItem::keyPressEvent( QKeyEvent* event_ )

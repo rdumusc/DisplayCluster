@@ -54,12 +54,12 @@
 #  include "PDFInteractionDelegate.h"
 #endif
 
+#define DEFAULT_ASPECT_RATIO 16./9
+
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
-    , contentWidth_( 0 )
-    , contentHeight_( 0 )
     , centerX_( 0.5 )
     , centerY_( 0.5 )
     , zoom_( 1 )
@@ -72,8 +72,6 @@ ContentWindow::ContentWindow()
 
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
-    , contentWidth_( 0 )
-    , contentHeight_( 0 )
     , centerX_( 0.5 )
     , centerY_( 0.5 )
     , zoom_( 1 )
@@ -95,13 +93,7 @@ const QUuid& ContentWindow::getID() const
     return uuid_;
 }
 
-void ContentWindow::getContentDimensions( int &contentWidth, int &contentHeight )
-{
-    contentWidth = contentWidth_;
-    contentHeight = contentHeight_;
-}
-
-void ContentWindow::getCoordinates( double &x, double &y, double &w, double &h )
+void ContentWindow::getCoordinates( double &x, double &y, double &w, double &h ) const
 {
     x = coordinates_.x();
     y = coordinates_.y();
@@ -114,25 +106,25 @@ QRectF ContentWindow::getCoordinates() const
     return coordinates_;
 }
 
-void ContentWindow::getPosition( double &x, double &y )
+void ContentWindow::getPosition( double &x, double &y ) const
 {
     x = coordinates_.x();
     y = coordinates_.y();
 }
 
-void ContentWindow::getSize( double &w, double &h )
+void ContentWindow::getSize( double &w, double &h ) const
 {
     w = coordinates_.width();
     h = coordinates_.height();
 }
 
-void ContentWindow::getCenter( double &centerX, double &centerY )
+void ContentWindow::getCenter( double &centerX, double &centerY ) const
 {
     centerX = centerX_;
     centerY = centerY_;
 }
 
-double ContentWindow::getZoom()
+double ContentWindow::getZoom() const
 {
     return zoom_;
 }
@@ -147,7 +139,7 @@ void ContentWindow::toggleFullscreen()
     adjustSize( sizeState_ == SIZE_FULLSCREEN ? SIZE_NORMALIZED : SIZE_FULLSCREEN );
 }
 
-ContentWindow::WindowState ContentWindow::getWindowState()
+ContentWindow::WindowState ContentWindow::getWindowState() const
 {
     return windowState_;
 }
@@ -174,10 +166,11 @@ SizeState ContentWindow::getSizeState() const
 
 void ContentWindow::fixAspectRatio()
 {
-    if( contentWidth_ == 0 && contentHeight_ == 0 )
+    if( !content_ )
         return;
 
-    double aspect = (double)contentWidth_ / (double)contentHeight_;
+    const QSize contentSize = content_->getDimensions();
+    double aspect = (double)contentSize.width() / (double)contentSize.height();
     const double screenAspect = g_configuration->getAspectRatio();
 
     aspect /= screenAspect;
@@ -194,30 +187,32 @@ void ContentWindow::fixAspectRatio()
         w = coordinates_.height() * aspect;
     }
 
-    // we don't want to call setSize unless necessary, since it will emit a signal
-    if( w != coordinates_.width() || h != coordinates_.height( ))
-    {
-        coordinates_.setWidth( w );
-        coordinates_.setHeight( h );
+    if( w == coordinates_.width() && h == coordinates_.height( ))
+        return;
 
-        setSize( coordinates_.width(), coordinates_.height( ));
-    }
+    emit dimensionsAboutToChange();
+
+    coordinates_.setWidth( w );
+    coordinates_.setHeight( h );
 }
 
 void ContentWindow::adjustSize( const SizeState state )
 {
     sizeState_ = state;
 
-    const double contentAR = contentHeight_ == 0 ? 16./9 :
-                                 double(contentWidth_) / double(contentHeight_);
+    const QSize contentSize = content_->getDimensions();
+
+    const double contentAR = ( contentSize.height() == 0 )
+            ? DEFAULT_ASPECT_RATIO
+            : double( contentSize.width( )) / double( contentSize.height( ));
     const double wallAR = 1. / g_configuration->getAspectRatio();
 
-    double height = contentHeight_ == 0
-                            ? 1.
-                            : double(contentHeight_) / double(g_configuration->getTotalHeight());
-    double width = contentWidth_ == 0
-                            ? wallAR * contentAR * height
-                            : double(contentWidth_) / double(g_configuration->getTotalWidth());
+    double height = ( contentSize.height() == 0 )
+            ? 1.
+            : double( contentSize.height( )) / double( g_configuration->getTotalHeight( ));
+    double width = ( contentSize.width() == 0 )
+            ? wallAR * contentAR * height
+            : double( contentSize.width( )) / double( g_configuration->getTotalWidth( ));
 
     QRectF coordinates;
 
@@ -257,19 +252,13 @@ void ContentWindow::adjustSize( const SizeState state )
     setCoordinates( coordinates );
 }
 
-void ContentWindow::setContentDimensions( int contentWidth, int contentHeight )
-{
-    contentWidth_ = contentWidth;
-    contentHeight_ = contentHeight;
-
-    emit( contentDimensionsChanged( contentWidth_, contentHeight_ ));
-}
-
-void ContentWindow::setCoordinates( const QRectF coordinates )
+void ContentWindow::setCoordinates( const QRectF& coordinates )
 {
     // don't allow negative width or height
-    if( coordinates.isValid( ))
+    if( !coordinates.isValid( ))
         return;
+
+    emit dimensionsAboutToChange();
 
     coordinates_ = coordinates;
     fixAspectRatio();
@@ -281,6 +270,8 @@ void ContentWindow::setCoordinates( const QRectF coordinates )
 
 void ContentWindow::setPosition( const double x, const double y )
 {
+    emit dimensionsAboutToChange();
+
     coordinates_.moveTo( x, y );
 
     emit( positionChanged( coordinates_.x(), coordinates_.y( )));
@@ -289,11 +280,13 @@ void ContentWindow::setPosition( const double x, const double y )
 void ContentWindow::setSize( const double w, const double h )
 {
     // don't allow negative width or height
-    if( w > 0. && h > 0. )
-    {
-        coordinates_.setWidth( w );
-        coordinates_.setHeight( h );
-    }
+    if( w < 0. || h < 0. )
+        return;
+
+    emit dimensionsAboutToChange();
+
+    coordinates_.setWidth( w );
+    coordinates_.setHeight( h );
 
     fixAspectRatio();
 
@@ -307,12 +300,13 @@ void ContentWindow::scaleSize( const double factor )
     if( factor < 0. )
         return;
 
-    coordinates_.setX( coordinates_.x() - ( factor - 1. ) * coordinates_.width() / 2. );
-    coordinates_.setY( coordinates_.y() - ( factor - 1. ) * coordinates_.height() / 2. );
-    coordinates_.setWidth( coordinates_.width() * factor );
-    coordinates_.setHeight( coordinates_.height() * factor );
+    QRectF coordinates;
+    coordinates.setX( coordinates_.x() - ( factor - 1. ) * coordinates_.width() / 2. );
+    coordinates.setY( coordinates_.y() - ( factor - 1. ) * coordinates_.height() / 2. );
+    coordinates.setWidth( coordinates_.width() * factor );
+    coordinates.setHeight( coordinates_.height() * factor );
 
-    setCoordinates( coordinates_ );
+    setCoordinates( coordinates );
 }
 
 void ContentWindow::setCenter( double centerX, double centerY )
@@ -434,7 +428,7 @@ void ContentWindow::setContent( ContentPtr content )
 {
     if( content_ )
     {
-        content_->disconnect( this, SLOT( setContentDimensions( int, int )));
+        content_->disconnect( this, SIGNAL( contentDimensionsChanged( int, int )));
         content_->disconnect( this, SIGNAL( contentModified( )));
     }
 
@@ -442,16 +436,12 @@ void ContentWindow::setContent( ContentPtr content )
 
     if( content_ )
     {
-        content_->getDimensions( contentWidth_, contentHeight_ );
-
         connect( content.get(), SIGNAL( dimensionsChanged( int, int )),
-                 this, SLOT( setContentDimensions( int, int )));
+                 this, SIGNAL( contentDimensionsChanged( int, int )));
 
         connect( content.get(), SIGNAL( modified( )),
                  this, SIGNAL( contentModified( )));
     }
-    else
-        contentWidth_ = contentHeight_ = 0;
 
     createInteractionDelegate();
 }

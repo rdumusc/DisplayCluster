@@ -56,11 +56,10 @@ const int HEIGHT = 100;
 
 BOOST_AUTO_TEST_CASE( testInitialSize )
 {
-    g_configuration =
-        new Configuration( "configuration.xml" );
+    g_configuration = new Configuration( "configuration.xml" );
 
     ContentPtr content( new DummyContent );
-    content->setDimensions( WIDTH, HEIGHT );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     const QRectF& coords = window.getCoordinates();
@@ -79,11 +78,10 @@ BOOST_AUTO_TEST_CASE( testInitialSize )
 
 BOOST_AUTO_TEST_CASE( testFullScreenSize )
 {
-    g_configuration =
-        new MasterConfiguration( "configuration.xml" );
+    g_configuration = new MasterConfiguration( "configuration.xml" );
 
     ContentPtr content( new DummyContent );
-    content->setDimensions( WIDTH, HEIGHT );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     window.toggleFullscreen();
@@ -105,11 +103,10 @@ BOOST_AUTO_TEST_CASE( testFullScreenSize )
 
 BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
 {
-    g_configuration =
-        new MasterConfiguration( "configuration.xml" );
+    g_configuration = new MasterConfiguration( "configuration.xml" );
 
     ContentPtr content( new DummyContent );
-    content->setDimensions( WIDTH, HEIGHT );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     QRectF target( 0.9, 0.7, 0.2, 1 );
@@ -140,11 +137,10 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
 
 BOOST_AUTO_TEST_CASE( testValidID )
 {
-    g_configuration =
-        new MasterConfiguration( "configuration.xml" );
+    g_configuration = new MasterConfiguration( "configuration.xml" );
 
     ContentPtr content( new DummyContent );
-    content->setDimensions( WIDTH, HEIGHT );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     BOOST_CHECK( window.getID() != QUuid());
@@ -154,11 +150,10 @@ BOOST_AUTO_TEST_CASE( testValidID )
 
 BOOST_AUTO_TEST_CASE( testUniqueID )
 {
-    g_configuration =
-        new MasterConfiguration( "configuration.xml" );
+    g_configuration = new MasterConfiguration( "configuration.xml" );
 
     ContentPtr content( new DummyContent );
-    content->setDimensions( WIDTH, HEIGHT );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
 
     ContentWindow window1( content );
     BOOST_CHECK( window1.getID() != QUuid());
@@ -173,31 +168,19 @@ BOOST_AUTO_TEST_CASE( testUniqueID )
 
 BOOST_AUTO_TEST_CASE( testSetContent )
 {
-    g_configuration =
-        new MasterConfiguration( "configuration.xml" );
+    g_configuration = new MasterConfiguration( "configuration.xml" );
 
     ContentPtr content( new DummyContent );
-    content->setDimensions( WIDTH, HEIGHT );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
 
     ContentWindow window;
-    BOOST_CHECK(!window.getContent());
+    BOOST_CHECK( !window.getContent( ));
 
-    int contentWidth, contentHeight;
-    window.getContentDimensions(contentWidth, contentHeight);
-    BOOST_CHECK_EQUAL(contentWidth, 0);
-    BOOST_CHECK_EQUAL(contentHeight, 0);
+    window.setContent( content );
+    BOOST_CHECK_EQUAL( window.getContent(), content );
 
-    window.setContent(content);
-    BOOST_CHECK_EQUAL(window.getContent(), content);
-    window.getContentDimensions(contentWidth, contentHeight);
-    BOOST_CHECK_EQUAL(contentWidth, WIDTH);
-    BOOST_CHECK_EQUAL(contentHeight, HEIGHT);
-
-    window.setContent(ContentPtr());
-    BOOST_CHECK(!window.getContent());
-    window.getContentDimensions(contentWidth, contentHeight);
-    BOOST_CHECK_EQUAL(contentWidth, 0);
-    BOOST_CHECK_EQUAL(contentHeight, 0);
+    window.setContent( ContentPtr( ));
+    BOOST_CHECK( !window.getContent( ));
 
     delete g_configuration;
 }
