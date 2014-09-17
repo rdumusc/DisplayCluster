@@ -41,83 +41,81 @@
 #include "globals.h"
 #include "configuration/Configuration.h"
 
-#include <QGraphicsRectItem>
-#include <QEvent>
-#include <QKeyEvent>
-#include <QGraphicsSceneMouseEvent>
+#include <QtGui/QGraphicsRectItem>
+#include <QtGui/QKeyEvent>
+#include <QtGui/QGraphicsSceneMouseEvent>
 
-DisplayGroupGraphicsScene::DisplayGroupGraphicsScene()
+DisplayGroupGraphicsScene::DisplayGroupGraphicsScene( QObject* parent_ )
+    : QGraphicsScene( parent_ )
 {
     setSceneRect(0., 0., 1., 1.);
-
-    // for the tiled display
-    addRect(0., 0., 1., 1.);
-
-    // add rectangles for the tiles
     refreshTileRects();
 }
 
 void DisplayGroupGraphicsScene::refreshTileRects()
 {
     // clear existing tile rects
-    for(TileRectItems::iterator it = tileRects_.begin(); it != tileRects_.end(); ++it)
+    for( TileRectItems::iterator it = tileRects_.begin(); it != tileRects_.end(); ++it )
         delete *it;
     tileRects_.clear();
 
-    // add rectangles for tiled display and each monitor
+    // Add rectangle for the wall area
+    tileRects_.push_back( addRect( 0., 0., 1., 1. ));
+
+    // Add 1 rectangle for each monitor
     const int numTilesX = g_configuration->getTotalScreenCountX();
     const int numTilesY = g_configuration->getTotalScreenCountY();
 
-    const QPen pen(QColor(0,0,0)); // border
-    const QBrush brush(QColor(0, 0, 0, 32)); // fill color / opacity
+    const QPen pen( QColor( 0, 0, 0 )); // border
+    const QBrush brush( QColor( 0, 0, 0, 32 )); // fill color / opacity
 
-    for(int i=0; i<numTilesX; ++i)
+    for( int i=0; i<numTilesX; ++i )
     {
-        for(int j=0; j<numTilesY; ++j)
+        for( int j=0; j<numTilesY; ++j )
         {
-            const QPoint tileIndex(i,j);
-            const QRectF screen = g_configuration->getNormalizedScreenRect(tileIndex);
+            const QPoint tileIndex( i, j );
+            const QRectF screen = g_configuration->getNormalizedScreenRect( tileIndex );
 
-            tileRects_.push_back(addRect(screen, pen, brush));
+            tileRects_.push_back( addRect( screen, pen, brush ));
         }
     }
 }
 
-bool DisplayGroupGraphicsScene::event(QEvent *evt)
+bool DisplayGroupGraphicsScene::event( QEvent *evt )
 {
-    switch( evt->type())
+    switch( evt->type( ))
     {
     case QEvent::KeyPress:
     {
-        QKeyEvent *k = static_cast<QKeyEvent*>(evt);
+        QKeyEvent *k = static_cast< QKeyEvent* >( evt );
 
         // Override default behaviour to process TAB key events
-        QGraphicsScene::keyPressEvent(k);
+        QGraphicsScene::keyPressEvent( k );
 
         if( k->key() == Qt::Key_Backtab ||
             k->key() == Qt::Key_Tab ||
-           (k->key() == Qt::Key_Tab && (k->modifiers() & Qt::ShiftModifier)))
+           ( k->key() == Qt::Key_Tab && ( k->modifiers() & Qt::ShiftModifier )))
         {
             evt->accept();
         }
         return true;
     }
     default:
-        return QGraphicsScene::event(evt);
+        return QGraphicsScene::event( evt );
     }
 }
 
-void DisplayGroupGraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent * mouseEvent)
+void DisplayGroupGraphicsScene::mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    QGraphicsScene::mouseMoveEvent(mouseEvent);
+    QGraphicsScene::mouseMoveEvent( mouseEvent );
 }
 
-void DisplayGroupGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent * mouseEvent)
+void DisplayGroupGraphicsScene::mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    QGraphicsScene::mousePressEvent(mouseEvent);
+    QGraphicsScene::mousePressEvent( mouseEvent );
 }
 
-void DisplayGroupGraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent * mouseEvent)
+void DisplayGroupGraphicsScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    QGraphicsScene::mouseReleaseEvent(mouseEvent);
+    QGraphicsScene::mouseReleaseEvent( mouseEvent );
 }

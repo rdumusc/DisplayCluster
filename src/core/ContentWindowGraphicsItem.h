@@ -41,7 +41,7 @@
 
 #include "types.h"
 
-#include <QtGui>
+#include <QtGui/QGraphicsObject>
 
 /**
  * Represent a ContentWindow in a QListView.
@@ -70,6 +70,13 @@ public slots:
 
     /** Used to trigger prepareGeometryChange() when window dimensions change */
     void prepareToChangeGeometry();
+
+signals:
+    /** Emitted when a user clicks the window to bring it to the front. */
+    void moveToFront( ContentWindowPtr contentWindow );
+
+    /** Emitted when the user clicks the close button. */
+    void close( ContentWindowPtr contentWindow );
 
 protected:
     /** Get normalized window dimensions. */

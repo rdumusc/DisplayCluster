@@ -64,8 +64,6 @@ ContentInteractionDelegate::~ContentInteractionDelegate()
 
 void ContentInteractionDelegate::gestureEvent( QGestureEvent* event )
 {
-    contentWindow_.moveToFront();
-
     QGesture* gesture = 0;
 
     if( ( gesture = event->gesture( Qt::TapAndHoldGesture )))

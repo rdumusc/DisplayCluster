@@ -53,12 +53,10 @@
 // https://bugreports.qt.nokia.com/browse/QTBUG-22829: When Qt moc runs on CGAL
 // files, do not process <boost/type_traits/has_operator.hpp>
 #  include <boost/shared_ptr.hpp>
-#  include <boost/weak_ptr.hpp>
 #  include <boost/date_time/posix_time/posix_time.hpp>
+#  include <boost/serialization/shared_ptr.hpp>
+#  include <boost/date_time/posix_time/time_serialize.hpp>
 #endif
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/serialization/weak_ptr.hpp>
-#include <boost/date_time/posix_time/time_serialize.hpp>
 
 class EventReceiver;
 
@@ -83,8 +81,7 @@ using dc::Event;
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class ContentWindow : public QObject,
-        public boost::enable_shared_from_this< ContentWindow >
+class ContentWindow : public QObject
 {
     Q_OBJECT
 
@@ -115,12 +112,6 @@ public:
     /** Set the content, replacing the existing one. @note Rank0 only. */
     void setContent( ContentPtr content );
 
-    /** Get the parent DisplayGroup of this window. */
-    DisplayGroupPtr getDisplayGroup() const;
-
-    /** Set a reference on the parent DisplayGroup of this window. */
-    void setDisplayGroup( DisplayGroupPtr displayGroup );
-
     /** @return the unique identifier for this window. */
     const QUuid& getID() const;
 
@@ -145,11 +136,11 @@ public:
     /** Get the current size state. */
     SizeState getSizeState() const;
 
-    /** Set the control state. */
-    void setControlState( const ControlState state ) { controlState_ = state; }
-
     /** Get the control state. */
-    ControlState getControlState() const { return controlState_; }
+    ControlState getControlState() const;
+
+    /** Set the control state. */
+    void setControlState( const ControlState state );
 
     /** Get the last event for this window. */
     Event getEvent() const;
@@ -165,13 +156,13 @@ public:
     ContentWindow::WindowState getWindowState() const;
 
     /** Is the window selected. */
-    bool selected() const { return windowState_ == SELECTED; }
+    bool selected() const;
 
     /** Register an object to receive this window's Events. */
     bool registerEventReceiver( EventReceiver* receiver );
 
     /** Does this window already have registered Event receiver(s) */
-    bool hasEventReceivers() const { return eventReceiversCount_ > 0; }
+    bool hasEventReceivers() const;
 
     /**
      * Get the interaction delegate.
@@ -211,9 +202,6 @@ public:
     void setWindowState( const ContentWindow::WindowState state );
     void setEvent( const Event event );
 
-    void moveToFront();
-    void close();
-
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
@@ -230,7 +218,6 @@ signals:
     void zoomChanged( double zoom );
     void windowStateChanged( ContentWindow::WindowState windowState );
     void eventChanged( Event event );
-    void closed();
 
 private:
     void fixAspectRatio();
@@ -243,7 +230,6 @@ private:
     void serialize( Archive & ar, const unsigned int )
     {
         ar & content_;
-        ar & displayGroup_;
         ar & coordinates_;
         ar & centerX_;
         ar & centerY_;
@@ -287,9 +273,6 @@ private:
     unsigned int eventReceiversCount_;
 
     ContentPtr content_;
-
-    boost::weak_ptr< DisplayGroup > displayGroup_;
-
     boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
 };
 

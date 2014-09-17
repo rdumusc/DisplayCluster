@@ -41,15 +41,12 @@
 
 #include "types.h"
 
-#include <QGraphicsView>
+#include <QtGui/QGraphicsView>
+#include <QtGui/QGesture>
+#include <QtGui/QGestureEvent>
 
-class QGesture;
-class QGestureEvent;
 class PanGesture;
 class PinchGesture;
-class QSwipeGesture;
-class QTapGesture;
-class QTapAndHoldGesture;
 
 /**
  * An interactive graphical view of a DisplayGroup's ContentWindows.
@@ -59,22 +56,35 @@ class DisplayGroupGraphicsView : public QGraphicsView
     Q_OBJECT
 
 public:
+    /** Constructor. */
     DisplayGroupGraphicsView( QWidget* parent = 0 );
+
+    /** Destructor */
     virtual ~DisplayGroupGraphicsView();
 
-public slots:
+    /** Set the DisplayGroup model that this view should present. */
+    void setModel( DisplayGroupPtr displayGroup );
+
+signals:
+    /** Emitted when a user taps the background. */
+    void backgroundTap( QPointF pos );
+
+    /** Emitted when a user taps and holds the background. */
+    void backgroundTapAndHold( QPointF pos );
+
+protected:
+    ///@{
+    /** Re-implemented QGraphicsView events. */
+    bool viewportEvent( QEvent* event ) override;
+    void resizeEvent( QResizeEvent* event ) override;
+    ///@}
+
+private slots:
     void addContentWindow( ContentWindowPtr contentWindow );
     void removeContentWindow( ContentWindowPtr contentWindow );
     void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
-signals:
-    void backgroundTap( QPointF pos );
-    void backgroundTapAndHold( QPointF pos );
-
-protected:
-    bool viewportEvent( QEvent* event ) override;
-    void resizeEvent( QResizeEvent* event ) override;
-
+private:
     void gestureEvent( QGestureEvent* event );
     void swipe( QSwipeGesture* gesture );
     void pan( PanGesture* gesture );
@@ -82,10 +92,11 @@ protected:
     void tap( QTapGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
 
-private:
     void grabGestures();
     QPointF getNormalizedPosition( const QGesture* gesture ) const;
     bool isOnBackground( const QPointF& position ) const;
+
+    DisplayGroupPtr displayGroup_;
 };
 
 #endif

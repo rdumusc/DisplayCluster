@@ -63,11 +63,9 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
     }
 
     contentWindows_.push_back( contentWindow );
-    emit( contentWindowAdded( contentWindow ));
-
-    contentWindow->setDisplayGroup( shared_from_this( ));
     watchChanges( contentWindow );
 
+    emit( contentWindowAdded( contentWindow ));
     sendDisplayGroup();
 }
 
@@ -84,12 +82,11 @@ void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
         return;
 
     contentWindows_.erase( it );
-    emit( contentWindowRemoved( contentWindow ));
 
     // disconnect any existing connections with the window
     disconnect( contentWindow.get(), 0, this, 0 );
-    contentWindow->setDisplayGroup( DisplayGroupPtr( ));
 
+    emit( contentWindowRemoved( contentWindow ));
     sendDisplayGroup();
 }
 
@@ -163,14 +160,11 @@ void DisplayGroup::setBackgroundContent( ContentPtr content )
     if ( content )
     {
         backgroundContent_ = ContentWindowPtr( new ContentWindow( content ));
-        backgroundContent_->setDisplayGroup( shared_from_this( ));
         backgroundContent_->adjustSize( SIZE_FULLSCREEN );
         watchChanges( backgroundContent_ );
     }
     else
-    {
         backgroundContent_ = ContentWindowPtr();
-    }
 
     sendDisplayGroup();
 }

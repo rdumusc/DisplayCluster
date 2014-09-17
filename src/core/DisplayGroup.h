@@ -67,12 +67,6 @@ public:
     /** Add a content window. */
     void addContentWindow( ContentWindowPtr contentWindow );
 
-    /** Remove a content window. */
-    void removeContentWindow( ContentWindowPtr contentWindow );
-
-    /** Move a content window to the front. */
-    void moveContentWindowToFront( ContentWindowPtr contentWindow );
-
     /** Get the background content window. */
     ContentWindowPtr getBackgroundContentWindow() const;
 
@@ -112,6 +106,12 @@ public slots:
      *                A null pointer removes the current background.
      */
     void setBackgroundContent( ContentPtr content );
+
+    /** Remove a content window. */
+    void removeContentWindow( ContentWindowPtr contentWindow );
+
+    /** Move a content window to the front. */
+    void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
 signals:
     /** Emitted whenever the DisplayGroup is modified */

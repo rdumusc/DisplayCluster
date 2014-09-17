@@ -38,7 +38,6 @@
 
 #include "ContentWindow.h"
 
-#include "DisplayGroup.h"
 #include "ContentInteractionDelegate.h"
 #include "EventReceiver.h"
 
@@ -144,6 +143,11 @@ ContentWindow::WindowState ContentWindow::getWindowState() const
     return windowState_;
 }
 
+bool ContentWindow::selected() const
+{
+    return windowState_ == SELECTED;
+}
+
 Event ContentWindow::getEvent() const
 {
     return latestEvent_;
@@ -159,9 +163,24 @@ bool ContentWindow::registerEventReceiver( EventReceiver* receiver )
     return success;
 }
 
+bool ContentWindow::hasEventReceivers() const
+{
+    return eventReceiversCount_ > 0;
+}
+
 SizeState ContentWindow::getSizeState() const
 {
     return sizeState_;
+}
+
+ControlState ContentWindow::getControlState() const
+{
+    return controlState_;
+}
+
+void ContentWindow::setControlState( const ControlState state )
+{
+    controlState_ = state;
 }
 
 void ContentWindow::fixAspectRatio()
@@ -400,21 +419,6 @@ void ContentWindow::setEvent( const dc::Event event_ )
     emit( eventChanged( event_ ));
 }
 
-void ContentWindow::moveToFront()
-{
-    DisplayGroupPtr displayGroup = getDisplayGroup();
-    if ( displayGroup )
-        displayGroup->moveContentWindowToFront( shared_from_this( ));
-    else
-        put_flog( LOG_DEBUG, "The DisplayGroupMangerPtr is invalid" );
-}
-
-void ContentWindow::close()
-{
-    getDisplayGroup()->removeContentWindow( shared_from_this( ));
-    emit( closed( ));
-}
-
 void ContentWindow::setEventToNewDimensions()
 {
     Event state;
@@ -473,16 +477,6 @@ void ContentWindow::createInteractionDelegate()
         interactionDelegate_.reset( new ZoomInteractionDelegate( *this ));
         break;
     }
-}
-
-DisplayGroupPtr ContentWindow::getDisplayGroup() const
-{
-    return displayGroup_.lock();
-}
-
-void ContentWindow::setDisplayGroup( DisplayGroupPtr displayGroup )
-{
-    displayGroup_ = displayGroup;
 }
 
 ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const

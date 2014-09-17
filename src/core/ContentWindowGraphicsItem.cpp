@@ -49,6 +49,10 @@
 #include "gestures/PanGestureRecognizer.h"
 #include "gestures/PinchGestureRecognizer.h"
 
+#include <QtGui/QPainter>
+#include <QtGui/QGraphicsScene>
+#include <QtGui/QGraphicsView>
+
 #define STD_WHEEL_DELTA 120 // Common value for the delta of mouse wheel events
 
 qreal ContentWindowGraphicsItem::zCounter_ = 0;
@@ -120,6 +124,7 @@ bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
     switch( event_->type( ))
     {
     case QEvent::Gesture:
+        emit moveToFront( contentWindow_ );
         contentWindow_->getInteractionDelegate().gestureEvent( static_cast< QGestureEvent* >( event_ ));
         return true;
     case QEvent::KeyPress:
@@ -177,11 +182,11 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
 
     if( hitCloseButton( event_->pos( )))
     {
-        contentWindow_->close();
+        emit close( contentWindow_ );
         return;
     }
 
-    contentWindow_->moveToFront();
+    emit moveToFront( contentWindow_ );
 
     if ( contentWindow_->selected( ))
     {

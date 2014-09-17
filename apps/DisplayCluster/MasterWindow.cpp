@@ -233,14 +233,8 @@ void MasterWindow::setupMasterWindowUI()
 
     // add the local renderer group
     dggv_ = new DisplayGroupGraphicsView(this);
+    dggv_->setModel(displayGroup_);
     mainWidget->addTab((QWidget *)dggv_, "Display group 0");
-    // Forward DisplayGroup events
-    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr)),
-            dggv_, SLOT(addContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr)),
-            dggv_, SLOT(removeContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr)),
-            dggv_, SLOT(moveContentWindowToFront(ContentWindowPtr)));
     // Forward background touch events
     connect(dggv_, SIGNAL(backgroundTap(QPointF)), this, SIGNAL(hideDock()));
     connect(dggv_, SIGNAL(backgroundTapAndHold(QPointF)),
@@ -256,13 +250,7 @@ void MasterWindow::setupMasterWindowUI()
 
     // add the list widget
     DisplayGroupListWidget* dglwp = new DisplayGroupListWidget(this);
-    // Forward DisplayGroup events
-    connect(displayGroup_.get(), SIGNAL(contentWindowAdded(ContentWindowPtr)),
-            dglwp, SLOT(addContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowRemoved(ContentWindowPtr)),
-            dglwp, SLOT(removeContentWindow(ContentWindowPtr)));
-    connect(displayGroup_.get(), SIGNAL(contentWindowMovedToFront(ContentWindowPtr)),
-            dglwp, SLOT(moveContentWindowToFront(ContentWindowPtr)));
+    dglwp->setModel(displayGroup_);
     contentsLayout->addWidget(dglwp);
 }
 
