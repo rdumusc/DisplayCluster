@@ -64,8 +64,10 @@ struct PixelStreamFrame;
 namespace dc
 {
 struct PixelStreamSegment;
+class Event;
 }
 using dc::PixelStreamSegment;
+using dc::Event;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;

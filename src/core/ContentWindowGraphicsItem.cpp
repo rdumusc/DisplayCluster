@@ -53,6 +53,9 @@
 #include <QtGui/QGraphicsScene>
 #include <QtGui/QGraphicsView>
 
+#include <QEvent>
+#include <QGestureEvent>
+
 #define STD_WHEEL_DELTA 120 // Common value for the delta of mouse wheel events
 
 qreal ContentWindowGraphicsItem::zCounter_ = 0;
@@ -64,7 +67,7 @@ ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWi
 {
     assert( contentWindow_ );
 
-    connect( contentWindow_.get(), SIGNAL( dimensionsAboutToChange( )),
+    connect( contentWindow_.get(), SIGNAL( coordinatesAboutToChange( )),
              this, SLOT( prepareToChangeGeometry( )));
 
     setFlag( QGraphicsItem::ItemIsMovable, true );
@@ -141,7 +144,6 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
     if( contentWindow_->selected( ))
     {
         contentWindow_->getInteractionDelegate().mouseMoveEvent( event_ );
-        update(); // force a redraw to update window info label
         return;
     }
 
@@ -489,15 +491,7 @@ void ContentWindowGraphicsItem::drawTextLabel_( QPainter* painter )
                               QString::number(centerX, 'f', 2) + QString(", ") +
                               QString::number(centerY, 'f', 2) + QString(")");
 
-    const Event latestEvent = contentWindow_->getEvent();
-    QString interactionLabel = QString(" x: ") +
-            QString::number(latestEvent.mouseX, 'f', 2) +
-            QString(" y: ") + QString::number(latestEvent.mouseY, 'f', 2) +
-            QString(" mouseLeft: ") + QString::number((int) latestEvent.mouseLeft, 'b', 1) +
-            QString(" mouseMiddle: ") + QString::number((int) latestEvent.mouseMiddle, 'b', 1) +
-            QString(" mouseRight: ") + QString::number((int) latestEvent.mouseRight, 'b', 1);
-
-    QString windowInfoLabel = coordinatesLabel + zoomCenterLabel + interactionLabel;
+    QString windowInfoLabel = coordinatesLabel + zoomCenterLabel;
     painter->drawText(textBoundingRect, Qt::AlignLeft | Qt::AlignBottom, windowInfoLabel);
 }
 

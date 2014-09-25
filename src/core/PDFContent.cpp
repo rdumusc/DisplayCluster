@@ -67,7 +67,7 @@ bool PDFContent::readMetadata()
 
     pdf.getDimensions( size_.rwidth(), size_.rheight( ));
     pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min( pageNumber_, pageCount_-1 );
+    pageNumber_ = std::min( pageNumber_, pageCount_ - 1 );
 
     return true;
 }

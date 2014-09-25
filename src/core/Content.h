@@ -100,9 +100,6 @@ public:
     virtual void postRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
 
 signals:
-    /** Emitted when dimensions have changed */
-    void dimensionsChanged( int width, int height );
-
     /** Emitted by any Content subclass when its state has been modified */
     void modified();
 

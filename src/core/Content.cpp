@@ -61,5 +61,5 @@ void Content::setDimensions( const QSize& dimensions )
 
     size_ = dimensions;
 
-    emit( dimensionsChanged( size_.width(), size_.height( )));
+    emit( modified( ));
 }

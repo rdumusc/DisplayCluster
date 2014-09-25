@@ -46,8 +46,6 @@
 
 #include <QMetaType>
 
-using dc::Event;
-
 /**
  * Register types for use in Qt signals/slots
  */

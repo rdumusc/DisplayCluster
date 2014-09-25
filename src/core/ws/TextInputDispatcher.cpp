@@ -41,9 +41,9 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
+#include "ContentInteractionDelegate.h"
 
-#include "Event.h"
-using dc::Event;
+#include <QKeyEvent>
 
 TextInputDispatcher::TextInputDispatcher(DisplayGroupPtr displayGroup,
                                          QObject *parentObject)
@@ -52,22 +52,17 @@ TextInputDispatcher::TextInputDispatcher(DisplayGroupPtr displayGroup,
 {
 }
 
-void TextInputDispatcher::sendKeyEventToActiveWindow(const char key) const
+void TextInputDispatcher::sendKeyEventToActiveWindow( const char key ) const
 {
     ContentWindowPtr window = displayGroup_->getActiveWindow();
-    if (!window)
+    if ( !window )
         return;
 
-    Event keyEvent;
-    keyEvent.key = keyMapper_.getQtKeyCode(key);
+    QKeyEvent pressEvent( QEvent::KeyPress, keyMapper_.getQtKeyCode( key ),
+                          0, QString( key ));
+    QKeyEvent releaseEvent( QEvent::KeyRelease, keyMapper_.getQtKeyCode( key ),
+                            0, QString( key ));
 
-    std::string text;
-    text.push_back(key);
-    strncpy(keyEvent.text, text.c_str(), sizeof(keyEvent.text));
-
-    keyEvent.type = Event::EVT_KEY_PRESS;
-    window->setEvent(keyEvent);
-
-    keyEvent.type = Event::EVT_KEY_RELEASE;
-    window->setEvent(keyEvent);
+    window->getInteractionDelegate().keyPressEvent( &pressEvent );
+    window->getInteractionDelegate().keyReleaseEvent( &releaseEvent );
 }

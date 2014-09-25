@@ -194,7 +194,7 @@ if(Poppler_name)
   set(FIND_PACKAGES_FOUND "${FIND_PACKAGES_FOUND} Poppler")
   link_directories(${${Poppler_name}_LIBRARY_DIRS})
   if(NOT "${${Poppler_name}_INCLUDE_DIRS}" MATCHES "-NOTFOUND")
-    include_directories(${${Poppler_name}_INCLUDE_DIRS})
+    include_directories(SYSTEM ${${Poppler_name}_INCLUDE_DIRS})
   endif()
 endif()
 

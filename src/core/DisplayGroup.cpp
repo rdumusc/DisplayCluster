@@ -71,10 +71,6 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
 
 void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
 {
-    Event closeEvent;
-    closeEvent.type = Event::EVT_CLOSE;
-    contentWindow->setEvent( closeEvent );
-
     ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
                                            contentWindows_.end(),
                                            contentWindow );
@@ -159,12 +155,12 @@ void DisplayGroup::setBackgroundContent( ContentPtr content )
 {
     if ( content )
     {
-        backgroundContent_ = ContentWindowPtr( new ContentWindow( content ));
+        backgroundContent_.reset( new ContentWindow( content ));
         backgroundContent_->adjustSize( SIZE_FULLSCREEN );
         watchChanges( backgroundContent_ );
     }
     else
-        backgroundContent_ = ContentWindowPtr();
+        backgroundContent_.reset();
 
     sendDisplayGroup();
 }
@@ -176,26 +172,7 @@ void DisplayGroup::sendDisplayGroup()
 
 void DisplayGroup::watchChanges( ContentWindowPtr contentWindow )
 {
-    connect( contentWindow.get(),
-             SIGNAL( contentDimensionsChanged( int, int )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(),
-             SIGNAL( coordinatesChanged( QRectF )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(),
-             SIGNAL( positionChanged( double, double )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(),
-             SIGNAL( sizeChanged( double, double )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(),
-             SIGNAL( centerChanged( double, double )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(),
-             SIGNAL( zoomChanged( double )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(),
-             SIGNAL( windowStateChanged( ContentWindow::WindowState )),
+    connect( contentWindow.get(), SIGNAL( modified( )),
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(), SIGNAL( contentModified( )),
              this, SLOT( sendDisplayGroup( )));

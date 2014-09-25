@@ -74,7 +74,6 @@ enum SizeState
 };
 
 class ContentInteractionDelegate;
-using dc::Event;
 
 /**
  * A window for placing a Content on the Wall.
@@ -142,9 +141,6 @@ public:
     /** Set the control state. */
     void setControlState( const ControlState state );
 
-    /** Get the last event for this window. */
-    Event getEvent() const;
-
     /** Toggle the window state. */
     void toggleWindowState();
 
@@ -200,23 +196,24 @@ public:
     void setZoom( const double zoom );
 
     void setWindowState( const ContentWindow::WindowState state );
-    void setEvent( const Event event );
+
+    /** Used by InteractionDelegate to emit eventChanged(). */
+    void dispatchEvent( const Event event );
 
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
 
-    /** Emitted just before the dimensions are going to change. */
-    void dimensionsAboutToChange();
+    /** Emitted just before the coordinates are going to change. */
+    void coordinatesAboutToChange();
 
-    // Used by the DisplayGroup to monitor changes
-    void contentDimensionsChanged( int contentWidth, int contentHeight );
-    void coordinatesChanged( QRectF coordinates );
-    void positionChanged( double x, double y );
-    void sizeChanged( double w, double h );
-    void centerChanged( double centerX, double centerY );
-    void zoomChanged( double zoom );
-    void windowStateChanged( ContentWindow::WindowState windowState );
+    /**
+     * Emitted whenever this object is modified.
+     * Used by DisplayGroup on Rank0 to distibute changes to the other ranks.
+     */
+    void modified();
+
+    /** Notify registered EventReceivers that an Event occured. */
     void eventChanged( Event event );
 
 private:
@@ -267,7 +264,6 @@ private:
     double zoom_;
 
     ContentWindow::WindowState windowState_;
-    Event latestEvent_;
     SizeState sizeState_;
     ControlState controlState_;
     unsigned int eventReceiversCount_;

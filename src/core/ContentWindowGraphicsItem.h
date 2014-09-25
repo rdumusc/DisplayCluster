@@ -68,6 +68,7 @@ public slots:
     /** Move this item to the front. */
     void setZToFront();
 
+private slots:
     /** Used to trigger prepareGeometryChange() when window dimensions change */
     void prepareToChangeGeometry();
 
@@ -97,7 +98,7 @@ protected:
 private:
     void getButtonDimensions( float &width, float &height ) const;
 
-    bool hitCloseButton(const QPointF& hitPos ) const;
+    bool hitCloseButton( const QPointF& hitPos ) const;
     bool hitResizeButton( const QPointF& hitPos ) const;
     bool hitFullscreenButton( const QPointF& hitPos ) const;
     bool hitPauseButton( const QPointF& hitPos ) const;

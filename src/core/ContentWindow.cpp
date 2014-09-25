@@ -148,11 +148,6 @@ bool ContentWindow::selected() const
     return windowState_ == SELECTED;
 }
 
-Event ContentWindow::getEvent() const
-{
-    return latestEvent_;
-}
-
 bool ContentWindow::registerEventReceiver( EventReceiver* receiver )
 {
     const bool success = connect( this, SIGNAL( eventChanged( Event )),
@@ -209,7 +204,7 @@ void ContentWindow::fixAspectRatio()
     if( w == coordinates_.width() && h == coordinates_.height( ))
         return;
 
-    emit dimensionsAboutToChange();
+    emit coordinatesAboutToChange();
 
     coordinates_.setWidth( w );
     coordinates_.setHeight( h );
@@ -277,23 +272,23 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
     if( !coordinates.isValid( ))
         return;
 
-    emit dimensionsAboutToChange();
+    emit coordinatesAboutToChange();
 
     coordinates_ = coordinates;
     fixAspectRatio();
 
-    emit( coordinatesChanged( coordinates_ ));
+    emit modified();
 
     setEventToNewDimensions();
 }
 
 void ContentWindow::setPosition( const double x, const double y )
 {
-    emit dimensionsAboutToChange();
+    emit coordinatesAboutToChange();
 
     coordinates_.moveTo( x, y );
 
-    emit( positionChanged( coordinates_.x(), coordinates_.y( )));
+    emit modified();
 }
 
 void ContentWindow::setSize( const double w, const double h )
@@ -302,14 +297,14 @@ void ContentWindow::setSize( const double w, const double h )
     if( w < 0. || h < 0. )
         return;
 
-    emit dimensionsAboutToChange();
+    emit coordinatesAboutToChange();
 
     coordinates_.setWidth( w );
     coordinates_.setHeight( h );
 
     fixAspectRatio();
 
-    emit( sizeChanged( coordinates_.width(), coordinates_.height( )));
+    emit modified();
 
     setEventToNewDimensions();
 }
@@ -364,7 +359,7 @@ void ContentWindow::setCenter( double centerX, double centerY )
         centerY_ = 1. - tH + 0.5 / zoom_;
     }
 
-    emit( centerChanged( centerX_, centerY_ ));
+    emit modified();
 }
 
 void ContentWindow::setZoom( const double zoom )
@@ -402,21 +397,19 @@ void ContentWindow::setZoom( const double zoom )
         setCenter( centerX_, centerY_ );
     }
 
-    emit( zoomChanged( zoom_ ));
+    emit modified();
 }
 
 void ContentWindow::setWindowState(const ContentWindow::WindowState state )
 {
     windowState_ = state;
 
-    emit( windowStateChanged( windowState_ ));
+    emit modified();
 }
 
-void ContentWindow::setEvent( const dc::Event event_ )
+void ContentWindow::dispatchEvent( const Event event_ )
 {
-    latestEvent_ = event_;
-
-    emit( eventChanged( event_ ));
+    emit eventChanged( event_ );
 }
 
 void ContentWindow::setEventToNewDimensions()
@@ -425,27 +418,20 @@ void ContentWindow::setEventToNewDimensions()
     state.type = Event::EVT_VIEW_SIZE_CHANGED;
     state.dx = coordinates_.width() * g_configuration->getTotalWidth();
     state.dy = coordinates_.height() * g_configuration->getTotalHeight();
-    setEvent( state );
+
+    emit eventChanged( state );
 }
 
 void ContentWindow::setContent( ContentPtr content )
 {
     if( content_ )
-    {
-        content_->disconnect( this, SIGNAL( contentDimensionsChanged( int, int )));
         content_->disconnect( this, SIGNAL( contentModified( )));
-    }
 
     content_ = content;
 
     if( content_ )
-    {
-        connect( content.get(), SIGNAL( dimensionsChanged( int, int )),
-                 this, SIGNAL( contentDimensionsChanged( int, int )));
-
         connect( content.get(), SIGNAL( modified( )),
                  this, SIGNAL( contentModified( )));
-    }
 
     createInteractionDelegate();
 }

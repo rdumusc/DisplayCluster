@@ -40,13 +40,8 @@
 #ifndef PIXELSTREAMINTERACTIONDELEGATE_H
 #define PIXELSTREAMINTERACTIONDELEGATE_H
 
+#include "types.h"
 #include "ContentInteractionDelegate.h"
-
-namespace dc
-{
-    struct Event;
-}
-using dc::Event;
 
 class PixelStreamInteractionDelegate : public ContentInteractionDelegate
 {
