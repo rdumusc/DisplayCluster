@@ -39,13 +39,24 @@
 #ifndef CONTENT_WINDOW_LIST_WIDGET_ITEM_H
 #define CONTENT_WINDOW_LIST_WIDGET_ITEM_H
 
-#include "ContentWindowInterface.h"
-#include <QListWidgetItem>
+#include "types.h"
 
-class ContentWindowListWidgetItem : public QListWidgetItem, public ContentWindowInterface
+#include <QtGui/QListWidgetItem>
+
+/**
+ * Represent a ContentWindow in a QListView.
+ */
+class ContentWindowListWidgetItem : public QListWidgetItem
 {
-    public:
-        ContentWindowListWidgetItem(ContentWindowPtr contentWindow);
+public:
+    /** Constructor. */
+    explicit ContentWindowListWidgetItem( ContentWindowPtr contentWindow );
+
+    /** Get the associated ContentWindow. */
+    ContentWindowPtr getContentWindow() const;
+
+private:
+    ContentWindowPtr contentWindow_;
 };
 
 #endif

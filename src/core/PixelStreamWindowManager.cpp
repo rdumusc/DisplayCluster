@@ -106,7 +106,7 @@ void PixelStreamWindowManager::updateDimension( QString uri, QSize size )
         return;
 
     ContentPtr content = contentWindow->getContent();
-    content->setDimensions( size.width(), size.height( ));
+    content->setDimensions( size );
 }
 
 void PixelStreamWindowManager::hideWindow( const QString& uri )
@@ -125,7 +125,7 @@ void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
     put_flog( LOG_DEBUG, "adding pixel stream: %s", uri.toLocal8Bit().constData());
 
     ContentPtr content = ContentFactory::getPixelStreamContent( uri );
-    content->setDimensions( size.width(), size.height( ));
+    content->setDimensions( size );
 
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
@@ -166,7 +166,7 @@ void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusiv
             success = contentWindow->registerEventReceiver( receiver );
 
             if( success )
-                contentWindow->setWindowState( ContentWindowInterface::SELECTED );
+                contentWindow->setWindowState( ContentWindow::SELECTED );
         }
     }
     else

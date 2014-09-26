@@ -249,6 +249,10 @@ void NetworkListenerThread::pixelStreamerClosed(QString uri)
 {
     if (uri == pixelStreamUri_)
     {
+        Event closeEvent;
+        closeEvent.type = Event::EVT_CLOSE;
+        send( closeEvent );
+
         emit(finished());
     }
 }

@@ -38,11 +38,9 @@
 
 #include "Content.h"
 
-Content::Content(QString uri)
-    : uri_(uri)
-    , width_(0)
-    , height_(0)
-    , blockAdvance_(false)
+Content::Content( const QString& uri )
+    : uri_( uri )
+    , blockAdvance_( false )
 {
 }
 
@@ -51,19 +49,17 @@ const QString& Content::getURI() const
     return uri_;
 }
 
-void Content::getDimensions(int &width, int &height)
+QSize Content::getDimensions() const
 {
-    width = width_;
-    height = height_;
+    return size_;
 }
 
-void Content::setDimensions(int width, int height)
+void Content::setDimensions( const QSize& dimensions )
 {
-    if(width == width_ && height == height_)
+    if( size_ == dimensions )
         return;
 
-    width_ = width;
-    height_ = height;
+    size_ = dimensions;
 
-    emit(dimensionsChanged(width_, height_));
+    emit( modified( ));
 }

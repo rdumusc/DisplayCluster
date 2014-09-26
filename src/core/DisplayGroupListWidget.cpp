@@ -38,17 +38,36 @@
 
 #include "DisplayGroupListWidget.h"
 
+#include "DisplayGroup.h"
 #include "ContentWindow.h"
 #include "Content.h"
 #include "ContentWindowListWidgetItem.h"
 
-#include <QListWidget>
+#include <QtGui/QListWidget>
 
 DisplayGroupListWidget::DisplayGroupListWidget( QWidget* parent_ )
     : QListWidget( parent_ )
 {
-    connect(this, SIGNAL( itemClicked( QListWidgetItem* )),
-            this, SLOT( moveListWidgetItemToFront( QListWidgetItem* )));
+    connect( this, SIGNAL( itemClicked( QListWidgetItem* )),
+             this, SLOT( moveListWidgetItemToFront( QListWidgetItem* )));
+}
+
+void DisplayGroupListWidget::setModel( DisplayGroupPtr displayGroup )
+{
+    if( displayGroup_ )
+        displayGroup_->disconnect( this );
+    clear();
+
+    displayGroup_ = displayGroup;
+    if( !displayGroup_ )
+        return;
+
+    connect( displayGroup_.get(), SIGNAL( contentWindowAdded( ContentWindowPtr )),
+             this, SLOT( addContentWindow( ContentWindowPtr )));
+    connect( displayGroup_.get(), SIGNAL( contentWindowRemoved( ContentWindowPtr )),
+            this, SLOT(removeContentWindow(ContentWindowPtr)));
+    connect( displayGroup_.get(), SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
+             this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
 }
 
 void DisplayGroupListWidget::addContentWindow( ContentWindowPtr contentWindow )
@@ -92,5 +111,5 @@ void DisplayGroupListWidget::moveListWidgetItemToFront( QListWidgetItem* listWid
 {
     ContentWindowListWidgetItem* windowItem = dynamic_cast< ContentWindowListWidgetItem* >( listWidgetItem );
     if( windowItem )
-        windowItem->moveToFront();
+        displayGroup_->moveContentWindowToFront( windowItem->getContentWindow( ));
 }

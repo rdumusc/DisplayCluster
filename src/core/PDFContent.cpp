@@ -61,13 +61,13 @@ CONTENT_TYPE PDFContent::getType()
 
 bool PDFContent::readMetadata()
 {
-    PDF pdf(uri_);
-    if (!pdf.isValid())
+    PDF pdf( uri_ );
+    if ( !pdf.isValid( ))
         return false;
 
-    pdf.getDimensions(width_, height_);
+    pdf.getDimensions( size_.rwidth(), size_.rheight( ));
     pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min(pageNumber_, pageCount_-1);
+    pageNumber_ = std::min( pageNumber_, pageCount_ - 1 );
 
     return true;
 }

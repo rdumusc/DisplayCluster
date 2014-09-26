@@ -39,25 +39,32 @@
 #ifndef DISPLAY_GROUP_GRAPHICS_SCENE_H
 #define DISPLAY_GROUP_GRAPHICS_SCENE_H
 
-#include "types.h"
+#include <QtGui/QGraphicsScene>
 
-#include <QGraphicsScene>
-
+/**
+ * A scene to draw a representation of a DisplayGroup.
+ * Used by DisplayGroupGraphicsView.
+ */
 class DisplayGroupGraphicsScene : public QGraphicsScene
 {
 public:
-    DisplayGroupGraphicsScene();
+    /** Constructor. */
+    DisplayGroupGraphicsScene( QObject* parent = 0 );
 
+    /** Refresh the background tiled rectangles that reprent the Displays. */
     void refreshTileRects();
 
 protected:
-    bool event(QEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent * event) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
+    ///@{
+    /** Re-implemented QGraphicsScene events. */
+    bool event( QEvent* event );
+    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
+    ///@}
 
 private:
-    typedef std::vector<QGraphicsRectItem *> TileRectItems;
+    typedef std::vector< QGraphicsRectItem* > TileRectItems;
     TileRectItems tileRects_;
 };
 

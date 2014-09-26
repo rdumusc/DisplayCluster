@@ -42,11 +42,9 @@
 
 #include "PixelStreamSegment.h"
 #include "Event.h"
-#include "ContentWindowInterface.h"
+#include "ContentWindow.h"
 
 #include <QMetaType>
-
-using dc::Event;
 
 /**
  * Register types for use in Qt signals/slots
@@ -63,7 +61,7 @@ struct MetaTypeRegistration
         qRegisterMetaType<ContentWindowPtr>("ContentWindowPtr");
         qRegisterMetaType<PixelStreamSegment>("PixelStreamSegment");
         qRegisterMetaType<PixelStreamFramePtr>("PixelStreamFramePtr");
-        qRegisterMetaType<ContentWindowInterface::WindowState>("ContentWindowInterface::WindowState");
+        qRegisterMetaType<ContentWindow::WindowState>("ContentWindow::WindowState");
     }
 };
 

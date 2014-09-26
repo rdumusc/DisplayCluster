@@ -38,7 +38,12 @@
 
 #include "ContentWindowListWidgetItem.h"
 
-ContentWindowListWidgetItem::ContentWindowListWidgetItem(ContentWindowPtr contentWindow)
-    : ContentWindowInterface(contentWindow)
+ContentWindowListWidgetItem::ContentWindowListWidgetItem( ContentWindowPtr contentWindow )
+    : contentWindow_( contentWindow )
 {
+}
+
+ContentWindowPtr ContentWindowListWidgetItem::getContentWindow() const
+{
+    return contentWindow_;
 }

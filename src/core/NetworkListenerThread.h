@@ -47,7 +47,6 @@
 #include <QtNetwork/QTcpSocket>
 #include <QQueue>
 
-using dc::Event;
 using dc::PixelStreamSegment;
 using dc::PixelStreamSegmentParameters;
 

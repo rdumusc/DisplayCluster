@@ -56,7 +56,6 @@ class QTapAndHoldGesture;
 class ContentInteractionDelegate
 {
 public:
-
     ContentInteractionDelegate(ContentWindow& contentWindow);
     virtual ~ContentInteractionDelegate();
 
@@ -72,22 +71,20 @@ public:
     //virtual void tapAndHold( QTapAndHoldGesture* gesture ) { Q_UNUSED(gesture) }
 
     // Keyboard + Mouse input
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * event) { Q_UNUSED(event) }
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent * event) { Q_UNUSED(event) }
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event) { Q_UNUSED(event) }
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) { Q_UNUSED(event) }
-    virtual void wheelEvent(QGraphicsSceneWheelEvent * event) { Q_UNUSED(event) }
-    virtual void keyPressEvent(QKeyEvent * event) { Q_UNUSED(event) }
-    virtual void keyReleaseEvent(QKeyEvent * event) { Q_UNUSED(event) }
+    virtual void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
+    virtual void mousePressEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
+    virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
+    virtual void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
+    virtual void wheelEvent( QGraphicsSceneWheelEvent* event ) { Q_UNUSED( event ) }
+    virtual void keyPressEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
+    virtual void keyReleaseEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
 
 protected:
-
     ContentWindow& contentWindow_;
 
-    double adaptZoomFactor(double pinchGestureScaleFactor);
+    double adaptZoomFactor( double pinchGestureScaleFactor );
 
 private:
-
     // Touch gestures when ContentWindow is not in interaction mode
     void doubleTapUnselected( DoubleTapGesture* gesture );
     void tapAndHoldUnselected( QTapAndHoldGesture* gesture );

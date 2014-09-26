@@ -69,8 +69,7 @@ bool MovieContent::readMetadata()
     if (!movie.isValid())
         return false;
 
-    width_ = movie.getWidth();
-    height_ = movie.getHeight();
+    size_ = QSize( movie.getWidth(), movie.getHeight());
     return true;
 }
 

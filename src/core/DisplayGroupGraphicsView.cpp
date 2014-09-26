@@ -38,8 +38,10 @@
 
 #include "DisplayGroupGraphicsView.h"
 
+#include "DisplayGroup.h"
 #include "DisplayGroupGraphicsScene.h"
 #include "ContentWindowGraphicsItem.h"
+#include "ContentWindow.h"
 
 #include "globals.h"
 #include "configuration/Configuration.h"
@@ -53,7 +55,7 @@ DisplayGroupGraphicsView::DisplayGroupGraphicsView( QWidget* parent_ )
     : QGraphicsView( parent_ )
 {
     // create and set scene for the view
-    setScene( new DisplayGroupGraphicsScene( ));
+    setScene( new DisplayGroupGraphicsScene( this ));
 
     // force scene to be anchored at top left
     setAlignment( Qt::AlignLeft | Qt::AlignTop );
@@ -68,7 +70,28 @@ DisplayGroupGraphicsView::DisplayGroupGraphicsView( QWidget* parent_ )
 
 DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
 {
-    delete scene();
+}
+
+void DisplayGroupGraphicsView::setModel( DisplayGroupPtr displayGroup )
+{
+    if( displayGroup_ )
+    {
+        displayGroup_->disconnect( this );
+        scene()->clear();
+        static_cast< DisplayGroupGraphicsScene* >( scene( ))->refreshTileRects();
+        grabGestures();
+    }
+
+    displayGroup_ = displayGroup;
+    if( !displayGroup_ )
+        return;
+
+    connect( displayGroup_.get(), SIGNAL( contentWindowAdded( ContentWindowPtr )),
+             this, SLOT( addContentWindow( ContentWindowPtr )));
+    connect( displayGroup_.get(), SIGNAL( contentWindowRemoved( ContentWindowPtr )),
+            this, SLOT(removeContentWindow(ContentWindowPtr)));
+    connect( displayGroup_.get(), SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
+             this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
 }
 
 void DisplayGroupGraphicsView::grabGestures()
@@ -214,12 +237,24 @@ bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
 
 void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow )
 {
+    assert( displayGroup_ );
+
     ContentWindowGraphicsItem* cwgi = new ContentWindowGraphicsItem( contentWindow );
     scene()->addItem( static_cast< QGraphicsItem* >( cwgi ) );
+
+    connect( cwgi, SIGNAL( moveToFront( ContentWindowPtr )),
+             displayGroup_.get(),
+             SLOT( moveContentWindowToFront( ContentWindowPtr )));
+
+    connect( cwgi, SIGNAL( close( ContentWindowPtr )),
+             displayGroup_.get(),
+             SLOT( removeContentWindow( ContentWindowPtr )));
 }
 
 void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWindow )
 {
+    assert( displayGroup_ );
+
     QList< QGraphicsItem* > itemsList = scene()->items();
 
     foreach( QGraphicsItem* item, itemsList )
@@ -238,6 +273,8 @@ void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWind
 
 void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr contentWindow )
 {
+    assert( displayGroup_ );
+
     QList< QGraphicsItem* > itemsList = scene()->items();
 
     foreach( QGraphicsItem* item, itemsList )

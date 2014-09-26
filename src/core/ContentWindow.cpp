@@ -37,29 +37,49 @@
 /*********************************************************************/
 
 #include "ContentWindow.h"
-#include "Content.h"
-#include "DisplayGroup.h"
+
 #include "ContentInteractionDelegate.h"
+#include "EventReceiver.h"
+
 #include "config.h"
 #include "log.h"
 
-// Specialized delegate implementations
+#include "globals.h"
+#include "configuration/Configuration.h"
+
 #include "PixelStreamInteractionDelegate.h"
 #include "ZoomInteractionDelegate.h"
 #if ENABLE_PDF_SUPPORT
 #  include "PDFInteractionDelegate.h"
 #endif
 
-IMPLEMENT_SERIALIZE_FOR_XML(ContentWindow)
+#define DEFAULT_ASPECT_RATIO 16./9
+
+IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 ContentWindow::ContentWindow()
+    : uuid_( QUuid::createUuid( ))
+    , centerX_( 0.5 )
+    , centerY_( 0.5 )
+    , zoom_( 1 )
+    , windowState_( UNSELECTED )
+    , sizeState_( SIZE_NORMALIZED )
+    , controlState_( STATE_LOOP )
+    , eventReceiversCount_( 0 )
 {
 }
 
-ContentWindow::ContentWindow(ContentPtr content)
+ContentWindow::ContentWindow( ContentPtr content )
+    : uuid_( QUuid::createUuid( ))
+    , centerX_( 0.5 )
+    , centerY_( 0.5 )
+    , zoom_( 1 )
+    , windowState_( UNSELECTED )
+    , sizeState_( SIZE_NORMALIZED )
+    , controlState_( STATE_LOOP )
+    , eventReceiversCount_( 0 )
 {
-    setContent(content);
-
+    setContent( content );
     adjustSize( SIZE_1TO1 );
 }
 
@@ -67,28 +87,351 @@ ContentWindow::~ContentWindow()
 {
 }
 
-void ContentWindow::setContent(ContentPtr content)
+const QUuid& ContentWindow::getID() const
 {
-    if(content_)
+    return uuid_;
+}
+
+void ContentWindow::getCoordinates( double &x, double &y, double &w, double &h ) const
+{
+    x = coordinates_.x();
+    y = coordinates_.y();
+    w = coordinates_.width();
+    h = coordinates_.height();
+}
+
+QRectF ContentWindow::getCoordinates() const
+{
+    return coordinates_;
+}
+
+void ContentWindow::getPosition( double &x, double &y ) const
+{
+    x = coordinates_.x();
+    y = coordinates_.y();
+}
+
+void ContentWindow::getSize( double &w, double &h ) const
+{
+    w = coordinates_.width();
+    h = coordinates_.height();
+}
+
+void ContentWindow::getCenter( double &centerX, double &centerY ) const
+{
+    centerX = centerX_;
+    centerY = centerY_;
+}
+
+double ContentWindow::getZoom() const
+{
+    return zoom_;
+}
+
+void ContentWindow::toggleWindowState()
+{
+    setWindowState( windowState_ == UNSELECTED ? SELECTED : UNSELECTED );
+}
+
+void ContentWindow::toggleFullscreen()
+{
+    adjustSize( sizeState_ == SIZE_FULLSCREEN ? SIZE_NORMALIZED : SIZE_FULLSCREEN );
+}
+
+ContentWindow::WindowState ContentWindow::getWindowState() const
+{
+    return windowState_;
+}
+
+bool ContentWindow::selected() const
+{
+    return windowState_ == SELECTED;
+}
+
+bool ContentWindow::registerEventReceiver( EventReceiver* receiver )
+{
+    const bool success = connect( this, SIGNAL( eventChanged( Event )),
+                                  receiver, SLOT( processEvent( Event )));
+    if ( success )
+        ++eventReceiversCount_;
+
+    return success;
+}
+
+bool ContentWindow::hasEventReceivers() const
+{
+    return eventReceiversCount_ > 0;
+}
+
+SizeState ContentWindow::getSizeState() const
+{
+    return sizeState_;
+}
+
+ControlState ContentWindow::getControlState() const
+{
+    return controlState_;
+}
+
+void ContentWindow::setControlState( const ControlState state )
+{
+    controlState_ = state;
+}
+
+void ContentWindow::fixAspectRatio()
+{
+    if( !content_ )
+        return;
+
+    const QSize contentSize = content_->getDimensions();
+    double aspect = (double)contentSize.width() / (double)contentSize.height();
+    const double screenAspect = g_configuration->getAspectRatio();
+
+    aspect /= screenAspect;
+
+    double w = coordinates_.width();
+    double h = coordinates_.height();
+
+    if( aspect > coordinates_.width() / coordinates_.height( ))
     {
-        content_->disconnect(this, SLOT(setContentDimensions(int, int)));
-        content_->disconnect(this, SIGNAL(contentModified()));
+        h = coordinates_.width() / aspect;
     }
+    else if( aspect <= coordinates_.width() / coordinates_.height( ))
+    {
+        w = coordinates_.height() * aspect;
+    }
+
+    if( w == coordinates_.width() && h == coordinates_.height( ))
+        return;
+
+    emit coordinatesAboutToChange();
+
+    coordinates_.setWidth( w );
+    coordinates_.setHeight( h );
+}
+
+void ContentWindow::adjustSize( const SizeState state )
+{
+    sizeState_ = state;
+
+    const QSize contentSize = content_->getDimensions();
+
+    const double contentAR = ( contentSize.height() == 0 )
+            ? DEFAULT_ASPECT_RATIO
+            : double( contentSize.width( )) / double( contentSize.height( ));
+    const double wallAR = 1. / g_configuration->getAspectRatio();
+
+    double height = ( contentSize.height() == 0 )
+            ? 1.
+            : double( contentSize.height( )) / double( g_configuration->getTotalHeight( ));
+    double width = ( contentSize.width() == 0 )
+            ? wallAR * contentAR * height
+            : double( contentSize.width( )) / double( g_configuration->getTotalWidth( ));
+
+    QRectF coordinates;
+
+    switch( state )
+    {
+    case SIZE_FULLSCREEN:
+        {
+            coordinatesBackup_ = coordinates_;
+            const double resize = std::min( 1. / height, 1. / width );
+            width *= resize;
+            height *= resize;
+
+            // center on the wall
+            coordinates.setRect( (1. - width) * .5 , (1. - height) * .5, width, height );
+        } break;
+
+    case SIZE_1TO1:
+        height = std::min( height, 1. );
+        width = wallAR * contentAR * height;
+        if( width > 1. )
+        {
+            height /= width;
+            width = 1.;
+        }
+
+        // center on the wall
+        coordinates.setRect( (1. - width) * .5 , (1. - height) * .5, width, height );
+        break;
+
+    case SIZE_NORMALIZED:
+        coordinates = coordinatesBackup_;
+        break;
+    default:
+        return;
+    }
+
+    setCoordinates( coordinates );
+}
+
+void ContentWindow::setCoordinates( const QRectF& coordinates )
+{
+    // don't allow negative width or height
+    if( !coordinates.isValid( ))
+        return;
+
+    emit coordinatesAboutToChange();
+
+    coordinates_ = coordinates;
+    fixAspectRatio();
+
+    emit modified();
+
+    setEventToNewDimensions();
+}
+
+void ContentWindow::setPosition( const double x, const double y )
+{
+    emit coordinatesAboutToChange();
+
+    coordinates_.moveTo( x, y );
+
+    emit modified();
+}
+
+void ContentWindow::setSize( const double w, const double h )
+{
+    // don't allow negative width or height
+    if( w < 0. || h < 0. )
+        return;
+
+    emit coordinatesAboutToChange();
+
+    coordinates_.setWidth( w );
+    coordinates_.setHeight( h );
+
+    fixAspectRatio();
+
+    emit modified();
+
+    setEventToNewDimensions();
+}
+
+void ContentWindow::scaleSize( const double factor )
+{
+    if( factor < 0. )
+        return;
+
+    QRectF coordinates;
+    coordinates.setX( coordinates_.x() - ( factor - 1. ) * coordinates_.width() / 2. );
+    coordinates.setY( coordinates_.y() - ( factor - 1. ) * coordinates_.height() / 2. );
+    coordinates.setWidth( coordinates_.width() * factor );
+    coordinates.setHeight( coordinates_.height() * factor );
+
+    setCoordinates( coordinates );
+}
+
+void ContentWindow::setCenter( double centerX, double centerY )
+{
+    // clamp center point such that view rectangle dimensions are constrained [0,1]
+    float tX = centerX - 0.5 / zoom_;
+    float tY = centerY - 0.5 / zoom_;
+    float tW = 1. / zoom_;
+    float tH = 1. / zoom_;
+
+    // handle centerX, clamping it if necessary
+    if( tX >= 0. && tX+tW <= 1. )
+    {
+        centerX_ = centerX;
+    }
+    else if( tX < 0. )
+    {
+        centerX_ = 0.5 / zoom_;
+    }
+    else if( tX+tW > 1. )
+    {
+        centerX_ = 1. - tW + 0.5 / zoom_;
+    }
+
+    // handle centerY, clamping it if necessary
+    if( tY >= 0. && tY+tH <= 1. )
+    {
+        centerY_ = centerY;
+    }
+    else if( tY < 0. )
+    {
+        centerY_ = 0.5 / zoom_;
+    }
+    else if( tY+tH > 1. )
+    {
+        centerY_ = 1. - tH + 0.5 / zoom_;
+    }
+
+    emit modified();
+}
+
+void ContentWindow::setZoom( const double zoom )
+{
+    zoom_ = std::max( zoom, 1.0 );
+
+    float tX = centerX_ - 0.5 / zoom_;
+    float tY = centerY_ - 0.5 / zoom_;
+    float tW = 1. / zoom_;
+    float tH = 1. / zoom_;
+
+    // see if we need to adjust the center point since the rectangle view bounds are outside [0,1]
+    if( !QRectF( 0., 0., 1., 1. ).contains( QRectF( tX, tY, tW, tH )))
+    {
+        // handle centerX, clamping it if necessary
+        if( tX < 0. )
+        {
+            centerX_ = 0.5 / zoom_;
+        }
+        else if( tX+tW > 1. )
+        {
+            centerX_ = 1. - tW + 0.5 / zoom_;
+        }
+
+        // handle centerY, clamping it if necessary
+        if( tY < 0. )
+        {
+            centerY_ = 0.5 / zoom_;
+        }
+        else if( tY+tH > 1. )
+        {
+            centerY_ = 1. - tH + 0.5 / zoom_;
+        }
+
+        setCenter( centerX_, centerY_ );
+    }
+
+    emit modified();
+}
+
+void ContentWindow::setWindowState(const ContentWindow::WindowState state )
+{
+    windowState_ = state;
+
+    emit modified();
+}
+
+void ContentWindow::dispatchEvent( const Event event_ )
+{
+    emit eventChanged( event_ );
+}
+
+void ContentWindow::setEventToNewDimensions()
+{
+    Event state;
+    state.type = Event::EVT_VIEW_SIZE_CHANGED;
+    state.dx = coordinates_.width() * g_configuration->getTotalWidth();
+    state.dy = coordinates_.height() * g_configuration->getTotalHeight();
+
+    emit eventChanged( state );
+}
+
+void ContentWindow::setContent( ContentPtr content )
+{
+    if( content_ )
+        content_->disconnect( this, SIGNAL( contentModified( )));
 
     content_ = content;
 
-    if(content_)
-    {
-        content_->getDimensions(contentWidth_, contentHeight_);
-
-        connect(content.get(), SIGNAL(dimensionsChanged(int, int)),
-                this, SLOT(setContentDimensions(int, int)));
-
-        connect(content.get(), SIGNAL(modified()),
-                this, SIGNAL(contentModified()));
-    }
-    else
-        contentWidth_ = contentHeight_ = 0;
+    if( content_ )
+        connect( content.get(), SIGNAL( modified( )),
+                 this, SIGNAL( contentModified( )));
 
     createInteractionDelegate();
 }
@@ -100,36 +443,26 @@ ContentPtr ContentWindow::getContent() const
 
 void ContentWindow::createInteractionDelegate()
 {
-    if(!content_)
+    if( !content_ )
     {
         interactionDelegate_.reset();
         return;
     }
 
-    switch (content_->getType())
+    switch ( content_->getType( ))
     {
     case CONTENT_TYPE_PIXEL_STREAM:
-        interactionDelegate_.reset(new PixelStreamInteractionDelegate(*this));
+        interactionDelegate_.reset( new PixelStreamInteractionDelegate( *this ));
         break;
 #if ENABLE_PDF_SUPPORT
     case CONTENT_TYPE_PDF:
-        interactionDelegate_.reset(new PDFInteractionDelegate(*this));
+        interactionDelegate_.reset( new PDFInteractionDelegate( *this ));
         break;
 #endif
     default:
-        interactionDelegate_.reset(new ZoomInteractionDelegate(*this));
+        interactionDelegate_.reset( new ZoomInteractionDelegate( *this ));
         break;
     }
-}
-
-DisplayGroupPtr ContentWindow::getDisplayGroup() const
-{
-    return displayGroup_.lock();
-}
-
-void ContentWindow::setDisplayGroup(DisplayGroupPtr displayGroup)
-{
-    displayGroup_ = displayGroup;
 }
 
 ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const
@@ -137,55 +470,31 @@ ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const
     return *interactionDelegate_;
 }
 
-void ContentWindow::moveToFront(ContentWindowInterface * source)
-{
-    ContentWindowInterface::moveToFront(source);
-
-    if(source != this)
-    {
-        DisplayGroupPtr displayGroup = getDisplayGroup();
-        if (displayGroup)
-            displayGroup->moveContentWindowToFront(shared_from_this());
-        else
-            put_flog(LOG_DEBUG, "The DisplayGroupMangerPtr is invalid");
-    }
-}
-
-void ContentWindow::close(ContentWindowInterface * source)
-{
-    ContentWindowInterface::close(source);
-
-    if(source != this)
-    {
-        getDisplayGroup()->removeContentWindow(shared_from_this());
-    }
-}
-
 QPointF ContentWindow::getWindowCenterPosition() const
 {
-    return QPointF(coordinates_.x() + 0.5 * coordinates_.width(),
-                   coordinates_.y() + 0.5 * coordinates_.height());
+    return QPointF( coordinates_.x() + 0.5 * coordinates_.width(),
+                    coordinates_.y() + 0.5 * coordinates_.height( ));
 }
 
-void ContentWindow::centerPositionAround(const QPointF& position,
-                                                const bool constrainToWindowBorders)
+void ContentWindow::centerPositionAround( const QPointF& position,
+                                          const bool constrainToWindowBorders )
 {
-    if(position.isNull())
+    if( position.isNull( ))
         return;
 
     double newX = position.x() - 0.5 * coordinates_.width();
     double newY = position.y() - 0.5 * coordinates_.height();
 
-    if (constrainToWindowBorders)
+    if ( constrainToWindowBorders )
     {
-        if (newX + coordinates_.width() > 1.0)
-            newX = 1.0-coordinates_.width();
-        if (newY + coordinates_.height() > 1.0)
-            newY = 1.0-coordinates_.height();
+        if( newX + coordinates_.width() > 1.0 )
+            newX = 1.0 - coordinates_.width();
+        if( newY + coordinates_.height() > 1.0 )
+            newY = 1.0 - coordinates_.height();
 
-        newX = std::max(0.0, newX);
-        newY = std::max(0.0, newY);
+        newX = std::max( 0.0, newX );
+        newY = std::max( 0.0, newY );
     }
 
-    setPosition(newX, newY);
+    setPosition( newX, newY );
 }

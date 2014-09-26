@@ -61,7 +61,7 @@ void PixelStreamInteractionDelegate::tap(QTapGesture *gesture)
         event.mouseLeft = true;
         event.type = Event::EVT_CLICK;
 
-        contentWindow_.setEvent(event);
+        contentWindow_.dispatchEvent(event);
     }
 }
 
@@ -72,7 +72,7 @@ void PixelStreamInteractionDelegate::doubleTap(DoubleTapGesture *gesture)
     event.mouseLeft = true;
     event.type = Event::EVT_DOUBLECLICK;
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
 void PixelStreamInteractionDelegate::pan(PanGesture *gesture)
@@ -100,7 +100,7 @@ void PixelStreamInteractionDelegate::pan(PanGesture *gesture)
         break;
     }
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
 void PixelStreamInteractionDelegate::swipe(QSwipeGesture *gesture)
@@ -126,7 +126,7 @@ void PixelStreamInteractionDelegate::swipe(QSwipeGesture *gesture)
 
     if (event.type != Event::EVT_NONE)
     {
-        contentWindow_.setEvent(event);
+        contentWindow_.dispatchEvent(event);
     }
 }
 
@@ -140,7 +140,7 @@ void PixelStreamInteractionDelegate::pinch(PinchGesture *gesture)
     event.dy = (factor - 1.f) * g_configuration->getTotalWidth();
     event.type = Event::EVT_WHEEL;
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
 
@@ -151,7 +151,7 @@ void PixelStreamInteractionDelegate::mouseMoveEvent(QGraphicsSceneMouseEvent *mo
 
     setMouseMoveNormalizedDelta(mouseEvent, event);
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
 void PixelStreamInteractionDelegate::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -161,7 +161,7 @@ void PixelStreamInteractionDelegate::mousePressEvent(QGraphicsSceneMouseEvent *m
 
     mousePressPos_ = mouseEvent->pos();
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
 void PixelStreamInteractionDelegate::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -169,7 +169,7 @@ void PixelStreamInteractionDelegate::mouseDoubleClickEvent(QGraphicsSceneMouseEv
     Event event = getMouseEvent(mouseEvent);
     event.type = Event::EVT_DOUBLECLICK;
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
 void PixelStreamInteractionDelegate::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -177,14 +177,14 @@ void PixelStreamInteractionDelegate::mouseReleaseEvent(QGraphicsSceneMouseEvent 
     Event event = getMouseEvent(mouseEvent);
     event.type = Event::EVT_RELEASE;
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 
     // Also generate a click event if releasing the button in place
     if ( fabs(mousePressPos_.x() - mouseEvent->pos().x()) < std::numeric_limits< float >::epsilon() &&
          fabs(mousePressPos_.y() - mouseEvent->pos().y()) < std::numeric_limits< float >::epsilon() )
     {
         event.type = Event::EVT_CLICK;
-        contentWindow_.setEvent(event);
+        contentWindow_.dispatchEvent(event);
     }
 }
 
@@ -205,31 +205,31 @@ void PixelStreamInteractionDelegate::wheelEvent(QGraphicsSceneWheelEvent* evt)
         event.dy = 0.;
     }
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent(event);
 }
 
-void PixelStreamInteractionDelegate::keyPressEvent(QKeyEvent* keyEvent)
+void PixelStreamInteractionDelegate::keyPressEvent( QKeyEvent* keyEvent )
 {
-    Event event = contentWindow_.getEvent();
+    Event event;
     event.type = Event::EVT_KEY_PRESS;
     event.key = keyEvent->key();
     event.modifiers = keyEvent->modifiers();
     strncpy( event.text, keyEvent->text().toStdString().c_str(),
              sizeof( event.text ));
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent( event );
 }
 
-void PixelStreamInteractionDelegate::keyReleaseEvent(QKeyEvent *keyEvent)
+void PixelStreamInteractionDelegate::keyReleaseEvent( QKeyEvent* keyEvent )
 {
-    Event event = contentWindow_.getEvent();
+    Event event;
     event.type = Event::EVT_KEY_RELEASE;
     event.key = keyEvent->key();
     event.modifiers = keyEvent->modifiers();
     strncpy( event.text, keyEvent->text().toStdString().c_str(),
              sizeof( event.text ));
 
-    contentWindow_.setEvent(event);
+    contentWindow_.dispatchEvent( event );
 }
 
 template <typename T>

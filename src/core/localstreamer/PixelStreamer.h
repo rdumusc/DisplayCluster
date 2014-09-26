@@ -40,13 +40,12 @@
 #ifndef PIXELSTREAMER_H
 #define PIXELSTREAMER_H
 
+#include "types.h"
+#include "Event.h"
+
 #include <QObject>
 #include <QSize>
 #include <QImage>
-
-#include "Event.h"
-
-using dc::Event;
 
 /**
  * Interface for Pixel Streamers.

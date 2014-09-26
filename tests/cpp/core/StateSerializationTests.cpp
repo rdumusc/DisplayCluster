@@ -66,46 +66,45 @@ const QString DUMMY_URI = "/dummuy/uri";
 BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropertiesArePreserved )
 {
 #ifdef PLEASE_REMOVE_ME
-    g_configuration = new Configuration("configuration.xml");
+    g_configuration = new Configuration( "configuration.xml" );
 #endif
 
     // Serialize
     std::stringstream ss;
     {
-        DummyContent* dummyContent = new DummyContent(DUMMY_URI);
+        DummyContent* dummyContent = new DummyContent( DUMMY_URI );
         ContentPtr content( dummyContent );
         dummyContent->dummyParam_ = DUMMY_PARAM_VALUE;
 
-        content->setDimensions( CONTENT_WIDTH, CONTENT_HEIGHT );
-        ContentWindowPtr window( new ContentWindow(content) );
+        content->setDimensions( QSize( CONTENT_WIDTH, CONTENT_HEIGHT ));
+        ContentWindowPtr window( new ContentWindow( content ));
 
         ContentWindowPtrs contentWindows;
-        contentWindows.push_back(window);
-        State state(contentWindows);
-        boost::archive::xml_oarchive oa(ss);
-        oa << BOOST_SERIALIZATION_NVP(state);
+        contentWindows.push_back( window );
+        State state( contentWindows );
+        boost::archive::xml_oarchive oa( ss );
+        oa << BOOST_SERIALIZATION_NVP( state );
     }
 
     // Deserialize
     ContentWindowPtrs contentWindows;
     {
         State state;
-        boost::archive::xml_iarchive ia(ss);
-        ia >> BOOST_SERIALIZATION_NVP(state);
+        boost::archive::xml_iarchive ia( ss );
+        ia >> BOOST_SERIALIZATION_NVP( state );
         contentWindows = state.getContentWindows();
     }
 
     BOOST_REQUIRE_EQUAL( contentWindows.size(), 1 );
-    DummyContent* dummyContent = dynamic_cast<DummyContent*>(contentWindows[0]->getContent().get());
+    DummyContent* dummyContent = dynamic_cast< DummyContent* >( contentWindows[0]->getContent().get( ));
     BOOST_REQUIRE( dummyContent );
 
-    int width, height;
-    dummyContent->getDimensions(width, height);
+    const QSize dimensions = dummyContent->getDimensions();
 
-    BOOST_CHECK_EQUAL( width, CONTENT_WIDTH );
-    BOOST_CHECK_EQUAL( height, CONTENT_HEIGHT );
+    BOOST_CHECK_EQUAL( dimensions.width(), CONTENT_WIDTH );
+    BOOST_CHECK_EQUAL( dimensions.height(), CONTENT_HEIGHT );
     BOOST_CHECK_EQUAL( dummyContent->dummyParam_, DUMMY_PARAM_VALUE );
     BOOST_CHECK_EQUAL( dummyContent->getType(), CONTENT_TYPE_ANY );
-    BOOST_CHECK_EQUAL( dummyContent->getURI().toStdString(), DUMMY_URI.toStdString() );
+    BOOST_CHECK_EQUAL( dummyContent->getURI().toStdString(), DUMMY_URI.toStdString( ));
 }
 

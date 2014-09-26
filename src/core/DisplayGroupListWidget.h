@@ -41,9 +41,7 @@
 
 #include "types.h"
 
-#include <QListWidget>
-
-class QListWidgetItem;
+#include <QtGui/QListWidget>
 
 /**
  * A list view of a DisplayGroup's ContentWindows.
@@ -53,15 +51,20 @@ class DisplayGroupListWidget : public QListWidget
     Q_OBJECT
 
 public:
+    /** Constructor. */
     DisplayGroupListWidget( QWidget* parent = 0 );
 
-public slots:
+    /** Set the DisplayGroup model that this view should present. */
+    void setModel( DisplayGroupPtr displayGroup );
+
+private slots:
     void addContentWindow( ContentWindowPtr contentWindow );
     void removeContentWindow( ContentWindowPtr contentWindow );
     void moveContentWindowToFront( ContentWindowPtr contentWindow );
-
-private slots:
     void moveListWidgetItemToFront( QListWidgetItem* listWidgetItem );
+
+private:
+    DisplayGroupPtr displayGroup_;
 };
 
 #endif
