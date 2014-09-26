@@ -39,17 +39,17 @@
 
 #include "MultiTouchListener.h"
 
+#include "log.h"
+#include "globals.h"
 #include "configuration/Configuration.h"
-#include "DisplayGroupGraphicsView.h"
+
 #include "gestures/DoubleTapGestureRecognizer.h"
 #include "gestures/PanGestureRecognizer.h"
 #include "gestures/PinchGestureRecognizer.h"
-#include "globals.h"
-#include "log.h"
 
 #include <QApplication>
 
-MultiTouchListener::MultiTouchListener(DisplayGroupGraphicsView* graphicsView )
+MultiTouchListener::MultiTouchListener( QGraphicsView* graphicsView )
     : TUIO::TuioListener()
     , graphicsView_( graphicsView )
 {
@@ -89,15 +89,15 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     if( !graphicsView_ )
         return;
 
-    const QPoint& viewPos = graphicsView_->mapToGlobal( graphicsView_->pos());
+    const QPoint& viewPos = graphicsView_->mapToGlobal( graphicsView_->pos( ));
     const QRectF& sceneRect = graphicsView_->sceneRect();
     const int viewWidth = graphicsView_->geometry().width();
     const int viewHeight = graphicsView_->geometry().height();
 
     const qreal w = viewWidth / sceneRect.width();
     const qreal h = viewHeight / sceneRect.height();
-    const int x = qreal(viewWidth - w) * .5;
-    const int y = qreal(viewHeight - h) * .5;
+    const int x = qreal( viewWidth - w ) * .5;
+    const int y = qreal( viewHeight - h ) * .5;
     const QPoint sceneOffset( x, y );
 
     const QPointF normPos( tcur->getX(), tcur->getY( ));
@@ -173,26 +173,26 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
         touchPointMap_.remove( tcur->getCursorID( ));
 }
 
-void MultiTouchListener::addTuioCursor(TUIO::TuioCursor *tcur)
+void MultiTouchListener::addTuioCursor( TUIO::TuioCursor* tcur )
 {
     handleEvent( tcur, QEvent::TouchBegin );
     const QPointF position( tcur->getX(), tcur->getY( ));
     emit touchPointAdded( tcur->getCursorID(), position );
 }
 
-void MultiTouchListener::updateTuioCursor(TUIO::TuioCursor *tcur)
+void MultiTouchListener::updateTuioCursor( TUIO::TuioCursor* tcur )
 {
     handleEvent( tcur, QEvent::TouchUpdate );
     const QPointF position( tcur->getX(), tcur->getY( ));
     emit touchPointUpdated( tcur->getCursorID(), position );
 }
 
-void MultiTouchListener::removeTuioCursor(TUIO::TuioCursor *tcur)
+void MultiTouchListener::removeTuioCursor( TUIO::TuioCursor* tcur )
 {
     handleEvent( tcur, QEvent::TouchEnd );
     emit touchPointRemoved( tcur->getCursorID( ));
 }
 
-void MultiTouchListener::refresh(TUIO::TuioTime)
+void MultiTouchListener::refresh( TUIO::TuioTime )
 {
 }

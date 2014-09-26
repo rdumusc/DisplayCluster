@@ -23,7 +23,7 @@ set(TEST_LIBRARIES
 )
 
 if(BUILD_CORE_LIBRARY)
-  list(APPEND PERF_TEST_FILES
+  set(PERF_TEST_SOURCES
     dcStreamTests.cpp
     dcBenchmarkMPI.cpp
     dcBenchmarkStreamer.cpp
@@ -31,7 +31,7 @@ if(BUILD_CORE_LIBRARY)
 endif()
 
 # Create executables but do not add them to the tests target
-foreach(FILE ${PERF_TEST_FILES})
+foreach(FILE ${PERF_TEST_SOURCES})
   string(REGEX REPLACE ".cpp" "" NAME ${FILE})
   string(REGEX REPLACE "[./]" "_" NAME ${NAME})
   source_group(\\ FILES ${FILE})

@@ -52,7 +52,8 @@
 #include "Markers.h"
 
 #if ENABLE_TUIO_TOUCH_LISTENER
-    #include "MultiTouchListener.h"
+#include "MultiTouchListener.h"
+#include "DisplayGroupGraphicsView.h" // Required to cast to QGraphicsView
 #endif
 
 #include "NetworkListener.h"
@@ -241,7 +242,8 @@ void MasterApplication::initMPIConnection()
 #if ENABLE_TUIO_TOUCH_LISTENER
 void MasterApplication::initTouchListener()
 {
-    touchListener_.reset(new MultiTouchListener(masterWindow_->getGraphicsView()));
+    QGraphicsView* graphicsView = masterWindow_->getGraphicsView();
+    touchListener_.reset(new MultiTouchListener(graphicsView));
     connect(touchListener_.get(), SIGNAL(touchPointAdded(int,QPointF)),
             markers_.get(), SLOT(addMarker(int,QPointF)));
     connect(touchListener_.get(), SIGNAL(touchPointUpdated(int,QPointF)),

@@ -47,8 +47,7 @@
 
 #include <QObject>
 #include <QtGui/QtEvents>
-
-class DisplayGroupGraphicsView;
+#include <QtGui/QGraphicsView>
 
 /**
  * Listen to TUIO events and transmit the touch points to a target QGraphicsView.
@@ -58,7 +57,7 @@ class MultiTouchListener : public QObject, public TUIO::TuioListener
     Q_OBJECT
 
 public:
-    MultiTouchListener( DisplayGroupGraphicsView* graphicsView );
+    MultiTouchListener( QGraphicsView* graphicsView );
     ~MultiTouchListener();
 
     void addTuioObject( TUIO::TuioObject* tobj );
@@ -72,9 +71,9 @@ public:
     void refresh( TUIO::TuioTime frameTime );
 
 signals:
-    void touchPointAdded(int id, QPointF position);
-    void touchPointUpdated(int id, QPointF position);
-    void touchPointRemoved(int id);
+    void touchPointAdded( int id, QPointF position );
+    void touchPointUpdated( int id, QPointF position );
+    void touchPointRemoved( int id );
 
 private:
     void handleEvent( TUIO::TuioCursor* tcur,
@@ -82,7 +81,7 @@ private:
 
     QMap< int, QTouchEvent::TouchPoint > touchPointMap_;
 
-    DisplayGroupGraphicsView* graphicsView_;
+    QGraphicsView* graphicsView_;
 
     TUIO::TuioClient client_;
 };

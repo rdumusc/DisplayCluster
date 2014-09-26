@@ -2,11 +2,10 @@
 # Copyright (c) 2013-2014, EPFL/Blue Brain Project
 #                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
-#
 
 include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mock)
-include_directories(${CMAKE_BINARY_DIR}) ### for config.h ###
+include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 
 # Libraries to link the tests executables with
