@@ -1,23 +1,26 @@
 
+# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
+
 include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${CMAKE_SOURCE_DIR}/src/dcstream)
-include_directories(${CMAKE_BINARY_DIR}) ### for config.h ###
+include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
 
-set(LOCAL_STREAMER_SRCS
+set(LOCALSTREAMER_MOC_HEADERS
+  src/Application.h
+)
+
+set(LOCALSTREAMER_SOURCES
   ../../src/log.cpp
   src/main.cpp
   src/Application.cpp
 )
 
-set(LOCAL_STREAMER_MOC_HEADERS
-  src/Application.h
-)
+set(LOCALSTREAMER_LINK_LIBRARIES dccore dcstream)
 
-qt4_wrap_cpp(LOCAL_STREAMER_MOC_OUTFILES ${LOCAL_STREAMER_MOC_HEADERS})
+qt4_wrap_cpp(MOC_OUTFILES ${LOCALSTREAMER_MOC_HEADERS})
 
-# DisplayCluster Main Application
-add_executable(localstreamer ${LOCAL_STREAMER_MOC_OUTFILES} ${LOCAL_STREAMER_SRCS})
-target_link_libraries(localstreamer dccore dcstream)
+add_executable(localstreamer ${MOC_OUTFILES} ${LOCALSTREAMER_SOURCES})
+target_link_libraries(localstreamer ${LOCALSTREAMER_LINK_LIBRARIES})
 
-# install executable
 install(TARGETS localstreamer RUNTIME DESTINATION bin)

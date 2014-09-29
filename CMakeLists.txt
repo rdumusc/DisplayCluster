@@ -1,3 +1,7 @@
+
+# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
+
 cmake_minimum_required(VERSION 2.8)
 project(DisplayCluster)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake
@@ -35,9 +39,9 @@ if(OPENGL_FOUND AND MPI_FOUND AND FFMPEG_FOUND AND FCGI_FOUND)
   set(BUILD_CORE_LIBRARY ON)
 else()
   if(FORCE_BUILD_DCCORE)
-    message( FATAL_ERROR "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!" )
+    message(FATAL_ERROR "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!")
   else()
-    message( STATUS "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!" )
+    message(STATUS "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!")
   endif()
 endif()
 

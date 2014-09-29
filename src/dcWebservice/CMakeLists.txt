@@ -1,13 +1,8 @@
-list(APPEND SOURCES
-  DefaultHandler.cpp
-  FastCGIWrapper.cpp
-  Mapper.cpp
-  RequestBuilder.cpp
-  Response.cpp
-  Server.cpp
-)
 
-list(APPEND HEADERS
+# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
+
+set(DCWEBSERVICE_HEADERS
   DefaultHandler.h
   FastCGIWrapper.h
   Handler.h
@@ -19,14 +14,21 @@ list(APPEND HEADERS
   types.h
 )
 
-list(APPEND PUBLIC_HEADERS)
+set(DCWEBSERVICE_SOURCES
+  DefaultHandler.cpp
+  FastCGIWrapper.cpp
+  Mapper.cpp
+  RequestBuilder.cpp
+  Response.cpp
+  Server.cpp
+)
 
-add_library(dcwebservice SHARED ${SOURCES} ${HEADERS})
-target_link_libraries(dcwebservice ${Boost_LIBRARIES}  ${FCGI_LIBRARIES})
+set(DCWEBSERVICE_LINK_LIBRARIES ${Boost_LIBRARIES} ${FCGI_LIBRARIES})
 
-# install library
+add_library(dcwebservice SHARED ${DCWEBSERVICE_SOURCES} ${DCWEBSERVICE_HEADERS})
+target_link_libraries(dcwebservice ${DCWEBSERVICE_LINK_LIBRARIES})
+
 install(TARGETS dcwebservice
     ARCHIVE DESTINATION lib COMPONENT dev
     RUNTIME DESTINATION bin COMPONENT core
     LIBRARY DESTINATION lib COMPONENT core)
-

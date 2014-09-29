@@ -1,16 +1,11 @@
 
-# SimpleStreamer example application
-set(SIMPLESTREAMER_LIBS ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} dcstream)
+# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
-set(SIMPLESTREAMER_SRCS
-  src/main.cpp
-)
+set(SIMPLESTREAMER_SOURCES src/main.cpp)
+set(SIMPLESTREAMER_LINK_LIBRARIES dcstream ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
 
-add_executable(simplestreamer ${SIMPLESTREAMER_SRCS})
+add_executable(simplestreamer ${SIMPLESTREAMER_SOURCES})
+target_link_libraries(simplestreamer ${SIMPLESTREAMER_LINK_LIBRARIES})
 
-target_link_libraries(simplestreamer ${SIMPLESTREAMER_LIBS})
-
-# install executable
-INSTALL(TARGETS simplestreamer
-    RUNTIME DESTINATION bin COMPONENT simplestreamer
-)
+INSTALL(TARGETS simplestreamer RUNTIME DESTINATION bin COMPONENT simplestreamer)

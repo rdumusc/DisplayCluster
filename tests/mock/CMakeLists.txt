@@ -5,23 +5,26 @@
 #
 # Generates a mock library used by the cpp unit tests.
 
-set(MOCK_LIBRARY_FILES
+set(MOCK_HEADERS
   glxDisplay.h
   GlobalQtApp.h
   MinimalGlobalQtApp.h
 )
 
-list(APPEND MOC_HEADERS MockNetworkListener.h)
-list(APPEND MOCK_LIBRARY_FILES MockNetworkListener.cpp)
+set(MOCK_MOC_HEADERS
+  MockNetworkListener.h
+)
 
-# Core Library Tests
+set(MOCK_SOURCES
+  MockNetworkListener.cpp
+)
+
 if(BUILD_CORE_LIBRARY)
-  list(APPEND MOC_HEADERS MockTextInputDispatcher.h)
-  list(APPEND MOCK_LIBRARY_FILES MockTextInputDispatcher.cpp)
+  list(APPEND MOCK_MOC_HEADERS MockTextInputDispatcher.h)
+  list(APPEND MOCK_SOURCES MockTextInputDispatcher.cpp)
 endif()
 
-qt4_wrap_cpp(MOC_OUTFILES ${MOC_HEADERS})
+qt4_wrap_cpp(MOC_OUTFILES ${MOCK_MOC_HEADERS})
 
-# Create the mock library
-add_library(mock SHARED ${MOC_OUTFILES} ${MOCK_LIBRARY_FILES})
+add_library(mock SHARED ${MOC_OUTFILES} ${MOCK_HEADERS} ${MOCK_SOURCES})
 target_link_libraries(mock ${DC_LIBRARIES})

@@ -1,58 +1,64 @@
 
-set(DESKTOP_STREAMER_SRCS ${DESKTOP_STREAMER_SRCS}
-    src/DesktopSelectionRectangle.cpp
-    src/DesktopSelectionWindow.cpp
-    src/DesktopSelectionView.cpp
-    src/main.cpp
-    src/MainWindow.cpp
+# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+#                     Raphael Dumusc <raphael.dumusc@epfl.ch>
+
+set(DESKTOPSTREAMER_MOC_HEADERS
+  src/MainWindow.h
+  src/DesktopSelectionWindow.h
+  src/DesktopSelectionRectangle.h
 )
 
-set(DESKTOP_STREAMER_MOC_HEADERS
-    src/MainWindow.h
-    src/DesktopSelectionWindow.h
-    src/DesktopSelectionRectangle.h
+set(DESKTOPSTREAMER_SOURCES
+  src/DesktopSelectionRectangle.cpp
+  src/DesktopSelectionWindow.cpp
+  src/DesktopSelectionView.cpp
+  src/main.cpp
+  src/MainWindow.cpp
 )
 
-qt4_wrap_cpp(DESKTOP_STREAMER_MOC_OUTFILES ${DESKTOP_STREAMER_MOC_HEADERS})
-qt4_add_resources(DESKTOP_STREAMER_RRC resources.qrc)
+set(DESKTOPSTREAMER_LINK_LIBRARIES dcstream ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY})
 
-set(DESKTOP_STREAMER_LIBS ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY})
+set(DESKTOPSTREAMER_RESOURCES resources.qrc)
+
+qt4_wrap_cpp(MOC_OUTFILES ${DESKTOPSTREAMER_MOC_HEADERS})
+qt4_add_resources(QRC_SOURCES ${DESKTOPSTREAMER_RESOURCES})
 
 if(APPLE)
-  set(STREAMER_APP_NAME DesktopStreamer)
-  set(STREAMER_ICON_FILE desktopstreamer.icns)
+  set(DESKTOPSTREAMER_APP_NAME DesktopStreamer)
+  set(DESKTOPSTREAMER_ICON_FILE desktopstreamer.icns)
 
   # Required to control AppNap on OSX >= 10.9
-  list(APPEND DESKTOP_STREAMER_LIBS "-framework Foundation")
-  list(APPEND DESKTOP_STREAMER_SRCS src/AppNapSuspender.mm)
+  list(APPEND DESKTOPSTREAMER_LINK_LIBRARIES "-framework Foundation")
+  list(APPEND DESKTOPSTREAMER_SOURCES src/AppNapSuspender.mm)
 
   # set where in the bundle to put the icns file
-  set_source_files_properties(${STREAMER_ICON_FILE}
+  set_source_files_properties(${DESKTOPSTREAMER_ICON_FILE}
     PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
-  # include the icns file in the target
-  add_executable(${STREAMER_APP_NAME} MACOSX_BUNDLE ${STREAMER_ICON_FILE}
-    ${DESKTOP_STREAMER_SRCS} ${DESKTOP_STREAMER_MOC_OUTFILES} ${DESKTOP_STREAMER_RRC})
-  set_target_properties(${STREAMER_APP_NAME} PROPERTIES
+  add_executable(${DESKTOPSTREAMER_APP_NAME} MACOSX_BUNDLE
+    ${DESKTOPSTREAMER_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES}
+    ${DESKTOPSTREAMER_ICON_FILE}) # include the icns file in the target
+
+  set_target_properties(${DESKTOPSTREAMER_APP_NAME} PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
+
 elseif(WIN32)
-  set(STREAMER_APP_NAME desktopstreamer)
-  list(APPEND DESKTOP_STREAMER_LIBS ${QT_QTMAIN_LIBRARY})
+  set(DESKTOPSTREAMER_APP_NAME desktopstreamer)
+  list(APPEND DESKTOPSTREAMER_LINK_LIBRARIES ${QT_QTMAIN_LIBRARY})
 
-  add_executable(${STREAMER_APP_NAME} WIN32
-    ${DESKTOP_STREAMER_SRCS} ${DESKTOP_STREAMER_MOC_OUTFILES} ${DESKTOP_STREAMER_RRC})
+  add_executable(${DESKTOPSTREAMER_APP_NAME} WIN32
+    ${DESKTOPSTREAMER_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES})
+
 else()
-  set(STREAMER_APP_NAME desktopstreamer)
+  set(DESKTOPSTREAMER_APP_NAME desktopstreamer)
 
-  add_executable(${STREAMER_APP_NAME}
-    ${DESKTOP_STREAMER_SRCS} ${DESKTOP_STREAMER_MOC_OUTFILES} ${DESKTOP_STREAMER_RRC})
+  add_executable(${DESKTOPSTREAMER_APP_NAME}
+    ${DESKTOPSTREAMER_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES})
 endif()
 
-# Note: dcstream is a target, which needs to be handled differently above
-target_link_libraries(${STREAMER_APP_NAME} ${DESKTOP_STREAMER_LIBS} dcstream)
+target_link_libraries(${DESKTOPSTREAMER_APP_NAME} ${DESKTOPSTREAMER_LINK_LIBRARIES})
 
-# install executable
-install(TARGETS ${STREAMER_APP_NAME}
+install(TARGETS ${DESKTOPSTREAMER_APP_NAME}
   RUNTIME DESTINATION bin COMPONENT desktopstreamer
   BUNDLE DESTINATION . COMPONENT desktopstreamer)
 
