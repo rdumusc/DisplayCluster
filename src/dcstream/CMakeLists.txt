@@ -3,10 +3,10 @@
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 set(DCSTREAM_PUBLIC_HEADERS
+  ${DISPLAYCLUSTER_SHARED_HEADERS}
   ImageWrapper.h
   Stream.h
   types.h
-  ../Event.h
 )
 
 set(DCSTREAM_MOC_HEADERS
@@ -14,9 +14,7 @@ set(DCSTREAM_MOC_HEADERS
 )
 
 set(DCSTREAM_SOURCES
-  ../Event.cpp
-  ../log.cpp
-  ../MessageHeader.cpp
+  ${DISPLAYCLUSTER_SHARED_SOURCES}
   Socket.cpp
   Stream.cpp
   StreamPrivate.cpp
@@ -37,9 +35,8 @@ set(DCSTREAM_LINK_LIBRARIES
 qt4_wrap_cpp(MOC_OUTFILES ${DCSTREAM_MOC_HEADERS})
 
 add_library(dcstream SHARED ${DCSTREAM_PUBLIC_HEADERS} ${DCSTREAM_SOURCES}
-            ${MOC_OUTFILES} ${DISPLAYCLUSTER_SHARED_HEADERS})
+            ${MOC_OUTFILES})
 target_link_libraries(dcstream ${DCSTREAM_LINK_LIBRARIES})
-
 set_target_properties(dcstream PROPERTIES
   VERSION ${VERSION} SOVERSION ${VERSION_ABI})
 

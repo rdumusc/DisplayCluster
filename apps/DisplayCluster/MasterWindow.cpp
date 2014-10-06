@@ -41,7 +41,7 @@
 
 #include "Options.h"
 #include "log.h"
-#include "displaycluster/version.h"
+#include "dc/version.h"
 
 #include "ContentLoader.h"
 #include "ContentFactory.h"
@@ -347,10 +347,10 @@ void MasterWindow::openContentsDirectory()
 
 void MasterWindow::openAboutWidget()
 {
-    const int revision = displaycluster::Version::getRevision();
+    const int revision = dc::Version::getRevision();
 
     std::ostringstream aboutMsg;
-    aboutMsg << "Current version: " << displaycluster::Version::getString();
+    aboutMsg << "Current version: " << dc::Version::getString();
     aboutMsg << std::endl;
     aboutMsg << "SCM revision: " << std::hex << revision << std::dec;
 

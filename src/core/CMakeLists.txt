@@ -4,7 +4,8 @@
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-set(DCCORE_LINK_LIBRARIES dcwebservice
+set(DCCORE_LINK_LIBRARIES
+  dcwebservice
   ${Boost_LIBRARIES}
   ${QT_LIBRARIES}
   ${OPENGL_LIBRARIES}
@@ -35,6 +36,107 @@ if(ENABLE_PDF_SUPPORT)
   )
   list(APPEND DCCORE_LINK_LIBRARIES ${POPPLER_LIBRARIES})
 endif()
+
+list(APPEND DCCORE_PUBLIC_HEADERS
+  ${COMMON_INCLUDES}
+  Command.h
+  CommandHandler.h
+  CommandType.h
+  Content.h
+  ContentFactory.h
+  ContentLoader.h
+  ContentType.h
+  ContentInteractionDelegate.h
+  ContentWindow.h
+  ContentWindowRenderer.h
+  DisplayGroup.h
+  DisplayGroupRenderer.h
+  DynamicTexture.h
+  DynamicTextureContent.h
+  ElapsedTimer.h
+  Factory.hpp
+  Factories.h
+  FactoryObject.h
+  FFMPEGMovie.h
+  FFMPEGVideoFrameConverter.h
+  FileCommandHandler.h
+  FpsCounter.h
+  FpsRenderer.h
+  GLQuad.h
+  GLTexture2D.h
+  GLWindow.h
+  globals.h
+  gestures/DoubleTapGestureRecognizer.h
+  gestures/PanGesture.h
+  gestures/PanGestureRecognizer.h
+  gestures/PinchGesture.h
+  gestures/PinchGestureRecognizer.h
+  ImageJpegDecompressor.h
+  Marker.h
+  Markers.h
+  MarkerRenderer.h
+  MasterFromWallChannel.h
+  MasterToWallChannel.h
+  Movie.h
+  MovieContent.h
+  MPIChannel.h
+  MPIContext.h
+  NetworkListener.h
+  NetworkListenerThread.h
+  Options.h
+  PixelStream.h
+  PixelStreamBuffer.h
+  PixelStreamContent.h
+  PixelStreamDispatcher.h
+  PixelStreamInteractionDelegate.h
+  PixelStreamSegmentDecoder.h
+  PixelStreamSegmentRenderer.h
+  PixelStreamWindowManager.h
+  RenderContext.h
+  RenderController.h
+  SessionCommandHandler.h
+  State.h
+  StatePreview.h
+  StateSerializationHelper.h
+  SVG.h
+  SVGContent.h
+  TestPattern.h
+  Texture.h
+  TextureContent.h
+  WallFromMasterChannel.h
+  WallToMasterChannel.h
+  WallToWallChannel.h
+  WebbrowserCommandHandler.h
+  ZoomInteractionDelegate.h
+  configuration/Configuration.h
+  configuration/MasterConfiguration.h
+  configuration/WallConfiguration.h
+  localstreamer/AsyncImageLoader.h
+  localstreamer/CommandLineOptions.h
+  localstreamer/DockPixelStreamer.h
+  localstreamer/DockToolbar.h
+  localstreamer/PixelStreamer.h
+  localstreamer/PixelStreamerFactory.h
+  localstreamer/PixelStreamerLauncher.h
+  localstreamer/PixelStreamerType.h
+  localstreamer/Pictureflow.h
+  localstreamer/WebkitAuthenticationHelper.h
+  localstreamer/WebkitHtmlSelectReplacer.h
+  localstreamer/WebkitPixelStreamer.h
+  thumbnail/DefaultThumbnailGenerator.h
+  thumbnail/FolderThumbnailGenerator.h
+  thumbnail/ImageThumbnailGenerator.h
+  thumbnail/MovieThumbnailGenerator.h
+  thumbnail/PyramidThumbnailGenerator.h
+  thumbnail/StateThumbnailGenerator.h
+  thumbnail/ThumbnailGenerator.h
+  thumbnail/ThumbnailGeneratorFactory.h
+  ws/AsciiToQtKeyCodeMapper.h
+  ws/DisplayGroupAdapter.h
+  ws/TextInputDispatcher.h
+  ws/TextInputHandler.h
+  ws/WebServiceServer.h
+)
 
 list(APPEND DCCORE_MOC_HEADERS
   CommandHandler.h
@@ -73,6 +175,8 @@ list(APPEND DCCORE_MOC_HEADERS
 )
 
 list(APPEND DCCORE_SOURCES
+  ${COMMON_SOURCES}
+  ${DISPLAYCLUSTER_SHARED_SOURCES}
   Command.cpp
   CommandHandler.cpp
   CommandType.cpp
@@ -100,14 +204,6 @@ list(APPEND DCCORE_SOURCES
   GLTexture2D.cpp
   GLWindow.cpp
   globals.cpp
-  gestures/DoubleTapGestureRecognizer.cpp
-  gestures/PanGesture.cpp
-  gestures/PanGestureRecognizer.cpp
-  gestures/PinchGesture.cpp
-  gestures/PinchGestureRecognizer.cpp
-  ../Event.cpp
-  ../log.cpp
-  ../MessageHeader.cpp
   ImageJpegDecompressor.cpp
   Marker.cpp
   Markers.cpp
@@ -149,6 +245,11 @@ list(APPEND DCCORE_SOURCES
   configuration/Configuration.cpp
   configuration/MasterConfiguration.cpp
   configuration/WallConfiguration.cpp
+  gestures/DoubleTapGestureRecognizer.cpp
+  gestures/PanGesture.cpp
+  gestures/PanGestureRecognizer.cpp
+  gestures/PinchGesture.cpp
+  gestures/PinchGestureRecognizer.cpp
   localstreamer/AsyncImageLoader.cpp
   localstreamer/CommandLineOptions.cpp
   localstreamer/DockPixelStreamer.cpp
@@ -182,15 +283,16 @@ set(DCCORE_RESOURCES resources/core.qrc)
 qt4_wrap_cpp(MOC_OUTFILES ${DCCORE_MOC_HEADERS} OPTIONS -DPOSIX_TIME_HPP___ -DPOSIX_TIME_SERIALIZE_HPP___ -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
 qt4_add_resources(QRC_SOURCES ${DCCORE_RESOURCES})
 
-add_library(dccore SHARED ${COMMON_SOURCES} ${DCCORE_SOURCES} ${MOC_OUTFILES}
-            ${QRC_SOURCES} ${DISPLAYCLUSTER_SHARED_HEADERS})
+add_library(dccore SHARED ${DCCORE_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES})
 target_link_libraries(dccore ${DCCORE_LINK_LIBRARIES})
-
 set_target_properties(dccore PROPERTIES
-  VERSION ${VERSION} SOVERSION ${VERSION_ABI} OUTPUT_NAME dccore)
+  VERSION ${VERSION} SOVERSION ${VERSION_ABI})
 
 install(TARGETS dccore
     ARCHIVE DESTINATION lib COMPONENT dev
     RUNTIME DESTINATION bin COMPONENT core
-    LIBRARY DESTINATION lib COMPONENT cor
+    LIBRARY DESTINATION lib COMPONENT core
 )
+
+install(FILES ${DCCORE_PUBLIC_HEADERS} ${DCCORE_MOC_HEADERS}
+  DESTINATION include/dc/core COMPONENT dev)

@@ -43,12 +43,13 @@
 #include <QWebView>
 
 /**
- * Substitutes all <select> elements on a webpage by equivalent HTML lists.
+ * Substitutes all \<select\> elements on a webpage by equivalent HTML lists.
  *
- * This class is most useful when QWebKit renders without a window and the system
- * ui list elements are not working.
+ * This class is most useful when QWebKit renders without a window and the
+ * system list elements are not working.
  *
- * It works by modifying the Html documents using Javascript after the page has finished loading.
+ * It works by modifying the Html documents using Javascript after the page has
+ * finished loading.
  */
 class WebkitHtmlSelectReplacer : public QObject
 {
@@ -62,10 +63,10 @@ public:
     WebkitHtmlSelectReplacer(QWebView& webView);
 
     /**
-     * Replace all <select> elements by Html equivalents.
+     * Replace all \<select\> elements by Html equivalents.
      *
-     * You only need to call this if new <select> elements have been dynamically
-     * added after the page was loaded.
+     * You only need to call this if new \<select\> elements have been
+     * dynamically added after the page was loaded.
      */
     void replaceAllSelectElements();
 

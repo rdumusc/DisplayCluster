@@ -72,7 +72,7 @@ public:
 
     /**
      * Is the given region visible in this window.
-     * @param rect The region in normalized global screen space, i.e. top-left
+     * @param region The region in normalized global screen space, i.e. top-left
      *        of tiled display is (0,0) and bottom-right is (1,1)
      * @return true if (partially) visible, false otherwise
      */
@@ -90,12 +90,12 @@ public:
     static QRectF getProjectedPixelRect(const bool clampToViewportBorders);
 
 protected:
-    ///@{
-    /** Overloaded methods from QGLWidget */
+    /** @name Overloaded methods from QGLWidget */
+    //@{
     void initializeGL() override;
     void paintGL() override;
     void resizeGL(int w, int h) override;
-    ///@}
+    //@}
 
 private:
     QColor backgroundColor_;

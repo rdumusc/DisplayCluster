@@ -83,11 +83,11 @@ signals:
     void openWebBrowser(QPointF pos, QSize size, QString url);
 
 protected:
-    ///@{
-    /** Drag events re-implemented from QMainWindow. */
+    /** @name Drag events re-implemented from QMainWindow */
+    //@{
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
-    ///@}
+    //@}
 
 private slots:
     void openContent();

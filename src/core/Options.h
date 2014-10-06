@@ -61,8 +61,8 @@ public:
     /** Constructor */
     Options();
 
+    /** @name Public getters */
     //@{
-    /** Public getters */
     bool getShowWindowBorders() const;
     bool getShowTouchPoints() const;
     bool getShowMovieControls() const;
@@ -74,8 +74,8 @@ public:
     //@}
 
 public slots:
+    /** @name Public setters. @see updated() */
     //@{
-    /** Public setters. @see updated() */
     void setShowWindowBorders(bool set);
     void setShowTouchPoints(bool set);
     void setShowTestPattern(bool set);

@@ -80,7 +80,7 @@ private:
     DesktopSelectionWindow* desktopSelectionWindow_;
 
     /** @name User Interface Elements */
-    /*@{*/
+    //@{
     QLineEdit hostnameLineEdit_;
     QLineEdit uriLineEdit_;
     QSpinBox xSpinBox_;
@@ -90,17 +90,17 @@ private:
     QSpinBox frameRateSpinBox_;
     QLabel frameRateLabel_;
 
-    QAction * shareDesktopAction_;
-    QAction * showDesktopSelectionWindowAction_;
-    /*@}*/
+    QAction* shareDesktopAction_;
+    QAction* showDesktopSelectionWindowAction_;
+    //@}
 
     /** @name Status */
-    /*@{*/
+    //@{
     int x_;
     int y_;
     int width_;
     int height_;
-    /*@}*/
+    //@}
 
     QImage cursor_;
 

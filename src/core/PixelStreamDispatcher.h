@@ -60,7 +60,8 @@ class PixelStreamWindowManager;
 typedef std::map<QString, PixelStreamBuffer> StreamBuffers;
 
 /**
- * Gather PixelStream Segments from multiple sources and dispatch them to Wall processes through MPI
+ * Gather PixelStream Segments from multiple sources and dispatch the resulting
+ * full frames.
  */
 class PixelStreamDispatcher : public QObject
 {
@@ -92,8 +93,10 @@ public slots:
      *
      * @param uri Identifier for the Stream
      * @param sourceIndex Identifier for the source in this stream
+     * @param segment The segment to process
      */
-    void processSegment(const QString uri, const size_t sourceIndex, PixelStreamSegment segment);
+    void processSegment(const QString uri, const size_t sourceIndex,
+                        PixelStreamSegment segment);
 
     /**
      * The given source has finished sending segments for the current frame
