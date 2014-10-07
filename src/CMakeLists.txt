@@ -15,6 +15,12 @@ set(DISPLAYCLUSTER_SHARED_HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/PixelStreamSegmentParameters.h
 )
 
+set(DISPLAYCLUSTER_SHARED_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/Event.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/MessageHeader.cpp
+)
+
 if(BUILD_CORE_LIBRARY)
   add_subdirectory(core)
   add_subdirectory(dcWebservice)

@@ -83,8 +83,8 @@ protected:
     /** Get normalized window dimensions. */
     QRectF boundingRect() const override;
 
-    ///@{
-    /** Re-implemented QGraphicsRectItem events. */
+    /** @name Re-implemented QGraphicsRectItem events */
+    //@{
     bool sceneEvent( QEvent* event ) override;
     void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
     void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
@@ -93,7 +93,7 @@ protected:
     void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
     void keyPressEvent( QKeyEvent* event ) override;
     void keyReleaseEvent( QKeyEvent* event ) override;
-    ///@}
+    //@}
 
 private:
     void getButtonDimensions( float &width, float &height ) const;

@@ -86,7 +86,7 @@ struct Event
     EventType type;
 
     /** @name Mouse and touch events */
-    /*@{*/
+    //@{
     double mouseX;    /**< Normalized X mouse/touch position relative to the window */
     double mouseY;    /**< Normalized Y mouse/touch position relative to the window */
     double dx;        /**< Normalized horizontal delta for scroll events / delta in pixels for wheel events. */
@@ -94,14 +94,14 @@ struct Event
     bool mouseLeft;   /**< The state of the left mouse button (pressed=true) */
     bool mouseRight;  /**< The state of the right mouse button (pressed=true) */
     bool mouseMiddle; /**< The state of the middle mouse button (pressed=true) */
-    /*@}*/
+    //@}
 
     /** @name Keyboard events */
-    /*@{*/
+    //@{
     int key;         /**< The key code, see QKeyEvent::key() */
     int modifiers;   /**< The keyboard modifiers, see QKeyEvent::modifiers() */
     char text[UNICODE_TEXT_SIZE];   /**< Carries unicode for key, see QKeyEvent::text() */
-    /*@}*/
+    //@}
 
     /** Construct a new event. @version 1.0 */
     Event()

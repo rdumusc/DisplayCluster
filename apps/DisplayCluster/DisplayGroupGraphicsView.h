@@ -73,11 +73,11 @@ signals:
     void backgroundTapAndHold( QPointF pos );
 
 protected:
-    ///@{
-    /** Re-implemented QGraphicsView events. */
+    /** @name Re-implemented QGraphicsView events */
+    //@{
     bool viewportEvent( QEvent* event ) override;
     void resizeEvent( QResizeEvent* event ) override;
-    ///@}
+    //@}
 
 private slots:
     void addContentWindow( ContentWindowPtr contentWindow );

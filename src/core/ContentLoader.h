@@ -63,10 +63,11 @@ public:
      * Load a Content from a file and create a window for it.
      *
      * @param filename The content file to open.
-     * @param windowPosition The point around which to center the window. If empty (default), the
-     *        window is automatically centered on the displayWall.
-     * @param windowSize The size of the window. If empty, the size of the window is automatically
-     *        adjusted to its content dimensions.
+     * @param windowCenterPosition The point around which to center the window.
+     *        If empty (default), the  window is automatically centered on the
+     *        displayWall.
+     * @param windowSize The size of the window. If empty, the size of the
+     *        window is automatically adjusted to its content dimensions.
      * @return true if operation was successful, false otherwise.
      */
     bool load(const QString& filename, const QPointF& windowCenterPosition = QPointF(),

@@ -1,8 +1,6 @@
 Documentation {#documentation}
 ============
 
-[TOC]
-
 This document describes the basic structure and provides pointers to
 auxilary documentation.
 
@@ -21,6 +19,8 @@ auxilary documentation.
   * SimpleStreamer: A simple example application which uses the dcstream library.
 * tests: Unit tests
 * doc: Doxygen and other documentation.
+* examples: Example xml configuration files, installed under share/DisplayCluster.
+* webservice: Configuration files and static content for the webservice.
 
 ## CMakeLists
 
@@ -40,4 +40,3 @@ integrated as a CMake/common subtree as described in the
 
 Unit tests are very important. Take a look at the
 [coverage report](CoverageReport/index.html).
-

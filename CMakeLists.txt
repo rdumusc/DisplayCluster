@@ -9,15 +9,14 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake
 include(GitExternal)
 
 # Versioning
-set(RELEASE_VERSION OFF) # OFF or ABI version
-set(LAST_RELEASE 1.0.0)
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 3)
+set(VERSION_MINOR 4)
 set(VERSION_PATCH 0)
+set(VERSION_ABI 0)
 
 # Scripts
+set(PROJECT_INCLUDE_NAME dc)
 set(DISPLAYCLUSTER_DESCRIPTION "The DisplayCluster project")
-set(COMMON_PROJECT_DOMAIN ch.epfl.bluebrain)
 set(DISPLAYCLUSTER_ISSUES_URL "https://bbpteam.epfl.ch/project/issues/browse/DISCL")
 set(DISPLAYCLUSTER_PACKAGE_URL "https://github.com/BlueBrain/DisplayCluster/releases")
 include(Common)
@@ -61,7 +60,7 @@ add_subdirectory(apps)
 add_subdirectory(tests)
 
 # Documentation
-set(PROJECT_INCLUDE_NAME dc)
+set(COMMON_PROJECT_DOMAIN ch.epfl.bluebrain)
 include(DoxygenRule)
 add_subdirectory(doc)
 

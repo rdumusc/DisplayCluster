@@ -55,7 +55,7 @@ class QWebView;
  * It offers a replacement to the system dialog box when QWebView is used
  * without a window.
  *
- * @usage Create one WebkitAuthenticationHelper instance for each
+ * Usage: Create one WebkitAuthenticationHelper instance for each
  * QWebView that needs to support HTTP authentication.
  */
 class WebkitAuthenticationHelper : public QObject
@@ -71,15 +71,14 @@ public:
     WebkitAuthenticationHelper(QWebView& webView);
 
 protected slots:
-    /**
-     * @defgroup Internal Callbacks
-     * These slots are accessed internally by the Javascript only but cannot be private,
-     * otherwise the compiler ignores them at compilation time.
-     *  @{
+    /** @name Internal Callbacks
+     * These slots are accessed internally by the Javascript only but cannot be
+     * private, otherwise the compiler ignores them at compilation time.
      */
+    //@{
     void loginFormInputChanged(const QString &inputName, const QString &inputValue);
     void loginFormSubmitted();
-    /** @} */ // Internal Callbacks
+    //@}
 
 private slots:
     void handleAuthenticationRequest(QNetworkReply*, QAuthenticator *authenticator);

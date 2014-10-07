@@ -68,7 +68,7 @@ public:
      * Initialize the FCGI library. After this method is called, it is assumed
      * that it is safe to call accept() to receive requests.
      *
-     * @param socket An id identifying the socket where requests are going to be
+     * @param port An id identifying the port on which requests are going to be
      * received.
      * @param nbOfConnections number of connections to enqueue in the socket.
      * @returns true if initialization succeeds, false otherwise.

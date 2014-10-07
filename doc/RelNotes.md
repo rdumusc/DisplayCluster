@@ -1,75 +1,68 @@
-Release Notes {#mainpage}
+Release Notes {#ReleaseNotes}
 ============
-
-[TOC]
-
-![](wall.png)
-
-# Introduction {#Introduction}
-
-Welcome to DisplayCluster, a software environment for interactively driving
-large-scale tiled displays.
-
-You can find more information in the @ref documentation.
-
-
-## Features {#Features}
-
-DisplayCluster provides the following functionality:
-* Interactively view media such as high-resolution imagery and video
-* Stream content from remote sources such as laptops / desktops or
-high-performance remote visualization machines
-
-- - -
 
 # New in this release {#New}
 
-DisplayCluster 0.3.0 provides the following features:
+DisplayCluster 0.4 provides the following improvements:
 
 ## New Features {#NewFeatures}
 
-* @ref documentation
+* Movies play synchronously across all screens.
+* The launch procedure relies on a single python script that works out of the
+  box on all supported platforms and with the different MPI implementations. It
+  is compatible with both Python 2.x and 3.x APIs.
+* dc::Stream implements an asyncSend() function for PixelStreams.
+* MPIBenchmark application to measure interprocess communication performance.
 
 ## Enhancements {#Enhancements}
 
-* Updated to the last CMake subtree
-* Unit tests can now generate a coverage report
-(using lcov, provided by CommonCTest.cmake)
+* DesktopStreamer properly handles AppNap on OSX 10.9.
+* DesktopStreamer detects Retina displays automatically (no retina checkbox).
+* ImagePyramids use a correct aspect ratio instead of a square size, leading to
+  a significant reduction in disk space usage for newly generated pyramids.
+* MasterWindow UI menus have been reorganized. Help -> about shows the git
+  revision used for the build.
+* The DisplayGroup, ContentWindow and related classes have undergone
+  profound refactorings and now follow an MVC pattern.
+* Use of global variables has been drastically reduced.
+* The CMakeLists.txt follows common Eyescale/CMake conventions.
+* MPI message headers are now separate from dc::Stream message headers.
+* The OpenGL rendering code has been improved, but still needs more attention.
 
 ## Optimizations {#Optimizations}
 
-* No optimizations
+* Multithreaded MPI communication between the processes brings significant
+  performance improvements.
+* PixelStream dispatch rate from master application is based on feedback from
+  wall applications for a correct flow control.
+* The handling of Content dimensions is greatly simplified and the
+  ContentDimensionsRequest has been removed.
 
 ## Documentation {#Documentation}
 
-* Added the first version of Documentation.md and RelNotes.md
+* Separate Introduction page from Release Notes for more clarity.
 
 ## Bug Fixes {#Fixes}
 
-* Fixed unit tests execution on the cluster
+* Fixed DynamicTexture LOD mechanism. Textures are now displayed at the correct
+  resolution.
+* Fixed startup crash with an empty background.
+* Fixed crashes when opening incorrect State files.
+* Fix crash on streaming client exit, fix signaling of new events.
+* Fixed multi-source PixelStream intialization.
+* All the exit(-1) calls have been replaced by std::exceptions.
+* Fixed all cppcheck warnings.
+* Fixed build with older FFMPEG versions.
 
 ## Known Bugs {#Bugs}
 
 The following bugs were known at release time:
-
-* No known bugs
+* Concurrency issues were introduced in DisplayGroup by the MPI refactoring and
+  can result in random crashes.
+  See [DISCL-242](https://bbpteam.epfl.ch/project/issues/browse/DISCL-242).
 
 Please file a [Bug Report](https://bbpteam.epfl.ch/project/issues/browse/DISCL)
 if you find any other issue with this release.
-- - -
-
-# About {#About}
-
-DisplayCluster uses CMake to create a platform-specific build environment.
-The following platforms and build environments are tested:
-
-* Linux: Ubuntu 13.04, 13.10 and RHEL 6 (using a Qt4.8.4 module)
-(Makefile, i386, x64)
-* Mac OS X: 10.7, 10.8, 10.9 - DesktopStreamer and dcstream library only
-(Makefile, XCode, i386, x64)
-
-The [API documentation](http://bluebrain.github.io/DisplayCluster-0.2/index.html)
-can be found on [bluebrain.github.io] (http://bluebrain.github.io/)
 
 - - -
 

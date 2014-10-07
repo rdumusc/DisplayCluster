@@ -53,6 +53,8 @@ public:
     /**
      * Constructor
      * @param displayGroup The target DisplayGroup for the commands.
+     * @param windowManager The window manager used to retrive the position of
+     *        the senderURI window in handle().
      */
     FileCommandHandler(DisplayGroupPtr displayGroup,
                        PixelStreamWindowManager& windowManager);

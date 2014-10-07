@@ -95,7 +95,7 @@ public:
      *
      * Assume that the GL matrices have been set to the normalized dimensions of the stream.
      * @param showSegmentBorders Show the segment boders
-     * @param showStatistics Show the statistics for this segment
+     * @param showSegmentStatistics Show the statistics for this segment
      * @return true on successful render; false if no texture available.
      */
     bool render(bool showSegmentBorders, bool showSegmentStatistics);

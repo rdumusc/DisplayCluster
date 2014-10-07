@@ -55,13 +55,13 @@ public:
     void refreshTileRects();
 
 protected:
-    ///@{
-    /** Re-implemented QGraphicsScene events. */
+    /** @name Re-implemented QGraphicsScene events */
+    //@{
     bool event( QEvent* event );
     void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
     void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
     void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    ///@}
+    //@}
 
 private:
     typedef std::vector< QGraphicsRectItem* > TileRectItems;

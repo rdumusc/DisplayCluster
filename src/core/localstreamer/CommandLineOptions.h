@@ -61,7 +61,7 @@ public:
     void showSyntax() const;
 
     /** @name Getters */
-    /*@{*/
+    //@{
     bool getHelp() const;
     PixelStreamerType getPixelStreamerType() const;
     const QString& getUrl() const;
@@ -69,7 +69,7 @@ public:
     const QString& getName() const;
     unsigned int getWidth() const;
     unsigned int getHeight() const;
-    /*@}*/
+    //@}
 
     /** Get the command line arguments corresponding to this object */
     QStringList getCommandLineArguments() const;
@@ -78,7 +78,7 @@ public:
     QString getCommandLine() const;
 
     /** @name Setters */
-    /*@{*/
+    //@{
     void setHelp(const bool set);
     void setPixelStreamerType(const PixelStreamerType type);
     void setUrl(const QString& url);
@@ -86,7 +86,7 @@ public:
     void setName(const QString& name);
     void setWidth(const unsigned int width);
     void setHeight(const unsigned int height);
-    /*@}*/
+    //@}
 
 private:
     void initDesc();
