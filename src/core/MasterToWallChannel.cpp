@@ -46,41 +46,59 @@
 #include "Markers.h"
 #include "PixelStreamFrame.h"
 
-MasterToWallChannel::MasterToWallChannel(MPIChannelPtr mpiChannel)
-    : mpiChannel_(mpiChannel)
+MasterToWallChannel::MasterToWallChannel( MPIChannelPtr mpiChannel )
+    : mpiChannel_( mpiChannel )
 {
 }
 
-template <typename T>
-void MasterToWallChannel::broadcast(const T& object, const MPIMessageType type)
+template< typename T >
+void MasterToWallChannel::broadcast( const T& object,
+                                     const MPIMessageType type )
 {
-    const std::string& serializedString = buffer_.serialize(object);
+    const std::string& serializedString = buffer_.serialize( object );
 
-    mpiChannel_->broadcast(type, serializedString);
+    mpiChannel_->broadcast( type, serializedString );
 }
 
-void MasterToWallChannel::send(DisplayGroupPtr displayGroup)
+template< typename T >
+void MasterToWallChannel::broadcastAsync( const T& object,
+                                          const MPIMessageType type )
 {
-    broadcast(displayGroup, MPI_MESSAGE_TYPE_DISPLAYGROUP);
+    const std::string serializedStringCopy = asyncBuffer_.serialize( object );
+
+    QMetaObject::invokeMethod( this, "broadcast", Qt::QueuedConnection,
+                               Q_ARG( MPIMessageType, type ),
+                               Q_ARG( std::string, serializedStringCopy ));
 }
 
-void MasterToWallChannel::send(OptionsPtr options)
+void MasterToWallChannel::sendAsync( DisplayGroupPtr displayGroup )
 {
-    broadcast(options, MPI_MESSAGE_TYPE_OPTIONS);
+    broadcastAsync( displayGroup, MPI_MESSAGE_TYPE_DISPLAYGROUP );
 }
 
-void MasterToWallChannel::send(MarkersPtr markers)
+void MasterToWallChannel::sendAsync( OptionsPtr options )
 {
-    broadcast(markers, MPI_MESSAGE_TYPE_MARKERS);
+    broadcastAsync( options, MPI_MESSAGE_TYPE_OPTIONS );
 }
 
-void MasterToWallChannel::send(PixelStreamFramePtr frame)
+void MasterToWallChannel::sendAsync( MarkersPtr markers )
 {
-    assert(!frame->segments.empty() && "received an empty frame");
-    broadcast(frame, MPI_MESSAGE_TYPE_PIXELSTREAM);
+    broadcastAsync( markers, MPI_MESSAGE_TYPE_MARKERS );
+}
+
+void MasterToWallChannel::send( PixelStreamFramePtr frame )
+{
+    assert( !frame->segments.empty() && "received an empty frame" );
+    broadcast( frame, MPI_MESSAGE_TYPE_PIXELSTREAM );
 }
 
 void MasterToWallChannel::sendQuit()
 {
-    mpiChannel_->sendAll(MPI_MESSAGE_TYPE_QUIT);
+    mpiChannel_->sendAll( MPI_MESSAGE_TYPE_QUIT );
+}
+
+// cppcheck-suppress passedByValue
+void MasterToWallChannel::broadcast( const MPIMessageType type, const std::string data )
+{
+    mpiChannel_->broadcast( type, data );
 }
