@@ -43,6 +43,7 @@
 #include "PixelStreamSegment.h"
 #include "Event.h"
 #include "ContentWindow.h"
+#include "MPIHeader.h"
 
 #include <QMetaType>
 
@@ -53,15 +54,17 @@ struct MetaTypeRegistration
 {
     MetaTypeRegistration()
     {
-        qRegisterMetaType<size_t>("size_t");
-        qRegisterMetaType<Event>("Event");
-        qRegisterMetaType<OptionsPtr>("OptionsPtr");
-        qRegisterMetaType<MarkersPtr>("MarkersPtr");
-        qRegisterMetaType<DisplayGroupPtr>("DisplayGroupPtr");
-        qRegisterMetaType<ContentWindowPtr>("ContentWindowPtr");
-        qRegisterMetaType<PixelStreamSegment>("PixelStreamSegment");
-        qRegisterMetaType<PixelStreamFramePtr>("PixelStreamFramePtr");
-        qRegisterMetaType<ContentWindow::WindowState>("ContentWindow::WindowState");
+        qRegisterMetaType< size_t >( "size_t" );
+        qRegisterMetaType< Event >( "Event" );
+        qRegisterMetaType< OptionsPtr >( "OptionsPtr" );
+        qRegisterMetaType< MarkersPtr >( "MarkersPtr" );
+        qRegisterMetaType< DisplayGroupPtr >( "DisplayGroupPtr" );
+        qRegisterMetaType< ContentWindowPtr >( "ContentWindowPtr" );
+        qRegisterMetaType< PixelStreamSegment >( "PixelStreamSegment" );
+        qRegisterMetaType< PixelStreamFramePtr >( "PixelStreamFramePtr" );
+        qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
+        qRegisterMetaType< MPIMessageType >( "MPIMessageType" );
+        qRegisterMetaType< std::string >( "std::string" );
     }
 };
 

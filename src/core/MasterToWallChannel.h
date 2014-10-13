@@ -48,6 +48,20 @@
 
 /**
  * Sending channel from the master application to the wall processes.
+ *
+ * This class is designed to be moved to a separate QThread.
+ *
+ * The methods in this class are NOT thread-safe.
+ *
+ * The send() functions are fully synchronous and rely on Qt::QueuedConnection
+ * for safe inter-thread communication.
+ *
+ * The sendAsync() functions are a workaround for objects that cannot be passed
+ * by copy and also cannot provide a thread-safe serialize() function.
+ * They can be called directly from the main thread (Qt::DirectConnection).
+ * The given object is serialized synchronously (in the calling thread), then
+ * the serialized data is sent asynchronously in the MasterToWallChannel's
+ * thread.
  */
 class MasterToWallChannel : public QObject
 {
@@ -55,32 +69,32 @@ class MasterToWallChannel : public QObject
 
 public:
     /** Constructor */
-    MasterToWallChannel(MPIChannelPtr mpiChannel);
+    MasterToWallChannel( MPIChannelPtr mpiChannel );
 
 public slots:
     /**
      * Send the given DisplayGroup to the wall processes.
      * @param displayGroup The DisplayGroup to send
      */
-    void send(DisplayGroupPtr displayGroup);
+    void sendAsync( DisplayGroupPtr displayGroup );
 
     /**
      * Send the given Options to the wall processes.
      * @param options The options to send
      */
-    void send(OptionsPtr options);
+    void sendAsync( OptionsPtr options );
 
     /**
      * Send the given Markers to the wall processes.
      * @param markers The markers to send
      */
-    void send(MarkersPtr markers);
+    void sendAsync( MarkersPtr markers );
 
     /**
      * Send pixel stream frame to the wall processes.
      * @param frame The frame to send
      */
-    void send(PixelStreamFramePtr frame);
+    void send( PixelStreamFramePtr frame );
 
     /**
      * Send quit message to the wall processes, terminating the application.
@@ -90,9 +104,16 @@ public slots:
 private:
     MPIChannelPtr mpiChannel_;
     SerializeBuffer buffer_;
+    SerializeBuffer asyncBuffer_;
 
-    template <typename T>
-    void broadcast(const T& object, const MPIMessageType type);
+    template< typename T >
+    void broadcast( const T& object, const MPIMessageType type );
+    template< typename T >
+    void broadcastAsync( const T& object, const MPIMessageType type );
+
+private slots:
+    // cppcheck-suppress passedByValue
+    void broadcast( const MPIMessageType type, const std::string data );
 };
 
 #endif // MASTERTOWALLCHANNEL_H

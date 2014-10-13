@@ -212,28 +212,32 @@ void MasterApplication::initPixelStreamLauncher()
 
 void MasterApplication::initMPIConnection()
 {
-    masterToWallChannel_->moveToThread(&mpiSendThread_);
-    masterFromWallChannel_->moveToThread(&mpiReceiveThread_);
+    masterToWallChannel_->moveToThread( &mpiSendThread_ );
+    masterFromWallChannel_->moveToThread( &mpiReceiveThread_ );
 
-    connect(displayGroup_.get(), SIGNAL(modified(DisplayGroupPtr)),
-            masterToWallChannel_.get(), SLOT(send(DisplayGroupPtr)));
+    connect( displayGroup_.get(), SIGNAL( modified( DisplayGroupPtr )),
+             masterToWallChannel_.get(), SLOT( sendAsync( DisplayGroupPtr )),
+             Qt::DirectConnection );
 
-    connect(masterWindow_->getOptions().get(), SIGNAL(updated(OptionsPtr)),
-            masterToWallChannel_.get(), SLOT(send(OptionsPtr)));
+    connect( masterWindow_->getOptions().get(), SIGNAL( updated( OptionsPtr )),
+             masterToWallChannel_.get(), SLOT( sendAsync( OptionsPtr )),
+             Qt::DirectConnection );
 
-    connect(markers_.get(), SIGNAL(updated(MarkersPtr)),
-            masterToWallChannel_.get(), SLOT(send(MarkersPtr)));
+    connect( markers_.get(), SIGNAL( updated( MarkersPtr )),
+             masterToWallChannel_.get(), SLOT( sendAsync( MarkersPtr )),
+             Qt::DirectConnection );
 
-    connect(networkListener_->getPixelStreamDispatcher(),
-            SIGNAL(sendFrame(PixelStreamFramePtr)),
-            masterToWallChannel_.get(), SLOT(send(PixelStreamFramePtr)));
+    connect( networkListener_->getPixelStreamDispatcher(),
+             SIGNAL( sendFrame( PixelStreamFramePtr )),
+             masterToWallChannel_.get(), SLOT( send( PixelStreamFramePtr )));
 
-    connect(masterFromWallChannel_.get(),
-            SIGNAL(receivedRequestFrame(const QString)),
-            networkListener_->getPixelStreamDispatcher(), SLOT(requestFrame(const QString)));
+    connect( masterFromWallChannel_.get(),
+             SIGNAL( receivedRequestFrame( const QString )),
+             networkListener_->getPixelStreamDispatcher(),
+             SLOT( requestFrame( const QString )));
 
-    connect(&mpiReceiveThread_, SIGNAL(started()),
-            masterFromWallChannel_.get(), SLOT(processMessages()));
+    connect( &mpiReceiveThread_, SIGNAL( started( )),
+             masterFromWallChannel_.get(), SLOT( processMessages( )));
 
     mpiSendThread_.start();
     mpiReceiveThread_.start();
