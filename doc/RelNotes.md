@@ -57,9 +57,10 @@ DisplayCluster 0.4 provides the following improvements:
 ## Known Bugs {#Bugs}
 
 The following bugs were known at release time:
-* Concurrency issues were introduced in DisplayGroup by the MPI refactoring and
-  can result in random crashes.
-  See [DISCL-242](https://bbpteam.epfl.ch/project/issues/browse/DISCL-242).
+* Sometimes, once closed the dock may refuse to open again ("Already have a
+  window for stream: Dock").
+* Touch events may occasionnaly pass through the active window onto the
+  background.
 
 Please file a [Bug Report](https://bbpteam.epfl.ch/project/issues/browse/DISCL)
 if you find any other issue with this release.
