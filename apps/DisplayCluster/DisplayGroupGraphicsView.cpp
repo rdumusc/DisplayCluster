@@ -267,8 +267,8 @@ void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWind
     // Qt WAR: when all items with grabbed gestures are removed, the viewport
     // also looses any registered gestures, which harms our dock to open...
     // <qt-source>/qgraphicsscene.cpp::ungrabGesture called in removeItemHelper()
-    if( scene()->items().empty( ))
-        grabGestures();
+    // Always call grabGestures() to prevent this situation from occuring.
+    grabGestures();
 }
 
 void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr contentWindow )
