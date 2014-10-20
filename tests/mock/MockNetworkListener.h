@@ -40,18 +40,23 @@
 #ifndef MOCKNETWORKLISTENER_H
 #define MOCKNETWORKLISTENER_H
 
+#ifdef _WIN32
+typedef __int32 int32_t;
+#endif
+
 #include <QtNetwork/QTcpServer>
 #include <QThread>
 
 #include "NetworkProtocol.h"
+#include <dc/api.h>
 
 class MockNetworkListener : public QTcpServer
 {
     Q_OBJECT
 
 public:
-    MockNetworkListener(const int32_t protocolVersion = NETWORK_PROTOCOL_VERSION);
-    virtual ~MockNetworkListener();
+    DC_API MockNetworkListener(const int32_t protocolVersion = NETWORK_PROTOCOL_VERSION);
+    DC_API virtual ~MockNetworkListener();
 
 protected:
     void incomingConnection(int handle) override;

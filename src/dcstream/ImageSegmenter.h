@@ -43,6 +43,7 @@
 
 #include <boost/function/function1.hpp>
 #include <vector>
+#include <dc/api.h>
 
 namespace dc
 {
@@ -63,7 +64,7 @@ class ImageSegmenter
 {
 public:
     /** Construct an ImageSegmenter. */
-    ImageSegmenter();
+    DC_API ImageSegmenter();
 
     /** Function called on each segment. */
     typedef boost::function< bool( const PixelStreamSegment& ) > Handler;
@@ -80,7 +81,8 @@ public:
      * @return true if all image handlers returned true, false on failure
      * @see setNominalSegmentDimensions()
      */
-    bool generate( const ImageWrapper& image, const Handler& handler ) const;
+    DC_API bool generate( const ImageWrapper& image,
+                          const Handler& handler ) const;
 
     /**
      * Set the nominal segment dimensions.
@@ -95,8 +97,8 @@ public:
      * @param nominalSegmentHeight The nominal height of the segments to
      *                             generate (default: 0).
      */
-    void setNominalSegmentDimensions( const unsigned int nominalSegmentWidth,
-                                      const unsigned int nominalSegmentHeight );
+    DC_API void setNominalSegmentDimensions( const unsigned int nominalSegmentWidth,
+                                             const unsigned int nominalSegmentHeight );
 
 private:
     SegmentParameters generateSegmentParameters(const ImageWrapper &image) const;

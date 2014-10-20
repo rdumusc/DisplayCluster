@@ -50,6 +50,7 @@
 
 #include "Event.h"
 #include "ImageWrapper.h"
+#include <dc/api.h>
 
 class Application;
 
@@ -87,13 +88,13 @@ public:
      *                "192.168.1.83".
      * @version 1.0
      */
-    Stream(const std::string& name, const std::string& address);
+    DC_API Stream( const std::string& name, const std::string& address );
 
     /** Destruct the Stream, closing the connection. @version 1.0 */
-    virtual ~Stream();
+    DC_API virtual ~Stream();
 
     /** @return true if the stream is connected, false otherwise. @version 1.0*/
-    bool isConnected() const;
+    DC_API bool isConnected() const;
 
     /** @name Asynchronous send API */
     //@{
@@ -113,7 +114,7 @@ public:
      * @see send()
      * @version 1.1
      */
-    Future asyncSend( const ImageWrapper& image );
+    DC_API Future asyncSend( const ImageWrapper& image );
     //@}
 
     /** @name Synchronous send API */
@@ -127,7 +128,7 @@ public:
      * @version 1.0
      * @sa finishFrame()
      */
-    bool send(const ImageWrapper& image);
+    DC_API bool send( const ImageWrapper& image );
 
     /**
      * Notify that all the images for this frame have been sent.
@@ -142,7 +143,7 @@ public:
      * @see send()
      * @version 1.0
      */
-    bool finishFrame();
+    DC_API bool finishFrame();
     //@}
 
     /**
@@ -168,7 +169,7 @@ public:
      * @return true if the registration could be or was already established.
      * @version 1.0
      */
-    bool registerForEvents(const bool exclusive = false);
+    DC_API bool registerForEvents( const bool exclusive = false );
 
     /**
      * Is this stream registered to receive events.
@@ -180,7 +181,7 @@ public:
      *         registration request, false otherwise
      * @version 1.0
      */
-    bool isRegisteredForEvents() const;
+    DC_API bool isRegisteredForEvents() const;
 
     /**
      * Get the native descriptor for the data stream.
@@ -193,7 +194,7 @@ public:
      * @return The native descriptor if available; otherwise returns -1.
      * @version 1.0
      */
-    int getDescriptor() const;
+    DC_API int getDescriptor() const;
 
     /**
      * Check if a new Event is available.
@@ -205,7 +206,7 @@ public:
      * @return True if an Event is available, false otherwise
      * @version 1.0
      */
-    bool hasEvent() const;
+    DC_API bool hasEvent() const;
 
     /**
      * Get the next Event.
@@ -219,7 +220,7 @@ public:
      * @return The next Event if available, otherwise an empty (default) Event.
      * @version 1.0
      */
-    Event getEvent();
+    DC_API Event getEvent();
 
 private:
     /** Disable copy constructor. */

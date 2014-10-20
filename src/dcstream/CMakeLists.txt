@@ -3,6 +3,7 @@
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 set(DCSTREAM_PUBLIC_HEADERS
+  ${COMMON_INCLUDES}
   ${DISPLAYCLUSTER_SHARED_HEADERS}
   ImageWrapper.h
   Stream.h
@@ -38,7 +39,8 @@ add_library(dcstream SHARED ${DCSTREAM_PUBLIC_HEADERS} ${DCSTREAM_SOURCES}
             ${MOC_OUTFILES})
 target_link_libraries(dcstream ${DCSTREAM_LINK_LIBRARIES})
 set_target_properties(dcstream PROPERTIES
-  VERSION ${VERSION} SOVERSION ${VERSION_ABI})
+  VERSION ${VERSION} SOVERSION ${VERSION_ABI}
+  COMPILE_DEFINITIONS "DISPLAYCLUSTER_SHARED")
 
 install(TARGETS dcstream
   ARCHIVE DESTINATION lib COMPONENT dev       # .a, .lib

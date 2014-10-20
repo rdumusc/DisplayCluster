@@ -6,7 +6,11 @@
 include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/mock)
 include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI ${PROJECT_BINARY_DIR}/config.h")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
+endif()
 
 # Libraries to link the tests executables with
 set(DC_LIBRARIES dcstream)

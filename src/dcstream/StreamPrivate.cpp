@@ -117,8 +117,8 @@ bool StreamPrivate::finishFrame()
 bool StreamPrivate::sendPixelStreamSegment(const PixelStreamSegment &segment)
 {
     // Create message header
-    size_t segmentSize = sizeof(PixelStreamSegmentParameters) +
-                         segment.imageData.size();
+    const uint32_t segmentSize(sizeof(PixelStreamSegmentParameters) +
+                               segment.imageData.size());
     MessageHeader mh(MESSAGE_TYPE_PIXELSTREAM, segmentSize, name_);
 
     // This byte array will hold the message to be sent over the socket

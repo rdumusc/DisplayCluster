@@ -49,9 +49,9 @@
     #include <windows.h>
 #else
     #include <stdint.h>
+    #include <unistd.h>
 #endif
 
-#include <unistd.h>
 #include <iostream>
 
 #define SHARE_DESKTOP_UPDATE_DELAY      1
