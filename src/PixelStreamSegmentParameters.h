@@ -40,7 +40,7 @@
 #define PIXELSTREAMSEGMENTPARAMETERS_H
 
 #ifdef _WIN32
-    typedef __uint32 uint32_t;
+    typedef unsigned __int32 uint32_t;
 #else
     #include <stdint.h>
 #endif

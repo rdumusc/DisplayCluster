@@ -27,4 +27,6 @@ endif()
 qt4_wrap_cpp(MOC_OUTFILES ${MOCK_MOC_HEADERS})
 
 add_library(mock SHARED ${MOC_OUTFILES} ${MOCK_HEADERS} ${MOCK_SOURCES})
+set_target_properties(mock PROPERTIES
+  COMPILE_DEFINITIONS "DISPLAYCLUSTER_SHARED")
 target_link_libraries(mock ${DC_LIBRARIES})

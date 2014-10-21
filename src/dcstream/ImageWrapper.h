@@ -41,6 +41,7 @@
 #define DCIMAGEWRAPPER_H
 
 #include <cstddef>
+#include <dc/api.h>
 
 namespace dc
 {
@@ -65,7 +66,7 @@ enum CompressionPolicy {
  * It also contains fields to indicate if the image should be compressed for sending (disabled by default).
  * @version 1.0
  */
-struct ImageWrapper
+struct DC_API ImageWrapper
 {
     /**
      * ImageWrapper constructor

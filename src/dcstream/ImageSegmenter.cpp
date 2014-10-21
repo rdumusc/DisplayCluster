@@ -139,7 +139,8 @@ bool ImageSegmenter::generateRaw( const ImageWrapper &image,
         if (segmentParams.size() == 1)
         {
             // If we are not segmenting the image, just append the image data
-            segment.imageData.append((const char*)image.data, image.getBufferSize());
+            segment.imageData.append((const char*)image.data,
+                                     int(image.getBufferSize()));
         }
         else // Copy the image subregion
         {
