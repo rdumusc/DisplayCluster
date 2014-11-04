@@ -90,6 +90,9 @@ public:
     /** Set the dimensions. */
     void setDimensions( const QSize& dimensions );
 
+    /** Get the aspect ratio. */
+    float getAspectRatio() const;
+
     /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
     void blockAdvance( bool block ) { blockAdvance_ = block; }
 

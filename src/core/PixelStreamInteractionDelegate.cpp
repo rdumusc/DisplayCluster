@@ -236,20 +236,19 @@ template <typename T>
 Event PixelStreamInteractionDelegate::getMouseEvent(const T* qtEvent)
 {
     // Bounding rectangle
-    double x, y, w, h;
-    contentWindow_.getCoordinates(x, y, w, h);
+    const QRectF& coord = contentWindow_.getCoordinates();
 
     QPointF eventPos = qtEvent->pos();
 
     Event event;
 
     // Normalize mouse coordinates
-    event.mouseX = (eventPos.x() - x) / w;
-    event.mouseY = (eventPos.y() - y) / h;
+    event.mouseX = ( eventPos.x() - coord.x( )) / coord.width();
+    event.mouseY = ( eventPos.y() - coord.y( )) / coord.height();
 
-    event.mouseLeft = qtEvent->buttons().testFlag(Qt::LeftButton);
-    event.mouseMiddle = qtEvent->buttons().testFlag(Qt::MidButton);
-    event.mouseRight = qtEvent->buttons().testFlag(Qt::RightButton);
+    event.mouseLeft = qtEvent->buttons().testFlag( Qt::LeftButton );
+    event.mouseMiddle = qtEvent->buttons().testFlag( Qt::MidButton );
+    event.mouseRight = qtEvent->buttons().testFlag( Qt::RightButton );
 
     return event;
 }
@@ -270,14 +269,13 @@ void PixelStreamInteractionDelegate::setMouseMoveNormalizedDelta(const QGraphics
 template<typename T>
 Event PixelStreamInteractionDelegate::getGestureEvent(const T *gesture)
 {
-    // Window coordinates (normalized units)
-    double x, y, w, h;
-    contentWindow_.getCoordinates(x, y, w, h);
+    const QRectF& win = contentWindow_.getCoordinates();
 
-    // For (almost) all QGestures, position() is the normalized position (on the wall / QGraphicsView)
+    // For (almost) all QGestures, position() is the normalized position
+    // (on the wall / QGraphicsView)
     Event event;
-    event.mouseX = (gesture->position().x() - x) / w;
-    event.mouseY = (gesture->position().y() - y) / h;
+    event.mouseX = ( gesture->position().x() - win.x( )) / win.width();
+    event.mouseY = ( gesture->position().y() - win.y( )) / win.height();
 
     // The returned event holds the normalized position inside the window
     return event;
@@ -285,18 +283,17 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const T *gesture)
 
 Event PixelStreamInteractionDelegate::getGestureEvent(const QTapGesture *gesture)
 {
-    // Window coordinates (normalized units)
-    double x, y, w, h;
-    contentWindow_.getCoordinates(x, y, w, h);
+    const QRectF& win = contentWindow_.getCoordinates();
 
     // Overall wall dimensions (in pixels)
     const double tWidth = g_configuration->getTotalWidth();
     const double tHeight = g_configuration->getTotalHeight();
 
-    // For QTapGestures, position() is the position on the WALL (not QGraphicsView!) in pixels
+    // For QTapGestures, position() is the position on the WALL
+    // (not QGraphicsView!) in pixels
     Event event;
-    event.mouseX = (gesture->position().x() / tWidth - x) / w;
-    event.mouseY = (gesture->position().y() / tHeight - y) / h;
+    event.mouseX = ( gesture->position().x() / tWidth - win.x( )) / win.width();
+    event.mouseY = ( gesture->position().y() / tHeight - win.y( )) / win.height();
 
     // The returned event holds the normalized position inside the window
     return event;
@@ -304,14 +301,13 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const QTapGesture *gesture
 
 Event PixelStreamInteractionDelegate::getGestureEvent(const PinchGesture *gesture)
 {
-    // Window coordinates (normalized units)
-    double x, y, w, h;
-    contentWindow_.getCoordinates(x, y, w, h);
+    const QRectF& win = contentWindow_.getCoordinates();
 
-    // For PinchGesture, normalizedCenterPoint() is the normalized position (on the wall / QGraphicsView)
+    // For PinchGesture, normalizedCenterPoint() is the normalized position
+    // (on the wall / QGraphicsView)
     Event event;
-    event.mouseX = (gesture->normalizedCenterPoint().x() - x) / w;
-    event.mouseY = (gesture->normalizedCenterPoint().y() - y) / h;
+    event.mouseX = ( gesture->normalizedCenterPoint().x() - win.x( )) / win.width();
+    event.mouseY = ( gesture->normalizedCenterPoint().y() - win.y( )) / win.height();
 
     // The returned event holds the normalized position inside the window
     return event;

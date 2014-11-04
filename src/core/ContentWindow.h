@@ -115,10 +115,7 @@ public:
     const QUuid& getID() const;
 
     /** Get the normalized window coordiates. */
-    void getCoordinates( double &x, double &y, double &w, double &h ) const;
-
-    /** Get the normalized window coordiates. */
-    QRectF getCoordinates() const;
+    const QRectF& getCoordinates() const;
 
     /** Get the normalized position. */
     void getPosition( double &x, double &y ) const;
@@ -217,8 +214,12 @@ signals:
     void eventChanged( Event event );
 
 private:
-    void fixAspectRatio();
     void setEventToNewDimensions();
+
+    bool isValidSize( const QSizeF& size ) const;
+    QSizeF getNormalized1To1Size() const;
+    void clampSize( QSizeF& size ) const;
+    QRectF getCenteredCoordinates( const QSizeF& size ) const;
 
     friend class boost::serialization::access;
 
@@ -239,7 +240,7 @@ private:
     template< class Archive >
     void serialize_for_xml( Archive & ar, const unsigned int )
     {
-        int contentWidth, contentHeight = 0; // For reading legacy archives
+        int contentWidth = 0, contentHeight = 0; // For reading legacy archives
         ar & boost::serialization::make_nvp( "content", content_ );
         ar & boost::serialization::make_nvp( "contentWidth", contentWidth );
         ar & boost::serialization::make_nvp( "contentHeight", contentHeight );

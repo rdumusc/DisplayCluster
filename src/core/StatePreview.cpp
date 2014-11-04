@@ -51,17 +51,22 @@
 #include <QPainter>
 #include <QImageReader>
 
-#define PREVIEW_IMAGE_SIZE       512
-#define CONTENT_THUMBNAIL_SIZE   128
+#include <boost/foreach.hpp>
 
-StatePreview::StatePreview(const QString &dcxFileName)
-    : dcxFileName_(dcxFileName)
+namespace
+{
+static const QSize PREVIEW_IMAGE_SIZE( 512, 512 );
+static const QSize THUMBNAIL_SIZE( 128, 128 );
+}
+
+StatePreview::StatePreview( const QString &dcxFileName )
+    : dcxFileName_( dcxFileName )
 {
 }
 
 QString StatePreview::getFileExtension()
 {
-    return QString(".dcxpreview");
+    return QString( ".dcxpreview" );
 }
 
 QImage StatePreview::getImage() const
@@ -71,44 +76,46 @@ QImage StatePreview::getImage() const
 
 QString StatePreview::previewFilename() const
 {
-    QFileInfo fileinfo(dcxFileName_);
+    QFileInfo fileinfo( dcxFileName_ );
 
-    if (fileinfo.suffix().toLower() != "dcx")
+    if ( fileinfo.suffix().toLower() != "dcx" )
     {
-        put_flog(LOG_WARN, "wrong state file extension (expected .dcx)");
+        put_flog( LOG_WARN, "wrong state file extension (expected .dcx)" );
         return QString();
     }
     return fileinfo.path() + "/" + fileinfo.completeBaseName() + getFileExtension();
 }
 
-void StatePreview::generateImage(const QSize& wallDimensions, const ContentWindowPtrs &contentWindows)
+void StatePreview::generateImage( const QSize& wallDimensions,
+                                  const ContentWindowPtrs &contentWindows )
 {
-    QSize previewDimension(wallDimensions);
-    previewDimension.scale(QSize(PREVIEW_IMAGE_SIZE, PREVIEW_IMAGE_SIZE), Qt::KeepAspectRatio);
+    QSize previewDimension( wallDimensions );
+    previewDimension.scale( PREVIEW_IMAGE_SIZE, Qt::KeepAspectRatio );
 
     // Transparent image
-    QImage preview(previewDimension, QImage::Format_ARGB32);
-    preview.fill(qRgba(0,0,0,0));
+    QImage preview( previewDimension, QImage::Format_ARGB32 );
+    preview.fill( qRgba( 0, 0, 0, 0 ));
+
+    QPainter painter( &preview );
 
     // Paint all Contents at their correct location
-    QPainter painter(&preview);
-    const QSize contentThumbnailSize(CONTENT_THUMBNAIL_SIZE, CONTENT_THUMBNAIL_SIZE);
-
-    for(size_t i=0; i<contentWindows.size(); i++)
+    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
-        ContentWindow* contentWindow = contentWindows[i].get();
-        if (contentWindow->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM)
-        {
-            // Use ThumbnailFactory to generate thumbnails for the Contents
-            const QString& filename = contentWindows[i]->getContent()->getURI();
-            QImage image = ThumbnailGeneratorFactory::getGenerator(filename, contentThumbnailSize)->generate(filename);
+        if( window->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
+            continue;
 
-            double x, y, w ,h;
-            contentWindow->getCoordinates(x, y, w ,h);
-            QRectF area(x*preview.size().width(), y*preview.size().height(), w*preview.size().width(), h*preview.size().height());
+        const QRectF& winCoord = window->getCoordinates();
+        const QRectF area( winCoord.x() * preview.size().width(),
+                           winCoord.y() * preview.size().height(),
+                           winCoord.width() * preview.size().width(),
+                           winCoord.height() * preview.size().height( ));
 
-            painter.drawImage(area, image);
-        }
+        const QString& filename = window->getContent()->getURI();
+        ThumbnailGeneratorPtr generator =
+            ThumbnailGeneratorFactory::getGenerator( filename, THUMBNAIL_SIZE );
+        const QImage image = generator->generate( filename );
+
+        painter.drawImage( area, image );
     }
 
     painter.end();
@@ -118,20 +125,21 @@ void StatePreview::generateImage(const QSize& wallDimensions, const ContentWindo
 
 bool StatePreview::saveToFile() const
 {
-    bool success = previewImage_.save(previewFilename(), "PNG");
+    const bool success = previewImage_.save( previewFilename(), "PNG" );
 
-    if (!success)
-        put_flog(LOG_ERROR, "Saving StatePreview image failed: %s", previewFilename().toLocal8Bit().constData());
+    if ( !success )
+        put_flog( LOG_ERROR, "Saving StatePreview image failed: %s",
+                  previewFilename().toLocal8Bit().constData( ));
 
     return success;
 }
 
 bool StatePreview::loadFromFile()
 {
-    QImageReader reader(previewFilename());
-    if (reader.canRead())
+    QImageReader reader( previewFilename( ));
+    if ( reader.canRead( ))
     {
-        return reader.read(&previewImage_);
+        return reader.read( &previewImage_ );
     }
     return false;
 }

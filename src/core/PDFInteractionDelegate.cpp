@@ -57,12 +57,12 @@ void PDFInteractionDelegate::tap(QTapGesture *gesture)
 {
     if ( gesture->state() == Qt::GestureFinished )
     {
-        double x, y, w, h;
-        contentWindow_.getCoordinates(x, y, w, h);
+        const QRectF& coord = contentWindow_.getCoordinates();
 
-        double winCenterX = (x + 0.5 * w) * g_configuration->getTotalWidth();
+        const float winCenterX = ( coord.x() + 0.5 * coord.width( )) *
+                                 g_configuration->getTotalWidth();
 
-        if (gesture->position().x() > winCenterX)
+        if ( gesture->position().x() > winCenterX )
             getPDFContent()->nextPage();
         else
             getPDFContent()->previousPage();
