@@ -53,7 +53,9 @@
 #  include "PDFInteractionDelegate.h"
 #endif
 
-#define DEFAULT_ASPECT_RATIO 16./9
+#define DEFAULT_ASPECT_RATIO 16./9.
+#define MAX_SIZE 2.0
+#define MIN_SIZE 0.05
 
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
@@ -92,15 +94,7 @@ const QUuid& ContentWindow::getID() const
     return uuid_;
 }
 
-void ContentWindow::getCoordinates( double &x, double &y, double &w, double &h ) const
-{
-    x = coordinates_.x();
-    y = coordinates_.y();
-    w = coordinates_.width();
-    h = coordinates_.height();
-}
-
-QRectF ContentWindow::getCoordinates() const
+const QRectF& ContentWindow::getCoordinates() const
 {
     return coordinates_;
 }
@@ -178,104 +172,46 @@ void ContentWindow::setControlState( const ControlState state )
     controlState_ = state;
 }
 
-void ContentWindow::fixAspectRatio()
-{
-    if( !content_ )
-        return;
-
-    const QSize contentSize = content_->getDimensions();
-    double aspect = (double)contentSize.width() / (double)contentSize.height();
-    const double screenAspect = g_configuration->getAspectRatio();
-
-    aspect /= screenAspect;
-
-    double w = coordinates_.width();
-    double h = coordinates_.height();
-
-    if( aspect > coordinates_.width() / coordinates_.height( ))
-    {
-        h = coordinates_.width() / aspect;
-    }
-    else if( aspect <= coordinates_.width() / coordinates_.height( ))
-    {
-        w = coordinates_.height() * aspect;
-    }
-
-    if( w == coordinates_.width() && h == coordinates_.height( ))
-        return;
-
-    emit coordinatesAboutToChange();
-
-    coordinates_.setWidth( w );
-    coordinates_.setHeight( h );
-}
-
 void ContentWindow::adjustSize( const SizeState state )
 {
     sizeState_ = state;
 
-    const QSize contentSize = content_->getDimensions();
-
-    const double contentAR = ( contentSize.height() == 0 )
-            ? DEFAULT_ASPECT_RATIO
-            : double( contentSize.width( )) / double( contentSize.height( ));
-    const double wallAR = 1. / g_configuration->getAspectRatio();
-
-    double height = ( contentSize.height() == 0 )
-            ? 1.
-            : double( contentSize.height( )) / double( g_configuration->getTotalHeight( ));
-    double width = ( contentSize.width() == 0 )
-            ? wallAR * contentAR * height
-            : double( contentSize.width( )) / double( g_configuration->getTotalWidth( ));
-
-    QRectF coordinates;
-
     switch( state )
     {
     case SIZE_FULLSCREEN:
-        {
-            coordinatesBackup_ = coordinates_;
-            const double resize = std::min( 1. / height, 1. / width );
-            width *= resize;
-            height *= resize;
+    {
+        coordinatesBackup_ = coordinates_;
 
-            // center on the wall
-            coordinates.setRect( (1. - width) * .5 , (1. - height) * .5, width, height );
-        } break;
+        QSizeF size = getNormalized1To1Size();
+        size.scale( 1.f, 1.f, Qt::KeepAspectRatio );
+        setCoordinates( getCenteredCoordinates( size ));
+    }
+        break;
 
     case SIZE_1TO1:
-        height = std::min( height, 1. );
-        width = wallAR * contentAR * height;
-        if( width > 1. )
-        {
-            height /= width;
-            width = 1.;
-        }
-
-        // center on the wall
-        coordinates.setRect( (1. - width) * .5 , (1. - height) * .5, width, height );
+    {
+        QSizeF size = getNormalized1To1Size();
+        clampSize( size );
+        setCoordinates( getCenteredCoordinates( size ));
+    }
         break;
 
     case SIZE_NORMALIZED:
-        coordinates = coordinatesBackup_;
+        setCoordinates( coordinatesBackup_ );
         break;
     default:
         return;
     }
-
-    setCoordinates( coordinates );
 }
 
 void ContentWindow::setCoordinates( const QRectF& coordinates )
 {
-    // don't allow negative width or height
-    if( !coordinates.isValid( ))
+    if( !isValidSize( coordinates.size( )))
         return;
 
     emit coordinatesAboutToChange();
 
     coordinates_ = coordinates;
-    fixAspectRatio();
 
     emit modified();
 
@@ -293,16 +229,13 @@ void ContentWindow::setPosition( const double x, const double y )
 
 void ContentWindow::setSize( const double w, const double h )
 {
-    // don't allow negative width or height
-    if( w < 0. || h < 0. )
+    if( !isValidSize( QSizeF( w, h )))
         return;
 
     emit coordinatesAboutToChange();
 
     coordinates_.setWidth( w );
     coordinates_.setHeight( h );
-
-    fixAspectRatio();
 
     emit modified();
 
@@ -420,6 +353,47 @@ void ContentWindow::setEventToNewDimensions()
     state.dy = coordinates_.height() * g_configuration->getTotalHeight();
 
     emit eventChanged( state );
+}
+
+bool ContentWindow::isValidSize( const QSizeF& size ) const
+{
+    return ( size.width() >= MIN_SIZE && size.height() >= MIN_SIZE &&
+             size.width() <= MAX_SIZE && size.height() <= MAX_SIZE );
+}
+
+QSizeF ContentWindow::getNormalized1To1Size() const
+{
+    const QSize contentSize = content_->getDimensions();
+
+    const double contentAR = ( contentSize.height() == 0 )
+            ? DEFAULT_ASPECT_RATIO
+            : double( contentSize.width( )) / double( contentSize.height( ));
+    const double wallAR = 1. / g_configuration->getAspectRatio();
+
+    double height = ( contentSize.height() == 0 )
+            ? 1.
+            : double( contentSize.height( )) / double( g_configuration->getTotalHeight( ));
+    double width = ( contentSize.width() == 0 )
+            ? wallAR * contentAR * height
+            : double( contentSize.width( )) / double( g_configuration->getTotalWidth( ));
+
+    return QSizeF( width, height );
+}
+
+void ContentWindow::clampSize( QSizeF& size ) const
+{
+    if ( size.width() > MAX_SIZE || size.height() > MAX_SIZE )
+        size.scale( MAX_SIZE, MAX_SIZE, Qt::KeepAspectRatio );
+
+    if ( size.width() < MIN_SIZE || size.height() < MIN_SIZE )
+        size.scale( MIN_SIZE, MIN_SIZE, Qt::KeepAspectRatioByExpanding );
+}
+
+QRectF ContentWindow::getCenteredCoordinates( const QSizeF& size ) const
+{
+    // center on the wall
+    return QRectF((1.0f - size.width()) * 0.5f, (1.0f - size.height()) * 0.5f,
+                  size.width(), size.height( ));
 }
 
 void ContentWindow::setContent( ContentPtr content )

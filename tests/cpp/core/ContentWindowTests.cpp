@@ -51,8 +51,8 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 #include "DummyContent.h"
 
-const int WIDTH = 100;
-const int HEIGHT = 100;
+const int WIDTH = 512;
+const int HEIGHT = 512;
 
 BOOST_AUTO_TEST_CASE( testInitialSize )
 {
@@ -68,6 +68,7 @@ BOOST_AUTO_TEST_CASE( testInitialSize )
     const double normHeight = double(HEIGHT) / g_configuration->getTotalHeight();
 
     // default 1:1 size, center on wall
+    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_1TO1 );
     BOOST_CHECK_EQUAL( coords.x(), (1. - normWidth) * .5 );
     BOOST_CHECK_EQUAL( coords.y(), (1. - normHeight) * .5 );
     BOOST_CHECK_EQUAL( coords.width(), normWidth );

@@ -6,8 +6,17 @@
 # Copy and configure resources used by the tests
 
 # Copy the files needed by the tests to the build directory
-set(TEST_RESOURCES webgl_interaction.html select_test.htm
-  configuration.xml configuration_default.xml)
+set(TEST_RESOURCES
+  webgl_interaction.html
+  select_test.htm
+  configuration.xml
+  configuration_default.xml
+  legacy.dcx
+  state_v0.dcx
+  state_v0.dcxpreview
+  state_v0_broken.dcx
+  wall.png
+)
 
 foreach(FILE ${TEST_RESOURCES})
   file(COPY ${FILE} DESTINATION ${PROJECT_BINARY_DIR}/tests/cpp)

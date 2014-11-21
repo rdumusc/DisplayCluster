@@ -114,6 +114,12 @@ bool StateSerializationHelper::load(const QString& filename)
                  filename.toStdString().c_str(), e.what());
         return false;
     }
+    catch (const std::exception& e)
+    {
+        put_flog(LOG_ERROR, "Could not restore state, wrong file format %s: %s",
+                 filename.toStdString().c_str(), e.what());
+        return false;
+    }
     ifs.close();
 
     ContentWindowPtrs contentWindows = state.getContentWindows();

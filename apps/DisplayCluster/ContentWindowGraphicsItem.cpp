@@ -154,9 +154,16 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
             QRectF coordinates = boundingRect();
             coordinates.setBottomRight( event_->pos( ));
 
-            const QRectF sceneRect = mapRectToScene( coordinates );
+            float targetAR = contentWindow_->getContent()->getAspectRatio();
+            targetAR /= g_configuration->getAspectRatio();
 
-            contentWindow_->setSize( sceneRect.width(), sceneRect.height( ));
+            const float eventCoordAR = coordinates.width() / coordinates.height();
+            if( eventCoordAR < targetAR )
+                contentWindow_->setSize( coordinates.width(),
+                                         coordinates.width() / targetAR );
+            else
+                contentWindow_->setSize( coordinates.height() * targetAR,
+                                         coordinates.height( ));
         }
         else
         {
