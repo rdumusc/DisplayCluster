@@ -117,6 +117,9 @@ public:
     /** Get the normalized window coordiates. */
     const QRectF& getCoordinates() const;
 
+    /** Get the absolute coordinates in pixel of the window on the wall */
+    QRectF getAbsCoordinates() const;
+
     /** Get the normalized position. */
     void getPosition( double &x, double &y ) const;
 

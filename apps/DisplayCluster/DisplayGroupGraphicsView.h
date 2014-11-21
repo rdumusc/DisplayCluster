@@ -57,7 +57,8 @@ class DisplayGroupGraphicsView : public QGraphicsView
 
 public:
     /** Constructor. */
-    DisplayGroupGraphicsView( QWidget* parent = 0 );
+    DisplayGroupGraphicsView( const Configuration& config,
+                              QWidget* parent = 0 );
 
     /** Destructor */
     virtual ~DisplayGroupGraphicsView();

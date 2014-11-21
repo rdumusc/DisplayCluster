@@ -161,6 +161,17 @@ QRectF Configuration::getNormalizedScreenRect(const QPoint& tileIndex) const
     return QRectF(screenLeft, screenTop, screenWidth, screenHeight);
 }
 
+QRect Configuration::getScreenRect( const QPoint& tileIndex ) const
+{
+    assert( tileIndex.x() < totalScreenCountX_ );
+    assert( tileIndex.y() < totalScreenCountY_ );
+
+    const int xPos = tileIndex.x() * ( screenWidth_ + mullionWidth_ );
+    const int yPos = tileIndex.y() * ( screenHeight_ + mullionHeight_ );
+
+    return QRect( xPos, yPos, screenWidth_, screenHeight_ );
+}
+
 bool Configuration::getFullscreen() const
 {
     return fullscreen_;

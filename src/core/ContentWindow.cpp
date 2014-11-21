@@ -99,6 +99,14 @@ const QRectF& ContentWindow::getCoordinates() const
     return coordinates_;
 }
 
+QRectF ContentWindow::getAbsCoordinates() const
+{
+    return QRectF(coordinates_.x() * g_configuration->getTotalWidth(),
+                  coordinates_.y() * g_configuration->getTotalHeight(),
+                  coordinates_.width() * g_configuration->getTotalWidth(),
+                  coordinates_.height() * g_configuration->getTotalHeight( ));
+}
+
 void ContentWindow::getPosition( double &x, double &y ) const
 {
     x = coordinates_.x();

@@ -43,6 +43,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
+class Configuration;
 class Content;
 class ContentWindow;
 class DisplayGroup;

@@ -41,6 +41,8 @@
 
 #include <QtGui/QGraphicsScene>
 
+#include "types.h"
+
 /**
  * A scene to draw a representation of a DisplayGroup.
  * Used by DisplayGroupGraphicsView.
@@ -49,10 +51,11 @@ class DisplayGroupGraphicsScene : public QGraphicsScene
 {
 public:
     /** Constructor. */
-    DisplayGroupGraphicsScene( QObject* parent = 0 );
+    DisplayGroupGraphicsScene( const Configuration& config,
+                               QObject* parent = 0 );
 
-    /** Refresh the background tiled rectangles that reprent the Displays. */
-    void refreshTileRects();
+    /** Clear the scene and restore the background. */
+    void clearAndRestoreBackground();
 
 protected:
     /** @name Re-implemented QGraphicsScene events */
@@ -64,8 +67,9 @@ protected:
     //@}
 
 private:
-    typedef std::vector< QGraphicsRectItem* > TileRectItems;
-    TileRectItems tileRects_;
+    void addBackgroundRectangles();
+
+    QList< QRectF > screens_;
 };
 
 #endif

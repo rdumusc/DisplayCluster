@@ -72,6 +72,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     , options_( new Options )
     , backgroundWidget_( new BackgroundWidget( config, this ))
     , webbrowserWidget_( new WebbrowserWidget( config, this ))
+    , dggv_( new DisplayGroupGraphicsView( config, this ))
     , contentFolder_( config.getDockStartDir( ))
     , sessionFolder_( config.getDockStartDir( ))
 {
@@ -244,7 +245,6 @@ void MasterWindow::setupMasterWindowUI()
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    dggv_ = new DisplayGroupGraphicsView(this);
     dggv_->setModel(displayGroup_);
     mainWidget->addTab((QWidget *)dggv_, "Display group 0");
     // Forward background touch events

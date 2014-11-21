@@ -110,6 +110,7 @@ private:
     void drawFullscreenButton_( QPainter* painter );
     void drawMovieControls_( QPainter* painter );
     void drawTextLabel_( QPainter* painter );
+    void drawWindowInfo_( QPainter* painter );
 
     ContentWindowPtr contentWindow_;
     bool resizing_;

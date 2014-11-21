@@ -43,24 +43,22 @@
 #include "ContentWindowGraphicsItem.h"
 #include "ContentWindow.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include "gestures/PanGesture.h"
 #include "gestures/PanGestureRecognizer.h"
 #include "gestures/PinchGesture.h"
 #include "gestures/PinchGestureRecognizer.h"
 
-DisplayGroupGraphicsView::DisplayGroupGraphicsView( QWidget* parent_ )
+#include <boost/foreach.hpp>
+
+#define VIEW_MARGIN 0.05f
+
+DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
+                                                    QWidget* parent_ )
     : QGraphicsView( parent_ )
 {
-    // create and set scene for the view
-    setScene( new DisplayGroupGraphicsScene( this ));
-
-    // force scene to be anchored at top left
+    setScene( new DisplayGroupGraphicsScene( config, this ));
     setAlignment( Qt::AlignLeft | Qt::AlignTop );
 
-    // set attributes of the view
     setInteractive( true );
     setDragMode( QGraphicsView::RubberBandDrag );
     setAcceptDrops( true );
@@ -77,8 +75,7 @@ void DisplayGroupGraphicsView::setModel( DisplayGroupPtr displayGroup )
     if( displayGroup_ )
     {
         displayGroup_->disconnect( this );
-        scene()->clear();
-        static_cast< DisplayGroupGraphicsScene* >( scene( ))->refreshTileRects();
+        static_cast< DisplayGroupGraphicsScene* >( scene( ))->clearAndRestoreBackground();
         grabGestures();
     }
 
@@ -86,11 +83,20 @@ void DisplayGroupGraphicsView::setModel( DisplayGroupPtr displayGroup )
     if( !displayGroup_ )
         return;
 
-    connect( displayGroup_.get(), SIGNAL( contentWindowAdded( ContentWindowPtr )),
+    ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
+    BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
+    {
+        addContentWindow( contentWindow );
+    }
+
+    connect( displayGroup_.get(),
+             SIGNAL( contentWindowAdded( ContentWindowPtr )),
              this, SLOT( addContentWindow( ContentWindowPtr )));
-    connect( displayGroup_.get(), SIGNAL( contentWindowRemoved( ContentWindowPtr )),
+    connect( displayGroup_.get(),
+             SIGNAL( contentWindowRemoved( ContentWindowPtr )),
             this, SLOT(removeContentWindow(ContentWindowPtr)));
-    connect( displayGroup_.get(), SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
+    connect( displayGroup_.get(),
+             SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
 }
 
@@ -178,38 +184,21 @@ void DisplayGroupGraphicsView::tapAndHold( QTapAndHoldGesture* gesture )
         emit backgroundTapAndHold( position );
 }
 
-void DisplayGroupGraphicsView::resizeEvent( QResizeEvent * resizeEvt )
+void DisplayGroupGraphicsView::resizeEvent( QResizeEvent* resizeEvt )
 {
-    // compute the scene rectangle to show such that the aspect ratio
-    // corresponds to the actual aspect ratio of the tiled display
-    const float tiledDisplayAspect = g_configuration->getAspectRatio();
-    const float windowAspect = (float)width() / (float)height();
+    const QSizeF& sceneSize = scene()->sceneRect().size();
 
-    float sceneWidth, sceneHeight;
+    QSizeF windowSize( width(), height( ));
+    windowSize.scale( sceneSize, Qt::KeepAspectRatioByExpanding );
+    windowSize = windowSize * ( 1.f + VIEW_MARGIN );
 
-    if( tiledDisplayAspect >= windowAspect )
-    {
-        sceneWidth = 1.;
-        sceneHeight = tiledDisplayAspect / windowAspect;
-    }
-    else // tiledDisplayAspect < windowAspect
-    {
-        sceneHeight = 1.;
-        sceneWidth = windowAspect / tiledDisplayAspect;
-    }
+    // Center the scene in the view
+    setSceneRect( -0.5f * (windowSize.width() - sceneSize.width()),
+                  -0.5f * (windowSize.height() - sceneSize.height()),
+                  windowSize.width(), windowSize.height( ));
+    fitInView( sceneRect( ));
 
-    // make sure we have a small buffer around the (0,0,1,1) scene rectangle
-    float border = 0.05;
-
-    sceneWidth = std::max( sceneWidth, (float)1. + border );
-    sceneHeight = std::max( sceneHeight, (float)1. + border );
-
-    setSceneRect( -(sceneWidth - 1.)/2., -(sceneHeight - 1.)/2.,
-                  sceneWidth, sceneHeight );
-
-    fitInView(sceneRect());
-
-    QGraphicsView::resizeEvent(resizeEvt);
+    QGraphicsView::resizeEvent( resizeEvt );
 }
 
 QPointF DisplayGroupGraphicsView::getNormalizedPosition( const QGesture* gesture ) const
