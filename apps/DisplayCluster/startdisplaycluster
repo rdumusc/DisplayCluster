@@ -49,24 +49,31 @@ if 'LD_LIBRARY_PATH' not in os.environ:
 else:
     os.environ['LD_LIBRARY_PATH'] += os.pathsep + DC_PATH + '/lib'
 
-# find full path to mpirun; if MPI is installed in a non-standard location the
+# find full path to mpiexec; if MPI is installed in a non-standard location the
 # full path may be necessary to launch correctly across the cluster.
-MPIRUN_CMD = distutils.spawn.find_executable('mpirun')
+MPIRUN_CMD = distutils.spawn.find_executable('mpiexec')
 
 if MPIRUN_CMD is None:
-    print('Error, could not find mpirun executable in PATH')
+    print('Error, could not find mpiexec executable in PATH')
     exit(-3)
 
-# mpirun has a different commandline syntax for MVAPICH than OpenMPI
+# mpiexec has a different commandline syntax for MVAPICH, MPICH2, and OpenMPI
 IS_MVAPICH = distutils.spawn.find_executable('mpiname')
+IS_MPICH2 = distutils.spawn.find_executable('mpich2version')
 if IS_MVAPICH:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     EXPORT_DISPLAY = ' -env DISPLAY '
     MPI_ARGS = ' -genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts '
+elif IS_MPICH2:
+    MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
+    MPI_PER_NODE_HOST = '-host'
+    EXPORT_DISPLAY = '-env DISPLAY '
+    MPI_ARGS = '-genvlist LD_LIBRARY_PATH'
 else:
     MPI_SPECIAL_FLAGS = ''
-    EXPORT_DISPLAY = ' -x DISPLAY='
-    MPI_ARGS = ' -x LD_LIBRARY_PATH -host '
+    EXPORT_DISPLAY = '-x DISPLAY='
+    MPI_ARGS = '-x LD_LIBRARY_PATH -host '
+
 
 # Form the application parameters list
 DC_PARAMS = ' --config ' + DC_CONFIG_FILE
@@ -102,9 +109,14 @@ try:
     if display is None:
         display = ':0'
 
-    hostlist.append(host)
-    runcommands.append(MPI_SPECIAL_FLAGS + EXPORT_DISPLAY + display +
-                       ' -np 1 '+ VGLRUN_BIN + DC_BIN + DC_PARAMS)
+    if MPI_PER_NODE_HOST:
+        node_host = '%s %s' % (MPI_PER_NODE_HOST, host)
+    else:
+        node_host = ''
+        hostlist.append(host)
+
+    rcmd = '%s %s %s %s -np 1 %s %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, VGLRUN_BIN, DC_BIN, DC_PARAMS)
+    runcommands.append(rcmd)
 
     # parse the wall process elements
     for elem in XML_CONFIG.findall('.//process'):
@@ -114,22 +126,28 @@ try:
             print('Error, no host attribute in <process> tag.')
             exit(-1)
 
-        hostlist.append(host)
 
         display = elem.get('display')
         if display == None:
             display = ':0'
 
-        runcommands.append(MPI_SPECIAL_FLAGS + EXPORT_DISPLAY + display +
-                           ' -np 1 '+ DC_BIN + DC_PARAMS)
-except:
-    print("Error processing xml configuration '" + DC_CONFIG_FILE + "'.")
+        if MPI_PER_NODE_HOST:
+            node_host = '%s %s' % (MPI_PER_NODE_HOST, host)
+        else:
+            node_host = ''
+            hostlist.append(host)
+
+        rcmd = '%s %s %s %s -np 1 %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, DC_BIN, DC_PARAMS)
+        runcommands.append(rcmd)
+
+except Exception as e:
+    print("Error processing xml configuration '%s'. (%s)" % (DC_CONFIG_FILE, e))
     exit(-2)
 
 HOST_LIST = ",".join(hostlist)
 RUN_COMMANDS = ' : '.join(runcommands)
 
-START_CMD = MPIRUN_CMD + MPI_ARGS + HOST_LIST + ' ' + RUN_COMMANDS
+START_CMD = '%s %s %s %s' % (MPIRUN_CMD, MPI_ARGS, HOST_LIST, RUN_COMMANDS)
 
 if args.printcmd:
     print(START_CMD)
