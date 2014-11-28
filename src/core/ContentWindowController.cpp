@@ -48,8 +48,8 @@ const qreal MAX_SIZE = 2.0;
 const qreal MIN_SIZE = 0.05;
 }
 
-ContentWindowController::ContentWindowController( ContentWindowPtr contentWindow,
-                                                  DisplayGroupPtr displayGroup )
+ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
+                                                  const DisplayGroup& displayGroup )
     : contentWindow_( contentWindow )
     , displayGroup_( displayGroup )
     , sizeState_( SIZE_NORMALIZED )
@@ -62,25 +62,25 @@ void ContentWindowController::adjustSize( const SizeState state )
     {
     case SIZE_FULLSCREEN:
     {
-        contentWindow_->coordinatesBackup_ = contentWindow_->coordinates_;
+        contentWindow_.coordinatesBackup_ = contentWindow_.coordinates_;
 
-        QSizeF size = contentWindow_->getContent()->getDimensions();
-        size.scale( displayGroup_->getCoordinates().size(),
+        QSizeF size = contentWindow_.getContent()->getDimensions();
+        size.scale( displayGroup_.getCoordinates().size(),
                     Qt::KeepAspectRatio );
-        contentWindow_->setCoordinates( getCenteredCoordinates( size ));
+        contentWindow_.setCoordinates( getCenteredCoordinates( size ));
     }
         break;
 
     case SIZE_1TO1:
     {
-        QSizeF size = contentWindow_->getContent()->getDimensions();
+        QSizeF size = contentWindow_.getContent()->getDimensions();
         clampSize( size );
-        contentWindow_->setCoordinates( getCenteredCoordinates( size ));
+        contentWindow_.setCoordinates( getCenteredCoordinates( size ));
     }
         break;
 
     case SIZE_NORMALIZED:
-        contentWindow_->setCoordinates( contentWindow_->coordinatesBackup_ );
+        contentWindow_.setCoordinates( contentWindow_.coordinatesBackup_ );
         break;
     default:
         return;
@@ -91,8 +91,8 @@ void ContentWindowController::adjustSize( const SizeState state )
 
 void ContentWindowController::constrainPosition( const QSizeF& minArea ) const
 {
-    const QRectF& window = contentWindow_->getCoordinates();
-    const QRectF& group = displayGroup_->getCoordinates();
+    const QRectF& window = contentWindow_.getCoordinates();
+    const QRectF& group = displayGroup_.getCoordinates();
 
     const QSizeF offset = minArea.isEmpty() ? window.size() : minArea;
 
@@ -105,13 +105,13 @@ void ContentWindowController::constrainPosition( const QSizeF& minArea ) const
     const QPointF pos( std::max( minX, std::min( window.x(), maxX )),
                        std::max( minY, std::min( window.y(), maxY )));
 
-    contentWindow_->setPosition( pos );
+    contentWindow_.setPosition( pos );
 }
 
 bool ContentWindowController::isValidSize( const QSizeF& size ) const
 {
-    const qreal max_size = MAX_SIZE * displayGroup_->getCoordinates().width();
-    const qreal min_size = MIN_SIZE * displayGroup_->getCoordinates().height();
+    const qreal max_size = MAX_SIZE * displayGroup_.getCoordinates().width();
+    const qreal min_size = MIN_SIZE * displayGroup_.getCoordinates().height();
 
     return ( size.width() >= min_size && size.height() >= min_size &&
              size.width() <= max_size && size.height() <= max_size );
@@ -122,10 +122,15 @@ void ContentWindowController::toggleFullscreen()
     adjustSize( sizeState_ == SIZE_NORMALIZED ? SIZE_FULLSCREEN : SIZE_NORMALIZED );
 }
 
+SizeState ContentWindowController::getSizeState() const
+{
+    return sizeState_;
+}
+
 void ContentWindowController::clampSize( QSizeF& size ) const
 {
-    const qreal max_size = MAX_SIZE * displayGroup_->getCoordinates().width();
-    const qreal min_size = MIN_SIZE * displayGroup_->getCoordinates().height();
+    const qreal max_size = MAX_SIZE * displayGroup_.getCoordinates().width();
+    const qreal min_size = MIN_SIZE * displayGroup_.getCoordinates().height();
 
     if ( size.width() > max_size || size.height() > max_size )
         size.scale( max_size, max_size, Qt::KeepAspectRatio );
@@ -136,8 +141,8 @@ void ContentWindowController::clampSize( QSizeF& size ) const
 
 QRectF ContentWindowController::getCenteredCoordinates( const QSizeF& size ) const
 {
-    const qreal totalWidth = displayGroup_->getCoordinates().width();
-    const qreal totalHeight = displayGroup_->getCoordinates().height();
+    const qreal totalWidth = displayGroup_.getCoordinates().width();
+    const qreal totalHeight = displayGroup_.getCoordinates().height();
 
     // center on the wall
     return QRectF((totalWidth - size.width()) * 0.5,

@@ -57,8 +57,8 @@ enum SizeState
 class ContentWindowController
 {
 public:
-    ContentWindowController( ContentWindowPtr contentWindow,
-                             DisplayGroupPtr displayGroup );
+    ContentWindowController( ContentWindow& contentWindow,
+                             const DisplayGroup& displayGroup );
 
     /** Resize the window to the desired state. */
     void adjustSize( const SizeState state );
@@ -77,12 +77,14 @@ public:
      *  and size after leaving fullscreen */
     void toggleFullscreen();
 
+    SizeState getSizeState() const;
+
 private:
     void clampSize( QSizeF& size ) const;
     QRectF getCenteredCoordinates( const QSizeF& size ) const;
 
-    ContentWindowPtr contentWindow_;
-    DisplayGroupPtr displayGroup_;
+    ContentWindow& contentWindow_;
+    const DisplayGroup& displayGroup_;
 
     SizeState sizeState_;
 };

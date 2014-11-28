@@ -63,9 +63,9 @@
 qreal ContentWindowGraphicsItem::zCounter_ = 0;
 
 ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
-                                                      DisplayGroupPtr displayGroup )
+                                                      const DisplayGroup& displayGroup )
     : contentWindow_( contentWindow )
-    , controller_( contentWindow, displayGroup )
+    , controller_( *contentWindow, displayGroup )
     , resizing_( false )
     , moving_( false )
 {

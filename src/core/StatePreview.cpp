@@ -105,10 +105,10 @@ void StatePreview::generateImage( const QSize& wallDimensions,
             continue;
 
         const QRectF& winCoord = window->getCoordinates();
-        const QRectF area( winCoord.x() * preview.size().width(),
-                           winCoord.y() * preview.size().height(),
-                           winCoord.width() * preview.size().width(),
-                           winCoord.height() * preview.size().height( ));
+        const qreal ratio = (qreal)previewDimension.width() /
+                            (qreal)wallDimensions.width();
+        const QRectF area( winCoord.topLeft() * ratio,
+                           winCoord.size() * ratio );
 
         const QString& filename = window->getContent()->getURI();
         ThumbnailGeneratorPtr generator =

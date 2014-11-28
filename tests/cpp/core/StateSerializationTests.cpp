@@ -70,7 +70,7 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 namespace
 {
-const QSize wallSize( 1000, 1000 );
+const QSize wallSize( 3840*2+14, 1080*3+2*12 );
 const int CONTENT_WIDTH = 100;
 const int CONTENT_HEIGHT = 100;
 const int DUMMY_PARAM_VALUE = 10;
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
     BOOST_CHECK( !success );
 }
 
-void checkWindow( ContentWindowPtr window )
+void checkLegacyWindow( ContentWindowPtr window )
 {
     BOOST_CHECK_EQUAL( window->getZoom(), 1.5 );
 
@@ -172,6 +172,23 @@ void checkWindow( ContentWindowPtr window )
     BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 );
     BOOST_CHECK_EQUAL( window->getCoordinates().width(), 0.5 );
     BOOST_CHECK_EQUAL( window->getCoordinates().height(), 0.5 );
+
+    ContentPtr content = window->getContent();
+    BOOST_CHECK_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
+    BOOST_CHECK_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
+    BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_TEXTURE );
+    BOOST_CHECK_EQUAL( content->getURI().toStdString(),
+                       VALID_TEXTURE_URI.toStdString() );
+}
+
+void checkWindow( ContentWindowPtr window )
+{
+    BOOST_CHECK_EQUAL( window->getZoom(), 1.5 );
+
+    BOOST_CHECK_EQUAL( window->getCoordinates().x(), 0.25 * wallSize.width( ));
+    BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 * wallSize.height( ));
+    BOOST_CHECK_EQUAL( window->getCoordinates().width(), 0.5 * wallSize.width( ));
+    BOOST_CHECK_EQUAL( window->getCoordinates().height(), 0.5 * wallSize.height( ));
 
     ContentPtr content = window->getContent();
     BOOST_CHECK_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
@@ -194,7 +211,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidStateThenContentIsLoaded )
     ContentWindowPtrs contentWindows = state.getContentWindows();
     BOOST_CHECK_EQUAL( contentWindows.size(), 1 );
 
-    checkWindow( contentWindows[0] );
+    checkLegacyWindow( contentWindows[0] );
 }
 
 BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
@@ -217,8 +234,9 @@ DisplayGroupPtr createTestDisplayGroup()
     BOOST_REQUIRE_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
     BOOST_REQUIRE_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
-    contentWindow->setSize( QSizeF( 0.5, 0.5 ));
-    contentWindow->setPosition( QPointF( 0.25, 0.25 ));
+    contentWindow->setSize( 0.5 * wallSize );
+    contentWindow->setPosition( QPointF( 0.25 * wallSize.width(),
+                                         0.25 * wallSize.height( )));
     contentWindow->setZoom( 1.5 );
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     displayGroup->addContentWindow( contentWindow );
@@ -239,9 +257,9 @@ void compareImages( const QString& file1, const QString& file2 )
     BOOST_REQUIRE( image1.load( file1 ));
     BOOST_REQUIRE( image2.load( file2 ));
 
-    BOOST_CHECK_EQUAL( image1.width(), image2.width( ));
-    BOOST_CHECK_EQUAL( image1.height(), image2.height( ));
-    BOOST_CHECK_EQUAL( image1.byteCount(), image2.byteCount( ));
+    BOOST_REQUIRE_EQUAL( image1.width(), image2.width( ));
+    BOOST_REQUIRE_EQUAL( image1.height(), image2.height( ));
+    BOOST_REQUIRE_EQUAL( image1.byteCount(), image2.byteCount( ));
 
     BOOST_CHECK_EQUAL_COLLECTIONS( image1.bits(),
                                    image1.bits() + image1.byteCount(),

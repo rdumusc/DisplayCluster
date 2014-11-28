@@ -60,7 +60,7 @@ class DisplayGroup : public QObject,
 
 public:
     /** Constructor */
-    DisplayGroup( const QSize& size );
+    DisplayGroup( const QSizeF& size );
 
     /** Destructor */
     virtual ~DisplayGroup();

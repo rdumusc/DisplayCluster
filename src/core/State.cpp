@@ -62,7 +62,7 @@ const ContentWindowPtrs& State::getContentWindows() const
     return contentWindows_;
 }
 
-bool State::legacyLoadXML( const QString& filename)
+bool State::legacyLoadXML( const QString& filename )
 {
     contentWindows_.clear();
 

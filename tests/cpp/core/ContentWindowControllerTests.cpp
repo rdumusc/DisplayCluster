@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,12 +37,13 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#define BOOST_TEST_MODULE ContentWindowTests
+#define BOOST_TEST_MODULE ContentWindowControllerTests
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
+#include "ContentWindowController.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
@@ -51,60 +52,86 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 namespace
 {
-const QSize wallSize( 1000, 1000 );
 const int WIDTH = 512;
-const int HEIGHT = 512;
+const int HEIGHT = 256;
+const QSizeF wallSize( 1000, 1000 );
+const QSizeF contentSize( WIDTH, HEIGHT );
+const qreal CONTENT_AR = qreal(WIDTH)/qreal(HEIGHT);
 }
 
-BOOST_AUTO_TEST_CASE( testInitialSize )
+BOOST_AUTO_TEST_CASE( testOneToOneSize )
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    const QRectF& coords = window.getCoordinates();
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
 
-    // default 1:1 size, left-corner at the origin
-    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
-    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
+    controller.adjustSize( SIZE_1TO1 );
+
+    const QRectF& coords = window.getCoordinates();
+    const float posX = ( wallSize.width() - contentSize.width( )) * 0.5;
+    const float posY = ( wallSize.height() - contentSize.height( )) * 0.5;
+
+    // 1:1 size, centered on wall
+    BOOST_CHECK_EQUAL( controller.getSizeState(), SIZE_1TO1 );
+    BOOST_CHECK_EQUAL( coords.x(), posX );
+    BOOST_CHECK_EQUAL( coords.y(), posY );
     BOOST_CHECK_EQUAL( coords.width(), WIDTH );
     BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
 }
 
-BOOST_AUTO_TEST_CASE( testValidID )
+BOOST_AUTO_TEST_CASE( testFullScreenSize )
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    BOOST_CHECK( window.getID() != QUuid());
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
+
+    BOOST_CHECK_EQUAL( controller.getSizeState(), SIZE_NORMALIZED );
+    controller.toggleFullscreen();
+    const QRectF& coords = window.getCoordinates();
+
+    // full screen, center on wall
+    BOOST_CHECK_EQUAL( controller.getSizeState(), SIZE_FULLSCREEN );
+    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.y(),  0.5 * ( wallSize.width() / CONTENT_AR ));
+    BOOST_CHECK_EQUAL( coords.width(), wallSize.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), wallSize.width() / CONTENT_AR );
 }
 
-BOOST_AUTO_TEST_CASE( testUniqueID )
+BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
 
-    ContentWindow window1( content );
-    BOOST_CHECK( window1.getID() != QUuid());
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
 
-    ContentWindow window2( content );
-    BOOST_CHECK( window2.getID() != QUuid());
+    const QRectF target( QPointF( 100.0, 125.0 ),
+                         content->getDimensions() * 1.75 );
+    window.setSize( target.size( ));
+    window.setPosition( target.topLeft( ));
 
-    BOOST_CHECK( window1.getID() != window2.getID());
-}
+    QRectF coords = window.getCoordinates();
+    BOOST_CHECK_EQUAL( coords.x(), target.x( ));
+    BOOST_CHECK_EQUAL( coords.y(), target.y( ));
+    BOOST_CHECK_EQUAL( coords.width(), target.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 
-BOOST_AUTO_TEST_CASE( testSetContent )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    controller.toggleFullscreen();
+    controller.toggleFullscreen();
 
-    ContentWindow window;
-    BOOST_CHECK( !window.getContent( ));
+    coords = window.getCoordinates();
 
-    window.setContent( content );
-    BOOST_CHECK_EQUAL( window.getContent(), content );
-
-    window.setContent( ContentPtr( ));
-    BOOST_CHECK( !window.getContent( ));
+    // back to original position and size
+    BOOST_CHECK_EQUAL( controller.getSizeState(), SIZE_NORMALIZED );
+    BOOST_CHECK_EQUAL( coords.x(), target.x( ));
+    BOOST_CHECK_EQUAL( coords.y(), target.y( ));
+    BOOST_CHECK_EQUAL( coords.width(), target.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 }

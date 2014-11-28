@@ -47,7 +47,7 @@ DisplayGroup::DisplayGroup()
 {
 }
 
-DisplayGroup::DisplayGroup( const QSize& size )
+DisplayGroup::DisplayGroup( const QSizeF& size )
 {
     coordinates_.setSize( size );
 }

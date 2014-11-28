@@ -228,7 +228,7 @@ void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow 
 {
     assert( displayGroup_ );
 
-    ContentWindowGraphicsItem* cwgi = new ContentWindowGraphicsItem( contentWindow, displayGroup_ );
+    ContentWindowGraphicsItem* cwgi = new ContentWindowGraphicsItem( contentWindow, *displayGroup_ );
     scene()->addItem( static_cast< QGraphicsItem* >( cwgi ) );
 
     connect( cwgi, SIGNAL( moveToFront( ContentWindowPtr )),

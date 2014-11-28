@@ -63,7 +63,7 @@ class ContentWindowGraphicsItem : public QGraphicsObject
 public:
     /** Constructor. */
     explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
-                                        DisplayGroupPtr displayGroup );
+                                        const DisplayGroup& displayGroup );
 
     /** Destructor. */
     virtual ~ContentWindowGraphicsItem();

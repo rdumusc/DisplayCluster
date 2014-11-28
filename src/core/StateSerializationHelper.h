@@ -55,7 +55,7 @@ public:
      *
      * @param displayGroup The DisplayGroup to be saved or restored.
      */
-    StateSerializationHelper(DisplayGroupPtr displayGroup);
+    StateSerializationHelper( DisplayGroupPtr displayGroup );
 
     /**
      * Save the state of the application.
@@ -63,19 +63,19 @@ public:
      * @param filename The .dcx file to save the state.
      * @param generatePreview Also generate a .dcxpreview thumbnail image for the state.
      */
-    bool save(const QString& filename, const bool generatePreview = true);
+    bool save( const QString& filename, const bool generatePreview = true );
 
     /**
      * Load the state from a given xml file.
      */
-    bool load(const QString& filename);
+    bool load( const QString& filename );
 
 private:
     DisplayGroupPtr displayGroup_;
 
-    void validate(ContentWindowPtrs& contentWindows) const;
-    void finalize(ContentWindowPtr contentWindow) const;
-    bool isPixelStream(ContentWindowPtr contentWindow) const;
+    void validate( ContentWindowPtrs& contentWindows ) const;
+    void finalize( ContentWindow& contentWindow ) const;
+    bool isPixelStream( const ContentWindow& contentWindow ) const;
 };
 
 #endif // STATESERIALIZATIONHELPER_H
