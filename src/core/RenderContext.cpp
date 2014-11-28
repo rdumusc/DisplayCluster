@@ -64,16 +64,12 @@ void RenderContext::setBackgroundColor(const QColor& color)
     }
 }
 
-void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
+void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
 {
-    for(int i=0; i<configuration.getScreenCount(); ++i)
+    for( int i=0; i<configuration.getScreenCount(); ++i )
     {
-        const QPoint screenIndex = configuration.getGlobalScreenIndex(i);
-        const QRectF normalizedCoordinates = configuration.getNormalizedScreenRect(screenIndex);
-
-        const QRect windowRect = QRect(configuration.getScreenPosition(i),
-                                       QSize(configuration.getScreenWidth(),
-                                             configuration.getScreenHeight()));
+        const QPoint screenIndex = configuration.getGlobalScreenIndex( i );
+        const QRect windowRect = configuration.getScreenRect( screenIndex );
 
         // share OpenGL context from the first GLWindow
         GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0].get();
@@ -81,16 +77,16 @@ void RenderContext::setupOpenGLWindows(const WallConfiguration& configuration)
         GLWindowPtr glw;
         try
         {
-            glw.reset(new GLWindow(normalizedCoordinates, windowRect, shareWidget));
+            glw.reset( new GLWindow( windowRect, shareWidget ));
         }
-        catch (const std::runtime_error& e)
+        catch ( const std::runtime_error& e )
         {
-            put_flog(LOG_FATAL, "Error creating a GLWindow: '%s'", e.what());
-            throw std::runtime_error("Failed creating the GLWindows.");
+            put_flog( LOG_FATAL, "Error creating a GLWindow: '%s'", e.what( ));
+            throw std::runtime_error( "Failed creating the GLWindows." );
         }
-        glWindows_.push_back(glw);
+        glWindows_.push_back( glw );
 
-        if(configuration.getFullscreen())
+        if( configuration.getFullscreen( ))
             glw->showFullScreen();
         else
             glw->show();

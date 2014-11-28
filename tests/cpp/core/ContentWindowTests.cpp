@@ -41,80 +41,108 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
-#include <globals.h>
-#include <Options.h>
-#include <ContentWindow.h>
-#include <configuration/MasterConfiguration.h>
+#include "ContentWindow.h"
+#include "DisplayGroup.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 #include "DummyContent.h"
 
+namespace
+{
+const QSize wallSize( 1000, 1000 );
 const int WIDTH = 512;
 const int HEIGHT = 512;
+}
 
 BOOST_AUTO_TEST_CASE( testInitialSize )
 {
-    g_configuration = new Configuration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     const QRectF& coords = window.getCoordinates();
 
-    const double normWidth = double(WIDTH) / g_configuration->getTotalWidth();
-    const double normHeight = double(HEIGHT) / g_configuration->getTotalHeight();
+    // default 1:1 size, left-corner at the origin
+//    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_1TO1 );
+    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
+    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
+}
 
-    // default 1:1 size, center on wall
-    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_1TO1 );
-    BOOST_CHECK_EQUAL( coords.x(), (1. - normWidth) * .5 );
-    BOOST_CHECK_EQUAL( coords.y(), (1. - normHeight) * .5 );
-    BOOST_CHECK_EQUAL( coords.width(), normWidth );
-    BOOST_CHECK_EQUAL( coords.height(), normHeight );
+BOOST_AUTO_TEST_CASE( testOneToOneSize )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
 
-    delete g_configuration;
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+//    window.adjustSize( SIZE_1TO1 );
+
+    const QRectF& coords = window.getCoordinates();
+
+    const float posX = ( wallSize.width() - float( WIDTH )) * 0.5;
+    const float posY = ( wallSize.height() - float( HEIGHT )) * 0.5;
+
+    // 1:1 size, centered on wall
+//    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_1TO1 );
+    BOOST_CHECK_EQUAL( coords.x(), posX );
+    BOOST_CHECK_EQUAL( coords.y(), posY );
+    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
+    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
+}
+
+BOOST_AUTO_TEST_CASE( testToggleSizeWithoutDisplayGroupDoesNothing )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+//    window.toggleFullscreen();
+
+    const QRectF& coords = window.getCoordinates();
+
+    // full screen, center on wall
+//    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_1TO1 );
+    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
+    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
 }
 
 BOOST_AUTO_TEST_CASE( testFullScreenSize )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    window.toggleFullscreen();
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+//    window.toggleFullscreen();
 
     const QRectF& coords = window.getCoordinates();
 
-    const double wallAR = 1. / g_configuration->getAspectRatio();
-    const double normWidth = 1. * wallAR;
-    const double normHeight = 1.;
+    const float posX = ( wallSize.width() - float( WIDTH )) * 0.5;
+    const float posY = ( wallSize.height() - float( HEIGHT )) * 0.5;
 
     // full screen, center on wall
-    BOOST_CHECK_EQUAL( coords.x(), (1. - normWidth) * .5 );
-    BOOST_CHECK_EQUAL( coords.y(), (1. - normHeight) * .5 );
-    BOOST_CHECK_EQUAL( coords.width(), normWidth );
-    BOOST_CHECK_EQUAL( coords.height(), normHeight );
-
-    delete g_configuration;
+//    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_FULLSCREEN );
+    BOOST_CHECK_EQUAL( coords.x(), posX );
+    BOOST_CHECK_EQUAL( coords.y(), posY );
+    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
+    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
 }
 
 BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    QRectF target( 0.9, 0.7, 0.2, 1 );
-    target.setHeight( target.width() * g_configuration->getAspectRatio());
-
-    window.setSize( target.width(), target.height( ));
-    window.setPosition( target.x(), target.y( ));
+    const QRectF target( 900.0, 700.0, 200.0, 1000.0 );
+    window.setSize( target.size( ));
+    window.setPosition( target.topLeft( ));
 
     QRectF coords = window.getCoordinates();
     BOOST_CHECK_EQUAL( coords.x(), target.x( ));
@@ -122,8 +150,8 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));
     BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 
-    window.toggleFullscreen();
-    window.toggleFullscreen();
+//    window.toggleFullscreen();
+//    window.toggleFullscreen();
 
     coords = window.getCoordinates();
 
@@ -132,27 +160,19 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
     BOOST_CHECK_EQUAL( coords.y(), target.y( ));
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));
     BOOST_CHECK_EQUAL( coords.height(), target.height( ));
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testValidID )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     BOOST_CHECK( window.getID() != QUuid());
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testUniqueID )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
 
@@ -163,14 +183,10 @@ BOOST_AUTO_TEST_CASE( testUniqueID )
     BOOST_CHECK( window2.getID() != QUuid());
 
     BOOST_CHECK( window1.getID() != window2.getID());
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testSetContent )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
 
@@ -182,6 +198,4 @@ BOOST_AUTO_TEST_CASE( testSetContent )
 
     window.setContent( ContentPtr( ));
     BOOST_CHECK( !window.getContent( ));
-
-    delete g_configuration;
 }

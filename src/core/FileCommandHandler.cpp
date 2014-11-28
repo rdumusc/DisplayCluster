@@ -80,7 +80,7 @@ void FileCommandHandler::handle(const Command& command, const QString& senderUri
         QPointF position;
         ContentWindowPtr parentWindow = pixelStreamWindowManager_.getContentWindow(senderUri);
         if( parentWindow )
-            position = parentWindow->getWindowCenterPosition();
+            position = parentWindow->getCoordinates().center();
         loader.load(uri, position);
     }
     else

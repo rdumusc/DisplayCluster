@@ -63,26 +63,16 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
                                                const QSizeF& size )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
-    if(contentWindow)
-        put_flog( LOG_WARN, "Already have a window for stream: '%s'", uri.toStdString().c_str( ));
+    if( contentWindow )
+        put_flog( LOG_WARN, "Already have a window for stream: '%s'",
+                  uri.toStdString().c_str( ));
     else
         contentWindow.reset( new ContentWindow );
 
-    // constrain to wall size
-    double width = size.width();
-    double height = size.height();
-    const double ar = width/height;
+    QRectF winCoord( QPointF(), size );
+    winCoord.moveCenter( pos );
+    contentWindow->setCoordinates( winCoord );
 
-    height = std::min( height, 1. );
-    width = ar * height;
-    if( width > 1. )
-    {
-        height /= width;
-        width = 1.;
-    }
-
-    contentWindow->setSize( width, height );
-    contentWindow->centerPositionAround( pos, true );
     streamerWindows_[uri] = contentWindow;
     return contentWindow;
 }
@@ -114,30 +104,27 @@ void PixelStreamWindowManager::hideWindow( const QString& uri )
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
     {
-        double x, y;
-        contentWindow->getSize( x, y );
-        contentWindow->setPosition( 0, -2*y );
+        const QRectF& window = contentWindow->getCoordinates();
+        contentWindow->setPosition( QPointF( 0.0, -2.0 * window.height( )));
     }
 }
 
 void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
 {
-    put_flog( LOG_DEBUG, "adding pixel stream: %s", uri.toLocal8Bit().constData());
+    put_flog( LOG_DEBUG, "adding pixel stream: %s",
+              uri.toLocal8Bit().constData( ));
 
     ContentPtr content = ContentFactory::getPixelStreamContent( uri );
     content->setDimensions( size );
 
     ContentWindowPtr contentWindow = getContentWindow( uri );
-    if( contentWindow )
-        contentWindow->setContent( content );
-    else
+    if( !contentWindow )
     {
         // external streamers have no window yet
-        contentWindow = createContentWindow( uri, QPointF(), QSizeF( ));
-        contentWindow->setContent( content );
-        contentWindow->adjustSize( SIZE_1TO1 );
+        const QPointF center = displayGroup_.getCoordinates().center();
+        contentWindow = createContentWindow( uri, center, size );
     }
-
+    contentWindow->setContent( content );
     displayGroup_.addContentWindow( contentWindow );
 }
 

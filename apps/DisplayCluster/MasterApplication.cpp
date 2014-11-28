@@ -44,7 +44,6 @@
 #include "MasterWindow.h"
 #include "DisplayGroup.h"
 #include "ContentFactory.h"
-#include "globals.h"
 #include "configuration/MasterConfiguration.h"
 #include "MasterToWallChannel.h"
 #include "MasterFromWallChannel.h"
@@ -78,7 +77,6 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
     : QApplication(argc_, argv_)
     , masterToWallChannel_(new MasterToWallChannel(worldChannel))
     , masterFromWallChannel_(new MasterFromWallChannel(worldChannel))
-    , displayGroup_(new DisplayGroup)
     , markers_(new Markers)
 {
     CommandLineParameters options(argc_, argv_);
@@ -87,6 +85,8 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
 
     if (!createConfig(options.getConfigFilename()))
         throw std::runtime_error("MasterApplication: initialization failed.");
+
+    displayGroup_.reset( new DisplayGroup( config_->getTotalSize( )));
 
     init();
 
@@ -131,7 +131,6 @@ bool MasterApplication::createConfig(const QString& filename)
     try
     {
         config_.reset(new MasterConfiguration(filename));
-        g_configuration = config_.get();
     }
     catch (const std::runtime_error& e)
     {

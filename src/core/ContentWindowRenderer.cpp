@@ -39,8 +39,6 @@
 
 #include "ContentWindowRenderer.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
 #include "Options.h"
 #include "ContentWindow.h"
 #include "Content.h"
@@ -99,11 +97,8 @@ void ContentWindowRenderer::setPixelStreamOptions(const bool showSegmentBorders,
 
 void ContentWindowRenderer::renderWindowBorder()
 {
-    const float horizontalBorder = WINDOW_BORDER_WIDTH_PIXELS /
-            (float)g_configuration->getTotalHeight();
-
-    const float verticalBorder = horizontalBorder /
-            g_configuration->getAspectRatio();
+    const float horizontalBorder = WINDOW_BORDER_WIDTH_PIXELS;
+    const float verticalBorder = WINDOW_BORDER_WIDTH_PIXELS;
 
     glPushAttrib(GL_CURRENT_BIT);
 
@@ -150,18 +145,17 @@ void ContentWindowRenderer::renderContent()
 
 QRectF ContentWindowRenderer::getTexCoord() const
 {
-    double centerX, centerY;
-    window_->getCenter(centerX, centerY);
-
+    const QPointF& center = window_->getZoomCenter();
     const double zoom = window_->getZoom();
 
-    return QRectF(centerX - 0.5/zoom, centerY - 0.5/zoom, 1./zoom, 1./zoom);
+    return QRectF( center.x() - 0.5/zoom, center.y() - 0.5/zoom,
+                   1.0/zoom, 1.0/zoom );
 }
 
 void ContentWindowRenderer::renderContextView(FactoryObjectPtr object,
                                               const QRectF& texCoord)
 {
-    const QRectF unitRect(0.f, 0.f, 1.f, 1.f);
+    const QRectF unitRect(0.0, 0.0, 1.0, 1.0);
 
     glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
     glPushMatrix();
@@ -200,7 +194,7 @@ void ContentWindowRenderer::drawQuad(const QRectF& coord)
 {
     glPushMatrix();
 
-    glTranslatef(coord.x(), coord.y(), 0);
+    glTranslatef(coord.x(), coord.y(), 0.f);
     glScalef(coord.width(), coord.height(), 1.f);
 
     quad_.setRenderMode(GL_QUADS);
@@ -213,7 +207,7 @@ void ContentWindowRenderer::drawQuadBorder(const QRectF& coord, const float widt
 {
     glPushMatrix();
 
-    glTranslatef(coord.x(), coord.y(), 0);
+    glTranslatef(coord.x(), coord.y(), 0.f);
     glScalef(coord.width(), coord.height(), 1.f);
 
     glLineWidth(width);

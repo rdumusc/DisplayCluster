@@ -41,15 +41,11 @@
 
 #include "Marker.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include "log.h"
 
 #define MARKER_IMAGE_FILENAME ":/img/marker.png"
 
-// this is a fraction of the tiled display width of 1
-#define MARKER_WIDTH 0.005
+#define MARKER_WIDTH_PIXELS 30
 
 MarkerRenderer::MarkerRenderer()
     : markers_(new Markers)
@@ -75,10 +71,6 @@ void MarkerRenderer::render(const Marker& marker)
 
     const QPointF pos = marker.getPosition();
 
-    // marker height needs to be scaled by the tiled display aspect ratio
-    const float tiledDisplayAspect = g_configuration->getAspectRatio();
-    const float markerHeight = MARKER_WIDTH * tiledDisplayAspect;
-
     glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
 
     glDisable(GL_DEPTH_TEST);
@@ -88,7 +80,7 @@ void MarkerRenderer::render(const Marker& marker)
     glPushMatrix();
 
     glTranslatef(pos.x(), pos.y(), 0);
-    glScalef(MARKER_WIDTH, markerHeight, 1.f);
+    glScalef(MARKER_WIDTH_PIXELS, MARKER_WIDTH_PIXELS, 1.f);
     glTranslatef(-0.5f, -0.5f, 0); // Center unit quad
 
     texture_.bind();

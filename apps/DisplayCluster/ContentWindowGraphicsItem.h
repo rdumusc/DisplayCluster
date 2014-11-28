@@ -41,7 +41,17 @@
 
 #include "types.h"
 
+#include "ContentWindowController.h"
+
 #include <QtGui/QGraphicsObject>
+
+class QGestureEvent;
+class DoubleTapGesture;
+class PanGesture;
+class PinchGesture;
+class QTapGesture;
+class QSwipeGesture;
+class QTapAndHoldGesture;
 
 /**
  * Represent a ContentWindow in a QListView.
@@ -52,7 +62,8 @@ class ContentWindowGraphicsItem : public QGraphicsObject
 
 public:
     /** Constructor. */
-    explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow );
+    explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
+                                        DisplayGroupPtr displayGroup );
 
     /** Destructor. */
     virtual ~ContentWindowGraphicsItem();
@@ -96,6 +107,12 @@ protected:
     //@}
 
 private:
+    void gestureEvent( QGestureEvent* touchEvent );
+    void doubleTapUnselected( DoubleTapGesture* gesture );
+    void tapAndHoldUnselected( QTapAndHoldGesture* gesture );
+    void panUnselected( PanGesture* gesture );
+    void pinchUnselected( PinchGesture* gesture );
+
     void getButtonDimensions( float &width, float &height ) const;
 
     bool hitCloseButton( const QPointF& hitPos ) const;
@@ -113,6 +130,7 @@ private:
     void drawWindowInfo_( QPainter* painter );
 
     ContentWindowPtr contentWindow_;
+    ContentWindowController controller_;
     bool resizing_;
     bool moving_;
 

@@ -42,8 +42,11 @@
 #include "Content.h"
 #include "ContentInteractionDelegate.h"
 
+#include "gestures/DoubleTapGesture.h"
 #include "gestures/DoubleTapGestureRecognizer.h"
+#include "gestures/PanGesture.h"
 #include "gestures/PanGestureRecognizer.h"
+#include "gestures/PinchGesture.h"
 #include "gestures/PinchGestureRecognizer.h"
 
 #include <QtGui/QPainter>
@@ -52,13 +55,17 @@
 
 #include <QEvent>
 #include <QGestureEvent>
+#include <QTapGesture>
+#include <QSwipeGesture>
 
 #define STD_WHEEL_DELTA 120 // Common value for the delta of mouse wheel events
 
 qreal ContentWindowGraphicsItem::zCounter_ = 0;
 
-ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWindow )
+ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
+                                                      DisplayGroupPtr displayGroup )
     : contentWindow_( contentWindow )
+    , controller_( contentWindow, displayGroup )
     , resizing_( false )
     , moving_( false )
 {
@@ -117,7 +124,7 @@ void ContentWindowGraphicsItem::prepareToChangeGeometry()
 
 QRectF ContentWindowGraphicsItem::boundingRect() const
 {
-    return contentWindow_->getAbsCoordinates();
+    return contentWindow_->getCoordinates();
 }
 
 bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
@@ -126,7 +133,7 @@ bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
     {
     case QEvent::Gesture:
         emit moveToFront( contentWindow_ );
-        contentWindow_->getInteractionDelegate().gestureEvent( static_cast< QGestureEvent* >( event_ ));
+        gestureEvent( static_cast< QGestureEvent* >( event_ ));
         return true;
     case QEvent::KeyPress:
         // Override default behaviour to process TAB key events
@@ -152,22 +159,21 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
             QRectF coordinates = boundingRect();
             coordinates.setBottomRight( event_->scenePos( ));
 
-            float targetAR = contentWindow_->getContent()->getAspectRatio();
+            const float targetAR = contentWindow_->getContent()->getAspectRatio();
 
             const float eventCoordAR = coordinates.width() / coordinates.height();
             if( eventCoordAR < targetAR )
-                contentWindow_->setSize( coordinates.width(),
-                                         coordinates.width() / targetAR );
+                contentWindow_->setSize( QSizeF( coordinates.width(),
+                                                 coordinates.width() / targetAR ));
             else
-                contentWindow_->setSize( coordinates.height() * targetAR,
-                                         coordinates.height( ));
+                contentWindow_->setSize( QSizeF( coordinates.height() * targetAR,
+                                                 coordinates.height( )));
         }
         else
         {
             const QPointF delta = event_->scenePos() - event_->lastScenePos();
             const QPointF newPos = boundingRect().topLeft() + delta;
-
-            contentWindow_->setPosition( newPos.x(), newPos.y( ));
+            contentWindow_->setPosition( newPos );
         }
     }
 }
@@ -192,7 +198,7 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
 
     emit moveToFront( contentWindow_ );
 
-    if ( contentWindow_->selected( ))
+    if( contentWindow_->selected( ))
     {
         contentWindow_->getInteractionDelegate().mousePressEvent( event_ );
         return;
@@ -205,7 +211,7 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
         resizing_ = true;
 
     else if( hitFullscreenButton( event_->pos( )))
-        contentWindow_->toggleFullscreen();
+        controller_.toggleFullscreen();
 
     else if( hitPauseButton( event_->pos( )))
         contentWindow_->setControlState( ControlState( controlState ^ STATE_PAUSED ));
@@ -277,6 +283,81 @@ void ContentWindowGraphicsItem::keyReleaseEvent( QKeyEvent* event_ )
 {
     if( contentWindow_->selected( ))
         contentWindow_->getInteractionDelegate().keyReleaseEvent( event_ );
+}
+
+void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* touchEvent )
+{
+    QGesture* gesture = 0;
+
+    if( ( gesture = touchEvent->gesture( Qt::TapAndHoldGesture )))
+    {
+        touchEvent->accept( Qt::TapAndHoldGesture );
+        tapAndHoldUnselected( static_cast< QTapAndHoldGesture* >( gesture ));
+        return;
+    }
+
+    if( contentWindow_->selected( ))
+    {
+        contentWindow_->getInteractionDelegate().gestureEvent( touchEvent );
+        return;
+    }
+
+    if( ( gesture = touchEvent->gesture( PanGestureRecognizer::type( ))))
+    {
+        touchEvent->accept( PanGestureRecognizer::type( ));
+        panUnselected( static_cast< PanGesture* >( gesture ));
+    }
+    else if( ( gesture = touchEvent->gesture( PinchGestureRecognizer::type( ))))
+    {
+        touchEvent->accept( PinchGestureRecognizer::type( ));
+        pinchUnselected( static_cast< PinchGesture* >( gesture ));
+    }
+    else if( ( gesture = touchEvent->gesture( DoubleTapGestureRecognizer::type( ))))
+    {
+        touchEvent->accept( DoubleTapGestureRecognizer::type( ));
+        doubleTapUnselected( static_cast< DoubleTapGesture* >( gesture ));
+    }
+}
+
+void ContentWindowGraphicsItem::tapAndHoldUnselected( QTapAndHoldGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureFinished )
+        contentWindow_->toggleWindowState();
+}
+
+void ContentWindowGraphicsItem::doubleTapUnselected( DoubleTapGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureFinished )
+        controller_.toggleFullscreen();
+}
+
+void ContentWindowGraphicsItem::panUnselected( PanGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureStarted )
+        contentWindow_->getContent()->blockAdvance( true );
+
+    else if( gesture->state() == Qt::GestureCanceled ||
+             gesture->state() == Qt::GestureFinished )
+        contentWindow_->getContent()->blockAdvance( false );
+
+    const QPointF& windowPos = contentWindow_->getCoordinates().topLeft();
+    contentWindow_->setPosition( windowPos + gesture->delta( ));
+}
+
+void ContentWindowGraphicsItem::pinchUnselected( PinchGesture* gesture )
+{
+    const double factor = contentWindow_->getInteractionDelegate().adaptZoomFactor( gesture->scaleFactor( ));
+    if( factor == 0.0 )
+        return;
+
+    if( gesture->state() == Qt::GestureStarted )
+        contentWindow_->getContent()->blockAdvance( true );
+
+    else if( gesture->state() == Qt::GestureCanceled ||
+             gesture->state() == Qt::GestureFinished )
+        contentWindow_->getContent()->blockAdvance( false );
+
+    contentWindow_->scaleSize( factor );
 }
 
 void ContentWindowGraphicsItem::getButtonDimensions( float& width, float& height ) const
@@ -454,15 +535,14 @@ void ContentWindowGraphicsItem::drawWindowInfo_( QPainter* painter )
                                      QString::number( coordinates.height(), 'f', 2 ) +
                                      QString(")\n");
 
-    double centerX, centerY;
-    contentWindow_->getCenter( centerX, centerY );
     const double zoom = contentWindow_->getZoom();
+    const QPointF& zoomCenter = contentWindow_->getZoomCenter();
     const QString zoomCenterLabel = QString(" zoom = ") +
                                     QString::number( zoom, 'f', 2 ) +
                                     QString(" @ (") +
-                                    QString::number( centerX, 'f', 2 ) +
+                                    QString::number( zoomCenter.x(), 'f', 2 ) +
                                     QString(", ") +
-                                    QString::number( centerY, 'f', 2 ) +
+                                    QString::number( zoomCenter.y(), 'f', 2 ) +
                                     QString(")");
 
     const QString windowInfoLabel = coordinatesLabel + zoomCenterLabel;

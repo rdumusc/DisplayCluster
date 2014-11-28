@@ -64,13 +64,13 @@ namespace ut = boost::unit_test;
 #define PLEASE_REMOVE_ME
 
 #ifdef PLEASE_REMOVE_ME
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 #endif
 
+namespace
+{
+const QSize wallSize( 1000, 1000 );
 const int CONTENT_WIDTH = 100;
 const int CONTENT_HEIGHT = 100;
 const int DUMMY_PARAM_VALUE = 10;
@@ -84,13 +84,10 @@ const QString STATE_V0_BROKEN_URI = "state_v0_broken.dcx";
 const QString TEST_DIR = "tmp";
 const int VALID_TEXTURE_WIDTH = 256;
 const int VALID_TEXTURE_HEIGHT = 128;
+}
 
 BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropertiesArePreserved )
 {
-#ifdef PLEASE_REMOVE_ME
-    g_configuration = new Configuration( "configuration.xml" );
-#endif
-
     // Serialize
     std::stringstream ss;
     {
@@ -147,7 +144,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidLegacyStateThenContentIsLoaded )
 
 BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromLegacyFile )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup );
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
     bool success = false;
@@ -159,7 +156,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromLegacyFile )
 
 BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup );
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
     bool success = false;
@@ -202,7 +199,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidStateThenContentIsLoaded )
 
 BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup );
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
     bool success = false;
@@ -220,10 +217,10 @@ DisplayGroupPtr createTestDisplayGroup()
     BOOST_REQUIRE_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
     BOOST_REQUIRE_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
-    contentWindow->setSize( 0.5, 0.5 );
-    contentWindow->setPosition( 0.25, 0.25 );
+    contentWindow->setSize( QSizeF( 0.5, 0.5 ));
+    contentWindow->setPosition( QPointF( 0.25, 0.25 ));
     contentWindow->setZoom( 1.5 );
-    DisplayGroupPtr displayGroup( new DisplayGroup );
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     displayGroup->addContentWindow( contentWindow );
     return displayGroup;
 }
@@ -256,9 +253,6 @@ void compareImages( const QString& file1, const QString& file2 )
 BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
 {
     // 1) Setup
-#ifdef PLEASE_REMOVE_ME
-    g_configuration = new Configuration( "configuration.xml" );
-#endif
     QDir dir;
     if ( !dir.mkdir( TEST_DIR ))
         cleanupTestDir();
@@ -280,7 +274,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
     compareImages( TEST_DIR + "/test.dcxpreview", STATE_V0_PREVIEW_FILE );
 
     // 4) Test restoring
-    DisplayGroupPtr loadedDisplayGroup = boost::make_shared<DisplayGroup>();
+    DisplayGroupPtr loadedDisplayGroup = boost::make_shared<DisplayGroup>( QSize( ));
     StateSerializationHelper loader( loadedDisplayGroup );
     BOOST_CHECK( loader.load( TEST_DIR + "/test.dcx" ));
 

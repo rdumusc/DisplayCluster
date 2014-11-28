@@ -38,9 +38,9 @@
 /*********************************************************************/
 
 #include "PixelStreamInteractionDelegate.h"
+
 #include "ContentWindow.h"
-#include "globals.h"
-#include "configuration/Configuration.h"
+
 #include "gestures/DoubleTapGesture.h"
 #include "gestures/PanGesture.h"
 #include "gestures/PinchGesture.h"
@@ -132,12 +132,13 @@ void PixelStreamInteractionDelegate::swipe(QSwipeGesture *gesture)
 
 void PixelStreamInteractionDelegate::pinch(PinchGesture *gesture)
 {
-    const qreal factor = (gesture->scaleFactor() - 1.) * 0.2f + 1.f;
+    const qreal factor = (gesture->scaleFactor() - 1.) * 0.2f;
     if( std::isnan( factor ) || std::isinf( factor ))
         return;
 
     Event event = getGestureEvent(gesture);
-    event.dy = (factor - 1.f) * g_configuration->getTotalWidth();
+    //event.dy = factor * g_configuration->getTotalWidth();
+    event.dy = gesture->scaleFactor();
     event.type = Event::EVT_WHEEL;
 
     contentWindow_.dispatchEvent(event);
@@ -197,11 +198,11 @@ void PixelStreamInteractionDelegate::wheelEvent(QGraphicsSceneWheelEvent* evt)
     if (evt->orientation() == Qt::Vertical)
     {
         event.dx = 0.;
-        event.dy = (double)evt->delta() / WHEEL_EVENT_FACTOR * g_configuration->getTotalHeight();
+        event.dy = (double)evt->delta() / WHEEL_EVENT_FACTOR /** g_configuration->getTotalHeight()*/;
     }
     else
     {
-        event.dx = (double)evt->delta() / WHEEL_EVENT_FACTOR * g_configuration->getTotalWidth();
+        event.dx = (double)evt->delta() / WHEEL_EVENT_FACTOR /** g_configuration->getTotalWidth()*/;
         event.dy = 0.;
     }
 
@@ -255,12 +256,11 @@ Event PixelStreamInteractionDelegate::getMouseEvent(const T* qtEvent)
 
 void PixelStreamInteractionDelegate::setMouseMoveNormalizedDelta(const QGraphicsSceneMouseEvent* mouseEvent, Event& event)
 {
-    // Bounding rectangle
-    double w, h;
-    contentWindow_.getSize(w, h);
+    const QPointF delta = mouseEvent->pos() - mouseEvent->lastPos();
+    const QRectF& window = contentWindow_.getCoordinates();
 
-    event.dx = (mouseEvent->pos().x() - mouseEvent->lastPos().x()) / w;
-    event.dy = (mouseEvent->pos().y() - mouseEvent->lastPos().y()) / h;
+    event.dx = delta.x() / window.width();
+    event.dy = delta.y() / window.height();
 }
 
 
@@ -286,14 +286,16 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const QTapGesture *gesture
     const QRectF& win = contentWindow_.getCoordinates();
 
     // Overall wall dimensions (in pixels)
-    const double tWidth = g_configuration->getTotalWidth();
-    const double tHeight = g_configuration->getTotalHeight();
+//    const double tWidth = g_configuration->getTotalWidth();
+//    const double tHeight = g_configuration->getTotalHeight();
 
     // For QTapGestures, position() is the position on the WALL
     // (not QGraphicsView!) in pixels
     Event event;
-    event.mouseX = ( gesture->position().x() / tWidth - win.x( )) / win.width();
-    event.mouseY = ( gesture->position().y() / tHeight - win.y( )) / win.height();
+//    event.mouseX = ( gesture->position().x() / tWidth - win.x( )) / win.width();
+//    event.mouseY = ( gesture->position().y() / tHeight - win.y( )) / win.height();
+    event.mouseX = ( gesture->position().x() - win.x( )) / win.width();
+    event.mouseY = ( gesture->position().y() - win.y( )) / win.height();
 
     // The returned event holds the normalized position inside the window
     return event;
@@ -315,15 +317,20 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const PinchGesture *gestur
 
 void PixelStreamInteractionDelegate::setPanGestureNormalizedDelta(const PanGesture* gesture, Event& event)
 {
-    // Bounding rectangle
-    double w, h;
-    contentWindow_.getSize(w, h);
+//    // Bounding rectangle
+//    double w, h;
+//    contentWindow_.getSize(w, h);
 
-    // Touchpad dimensions
-    const double tWidth = g_configuration->getTotalWidth();
-    const double tHeight = g_configuration->getTotalHeight();
+//    // Touchpad dimensions
+//    const double tWidth = g_configuration->getTotalWidth();
+//    const double tHeight = g_configuration->getTotalHeight();
 
-    event.dx = (gesture->delta().x() / tWidth) / w;
-    event.dy = (gesture->delta().y() / tHeight) / h;
+//    event.dx = (gesture->delta().x() / tWidth) / w;
+//    event.dy = (gesture->delta().y() / tHeight) / h;
+
+    const QRectF& window = contentWindow_.getCoordinates();
+
+    event.dx = gesture->delta().x() / window.width();
+    event.dy = gesture->delta().y() / window.height();
 }
 

@@ -40,8 +40,6 @@
 #include "MultiTouchListener.h"
 
 #include "log.h"
-#include "globals.h"
-#include "configuration/Configuration.h"
 
 #include "gestures/DoubleTapGestureRecognizer.h"
 #include "gestures/PanGestureRecognizer.h"
@@ -91,6 +89,7 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
 
     const QPoint& viewPos = graphicsView_->mapToGlobal( graphicsView_->pos( ));
     const QRectF& sceneRect = graphicsView_->sceneRect();
+    const QRectF& wallRect = graphicsView_->scene()->sceneRect();
     const int viewWidth = graphicsView_->geometry().width();
     const int viewHeight = graphicsView_->geometry().height();
 
@@ -104,8 +103,8 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     const QPoint pos( w * normPos.x(), h * normPos.y( ));
     const QPoint screenPos( viewPos + sceneOffset + pos );
 
-    const QPoint wallPos( g_configuration->getTotalWidth() * tcur->getX(),
-                          g_configuration->getTotalHeight() * tcur->getY( ));
+    const QPoint wallPos( wallRect.width() * tcur->getX(),
+                          wallRect.height() * tcur->getY( ));
 
     QTouchEvent::TouchPoint touchPoint( tcur->getCursorID( ));
     touchPoint.setPressure( 1.0 );

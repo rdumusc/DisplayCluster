@@ -54,30 +54,30 @@
     #include <GL/glu.h>
 #endif
 
-GLWindow::GLWindow(const QRectF& normalizedCoordinates, const QRect& windowRect, QGLWidget* shareWidget)
-  : QGLWidget(0, shareWidget)
-  , backgroundColor_(Qt::black)
-  , normalizedCoordinates_(normalizedCoordinates)
+GLWindow::GLWindow( const QRect& windowRect, QGLWidget* shareWidget )
+  : QGLWidget( 0, shareWidget )
+  , backgroundColor_( Qt::black )
+  , coordinates_( windowRect )
 {
-    setGeometry(windowRect);
-    setCursor(Qt::BlankCursor);
+    setGeometry( windowRect );
+    setCursor( Qt::BlankCursor );
 
-    if(shareWidget && !isSharing())
-        throw std::runtime_error("failed to share OpenGL context");
+    if( shareWidget && !isSharing( ))
+        throw std::runtime_error( "failed to share OpenGL context" );
 
-    setAutoBufferSwap(false);
+    setAutoBufferSwap( false );
 }
 
 GLWindow::~GLWindow()
 {
 }
 
-void GLWindow::addRenderable(RenderablePtr renderable)
+void GLWindow::addRenderable( RenderablePtr renderable )
 {
-    renderables_.append(renderable);
+    renderables_.append( renderable );
 }
 
-void GLWindow::setBackgroundColor(const QColor& color)
+void GLWindow::setBackgroundColor( const QColor& color )
 {
     backgroundColor_ = color;
 }
@@ -85,28 +85,28 @@ void GLWindow::setBackgroundColor(const QColor& color)
 void GLWindow::initializeGL()
 {
     // enable depth testing; disable lighting
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
+    glEnable( GL_DEPTH_TEST );
+    glDisable( GL_LIGHTING );
 }
 
 void GLWindow::paintGL()
 {
-    clear(backgroundColor_);
+    clear( backgroundColor_ );
     setOrthographicView();
 
-    foreach (RenderablePtr renderable, renderables_)
+    foreach( RenderablePtr renderable, renderables_ )
     {
-        if (renderable->isVisible())
+        if ( renderable->isVisible( ))
             renderable->render();
     }
 }
 
-void GLWindow::resizeGL(int w, int h)
+void GLWindow::resizeGL( int w, int h )
 {
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
+    glViewport( 0, 0, w, h );
+    glMatrixMode( GL_PROJECTION );
     glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
 
     update();
@@ -114,30 +114,30 @@ void GLWindow::resizeGL(int w, int h)
 
 void GLWindow::clear(const QColor& clearColor)
 {
-    glClearColor(clearColor.redF(), clearColor.greenF(),
-                 clearColor.blueF(), clearColor.alpha());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor( clearColor.redF(), clearColor.greenF(),
+                  clearColor.blueF(), clearColor.alpha( ));
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
 void GLWindow::setOrthographicView()
 {
-    glMatrixMode(GL_PROJECTION);
+    glMatrixMode( GL_PROJECTION );
     glLoadIdentity();
 
-    gluOrtho2D(normalizedCoordinates_.left(), normalizedCoordinates_.right(),
-               normalizedCoordinates_.bottom(), normalizedCoordinates_.top());
+    gluOrtho2D( coordinates_.left(), coordinates_.right(),
+                coordinates_.bottom(), coordinates_.top( ));
     glPushMatrix();
 
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
 }
 
-bool GLWindow::isRegionVisible(const QRectF& region) const
+bool GLWindow::isRegionVisible( const QRectF& region ) const
 {
-    return normalizedCoordinates_.intersects(region);
+    return coordinates_.intersects( region );
 }
 
-QRectF GLWindow::getProjectedPixelRect(const bool clampToViewportBorders)
+QRectF GLWindow::getProjectedPixelRect( const bool clampToViewportBorders )
 {
     // get four corners in object space (recall we're in normalized 0->1 dimensions)
     const double corners[4][3] =
@@ -150,19 +150,21 @@ QRectF GLWindow::getProjectedPixelRect(const bool clampToViewportBorders)
 
     // get four corners in screen space
     GLdouble modelview[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
 
     GLdouble projection[16];
-    glGetDoublev(GL_PROJECTION_MATRIX, projection);
+    glGetDoublev( GL_PROJECTION_MATRIX, projection );
 
     GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
+    glGetIntegerv( GL_VIEWPORT, viewport );
 
     GLdouble xWin[4][3];
 
     for(size_t i=0; i<4; i++)
     {
-        gluProject(corners[i][0], corners[i][1], corners[i][2], modelview, projection, viewport, &xWin[i][0], &xWin[i][1], &xWin[i][2]);
+        gluProject( corners[i][0], corners[i][1], corners[i][2],
+                    modelview, projection, viewport,
+                    &xWin[i][0], &xWin[i][1], &xWin[i][2] );
 
         const GLdouble viewportWidth = (GLdouble)viewport[2];
         const GLdouble viewportHeight = (GLdouble)viewport[3];

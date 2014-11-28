@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,6 +37,54 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "globals.h"
+#ifndef CONTENTWINDOWCONTROLLER_H
+#define CONTENTWINDOWCONTROLLER_H
 
-Configuration * g_configuration = 0;
+#include "types.h"
+
+#include <QtCore/QRectF>
+
+enum SizeState
+{
+    SIZE_1TO1,
+    SIZE_FULLSCREEN,
+    SIZE_NORMALIZED
+};
+
+/**
+ * Controller for moving and resizing windows.
+ */
+class ContentWindowController
+{
+public:
+    ContentWindowController( ContentWindowPtr contentWindow,
+                             DisplayGroupPtr displayGroup );
+
+    /** Resize the window to the desired state. */
+    void adjustSize( const SizeState state );
+
+    /**
+     * Constrain the position of the window.
+     * @param minArea The minimum area of the window that must remain visible,
+     *        given in pixels. If empty, the total window area is used instead.
+     */
+    void constrainPosition( const QSizeF& minArea = QSizeF( )) const;
+
+    /** Is the size in a valid range. */
+    bool isValidSize( const QSizeF& size ) const;
+
+    /** Toggle between fullscreen and 'normalized' by keeping the position
+     *  and size after leaving fullscreen */
+    void toggleFullscreen();
+
+private:
+    void clampSize( QSizeF& size ) const;
+    QRectF getCenteredCoordinates( const QSizeF& size ) const;
+
+    ContentWindowPtr contentWindow_;
+    DisplayGroupPtr displayGroup_;
+
+    SizeState sizeState_;
+};
+
+#endif // CONTENTWINDOWCONTROLLER_H

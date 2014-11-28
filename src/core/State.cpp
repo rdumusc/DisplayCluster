@@ -214,25 +214,18 @@ ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,
     ContentWindowPtr contentWindow(new ContentWindow(content));
 
     // now, apply settings if we got them from the XML file
-    if(x != -1. || y != -1.)
-    {
-        contentWindow->setPosition(x, y);
-    }
+    if( x != -1. || y != -1. )
+        contentWindow->setPosition( QPointF( x, y ));
 
-    if(w != -1. || h != -1.)
-    {
-        contentWindow->setSize(w, h);
-    }
+    if( w != -1. || h != -1. )
+        contentWindow->setSize( QSizeF( w, h ));
 
     // zoom needs to be set before center because of clamping
-    if(zoom != -1.)
-    {
-        contentWindow->setZoom(zoom);
-    }
+    if( zoom != -1. )
+        contentWindow->setZoom( zoom );
 
-    if(centerX != -1. || centerY != -1.)
-    {
-        contentWindow->setCenter(centerX, centerY);
-    }
+    if( centerX != -1. || centerY != -1. )
+        contentWindow->setZoomCenter( QPointF( centerX, centerY ));
+
     return contentWindow;
 }

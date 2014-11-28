@@ -37,9 +37,8 @@
 /*********************************************************************/
 
 #include "PixelStream.h"
-#include "globals.h"
+
 #include "ContentWindow.h"
-#include "configuration/Configuration.h"
 #include "WallToWallChannel.h"
 #include "RenderContext.h"
 #include "log.h"

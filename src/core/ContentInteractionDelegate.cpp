@@ -48,14 +48,11 @@
 #include "gestures/PinchGesture.h"
 #include "gestures/PinchGestureRecognizer.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include <QTapGesture>
 #include <QSwipeGesture>
 
-ContentInteractionDelegate::ContentInteractionDelegate(ContentWindow& contentWindow)
-    : contentWindow_(contentWindow)
+ContentInteractionDelegate::ContentInteractionDelegate( ContentWindow& contentWindow )
+    : contentWindow_( contentWindow )
 {
 }
 
@@ -66,117 +63,34 @@ void ContentInteractionDelegate::gestureEvent( QGestureEvent* event )
 {
     QGesture* gesture = 0;
 
-    if( ( gesture = event->gesture( Qt::TapAndHoldGesture )))
-    {
-        event->accept( Qt::TapAndHoldGesture );
-        tapAndHoldUnselected( static_cast< QTapAndHoldGesture* >( gesture ));
-    }
-
-    else if( ( gesture = event->gesture( PanGestureRecognizer::type( ))))
+    if( ( gesture = event->gesture( PanGestureRecognizer::type( ))))
     {
         event->accept( PanGestureRecognizer::type( ));
-        if( contentWindow_.selected() )
-        {
-            pan( static_cast< PanGesture* >( gesture ));
-        }
-        else
-        {
-            panUnselected(static_cast< PanGesture* >( gesture ));
-        }
+        pan( static_cast< PanGesture* >( gesture ));
     }
-
     else if( ( gesture = event->gesture( PinchGestureRecognizer::type( ))))
     {
         event->accept( PinchGestureRecognizer::type( ));
-        if( contentWindow_.selected() )
-        {
-            pinch( static_cast< PinchGesture* >( gesture ));
-        }
-        else
-        {
-            pinchUnselected( static_cast< PinchGesture* >( gesture ));
-        }
+        pinch( static_cast< PinchGesture* >( gesture ));
     }
-
     else if( ( gesture = event->gesture( DoubleTapGestureRecognizer::type( ))))
     {
         event->accept( DoubleTapGestureRecognizer::type( ));
-        if( contentWindow_.selected() )
-        {
-            doubleTap( static_cast< DoubleTapGesture* >( gesture ));
-        }
-        else
-        {
-            doubleTapUnselected(static_cast< DoubleTapGesture* >( gesture ));
-        }
+        doubleTap( static_cast< DoubleTapGesture* >( gesture ));
     }
-
     else if( ( gesture = event->gesture( Qt::TapGesture )))
     {
         event->accept( Qt::TapGesture );
-        if( contentWindow_.selected() )
-        {
-            tap( static_cast< QTapGesture* >( gesture ));
-        }
+        tap( static_cast< QTapGesture* >( gesture ));
     }
-
     else if( ( gesture = event->gesture( Qt::SwipeGesture )))
     {
         event->accept( Qt::SwipeGesture );
-        if( contentWindow_.selected() )
-        {
-            swipe( static_cast< QSwipeGesture* >( gesture ));
-        }
+        swipe( static_cast< QSwipeGesture* >( gesture ));
     }
 }
 
-void ContentInteractionDelegate::tapAndHoldUnselected(QTapAndHoldGesture *gesture)
-{
-    if( gesture->state() == Qt::GestureFinished )
-        contentWindow_.toggleWindowState();
-}
-
-void ContentInteractionDelegate::doubleTapUnselected(DoubleTapGesture *gesture)
-{
-    if( gesture->state() == Qt::GestureFinished )
-        contentWindow_.toggleFullscreen();
-}
-
-void ContentInteractionDelegate::panUnselected(PanGesture *gesture)
-{
-    const QPointF& delta = gesture->delta();
-    const double dx = delta.x() / g_configuration->getTotalWidth();
-    const double dy = delta.y() / g_configuration->getTotalHeight();
-
-    if( gesture->state() == Qt::GestureStarted )
-        contentWindow_.getContent()->blockAdvance( true );
-
-    else if( gesture->state() == Qt::GestureCanceled ||
-             gesture->state() == Qt::GestureFinished )
-        contentWindow_.getContent()->blockAdvance( false );
-
-    double x, y;
-    contentWindow_.getPosition( x, y );
-    contentWindow_.setPosition( x+dx, y+dy );
-}
-
-void ContentInteractionDelegate::pinchUnselected(PinchGesture *gesture)
-{
-    const double factor = adaptZoomFactor(gesture->scaleFactor());
-    if( factor == 0.0 )
-        return;
-
-    if( gesture->state() == Qt::GestureStarted )
-        contentWindow_.getContent()->blockAdvance( true );
-
-    else if( gesture->state() == Qt::GestureCanceled ||
-             gesture->state() == Qt::GestureFinished )
-        contentWindow_.getContent()->blockAdvance( false );
-
-    contentWindow_.scaleSize( factor );
-}
-
-double ContentInteractionDelegate::adaptZoomFactor(double pinchGestureScaleFactor)
+double ContentInteractionDelegate::adaptZoomFactor( const double pinchGestureScaleFactor ) const
 {
     const double factor = (pinchGestureScaleFactor - 1.0) * 0.2 + 1.0;
     if( std::isnan( factor ) || std::isinf( factor ))

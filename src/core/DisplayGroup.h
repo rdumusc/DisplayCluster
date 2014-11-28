@@ -46,6 +46,7 @@
 
 #include <QObject>
 #include <QUuid>
+#include <QRectF>
 
 /**
  * A collection of ContentWindows.
@@ -59,7 +60,7 @@ class DisplayGroup : public QObject,
 
 public:
     /** Constructor */
-    DisplayGroup();
+    DisplayGroup( const QSize& size );
 
     /** Destructor */
     virtual ~DisplayGroup();
@@ -95,6 +96,9 @@ public:
      * @param contentWindows The list of windows to set.
      */
     void setContentWindows( ContentWindowPtrs contentWindows );
+
+    /** Get the coordinates of the display group on the wall in pixel units. */
+    const QRectF& getCoordinates() const;
 
 public slots:
     /** Clear all ContentWindows */
@@ -132,6 +136,9 @@ private slots:
 private:
     friend class boost::serialization::access;
 
+    /** No-argument constructor required for serialization. */
+    DisplayGroup();
+
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
@@ -143,6 +150,8 @@ private:
 
     ContentWindowPtrs contentWindows_;
     ContentWindowPtr backgroundContent_;
+
+    QRectF coordinates_;
 };
 
 #endif

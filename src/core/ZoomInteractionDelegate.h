@@ -45,13 +45,13 @@
 class ZoomInteractionDelegate : public ContentInteractionDelegate
 {
 public:
-    ZoomInteractionDelegate(ContentWindow& contentWindow);
+    ZoomInteractionDelegate( ContentWindow& contentWindow );
 
-    void pan(PanGesture *gesture);
-    void pinch(PinchGesture *gesture);
+    void pan( PanGesture* gesture );
+    void pinch( PinchGesture* gesture );
 
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void wheelEvent(QGraphicsSceneWheelEvent *event);
+    void mouseMoveEvent( QGraphicsSceneMouseEvent* event );
+    void wheelEvent( QGraphicsSceneWheelEvent* event );
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

@@ -44,9 +44,6 @@
 #include "DisplayGroup.h"
 #include "ContentFactory.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include "log.h"
 
 #include <fstream>
@@ -66,9 +63,10 @@ bool StateSerializationHelper::save(const QString& filename, const bool generate
 
     if (generatePreview)
     {
-        const QSize wallDimensions(g_configuration->getTotalWidth(), g_configuration->getTotalHeight());
+        const QSizeF& size = displayGroup_->getCoordinates().size();
+        const QSize dimensions( (int)size.width(), (int)size.height( ));
         StatePreview filePreview(filename);
-        filePreview.generateImage( wallDimensions, contentWindows );
+        filePreview.generateImage( dimensions, contentWindows );
         filePreview.saveToFile();
     }
 

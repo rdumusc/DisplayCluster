@@ -43,12 +43,14 @@
 #include "ContentWindow.h"
 #include "ContentFactory.h"
 
-ContentLoader::ContentLoader(DisplayGroupPtr displayGroup)
-    : displayGroup_(displayGroup)
+ContentLoader::ContentLoader( DisplayGroupPtr displayGroup )
+    : displayGroup_( displayGroup )
 {
 }
 
-bool ContentLoader::load(const QString& filename, const QPointF& windowCenterPosition, const QSizeF& windowSize)
+bool ContentLoader::load( const QString& filename,
+                          const QPointF& windowCenterPosition,
+                          const QSizeF& windowSize )
 {
     ContentPtr content = ContentFactory::getContent( filename );
     if( !content )
@@ -56,10 +58,12 @@ bool ContentLoader::load(const QString& filename, const QPointF& windowCenterPos
 
     ContentWindowPtr contentWindow( new ContentWindow( content ));
 
-    if (!windowSize.isNull())
-        contentWindow->setSize(windowSize.width(), windowSize.height());
-
-    contentWindow->centerPositionAround(windowCenterPosition, true);
+    QRectF winCoord = contentWindow->getCoordinates();
+    if ( !windowSize.isNull( ))
+        winCoord.setSize( windowSize );
+    if ( !windowCenterPosition.isNull( ))
+        winCoord.moveCenter( windowCenterPosition );
+    contentWindow->setCoordinates( winCoord );
 
     displayGroup_->addContentWindow( contentWindow );
 

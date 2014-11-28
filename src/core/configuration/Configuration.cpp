@@ -136,6 +136,11 @@ int Configuration::getTotalHeight() const
             (totalScreenCountY_ - 1) * getMullionHeight();
 }
 
+QSize Configuration::getTotalSize() const
+{
+    return QSize( getTotalWidth(), getTotalHeight( ));
+}
+
 double Configuration::getAspectRatio() const
 {
     return double(getTotalWidth()) / getTotalHeight();
