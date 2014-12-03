@@ -50,7 +50,9 @@ namespace ut = boost::unit_test;
 #include <QDir>
 
 #include "GlobalQtApp.h"
+#include "glVersion.h"
 
+#define GL_REQ_VERSION  2
 #define TEST_PAGE_URL   "/webgl_interaction.html"
 #define EMPTY_PAGE_URL  "about:blank"
 
@@ -63,7 +65,7 @@ QString testPageURL()
 
 BOOST_AUTO_TEST_CASE( test_webgl_support )
 {
-    if( !hasGLXDisplay( ))
+    if( !hasGLXDisplay() || !glVersionGreaterEqual( GL_REQ_VERSION ))
         return;
 
     // load the webgl website, exec() returns when loading is finished
@@ -106,7 +108,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_support )
 
 BOOST_AUTO_TEST_CASE( test_webgl_interaction )
 {
-    if( !hasGLXDisplay( ))
+    if( !hasGLXDisplay() || !glVersionGreaterEqual( GL_REQ_VERSION ))
         return;
 
     // load the webgl website, exec() returns when loading is finished
@@ -163,7 +165,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_interaction )
 
 BOOST_AUTO_TEST_CASE( test_webgl_click )
 {
-    if( !hasGLXDisplay( ))
+    if( !hasGLXDisplay() || !glVersionGreaterEqual( GL_REQ_VERSION ))
         return;
 
     // load the webgl website, exec() returns when loading is finished
@@ -203,7 +205,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_click )
 
 BOOST_AUTO_TEST_CASE( test_webgl_wheel )
 {
-    if( !hasGLXDisplay( ))
+    if( !hasGLXDisplay() || !glVersionGreaterEqual( GL_REQ_VERSION ))
         return;
 
     // load the webgl website, exec() returns when loading is finished
@@ -246,7 +248,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_wheel )
 
 BOOST_AUTO_TEST_CASE( test_localstorage )
 {
-    if( !hasGLXDisplay( ))
+    if( !hasGLXDisplay() || !glVersionGreaterEqual( GL_REQ_VERSION ))
         return;
 
     // load the webgl website, exec() returns when loading is finished
