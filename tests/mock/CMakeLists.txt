@@ -7,6 +7,7 @@
 
 set(MOCK_HEADERS
   glxDisplay.h
+  glVersion.h
   GlobalQtApp.h
   MinimalGlobalQtApp.h
 )
