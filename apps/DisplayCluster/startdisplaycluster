@@ -62,6 +62,7 @@ IS_MVAPICH = distutils.spawn.find_executable('mpiname')
 IS_MPICH2 = distutils.spawn.find_executable('mpich2version')
 if IS_MVAPICH:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
+    MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = ' -env DISPLAY '
     MPI_ARGS = ' -genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts '
 elif IS_MPICH2:
@@ -71,9 +72,9 @@ elif IS_MPICH2:
     MPI_ARGS = '-genvlist LD_LIBRARY_PATH'
 else:
     MPI_SPECIAL_FLAGS = ''
+    MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = '-x DISPLAY='
     MPI_ARGS = '-x LD_LIBRARY_PATH -host '
-
 
 # Form the application parameters list
 DC_PARAMS = ' --config ' + DC_CONFIG_FILE
