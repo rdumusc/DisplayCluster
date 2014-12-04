@@ -65,7 +65,7 @@ public:
      * Constructor
      * @param contentWindows a list of contentWindows to serialize
      */
-    State(const ContentWindowPtrs& contentWindows);
+    State( const ContentWindowPtrs& contentWindows );
 
     /** Get the content windows */
     const ContentWindowPtrs& getContentWindows() const;
@@ -81,9 +81,10 @@ private:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
-        ar & boost::serialization::make_nvp("contentWindows", contentWindows_);
+        ar & boost::serialization::make_nvp( "contentWindows",
+                                             contentWindows_ );
     }
 
     ContentWindowPtrs contentWindows_;

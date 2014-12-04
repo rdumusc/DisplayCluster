@@ -145,7 +145,11 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
         if( isPixelStream( *contentWindow ))
             continue;
 
-        finalize( *contentWindow );
+        // Refresh content information, files can have been modified or removed
+        // since the state was saved.
+        if ( !contentWindow->getContent()->readMetadata( ))
+            contentWindow->setContent( ContentFactory::getErrorContent( ));
+
         validContentWindows.push_back( contentWindow );
     }
     contentWindows = validContentWindows;
@@ -154,13 +158,4 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
 bool StateSerializationHelper::isPixelStream( const ContentWindow& contentWindow ) const
 {
     return contentWindow.getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM;
-}
-
-void StateSerializationHelper::finalize( ContentWindow& contentWindow ) const
-{
-    // Refresh content informations. Files can have changed since the State was saved.
-    if ( contentWindow.getContent()->readMetadata( ))
-        contentWindow.createInteractionDelegate();
-    else
-        contentWindow.setContent( ContentFactory::getErrorContent( ));
 }

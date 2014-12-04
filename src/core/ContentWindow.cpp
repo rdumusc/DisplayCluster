@@ -71,9 +71,9 @@ ContentWindow::ContentWindow( ContentPtr content )
     , controlState_( STATE_LOOP )
     , eventReceiversCount_( 0 )
 {
+    assert( content );
     setContent( content );
-    if( content )
-        coordinates_.setSize( content->getDimensions( ));
+    coordinates_.setSize( content_->getDimensions( ));
     coordinatesBackup_ = coordinates_;
 }
 
@@ -93,14 +93,14 @@ ContentPtr ContentWindow::getContent() const
 
 void ContentWindow::setContent( ContentPtr content )
 {
+    assert( content );
+
     if( content_ )
         content_->disconnect( this, SIGNAL( contentModified( )));
 
     content_ = content;
 
-    if( content_ )
-        connect( content.get(), SIGNAL( modified( )),
-                 this, SIGNAL( contentModified( )));
+    connect( content_.get(), SIGNAL( modified( )), SIGNAL( contentModified( )));
 
     createInteractionDelegate();
 }
@@ -242,11 +242,7 @@ ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const
 
 void ContentWindow::createInteractionDelegate()
 {
-    if( !content_ )
-    {
-        interactionDelegate_.reset();
-        return;
-    }
+    assert( content_ );
 
     switch ( content_->getType( ))
     {

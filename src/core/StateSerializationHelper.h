@@ -74,7 +74,6 @@ private:
     DisplayGroupPtr displayGroup_;
 
     void validate( ContentWindowPtrs& contentWindows ) const;
-    void finalize( ContentWindow& contentWindow ) const;
     bool isPixelStream( const ContentWindow& contentWindow ) const;
 };
 

@@ -57,6 +57,7 @@
 #  include <boost/date_time/posix_time/posix_time.hpp>
 #  include <boost/serialization/shared_ptr.hpp>
 #  include <boost/date_time/posix_time/time_serialize.hpp>
+#  include <boost/serialization/split_member.hpp>
 #endif
 
 class EventReceiver;
@@ -70,7 +71,7 @@ enum ControlState
 class ContentInteractionDelegate;
 
 /**
- * A window for placing a Content on the Wall.
+ * A window for displaying Content on the Wall.
  *
  * Can be serialized and distributed to the Wall applications.
  */
@@ -170,17 +171,9 @@ public:
 
     /**
      * Get the interaction delegate.
-     * @see createInteractionDelegate()
      * @note Rank0 only.
      */
     ContentInteractionDelegate& getInteractionDelegate() const;
-
-    /**
-     * Create a delegate to handle user interaction through dc::Events.
-     * The type of delegate created depends on the ContentType.
-     * @note Rank0 only.
-     */
-    void createInteractionDelegate();
 
 signals:
     /** Emitted when the Content signals that it has been modified. */
@@ -215,7 +208,7 @@ private:
 
     /** Serialize for saving to an xml file */
     template< class Archive >
-    void serialize_for_xml( Archive & ar, const unsigned int )
+    void serialize_members_xml( Archive & ar )
     {
         int contentWidth = 0, contentHeight = 0; // For reading legacy archives
         ar & boost::serialization::make_nvp( "content", content_ );
@@ -228,6 +221,22 @@ private:
         ar & boost::serialization::make_nvp( "zoom", zoom_ );
         ar & boost::serialization::make_nvp( "controlState", controlState_ );
         ar & boost::serialization::make_nvp( "windowState", windowState_ );
+    }
+
+    /** Saving to xml. */
+    void serialize_for_xml( boost::archive::xml_iarchive& ar,
+                            const unsigned int )
+    {
+        serialize_members_xml( ar );
+    }
+
+    /** Loading from xml. */
+    void serialize_for_xml( boost::archive::xml_oarchive& ar,
+                            const unsigned int )
+    {
+        serialize_members_xml( ar );
+        // InteractionDelegates are not serialized and must be recreated
+        createInteractionDelegate();
     }
 
     const QUuid uuid_;
@@ -249,6 +258,7 @@ private:
 
     boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
 
+    void createInteractionDelegate();
     void setEventToNewDimensions();
     void constrainZoomCenter();
 };
