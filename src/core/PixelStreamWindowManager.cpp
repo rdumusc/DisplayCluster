@@ -49,8 +49,8 @@ PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
     , displayGroup_( displayGroup )
 {
-    connect(&displayGroup, SIGNAL(contentWindowRemoved(ContentWindowPtr)),
-            this, SLOT(onContentWindowRemoved(ContentWindowPtr)));
+    connect( &displayGroup, SIGNAL( contentWindowRemoved( ContentWindowPtr )),
+             this, SLOT( onContentWindowRemoved( ContentWindowPtr )));
 }
 
 PixelStreamWindowManager::~PixelStreamWindowManager()
@@ -89,24 +89,28 @@ PixelStreamWindowManager::getContentWindow( const QString& uri ) const
     return it != streamerWindows_.end() ? it->second : ContentWindowPtr();
 }
 
-void PixelStreamWindowManager::updateDimension( QString uri, QSize size )
+void PixelStreamWindowManager::updateDimension( const QString& uri,
+                                                const QSize& size )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( !contentWindow )
         return;
 
-    ContentPtr content = contentWindow->getContent();
-    content->setDimensions( size );
+    contentWindow->getContent()->setDimensions( size );
 }
 
 void PixelStreamWindowManager::hideWindow( const QString& uri )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
-    {
-        const QRectF& window = contentWindow->getCoordinates();
-        contentWindow->setPosition( QPointF( 0.0, -2.0 * window.height( )));
-    }
+        contentWindow->setState( ContentWindow::HIDDEN );
+}
+
+void PixelStreamWindowManager::showWindow( const QString& uri )
+{
+    ContentWindowPtr contentWindow = getContentWindow( uri );
+    if( contentWindow )
+        contentWindow->setState( ContentWindow::SELECTED );
 }
 
 void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
@@ -128,16 +132,18 @@ void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
     displayGroup_.addContentWindow( contentWindow );
 }
 
-void PixelStreamWindowManager::closePixelStreamWindow( const QString& uri )
+void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
 {
-    put_flog( LOG_DEBUG, "deleting pixel stream: %s", uri.toLocal8Bit().constData( ));
+    put_flog( LOG_DEBUG, "deleting pixel stream: %s",
+              uri.toLocal8Bit().constData( ));
 
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
         displayGroup_.removeContentWindow( contentWindow );
 }
 
-void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusive,
+void PixelStreamWindowManager::registerEventReceiver( const QString uri,
+                                                      const bool exclusive,
                                                       EventReceiver* receiver )
 {
     bool success = false;
@@ -147,24 +153,26 @@ void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusiv
     {
         put_flog( LOG_DEBUG, "found window: '%s'", uri.toStdString().c_str( ));
 
-        // If a receiver is already registered, don't register this one if exclusive was requested
+        // If a receiver is already registered, don't register this one if
+        // "exclusive" was requested
         if( !exclusive || !contentWindow->hasEventReceivers( ))
         {
             success = contentWindow->registerEventReceiver( receiver );
 
             if( success )
-                contentWindow->setWindowState( ContentWindow::SELECTED );
+                contentWindow->setState( ContentWindow::SELECTED );
         }
     }
     else
-        put_flog( LOG_ERROR, "could not find window: '%s'", uri.toStdString().c_str( ));
+        put_flog( LOG_ERROR, "could not find window: '%s'",
+                  uri.toStdString().c_str( ));
 
     emit eventRegistrationReply( uri, success );
 }
 
-void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr contentWindow )
+void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
 {
-    ContentPtr content = contentWindow->getContent();
+    ContentPtr content = window->getContent();
     if( !content )
         return;
 

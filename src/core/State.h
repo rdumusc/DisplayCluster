@@ -77,23 +77,30 @@ public:
      */
     bool legacyLoadXML( const QString& filename );
 
+    /** Get the version that was last used for loading or saving. */
+    unsigned int getVersion() const;
+
 private:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize( Archive & ar, const unsigned int )
+    void serialize( Archive & ar, const unsigned int version )
     {
+        version_ = version;
         ar & boost::serialization::make_nvp( "contentWindows",
                                              contentWindows_ );
     }
-
-    ContentWindowPtrs contentWindows_;
 
     /** Legacy methods. @deprecated */
     bool checkVersion_( QXmlQuery& query ) const;
     ContentPtr loadContent_( QXmlQuery& query, const int index ) const;
     ContentWindowPtr restoreContent_( QXmlQuery& query, ContentPtr content,
                                       const int index ) const;
+
+    ContentWindowPtrs contentWindows_;
+    unsigned int version_;
 };
+
+BOOST_CLASS_VERSION( State, 2 )
 
 #endif

@@ -87,30 +87,20 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     if( !graphicsView_ )
         return;
 
-    const QPoint& viewPos = graphicsView_->mapToGlobal( graphicsView_->pos( ));
-    const QRectF& sceneRect = graphicsView_->sceneRect();
-    const QRectF& wallRect = graphicsView_->scene()->sceneRect();
-    const int viewWidth = graphicsView_->geometry().width();
-    const int viewHeight = graphicsView_->geometry().height();
-
-    const qreal w = viewWidth / sceneRect.width();
-    const qreal h = viewHeight / sceneRect.height();
-    const int x = qreal( viewWidth - w ) * .5;
-    const int y = qreal( viewHeight - h ) * .5;
-    const QPoint sceneOffset( x, y );
-
     const QPointF normPos( tcur->getX(), tcur->getY( ));
-    const QPoint pos( w * normPos.x(), h * normPos.y( ));
-    const QPoint screenPos( viewPos + sceneOffset + pos );
+    const QPointF scenePos( tcur->getX() * graphicsView_->scene()->width(),
+                            tcur->getY() * graphicsView_->scene()->height( ));
+    const QPointF wallPos = scenePos;
 
-    const QPoint wallPos( wallRect.width() * tcur->getX(),
-                          wallRect.height() * tcur->getY( ));
+    /** Find the global == screen position of the touch point for Qt */
+    const QPoint posInViewCoord = graphicsView_->mapFromScene( scenePos );
+    const QPoint screenPos = graphicsView_->mapToGlobal( posInViewCoord );
 
     QTouchEvent::TouchPoint touchPoint( tcur->getCursorID( ));
     touchPoint.setPressure( 1.0 );
     touchPoint.setNormalizedPos( normPos );
     touchPoint.setPos( wallPos ); // need for pan gesture recognition
-    touchPoint.setScenePos( normPos );
+    touchPoint.setScenePos( scenePos );
     touchPoint.setScreenPos( screenPos ); // need for hotspot & itemAt
 
     Qt::TouchPointStates touchPointStates = 0;
@@ -175,14 +165,18 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
 void MultiTouchListener::addTuioCursor( TUIO::TuioCursor* tcur )
 {
     handleEvent( tcur, QEvent::TouchBegin );
-    const QPointF position( tcur->getX(), tcur->getY( ));
+    const QRectF& wallRect = graphicsView_->scene()->sceneRect();
+    const QPointF position( tcur->getX() * wallRect.width(),
+                            tcur->getY() * wallRect.height( ));
     emit touchPointAdded( tcur->getCursorID(), position );
 }
 
 void MultiTouchListener::updateTuioCursor( TUIO::TuioCursor* tcur )
 {
     handleEvent( tcur, QEvent::TouchUpdate );
-    const QPointF position( tcur->getX(), tcur->getY( ));
+    const QRectF& wallRect = graphicsView_->scene()->sceneRect();
+    const QPointF position( tcur->getX() * wallRect.width(),
+                            tcur->getY() * wallRect.height( ));
     emit touchPointUpdated( tcur->getCursorID(), position );
 }
 

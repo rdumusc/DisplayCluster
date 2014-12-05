@@ -49,11 +49,13 @@
 #define LEGACY_STATE_FILE_VERSION_NUMBER 1
 
 State::State()
+    : version_( 0 )
 {
 }
 
 State::State(const ContentWindowPtrs& contentWindows)
     : contentWindows_(contentWindows)
+    , version_( 0 )
 {
 }
 
@@ -103,6 +105,11 @@ bool State::legacyLoadXML( const QString& filename )
     return true;
 }
 
+unsigned int State::getVersion() const
+{
+    return version_;
+}
+
 bool State::checkVersion_( QXmlQuery& query ) const
 {
     QString qstring;
@@ -117,7 +124,7 @@ bool State::checkVersion_( QXmlQuery& query ) const
 
     if( version != LEGACY_STATE_FILE_VERSION_NUMBER )
     {
-        put_flog( LOG_ERROR, "could not load state file with version %i, expected version %i",
+        put_flog( LOG_DEBUG, "not a legacy state file. version: %i, legacy version %i",
                   version, LEGACY_STATE_FILE_VERSION_NUMBER );
         return false;
     }
@@ -211,14 +218,14 @@ ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,
         zoom = qstring.toDouble();
     }
 
-    ContentWindowPtr contentWindow(new ContentWindow(content));
+    ContentWindowPtr contentWindow( new ContentWindow( content ));
 
-    // now, apply settings if we got them from the XML file
+    QRectF windowCoordinates( contentWindow->getCoordinates( ));
     if( x != -1. || y != -1. )
-        contentWindow->setPosition( QPointF( x, y ));
-
+        windowCoordinates.moveTopLeft( QPointF( x, y ));
     if( w != -1. || h != -1. )
-        contentWindow->setSize( QSizeF( w, h ));
+        windowCoordinates.setSize( QSizeF( w, h ));
+    contentWindow->setCoordinates( windowCoordinates );
 
     // zoom needs to be set before center because of clamping
     if( zoom != -1. )

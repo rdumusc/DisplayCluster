@@ -59,12 +59,16 @@ bool ContentLoader::load( const QString& filename,
     ContentWindowPtr contentWindow( new ContentWindow( content ));
 
     QRectF winCoord = contentWindow->getCoordinates();
+
     if ( windowSize.isValid( ))
         winCoord.setSize( windowSize );
+
     if ( !windowCenterPosition.isNull( ))
         winCoord.moveCenter( windowCenterPosition );
-    contentWindow->setCoordinates( winCoord );
+    else
+        winCoord.moveCenter( displayGroup_->getCoordinates().center( ));
 
+    contentWindow->setCoordinates( winCoord );
     displayGroup_->addContentWindow( contentWindow );
 
     return true;

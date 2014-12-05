@@ -40,7 +40,6 @@
 
 Content::Content( const QString& uri )
     : uri_( uri )
-    , blockAdvance_( false )
 {
 }
 

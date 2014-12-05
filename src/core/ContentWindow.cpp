@@ -55,20 +55,18 @@ IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
-    , zoomCenter_( 0.5f, 0.5f )
+    , zoomCenter_( 0.5, 0.5 )
     , zoom_( 1.0 )
     , windowState_( UNSELECTED )
-    , controlState_( STATE_LOOP )
     , eventReceiversCount_( 0 )
 {
 }
 
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
-    , zoomCenter_( 0.5f, 0.5f )
+    , zoomCenter_( 0.5, 0.5 )
     , zoom_( 1.0 )
     , windowState_( UNSELECTED )
-    , controlState_( STATE_LOOP )
     , eventReceiversCount_( 0 )
 {
     assert( content );
@@ -121,40 +119,6 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
     setEventToNewDimensions();
 }
 
-void ContentWindow::setPosition( const QPointF& position )
-{
-    emit coordinatesAboutToChange();
-
-    coordinates_.moveTo( position );
-
-    emit modified();
-}
-
-void ContentWindow::setSize( const QSizeF& size )
-{
-    emit coordinatesAboutToChange();
-
-    coordinates_.setSize( size );
-
-    emit modified();
-
-    setEventToNewDimensions();
-}
-
-void ContentWindow::scaleSize( const double factor )
-{
-    if( factor < 0. )
-        return;
-
-    QRectF coordinates;
-    coordinates.setX( coordinates_.x() - ( factor - 1. ) * coordinates_.width() / 2. );
-    coordinates.setY( coordinates_.y() - ( factor - 1. ) * coordinates_.height() / 2. );
-    coordinates.setWidth( coordinates_.width() * factor );
-    coordinates.setHeight( coordinates_.height() * factor );
-
-    setCoordinates( coordinates );
-}
-
 qreal ContentWindow::getZoom() const
 {
     return zoom_;
@@ -183,36 +147,36 @@ void ContentWindow::setZoomCenter( const QPointF& zoomCenter )
     emit modified();
 }
 
-ControlState ContentWindow::getControlState() const
-{
-    return controlState_;
-}
-
-void ContentWindow::setControlState( const ControlState state )
-{
-    controlState_ = state;
-}
-
-ContentWindow::WindowState ContentWindow::getWindowState() const
+ContentWindow::WindowState ContentWindow::getState() const
 {
     return windowState_;
 }
 
-void ContentWindow::setWindowState( const ContentWindow::WindowState state )
+void ContentWindow::setState( const ContentWindow::WindowState state )
 {
     windowState_ = state;
 
     emit modified();
 }
 
-void ContentWindow::toggleWindowState()
-{
-    setWindowState( windowState_ == UNSELECTED ? SELECTED : UNSELECTED );
-}
-
-bool ContentWindow::selected() const
+bool ContentWindow::isSelected() const
 {
     return windowState_ == SELECTED;
+}
+
+bool ContentWindow::isMoving() const
+{
+    return windowState_ == MOVING;
+}
+
+bool ContentWindow::isResizing() const
+{
+    return windowState_ == RESIZING;
+}
+
+bool ContentWindow::isHidden() const
+{
+    return windowState_ == HIDDEN;
 }
 
 bool ContentWindow::registerEventReceiver( EventReceiver* receiver )
@@ -238,6 +202,16 @@ void ContentWindow::dispatchEvent( const Event event_ )
 ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const
 {
     return *interactionDelegate_;
+}
+
+void ContentWindow::backupCoordinates()
+{
+    coordinatesBackup_ = coordinates_;
+}
+
+void ContentWindow::restoreCoordinates()
+{
+    setCoordinates( coordinatesBackup_ );
 }
 
 void ContentWindow::createInteractionDelegate()
@@ -273,21 +247,21 @@ void ContentWindow::setEventToNewDimensions()
 void ContentWindow::constrainZoomCenter()
 {
     // clamp center point such that view rectangle dimensions are constrained [0,1]
-    const float tX = zoomCenter_.x() - 0.5f / zoom_;
-    const float tY = zoomCenter_.y() - 0.5f / zoom_;
-    const float tW = 1.f / zoom_;
-    const float tH = 1.f / zoom_;
+    const qreal tX = zoomCenter_.x() - 0.5 / zoom_;
+    const qreal tY = zoomCenter_.y() - 0.5 / zoom_;
+    const qreal tW = 1.0 / zoom_;
+    const qreal tH = 1.0 / zoom_;
 
-    if( !QRectF( 0.f, 0.f, 1.f, 1.f ).contains( QRectF( tX, tY, tW, tH )))
+    if( !QRectF( 0.0, 0.0, 1.0, 1.0 ).contains( QRectF( tX, tY, tW, tH )))
     {
-        if( tX < 0.f )
-            zoomCenter_.setX( 0.5f / zoom_ );
-        else if( tX+tW > 1.f )
-            zoomCenter_.setX( 1.f - tW + 0.5f / zoom_ );
+        if( tX < 0.0 )
+            zoomCenter_.setX( 0.5 / zoom_ );
+        else if( tX+tW > 1.0 )
+            zoomCenter_.setX( 1.0 - tW + 0.5 / zoom_ );
 
-        if( tY < 0.f )
-            zoomCenter_.setY( 0.5f / zoom_ );
-        else if( tY+tH > 1.f )
-            zoomCenter_.setY( 1.f - tH + 0.5f / zoom_ );
+        if( tY < 0.0 )
+            zoomCenter_.setY( 0.5 / zoom_ );
+        else if( tY+tH > 1.0 )
+            zoomCenter_.setY( 1.0 - tH + 0.5 / zoom_ );
     }
 }

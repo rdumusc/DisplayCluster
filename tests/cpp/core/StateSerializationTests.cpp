@@ -234,9 +234,8 @@ DisplayGroupPtr createTestDisplayGroup()
     BOOST_REQUIRE_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
     BOOST_REQUIRE_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
-    contentWindow->setSize( 0.5 * wallSize );
-    contentWindow->setPosition( QPointF( 0.25 * wallSize.width(),
-                                         0.25 * wallSize.height( )));
+    const QPointF position( 0.25 * wallSize.width(), 0.25 * wallSize.height( ));
+    contentWindow->setCoordinates( QRectF( position, 0.5 * wallSize ));
     contentWindow->setZoom( 1.5 );
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     displayGroup->addContentWindow( contentWindow );

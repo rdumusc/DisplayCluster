@@ -41,6 +41,7 @@
 #include "DynamicTexture.h"
 #include "serializationHelpers.h"
 #include "Factories.h"
+#include "ContentWindow.h"
 
 #include <boost/serialization/export.hpp>
 
@@ -87,9 +88,10 @@ void DynamicTextureContent::preRenderUpdate(Factories& factories, ContentWindowP
     factories.getDynamicTextureFactory().getObject(getURI())->preRenderUpdate();
 }
 
-void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&)
+void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel&)
 {
-    if( blockAdvance_ )
+    // Don't clear children while moving or resizing for performance reasons
+    if( window->isMoving() || window->isResizing( ))
         return;
 
     factories.getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();

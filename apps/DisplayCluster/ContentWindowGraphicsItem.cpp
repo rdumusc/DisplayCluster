@@ -40,6 +40,7 @@
 
 #include "ContentWindow.h"
 #include "Content.h"
+#include "MovieContent.h"
 #include "ContentInteractionDelegate.h"
 
 #include "gestures/DoubleTapGesture.h"
@@ -66,8 +67,6 @@ ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWi
                                                       const DisplayGroup& displayGroup )
     : contentWindow_( contentWindow )
     , controller_( *contentWindow, displayGroup )
-    , resizing_( false )
-    , moving_( false )
 {
     assert( contentWindow_ );
 
@@ -103,6 +102,9 @@ void ContentWindowGraphicsItem::paint( QPainter* painter,
                                        const QStyleOptionGraphicsItem*,
                                        QWidget* )
 {
+    if( contentWindow_->isHidden( ))
+        return;
+
     drawFrame_( painter );
     drawCloseButton_( painter );
     drawResizeIndicator_( painter );
@@ -129,6 +131,9 @@ QRectF ContentWindowGraphicsItem::boundingRect() const
 
 bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
 {
+    if( contentWindow_->isHidden( ))
+        return false;
+
     switch( event_->type( ))
     {
     case QEvent::Gesture:
@@ -146,7 +151,7 @@ bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
 
 void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
 {
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
     {
         contentWindow_->getInteractionDelegate().mouseMoveEvent( event_ );
         return;
@@ -154,7 +159,7 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
 
     if( event_->buttons().testFlag( Qt::LeftButton ))
     {
-        if( resizing_ )
+        if( contentWindow_->isResizing( ))
         {
             QRectF coordinates = boundingRect();
             coordinates.setBottomRight( event_->scenePos( ));
@@ -163,17 +168,17 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
 
             const float eventCoordAR = coordinates.width() / coordinates.height();
             if( eventCoordAR < targetAR )
-                contentWindow_->setSize( QSizeF( coordinates.width(),
-                                                 coordinates.width() / targetAR ));
+                controller_.resize( QSizeF( coordinates.width(),
+                                            coordinates.width() / targetAR ));
             else
-                contentWindow_->setSize( QSizeF( coordinates.height() * targetAR,
-                                                 coordinates.height( )));
+                controller_.resize( QSizeF( coordinates.height() * targetAR,
+                                            coordinates.height( )));
         }
-        else
+        else if( contentWindow_->isMoving( ))
         {
             const QPointF delta = event_->scenePos() - event_->lastScenePos();
             const QPointF newPos = boundingRect().topLeft() + delta;
-            contentWindow_->setPosition( newPos );
+            controller_.moveTo( newPos );
         }
     }
 }
@@ -198,31 +203,51 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
 
     emit moveToFront( contentWindow_ );
 
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
     {
         contentWindow_->getInteractionDelegate().mousePressEvent( event_ );
         return;
     }
 
-    const ControlState controlState = contentWindow_->getControlState();
-    contentWindow_->getContent()->blockAdvance( true );
-
     if( hitResizeButton( event_->pos( )))
-        resizing_ = true;
+        contentWindow_->setState( ContentWindow::RESIZING );
 
     else if( hitFullscreenButton( event_->pos( )))
         controller_.toggleFullscreen();
 
-    else if( hitPauseButton( event_->pos( )))
-        contentWindow_->setControlState( ControlState( controlState ^ STATE_PAUSED ));
-
-    else if( hitLoopButton( event_->pos( )))
-        contentWindow_->setControlState( ControlState( controlState ^ STATE_LOOP ));
+    else if ( hitMovieControl( event_->pos( )))
+    { /** Nothing to do */ }
 
     else
-        moving_ = true;
+        contentWindow_->setState( ContentWindow::MOVING );
 
     QGraphicsItem::mousePressEvent( event_ );
+}
+
+bool ContentWindowGraphicsItem::hitMovieControl( const QPointF& hitPos ) const
+{
+    if( contentWindow_->getContent()->getType() != CONTENT_TYPE_MOVIE )
+        return false;
+
+    if( hitPauseButton( hitPos ))
+    {
+        ContentPtr content = contentWindow_->getContent();
+        MovieContent* movie = static_cast< MovieContent* >( content.get( ));
+
+        movie->setControlState( ControlState( movie->getControlState() ^ STATE_PAUSED ));
+        return true;
+    }
+
+    if( hitLoopButton( hitPos ))
+    {
+        ContentPtr content = contentWindow_->getContent();
+        MovieContent* movie = static_cast< MovieContent* >( content.get( ));
+
+        movie->setControlState( ControlState( movie->getControlState() ^ STATE_LOOP ));
+        return true;
+    }
+
+    return false;
 }
 
 void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event_ )
@@ -237,20 +262,20 @@ void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent*
         return;
     }
 
-    contentWindow_->toggleWindowState();
+    controller_.toggleWindowState();
 
     QGraphicsItem::mouseDoubleClickEvent( event_ );
 }
 
 void ContentWindowGraphicsItem::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
 {
-    resizing_ = false;
-    moving_ = false;
-
-    contentWindow_->getContent()->blockAdvance( false );
-
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
+    {
         contentWindow_->getInteractionDelegate().mouseReleaseEvent( event_ );
+        return;
+    }
+
+    contentWindow_->setState( ContentWindow::UNSELECTED );
 
     QGraphicsItem::mouseReleaseEvent( event_ );
 }
@@ -267,21 +292,21 @@ void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
         return;
     }
 
-    if ( contentWindow_->selected( ))
+    if ( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
     else
-        contentWindow_->scaleSize( 1. + (double)event_->delta() / ( 10. * STD_WHEEL_DELTA ));
+        controller_.scale( 1. + (double)event_->delta() / ( 10. * STD_WHEEL_DELTA ));
 }
 
 void ContentWindowGraphicsItem::keyPressEvent( QKeyEvent* event_ )
 {
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().keyPressEvent( event_ );
 }
 
 void ContentWindowGraphicsItem::keyReleaseEvent( QKeyEvent* event_ )
 {
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().keyReleaseEvent( event_ );
 }
 
@@ -296,7 +321,7 @@ void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* touchEvent )
         return;
     }
 
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
     {
         contentWindow_->getInteractionDelegate().gestureEvent( touchEvent );
         return;
@@ -322,7 +347,7 @@ void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* touchEvent )
 void ContentWindowGraphicsItem::tapAndHoldUnselected( QTapAndHoldGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
-        contentWindow_->toggleWindowState();
+        controller_.toggleWindowState();
 }
 
 void ContentWindowGraphicsItem::doubleTapUnselected( DoubleTapGesture* gesture )
@@ -334,14 +359,14 @@ void ContentWindowGraphicsItem::doubleTapUnselected( DoubleTapGesture* gesture )
 void ContentWindowGraphicsItem::panUnselected( PanGesture* gesture )
 {
     if( gesture->state() == Qt::GestureStarted )
-        contentWindow_->getContent()->blockAdvance( true );
+        contentWindow_->setState( ContentWindow::MOVING );
 
     else if( gesture->state() == Qt::GestureCanceled ||
              gesture->state() == Qt::GestureFinished )
-        contentWindow_->getContent()->blockAdvance( false );
+        contentWindow_->setState( ContentWindow::UNSELECTED );
 
     const QPointF& windowPos = contentWindow_->getCoordinates().topLeft();
-    contentWindow_->setPosition( windowPos + gesture->delta( ));
+    controller_.moveTo( windowPos + gesture->delta( ));
 }
 
 void ContentWindowGraphicsItem::pinchUnselected( PinchGesture* gesture )
@@ -351,13 +376,13 @@ void ContentWindowGraphicsItem::pinchUnselected( PinchGesture* gesture )
         return;
 
     if( gesture->state() == Qt::GestureStarted )
-        contentWindow_->getContent()->blockAdvance( true );
+        contentWindow_->setState( ContentWindow::RESIZING );
 
     else if( gesture->state() == Qt::GestureCanceled ||
              gesture->state() == Qt::GestureFinished )
-        contentWindow_->getContent()->blockAdvance( false );
+        contentWindow_->setState( ContentWindow::UNSELECTED );
 
-    contentWindow_->scaleSize( factor );
+    controller_.scale( factor );
 }
 
 void ContentWindowGraphicsItem::getButtonDimensions( float& width, float& height ) const
@@ -475,10 +500,13 @@ void ContentWindowGraphicsItem::drawMovieControls_( QPainter* painter )
     if( contentWindow_->getContent()->getType() != CONTENT_TYPE_MOVIE )
         return;
 
+    ContentPtr content = contentWindow_->getContent();
+    MovieContent* movie = static_cast< MovieContent* >( content.get( ));
+    const ControlState controlState = movie->getControlState();
+
     float buttonWidth, buttonHeight;
     getButtonDimensions( buttonWidth, buttonHeight );
     const QRectF coordinates = boundingRect();
-    const ControlState controlState = contentWindow_->getControlState();
 
     // play/pause
     QRectF playPauseRect( coordinates.x() + coordinates.width()/2 - buttonWidth,
@@ -568,7 +596,7 @@ void ContentWindowGraphicsItem::drawWindowInfo_( QPainter* painter )
 void ContentWindowGraphicsItem::drawFrame_( QPainter* painter )
 {
     QPen pen;
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
         pen.setColor( QColor( Qt::red ));
     else
         pen.setColor( QColor( Qt::black ));

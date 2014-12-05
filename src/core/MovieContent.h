@@ -42,11 +42,17 @@
 #include "Content.h"
 #include <boost/serialization/base_object.hpp>
 
+enum ControlState
+{
+    STATE_PAUSED = 1 << 0,
+    STATE_LOOP   = 1 << 1
+};
+
 class MovieContent : public Content
 {
 public:
     /** Create a MovieContent from the given uri. */
-    explicit MovieContent(const QString& uri);
+    explicit MovieContent( const QString& uri );
 
     /** Get the content type **/
     CONTENT_TYPE getType() override;
@@ -59,8 +65,14 @@ public:
 
     static const QStringList& getSupportedExtensions();
 
-    void preRenderUpdate(Factories&, ContentWindowPtr, WallToWallChannel& wallToWallChannel) override;
+    void preRenderUpdate(Factories&, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
     void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
+
+    /** Get the control state. */
+    ControlState getControlState() const;
+
+    /** Set the control state. */
+    void setControlState( const ControlState state );
 
 private:
     friend class boost::serialization::access;
@@ -68,12 +80,18 @@ private:
     // Default constructor required for boost::serialization
     MovieContent() {}
 
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    template< class Archive >
+    void serialize( Archive & ar, const unsigned int version )
     {
         // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
+        if ( version >= 2 )
+            ar & boost::serialization::make_nvp( "controlState", controlState_ );
     }
+
+    ControlState controlState_;
 };
+
+BOOST_CLASS_VERSION( MovieContent, 2 )
 
 #endif

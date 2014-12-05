@@ -74,7 +74,7 @@ public:
      *
      * @param uri the URI of the streamer
      * @param pos the desired normalized position of the window
-     * @param size the desired normalized size of the window
+     * @param size the desired size of the window in pixels
      * @return the window of the streamer. Is never NULL.
      */
     ContentWindowPtr createContentWindow( const QString& uri,
@@ -104,7 +104,7 @@ public:
      * @param uri the URI of the streamer
      * @param size the size in pixels of the streaming source
      */
-    void updateDimension( QString uri, QSize size );
+    void updateDimension( const QString& uri, const QSize& size );
 
     /**
      * Hide the associated content window of the stream.
@@ -112,6 +112,13 @@ public:
      * @param uri the URI of the streamer
      */
     void hideWindow( const QString& uri );
+
+    /**
+     * Show the associated content window of the stream.
+     *
+     * @param uri the URI of the streamer
+     */
+    void showWindow( const QString& uri );
 
 public slots:
     /**
@@ -130,7 +137,7 @@ public slots:
      *
      * @param uri the URI of the streamer
      */
-    void closePixelStreamWindow( const QString& uri );
+    void closePixelStreamWindow( QString uri );
 
     /**
      * Is called when the streamer wants to enable event handling. This will
@@ -138,7 +145,7 @@ public slots:
      *
      * @param uri the URI of the streamer
      * @param exclusive true if only one source of the streamer should
-     *                  send/handle events
+     *        send/handle events
      * @param receiver the event receiver instance
      */
     void registerEventReceiver( QString uri, bool exclusive,
@@ -164,15 +171,14 @@ private slots:
     /**
      * This will close the streamer that is associated with the given window.
      *
-     * @param contentWindow the content window that might be associated
-     *                      to a streamer
+     * @param window the content window that might be associated to a streamer
      */
-    void onContentWindowRemoved( ContentWindowPtr contentWindow );
+    void onContentWindowRemoved( ContentWindowPtr window );
 
 private:
     DisplayGroup& displayGroup_;
 
-    typedef std::map<QString, ContentWindowPtr> ContentWindowMap;
+    typedef std::map< QString, ContentWindowPtr > ContentWindowMap;
     ContentWindowMap streamerWindows_;
 };
 

@@ -118,6 +118,7 @@ private:
     bool hitCloseButton( const QPointF& hitPos ) const;
     bool hitResizeButton( const QPointF& hitPos ) const;
     bool hitFullscreenButton( const QPointF& hitPos ) const;
+    bool hitMovieControl( const QPointF& hitPos ) const;
     bool hitPauseButton( const QPointF& hitPos ) const;
     bool hitLoopButton( const QPointF& hitPos ) const;
 
@@ -131,8 +132,6 @@ private:
 
     ContentWindowPtr contentWindow_;
     ContentWindowController controller_;
-    bool resizing_;
-    bool moving_;
 
     // counter used to determine stacking order in the UI
     static qreal zCounter_;

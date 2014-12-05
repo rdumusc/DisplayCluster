@@ -121,10 +121,27 @@ bool StateSerializationHelper::load( const QString& filename )
     ifs.close();
 
     ContentWindowPtrs contentWindows = state.getContentWindows();
+    if( state.getVersion() < 2 )
+        scaleToDisplayGroup( contentWindows );
     validate( contentWindows );
 
     displayGroup_->setContentWindows( contentWindows );
     return true;
+}
+
+void StateSerializationHelper::scaleToDisplayGroup( ContentWindowPtrs&
+                                                    contentWindows ) const
+{
+    const QRectF& group = displayGroup_->getCoordinates();
+
+    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
+    {
+        const QRectF& norm = window->getCoordinates();
+        window->setCoordinates( QRectF( norm.x() * group.width(),
+                                        norm.y() * group.height(),
+                                        norm.width() * group.width(),
+                                        norm.height() * group.height( )));
+    }
 }
 
 void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
@@ -134,7 +151,7 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
 
     BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
-        if ( !contentWindow->getContent( ))
+        if( !contentWindow->getContent( ))
         {
             put_flog( LOG_WARN, "Window '%s' does not have a Content.",
                       contentWindow->getID().toString().toStdString().c_str( ));

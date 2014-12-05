@@ -73,6 +73,7 @@ public:
 private:
     DisplayGroupPtr displayGroup_;
 
+    void scaleToDisplayGroup( ContentWindowPtrs& contentWindows ) const;
     void validate( ContentWindowPtrs& contentWindows ) const;
     bool isPixelStream( const ContentWindow& contentWindow ) const;
 };
