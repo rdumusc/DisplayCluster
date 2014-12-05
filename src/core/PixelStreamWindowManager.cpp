@@ -67,7 +67,11 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
         put_flog( LOG_WARN, "Already have a window for stream: '%s'",
                   uri.toStdString().c_str( ));
     else
-        contentWindow.reset( new ContentWindow );
+    {
+        ContentPtr content = ContentFactory::getPixelStreamContent( uri );
+        contentWindow.reset( new ContentWindow( content ));
+        //contentWindow->setState( ContentWindow::HIDDEN );
+    }
 
     QRectF winCoord( QPointF(), size );
     winCoord.moveCenter( pos );
@@ -118,9 +122,6 @@ void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
     put_flog( LOG_DEBUG, "adding pixel stream: %s",
               uri.toLocal8Bit().constData( ));
 
-    ContentPtr content = ContentFactory::getPixelStreamContent( uri );
-    content->setDimensions( size );
-
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( !contentWindow )
     {
@@ -128,7 +129,8 @@ void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
         const QPointF center = displayGroup_.getCoordinates().center();
         contentWindow = createContentWindow( uri, center, size );
     }
-    contentWindow->setContent( content );
+    contentWindow->getContent()->setDimensions( size );
+    contentWindow->setState( ContentWindow::SELECTED );
     displayGroup_.addContentWindow( contentWindow );
 }
 

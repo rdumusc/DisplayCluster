@@ -250,7 +250,7 @@ void cleanupTestDir()
         QFile::remove( TEST_DIR + "/" + file );
 }
 
-void compareImages( const QString& file1, const QString& file2 )
+float compareImages( const QString& file1, const QString& file2 )
 {
     QImage image1, image2;
     BOOST_REQUIRE( image1.load( file1 ));
@@ -260,11 +260,19 @@ void compareImages( const QString& file1, const QString& file2 )
     BOOST_REQUIRE_EQUAL( image1.height(), image2.height( ));
     BOOST_REQUIRE_EQUAL( image1.byteCount(), image2.byteCount( ));
 
-    BOOST_CHECK_EQUAL_COLLECTIONS( image1.bits(),
-                                   image1.bits() + image1.byteCount(),
-                                   image2.bits(),
-                                   image2.bits() + image2.byteCount()
-                                   );
+    // BOOST_CHECK_EQUAL_COLLECTION is too noisy so do a silent comparison
+    unsigned int errors = 0;
+    const uchar* it1 = image1.bits();
+    const uchar* it2 = image2.bits();
+    while( it1 < image1.bits() + image1.byteCount() &&
+           it2 < image2.bits() + image2.byteCount() )
+    {
+        if( *it1 != *it2 )
+            ++errors;
+        ++it1;
+        ++it2;
+    }
+    return (float)errors / (float)image1.byteCount();
 }
 
 BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
@@ -287,8 +295,11 @@ BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
     BOOST_CHECK( files.contains( "test.dcx" ));
     BOOST_CHECK( files.contains( "test.dcxpreview" ));
 
-    // 3) Check preview image
-    compareImages( TEST_DIR + "/test.dcxpreview", STATE_V0_PREVIEW_FILE );
+    // 3) Check preview image.
+    //    Observations have shown that a 2% error maring is imperceptible.
+    const float previewError = compareImages( TEST_DIR + "/test.dcxpreview",
+                                              STATE_V0_PREVIEW_FILE );
+    BOOST_CHECK_LT( previewError, 0.02f );
 
     // 4) Test restoring
     DisplayGroupPtr loadedDisplayGroup = boost::make_shared<DisplayGroup>( QSize( ));

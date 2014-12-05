@@ -51,12 +51,15 @@
 #  include "PDFInteractionDelegate.h"
 #endif
 
+#define MIN_ZOOM  1.0
+#define MAX_ZOOM 16.0
+
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomCenter_( 0.5, 0.5 )
-    , zoom_( 1.0 )
+    , zoom_( MIN_ZOOM )
     , windowState_( UNSELECTED )
     , eventReceiversCount_( 0 )
 {
@@ -65,7 +68,7 @@ ContentWindow::ContentWindow()
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
     , zoomCenter_( 0.5, 0.5 )
-    , zoom_( 1.0 )
+    , zoom_( MIN_ZOOM )
     , windowState_( UNSELECTED )
     , eventReceiversCount_( 0 )
 {
@@ -126,7 +129,7 @@ qreal ContentWindow::getZoom() const
 
 void ContentWindow::setZoom( const qreal zoom )
 {
-    zoom_ = std::max( zoom, 1.0 );
+    zoom_ = std::max( MIN_ZOOM, std::min( zoom, MAX_ZOOM ) );
 
     constrainZoomCenter();
 

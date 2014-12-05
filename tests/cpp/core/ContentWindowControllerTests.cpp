@@ -59,7 +59,7 @@ const QSizeF contentSize( WIDTH, HEIGHT );
 const qreal CONTENT_AR = qreal(WIDTH)/qreal(HEIGHT);
 }
 
-BOOST_AUTO_TEST_CASE( testOneToOneSize )
+BOOST_AUTO_TEST_CASE( testResizeAndMove )
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
@@ -68,15 +68,53 @@ BOOST_AUTO_TEST_CASE( testOneToOneSize )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     ContentWindowController controller( window, *displayGroup );
 
-    controller.adjustSize( SIZE_1TO1 );
+    const QPointF targetPosition( 124.2, 457.3 );
+    const QSizeF targetSize( 0.7 * QSizeF( content->getDimensions( )));
+
+    controller.moveTo( targetPosition );
+    controller.resize( targetSize );
 
     const QRectF& coords = window.getCoordinates();
-    const float posX = ( wallSize.width() - contentSize.width( )) * 0.5;
-    const float posY = ( wallSize.height() - contentSize.height( )) * 0.5;
 
-    // 1:1 size, centered on wall
-    BOOST_CHECK_EQUAL( coords.x(), posX );
-    BOOST_CHECK_EQUAL( coords.y(), posY );
+    BOOST_CHECK_EQUAL( coords.x(), targetPosition.x() );
+    BOOST_CHECK_EQUAL( coords.y(), targetPosition.y() );
+    BOOST_CHECK_EQUAL( coords.width(), targetSize.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), targetSize.height( ));
+
+    const QPointF fixedCenter = coords.center();
+    const QSizeF centeredSize( 0.5 * QSizeF( content->getDimensions( )));
+
+    controller.resize( centeredSize, ContentWindowController::CENTER );
+
+    BOOST_CHECK_EQUAL( coords.center().x(), fixedCenter.x( ));
+    BOOST_CHECK_EQUAL( coords.center().y(), fixedCenter.y( ));
+    BOOST_CHECK_EQUAL( coords.width(), centeredSize.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), centeredSize.height( ));
+}
+
+BOOST_AUTO_TEST_CASE( testOneToOneSize )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    window.setCoordinates( QRectF( 610, 220, 30, 40 ));
+
+    const QRectF& coords = window.getCoordinates();
+
+    BOOST_REQUIRE_EQUAL( coords.x(), 610 );
+    BOOST_REQUIRE_EQUAL( coords.y(), 220 );
+    BOOST_REQUIRE_EQUAL( coords.center().x(), 625 );
+    BOOST_REQUIRE_EQUAL( coords.center().y(), 240 );
+
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
+
+    controller.adjustSize( SIZE_1TO1 );
+
+    // 1:1 size restored around existing window center
+    BOOST_CHECK_EQUAL( coords.center().x(), 625 );
+    BOOST_CHECK_EQUAL( coords.center().y(), 240 );
     BOOST_CHECK_EQUAL( coords.width(), WIDTH );
     BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
 }
@@ -130,3 +168,34 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));
     BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 }
+
+BOOST_AUTO_TEST_CASE( testToggleWindowState )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
+
+    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::UNSELECTED );
+
+    controller.toggleWindowState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::SELECTED );
+
+    controller.toggleWindowState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::UNSELECTED );
+
+    window.setState( ContentWindow::MOVING );
+    controller.toggleWindowState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::MOVING );
+
+    window.setState( ContentWindow::RESIZING );
+    controller.toggleWindowState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::RESIZING );
+
+    window.setState( ContentWindow::HIDDEN );
+    controller.toggleWindowState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
+}
+

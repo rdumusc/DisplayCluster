@@ -58,7 +58,8 @@ ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
 {
 }
 
-void ContentWindowController::resize( const QSizeF& size )
+void ContentWindowController::resize( const QSizeF& size,
+                                      const FixedPoint fixedPoint )
 {
     QSizeF windowSize = size;
 
@@ -66,6 +67,8 @@ void ContentWindowController::resize( const QSizeF& size )
 
     QRectF coordinates( contentWindow_.getCoordinates( ));
     coordinates.setSize( windowSize );
+    if( fixedPoint == CENTER )
+        coordinates.moveCenter( contentWindow_.getCoordinates().center( ));
     constrainPosition( coordinates );
     contentWindow_.setCoordinates( coordinates );
 }
@@ -75,12 +78,7 @@ void ContentWindowController::scale( const double factor )
     if( factor <= 0.0 )
         return;
 
-    resize( contentWindow_.getCoordinates().size() * factor );
-}
-
-void ContentWindowController::toggleFullscreen()
-{
-    adjustSize( sizeState_ == SIZE_NORMALIZED ? SIZE_FULLSCREEN : SIZE_NORMALIZED );
+    resize( contentWindow_.getCoordinates().size() * factor, CENTER );
 }
 
 void ContentWindowController::adjustSize( const SizeState state )
@@ -99,7 +97,7 @@ void ContentWindowController::adjustSize( const SizeState state )
         break;
 
     case SIZE_1TO1:
-        resize( contentWindow_.getContent()->getDimensions( ));
+        resize( contentWindow_.getContent()->getDimensions(), CENTER );
         break;
 
     case SIZE_NORMALIZED:
@@ -110,6 +108,11 @@ void ContentWindowController::adjustSize( const SizeState state )
     }
 
     sizeState_ = state;
+}
+
+void ContentWindowController::toggleFullscreen()
+{
+    adjustSize( sizeState_ == SIZE_NORMALIZED ? SIZE_FULLSCREEN : SIZE_NORMALIZED );
 }
 
 void ContentWindowController::moveTo( const QPointF& position )

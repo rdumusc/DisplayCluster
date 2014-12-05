@@ -60,36 +60,35 @@ public:
     ContentWindowController( ContentWindow& contentWindow,
                              const DisplayGroup& displayGroup );
 
+    /** Fixed point for affine transforms of the window. */
+    enum FixedPoint
+    {
+        TOP_LEFT,
+        CENTER
+    };
+
     /** Resize the window. */
-    void resize( const QSizeF& size );
+    void resize( const QSizeF& size, const FixedPoint = TOP_LEFT );
 
     /** Scale the window by the given factor (around its center). */
     void scale( const double factor );
 
+    /** Adjust the window coordinates to match the desired state. */
+    void adjustSize( const SizeState state );
 
     /** Toggle between fullscreen and 'normalized' by keeping the position
      *  and size after leaving fullscreen */
     void toggleFullscreen();
 
-    /** Adjust the window coordinates to match the desired state. */
-    void adjustSize( const SizeState state );
-
-
     /** Move the window to the desired position. */
     void moveTo( const QPointF& position );
-
 
     /** Toggle the state (selected / unselected). */
     void toggleWindowState();
 
 private:
-    /** Constrain the given window size based on display group dimensions. */
     void constrainSize( QSizeF& windowSize ) const;
-
-    /** Constrain the position of the given window coordinates. */
     void constrainPosition( QRectF& window ) const;
-
-    /** Get coordinates centered on the display group for the given size. */
     QRectF getCenteredCoordinates( const QSizeF& size ) const;
 
     ContentWindow& contentWindow_;

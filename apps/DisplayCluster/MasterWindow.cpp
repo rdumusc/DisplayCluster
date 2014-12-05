@@ -40,6 +40,7 @@
 #include "MasterWindow.h"
 
 #include "Options.h"
+#include "configuration/MasterConfiguration.h"
 #include "log.h"
 #include "dc/version.h"
 #include "configuration/MasterConfiguration.h"

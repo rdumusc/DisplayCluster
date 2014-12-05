@@ -110,10 +110,10 @@ public:
     void setCoordinates( const QRectF& coordinates );
 
 
-    /** Get the zoom factor [1;inf]. */
+    /** Get the zoom factor [1.0; 16.0]. */
     qreal getZoom() const;
 
-    /** Get the zoom factor [1;inf]. */
+    /** Set the zoom factor [1.0; 16.0]. */
     void setZoom( const qreal zoom );
 
     /** Get the zoom center in normalized coordinates. */
@@ -161,7 +161,7 @@ public:
     /** Backup the current coordinates. */
     void backupCoordinates();
 
-    /** Restore the last backed-up coordinates. */
+    /** Restore the lastest backed-up coordinates. */
     void restoreCoordinates();
 
 signals:
