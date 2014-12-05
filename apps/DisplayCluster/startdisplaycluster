@@ -63,8 +63,8 @@ IS_MPICH2 = distutils.spawn.find_executable('mpich2version')
 if IS_MVAPICH:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     MPI_PER_NODE_HOST = None
-    EXPORT_DISPLAY = ' -env DISPLAY '
-    MPI_ARGS = ' -genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts '
+    EXPORT_DISPLAY = '-env DISPLAY '
+    MPI_ARGS = '-genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts'
 elif IS_MPICH2:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     MPI_PER_NODE_HOST = '-host'
@@ -74,12 +74,12 @@ else:
     MPI_SPECIAL_FLAGS = ''
     MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = '-x DISPLAY='
-    MPI_ARGS = '-x LD_LIBRARY_PATH -host '
+    MPI_ARGS = '-x LD_LIBRARY_PATH -host'
 
 # Form the application parameters list
-DC_PARAMS = ' --config ' + DC_CONFIG_FILE
+DC_PARAMS = '--config ' + DC_CONFIG_FILE
 if args.session:
-    DC_PARAMS += ' --session ' + args.session
+    DC_PARAMS += '--session ' + args.session
 
 if args.vglrun:
     VGLRUN_BIN = 'vglrun '
@@ -116,7 +116,7 @@ try:
         node_host = ''
         hostlist.append(host)
 
-    rcmd = '%s %s %s %s -np 1 %s %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, VGLRUN_BIN, DC_BIN, DC_PARAMS)
+    rcmd = '%s %s%s %s -np 1 %s%s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, VGLRUN_BIN, DC_BIN, DC_PARAMS)
     runcommands.append(rcmd)
 
     # parse the wall process elements
@@ -126,7 +126,6 @@ try:
         if host is None:
             print('Error, no host attribute in <process> tag.')
             exit(-1)
-
 
         display = elem.get('display')
         if display == None:
@@ -138,7 +137,7 @@ try:
             node_host = ''
             hostlist.append(host)
 
-        rcmd = '%s %s %s %s -np 1 %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, DC_BIN, DC_PARAMS)
+        rcmd = '%s %s%s %s -np 1 %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, DC_BIN, DC_PARAMS)
         runcommands.append(rcmd)
 
 except Exception as e:
