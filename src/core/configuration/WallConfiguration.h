@@ -41,6 +41,7 @@
 #define WALLCONFIGURATION_H
 
 #include "Configuration.h"
+
 #include <QPoint>
 
 /**
@@ -52,47 +53,40 @@ class WallConfiguration : public Configuration
 {
 public:
     /**
-     * @brief WallConfiguration
+     * Constructor.
      * @param filename \see Configuration
      * @param processIndex MPI index in the range [1;n] of the process
      * @throw std::runtime_error if the file could not be read
      */
     WallConfiguration(const QString &filename, const int processIndex);
 
-    /**
-     * @brief getHost
-     * @return the name of the host on which this process is running (as read from the configuration file)
-     */
+    /** Get the name of the host on which this process is running. */
     const QString& getHost() const;
 
     /**
-     * @brief getDisplay
-     * @return the display identifier in string format matching the current Linux DISPLAY env_var
+     * Get the display identifier in string format matching the current Linux
+     * DISPLAY env_var.
      */
     const QString& getDisplay() const;
 
-    /**
-     * @brief getScreenCount Get the number of screens/GLWindows this process has to manage
-     * @return
-     */
+    /** Get the number of screens/GLWindows this process has to manage. */
     int getScreenCount() const;
 
     /**
-     * @brief getScreenPosition Get the position of the specified screen
+     * Get the position of the specified screen.
      * @param screenIndex index in the range [0,getScreenCount()-1]
      * @return top-left position in pixels units
      */
     const QPoint& getScreenPosition(int screenIndex) const;
 
     /**
-     * @brief getScreenGlobalIndex Get the global index for the screen
+     * Get the global index for the screen.
      * @param screenIndex index in the range [0,getScreenCount()-1]
      * @return index starting at {0,0} from the top-left
      */
     const QPoint& getGlobalScreenIndex(int screenIndex) const;
 
 private:
-
     QString host_;
     QString display_;
 

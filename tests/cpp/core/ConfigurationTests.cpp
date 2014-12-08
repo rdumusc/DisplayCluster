@@ -63,11 +63,8 @@ namespace ut = boost::unit_test;
 
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
-void testBaseParameters(const Configuration& config)
+void testBaseParameters( const Configuration& config )
 {
-    BOOST_CHECK( config.getBackgroundColor() == QColor(CONFIG_EXPECTED_BACKGROUND_COLOR) );
-    BOOST_CHECK_EQUAL( config.getBackgroundUri().toStdString(), CONFIG_EXPECTED_BACKGROUND );
-
     BOOST_CHECK_EQUAL( config.getFullscreen(), true );
 
     BOOST_CHECK_EQUAL( config.getMullionHeight(), 12 );
@@ -85,17 +82,17 @@ void testBaseParameters(const Configuration& config)
 
 BOOST_AUTO_TEST_CASE( test_configuration )
 {
-    Configuration config(CONFIG_TEST_FILENAME);
+    Configuration config( CONFIG_TEST_FILENAME );
 
     testBaseParameters(config);
 }
 
 BOOST_AUTO_TEST_CASE( test_wall_configuration )
 {
-    WallConfiguration config(CONFIG_TEST_FILENAME, 1);
+    WallConfiguration config( CONFIG_TEST_FILENAME, 1 );
 
     BOOST_CHECK_EQUAL( config.getDisplay().toStdString(), CONFIG_EXPECTED_DISPLAY );
-    BOOST_CHECK( config.getGlobalScreenIndex(0) == QPoint(0,0) );
+    BOOST_CHECK( config.getGlobalScreenIndex( 0 ) == QPoint( 0,0 ) );
     BOOST_CHECK_EQUAL( config.getHost().toStdString(), CONFIG_EXPECTED_HOST_NAME );
 
     BOOST_CHECK_EQUAL( config.getScreenCount(), 1 );
@@ -103,16 +100,19 @@ BOOST_AUTO_TEST_CASE( test_wall_configuration )
 
 BOOST_AUTO_TEST_CASE( test_master_configuration )
 {
-    MasterConfiguration config(CONFIG_TEST_FILENAME);
+    MasterConfiguration config( CONFIG_TEST_FILENAME );
 
     BOOST_CHECK_EQUAL( config.getDockStartDir().toStdString(), CONFIG_EXPECTED_DOCK_DIR );
     BOOST_CHECK_EQUAL( config.getWebServicePort(), CONFIG_EXPECTED_WEBSERVICE_PORT );
     BOOST_CHECK_EQUAL( config.getWebBrowserDefaultURL().toStdString(), CONFIG_EXPECTED_URL );
+
+    BOOST_CHECK( config.getBackgroundColor() == QColor( CONFIG_EXPECTED_BACKGROUND_COLOR ));
+    BOOST_CHECK_EQUAL( config.getBackgroundUri().toStdString(), CONFIG_EXPECTED_BACKGROUND );
 }
 
 BOOST_AUTO_TEST_CASE( test_master_configuration_default_values )
 {
-    MasterConfiguration config(CONFIG_TEST_FILENAME_II);
+    MasterConfiguration config( CONFIG_TEST_FILENAME_II );
 
     BOOST_CHECK_EQUAL( config.getDockStartDir().toStdString(), QDir::homePath().toStdString() );
     BOOST_CHECK_EQUAL( config.getWebBrowserDefaultURL().toStdString(), CONFIG_EXPECTED_DEFAULT_URL );
@@ -121,12 +121,12 @@ BOOST_AUTO_TEST_CASE( test_master_configuration_default_values )
 BOOST_AUTO_TEST_CASE( test_save_configuration )
 {
     {
-        Configuration config(CONFIG_TEST_FILENAME);
-        config.setBackgroundColor(QColor("#123456"));
-        BOOST_CHECK( config.save("configuration_modified.xml") );
+        MasterConfiguration config( CONFIG_TEST_FILENAME );
+        config.setBackgroundColor( QColor( "#123456" ));
+        BOOST_CHECK( config.save( "configuration_modified.xml" ));
     }
 
     // Check reloading
-    Configuration config("configuration_modified.xml");
-    BOOST_CHECK( config.getBackgroundColor() == QColor("#123456") );
+    MasterConfiguration config( "configuration_modified.xml" );
+    BOOST_CHECK( config.getBackgroundColor() == QColor( "#123456" ));
 }

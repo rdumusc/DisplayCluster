@@ -46,7 +46,7 @@
 #include <QMimeData>
 
 class BackgroundWidget;
-class Configuration;
+class MasterConfiguration;
 class DisplayGroupGraphicsView;
 class WebbrowserWidget;
 
@@ -61,7 +61,7 @@ class MasterWindow : public QMainWindow
 
 public:
     /** Constructor. */
-    MasterWindow(DisplayGroupPtr displayGroup, Configuration& config);
+    MasterWindow(DisplayGroupPtr displayGroup, MasterConfiguration& config);
 
     /** Destructor. */
     ~MasterWindow();

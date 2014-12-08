@@ -2,7 +2,7 @@
     <dimensions mullionHeight="0" fullscreen="0" numTilesWidth="4" screenHeight="216" mullionWidth="0" screenWidth="384" numTilesHeight="3"/>
     <dock directory=""/>
     <webservice port="10000"/>
-    <webbrowser zoomFactor="2.0" defaultUrl="http://www.google.com" pageWidth="1280" pageHeight="1024"/>
+    <webbrowser zoomFactor="2.0" defaultURL="http://www.google.com" pageWidth="1280" pageHeight="1024"/>
     <background uri="" color="#282828"/>
     <masterProcess display=":0" host="localhost"/>
     <process display=":0" host="localhost">

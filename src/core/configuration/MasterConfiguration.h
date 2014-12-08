@@ -52,40 +52,81 @@ class MasterConfiguration : public Configuration
 {
 public:
     /**
-     * @brief MasterConfiguration constructor
+     * Constructor
      * @param filename \see Configuration
      * @throw std::runtime_error if the file could not be read
      */
     MasterConfiguration(const QString& filename);
 
     /**
-     * @brief getDockStartDir Get the Dock startup directory
+     * Get the Dock startup directory
      * @return directory path
      */
     const QString& getDockStartDir() const;
 
     /**
-     * @brief getWebServicePort Get the port where the WebService server
-     * will be listening for incoming requests.
+     * Get the port where the WebService server will be listening for incoming
+     * requests.
      * @return port for WebService server
      */
     int getWebServicePort() const;
 
     /**
-     * @brief Get the URL used as start page when opening a Web Browser.
+     * Get the URL used as start page when opening a Web Browser.
      * @return The URL defined in the configuration file, or a default value if
      * none is found.
      */
     const QString& getWebBrowserDefaultURL() const;
 
+    /**
+     * Get the URI to the Content to be used as background
+     * @return empty string if unspecified
+     */
+    const QString& getBackgroundUri() const;
+
+    /**
+     * Get the uniform color to use for Background
+     * @return defaults to black if unspecified
+     */
+    const QColor& getBackgroundColor() const;
+
+    /**
+     * Set the background color
+     * @param color
+     */
+    void setBackgroundColor(const QColor& color);
+
+    /**
+     * Set the URI to the Content to be used as background
+     * @param uri empty string to use no background content
+     */
+    void setBackgroundUri(const QString& uri);
+
+    /**
+     * Save the configuration to the current xml file.
+     * @return true on succes, false on failure
+     */
+    bool save() const;
+
+    /**
+     * Save the configuration to the specified xml file.
+     * @param filename destination file
+     * @return true on succes, false on failure
+     */
+    bool save(const QString& filename) const;
+
 private:
     void loadMasterSettings();
     void loadDockStartDirectory(QXmlQuery& query);
     void loadWebBrowserStartURL(QXmlQuery& query);
+    void loadBackgroundProperties(QXmlQuery& query);
 
     QString dockStartDir_;
     int dcWebServicePort_;
     QString webBrowserDefaultURL_;
+
+    QString backgroundUri_;
+    QColor backgroundColor_;
 };
 
 #endif // MASTERCONFIGURATION_H

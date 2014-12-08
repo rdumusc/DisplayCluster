@@ -41,11 +41,12 @@
 
 #include <QtGui>
 
-#include "configuration/Configuration.h"
+#include "configuration/MasterConfiguration.h"
 #include "ContentFactory.h"
 
-BackgroundWidget::BackgroundWidget(Configuration& configuration, QWidget *widget_)
-    : QDialog(widget_)
+BackgroundWidget::BackgroundWidget( MasterConfiguration& configuration,
+                                    QWidget* parent_ )
+    : QDialog(parent_)
     , configuration_(configuration)
 {
     setWindowTitle(tr("Background settings"));
