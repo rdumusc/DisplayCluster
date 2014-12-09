@@ -39,6 +39,9 @@
 
 #include "MasterConfiguration.h"
 
+#include "log.h"
+
+#include <QDomElement>
 #include <QtXmlPatterns>
 #include <stdexcept>
 
@@ -48,6 +51,7 @@
 
 MasterConfiguration::MasterConfiguration(const QString &filename)
     : Configuration(filename)
+    , backgroundColor_(Qt::black)
 {
     loadMasterSettings();
 }
@@ -60,6 +64,7 @@ void MasterConfiguration::loadMasterSettings()
 
     loadDockStartDirectory(query);
     loadWebBrowserStartURL(query);
+    loadBackgroundProperties(query);
 }
 
 void MasterConfiguration::loadDockStartDirectory(QXmlQuery& query)
@@ -94,6 +99,25 @@ void MasterConfiguration::loadWebBrowserStartURL(QXmlQuery& query)
         webBrowserDefaultURL_ = DEFAULT_URL;
 }
 
+void MasterConfiguration::loadBackgroundProperties(QXmlQuery& query)
+{
+    QString queryResult;
+
+    query.setQuery("string(/configuration/background/@uri)");
+    if(query.evaluateTo(&queryResult))
+        backgroundUri_ = queryResult.remove(QRegExp("[\\n\\t\\r]"));
+
+    query.setQuery("string(/configuration/background/@color)");
+    if (query.evaluateTo(&queryResult))
+    {
+        queryResult.remove(QRegExp("[\\n\\t\\r]"));
+
+        const QColor newColor( queryResult );
+        if( newColor.isValid( ))
+            backgroundColor_ = newColor;
+    }
+}
+
 const QString& MasterConfiguration::getDockStartDir() const
 {
     return dockStartDir_;
@@ -107,4 +131,64 @@ int MasterConfiguration::getWebServicePort() const
 const QString& MasterConfiguration::getWebBrowserDefaultURL() const
 {
     return webBrowserDefaultURL_;
+}
+
+const QString& MasterConfiguration::getBackgroundUri() const
+{
+    return backgroundUri_;
+}
+
+const QColor& MasterConfiguration::getBackgroundColor() const
+{
+    return backgroundColor_;
+}
+
+void MasterConfiguration::setBackgroundColor(const QColor& color)
+{
+    backgroundColor_ = color;
+}
+
+void MasterConfiguration::setBackgroundUri(const QString& uri)
+{
+    backgroundUri_ = uri;
+}
+
+bool MasterConfiguration::save() const
+{
+    return save(filename_);
+}
+
+bool MasterConfiguration::save(const QString& filename) const
+{
+    QDomDocument doc("XmlDoc");
+    QFile infile(filename_);
+    if (!infile.open(QIODevice::ReadOnly))
+    {
+        put_flog(LOG_ERROR, "could not open configuration xml file for saving");
+        return false;
+    }
+    doc.setContent(&infile);
+    infile.close();
+
+    QDomElement root = doc.documentElement();
+
+    QDomElement background = root.firstChildElement("background");
+    if (background.isNull())
+    {
+        background = doc.createElement("background");
+        root.appendChild(background);
+    }
+    background.setAttribute("uri", backgroundUri_);
+    background.setAttribute("color", backgroundColor_.name());
+
+    QFile outfile(filename);
+    if (!outfile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        put_flog(LOG_ERROR, "could not open configuration xml file for saving");
+        return false;
+    }
+    QTextStream out(&outfile);
+    out << doc.toString(4);
+    outfile.close();
+    return true;
 }

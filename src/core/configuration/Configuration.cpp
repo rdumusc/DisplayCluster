@@ -38,10 +38,6 @@
 
 #include "Configuration.h"
 
-#include "log.h"
-#include "Options.h"
-
-#include <QDomElement>
 #include <QtXmlPatterns>
 
 #include <stdexcept>
@@ -55,7 +51,6 @@ Configuration::Configuration(const QString &filename)
     , mullionWidth_(0)
     , mullionHeight_(0)
     , fullscreen_(false)
-    , backgroundColor_(Qt::black)
 {
     load();
 }
@@ -97,22 +92,6 @@ void Configuration::load()
     query.setQuery("string(/configuration/dimensions/@fullscreen)");
     if(query.evaluateTo(&queryResult))
         fullscreen_ = queryResult.toInt() != 0;
-
-    // Background content URI
-    query.setQuery("string(/configuration/background/@uri)");
-    if(query.evaluateTo(&queryResult))
-        backgroundUri_ = queryResult.remove(QRegExp("[\\n\\t\\r]"));
-
-    // Background color
-    query.setQuery("string(/configuration/background/@color)");
-    if (query.evaluateTo(&queryResult))
-    {
-        queryResult.remove(QRegExp("[\\n\\t\\r]"));
-
-        QColor newColor( queryResult );
-        if( newColor.isValid( ))
-            backgroundColor_ = newColor;
-    }
 }
 
 int Configuration::getTotalScreenCountX() const
@@ -185,64 +164,4 @@ QRectF Configuration::getNormalizedScreenRect(const QPoint& tileIndex) const
 bool Configuration::getFullscreen() const
 {
     return fullscreen_;
-}
-
-const QString &Configuration::getBackgroundUri() const
-{
-    return backgroundUri_;
-}
-
-const QColor &Configuration::getBackgroundColor() const
-{
-    return backgroundColor_;
-}
-
-void Configuration::setBackgroundColor(const QColor &color)
-{
-    backgroundColor_ = color;
-}
-
-void Configuration::setBackgroundUri(const QString& uri)
-{
-    backgroundUri_ = uri;
-}
-
-bool Configuration::save() const
-{
-    return save(filename_);
-}
-
-bool Configuration::save(const QString &filename) const
-{
-    QDomDocument doc("XmlDoc");
-    QFile infile(filename_);
-    if (!infile.open(QIODevice::ReadOnly))
-    {
-        put_flog(LOG_ERROR, "could not open configuration xml file for saving");
-        return false;
-    }
-    doc.setContent(&infile);
-    infile.close();
-
-    QDomElement root = doc.documentElement();
-
-    QDomElement background = root.firstChildElement("background");
-    if (background.isNull())
-    {
-        background = doc.createElement("background");
-        root.appendChild(background);
-    }
-    background.setAttribute("uri", backgroundUri_);
-    background.setAttribute("color", backgroundColor_.name());
-
-    QFile outfile(filename);
-    if (!outfile.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-        put_flog(LOG_ERROR, "could not open configuration xml file for saving");
-        return false;
-    }
-    QTextStream out(&outfile);
-    out << doc.toString(4);
-    outfile.close();
-    return true;
 }

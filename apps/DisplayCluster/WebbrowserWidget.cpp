@@ -39,9 +39,9 @@
 
 #include "WebbrowserWidget.h"
 
-#include <QtGui>
+#include "configuration/MasterConfiguration.h"
 
-#define WEBBROWSER_DEFAULT_URL   "http://www.google.ch"
+#include <QtGui>
 
 #define SPIN_BOX_MIN_VALUE 0
 #define SPIN_BOX_MAX_VALUE 10000
@@ -49,7 +49,8 @@
 #define WEBBROWSER_DEFAULT_WIDTH 1280
 #define WEBBROWSER_DEFAULT_HEIGHT 1024
 
-WebbrowserWidget::WebbrowserWidget(QWidget* parent_)
+WebbrowserWidget::WebbrowserWidget( const MasterConfiguration& config,
+                                    QWidget* parent_ )
     : QDialog(parent_)
     , widthSpinBox_(0)
     , heightSpinBox_(0)
@@ -59,7 +60,7 @@ WebbrowserWidget::WebbrowserWidget(QWidget* parent_)
     // URL input
 
     QLabel* urlLabel = new QLabel("Url: ", this);
-    urlLineEdit_ = new QLineEdit(WEBBROWSER_DEFAULT_URL, this);
+    urlLineEdit_ = new QLineEdit(config.getWebBrowserDefaultURL(), this);
     urlLabel->setBuddy(urlLineEdit_);
 
     // Standard buttons

@@ -58,12 +58,13 @@
 
 #include <QtGui>
 
-MasterWindow::MasterWindow(DisplayGroupPtr displayGroup, Configuration& config)
+MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
+                            MasterConfiguration& config )
     : QMainWindow()
     , displayGroup_(displayGroup)
     , options_(new Options)
     , backgroundWidget_(new BackgroundWidget(config, this))
-    , webbrowserWidget_(new WebbrowserWidget(this))
+    , webbrowserWidget_(new WebbrowserWidget(config, this))
 {
     backgroundWidget_->setModal(true);
     connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),

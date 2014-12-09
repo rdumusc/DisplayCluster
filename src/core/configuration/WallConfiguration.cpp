@@ -107,12 +107,12 @@ void WallConfiguration::loadWallSettings(const int processIndex)
     }
 }
 
-const QString &WallConfiguration::getHost() const
+const QString& WallConfiguration::getHost() const
 {
     return host_;
 }
 
-const QString &WallConfiguration::getDisplay() const
+const QString& WallConfiguration::getDisplay() const
 {
     return display_;
 }
@@ -122,12 +122,12 @@ int WallConfiguration::getScreenCount() const
     return screenCountForCurrentProcess_;
 }
 
-const QPoint &WallConfiguration::getScreenPosition(int screenIndex) const
+const QPoint& WallConfiguration::getScreenPosition(int screenIndex) const
 {
     return screenPosition_.at(screenIndex);
 }
 
-const QPoint &WallConfiguration::getGlobalScreenIndex(int screenIndex) const
+const QPoint& WallConfiguration::getGlobalScreenIndex(int screenIndex) const
 {
     return screenGlobalIndex_.at(screenIndex);
 }
