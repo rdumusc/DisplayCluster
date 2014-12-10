@@ -71,13 +71,13 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
         ContentPtr content = ContentFactory::getPixelStreamContent( uri );
         contentWindow.reset( new ContentWindow( content ));
         //contentWindow->setState( ContentWindow::HIDDEN );
+        streamerWindows_[uri] = contentWindow;
     }
 
     QRectF winCoord( QPointF(), size );
     winCoord.moveCenter( pos );
     contentWindow->setCoordinates( winCoord );
 
-    streamerWindows_[uri] = contentWindow;
     return contentWindow;
 }
 
@@ -174,11 +174,7 @@ void PixelStreamWindowManager::registerEventReceiver( const QString uri,
 
 void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
 {
-    ContentPtr content = window->getContent();
-    if( !content )
-        return;
-
-    const QString& uri = content->getURI();
+    const QString& uri = window->getContent()->getURI();
     if( !getContentWindow( uri ))
         return;
 
