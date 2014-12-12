@@ -42,6 +42,7 @@
 #include "Options.h"
 #include "log.h"
 #include "dc/version.h"
+#include "configuration/MasterConfiguration.h"
 
 #include "ContentLoader.h"
 #include "ContentFactory.h"
@@ -58,25 +59,35 @@
 
 #include <QtGui>
 
+namespace
+{
+const QString STATE_FILES_FILTER( "State files (*.dcx)" );
+const QSize DEFAULT_WINDOW_SIZE( 800, 600 );
+}
+
 MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
                             MasterConfiguration& config )
     : QMainWindow()
-    , displayGroup_(displayGroup)
-    , options_(new Options)
-    , backgroundWidget_(new BackgroundWidget(config, this))
-    , webbrowserWidget_(new WebbrowserWidget(config, this))
+    , displayGroup_( displayGroup )
+    , options_( new Options )
+    , backgroundWidget_( new BackgroundWidget( config, this ))
+    , webbrowserWidget_( new WebbrowserWidget( config, this ))
+    , contentFolder_( config.getDockStartDir( ))
+    , sessionFolder_( config.getDockStartDir( ))
 {
-    backgroundWidget_->setModal(true);
-    connect(backgroundWidget_, SIGNAL(backgroundColorChanged(QColor)),
-            options_.get(), SLOT(setBackgroundColor(QColor)));
-    connect(backgroundWidget_, SIGNAL(backgroundContentChanged(ContentPtr)),
-            displayGroup_.get(), SLOT(setBackgroundContent(ContentPtr)));
+    backgroundWidget_->setModal( true );
 
-    connect(webbrowserWidget_, SIGNAL(openWebBrowser(QPointF,QSize,QString)),
-            this, SIGNAL(openWebBrowser(QPointF,QSize,QString)));
+    connect( backgroundWidget_, SIGNAL( backgroundColorChanged( QColor )),
+             options_.get(), SLOT( setBackgroundColor( QColor )));
+    connect( backgroundWidget_, SIGNAL( backgroundContentChanged( ContentPtr )),
+             displayGroup_.get(), SLOT( setBackgroundContent( ContentPtr )));
 
-    resize(800,600);
-    setAcceptDrops(true);
+    connect( webbrowserWidget_,
+             SIGNAL( openWebBrowser( QPointF, QSize, QString )),
+             this, SIGNAL( openWebBrowser( QPointF, QSize, QString )));
+
+    resize( DEFAULT_WINDOW_SIZE );
+    setAcceptDrops( true );
 
     setupMasterWindowUI();
 
@@ -257,43 +268,47 @@ void MasterWindow::setupMasterWindowUI()
 
 void MasterWindow::openContent()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Choose content"), QString(), ContentFactory::getSupportedFilesFilterAsString());
+    const QString filter = ContentFactory::getSupportedFilesFilterAsString();
 
-    if(!filename.isEmpty())
+    const QString filename = QFileDialog::getOpenFileName( this,
+                                                           tr("Choose content"),
+                                                           contentFolder_,
+                                                           filter );
+    if( filename.isEmpty( ))
+        return;
+
+    contentFolder_ = QFileInfo( filename ).absoluteDir().path();
+
+    if ( !ContentLoader( displayGroup_ ).load( filename ))
     {
-        const bool success = ContentLoader(displayGroup_).load(filename);
-
-        if ( !success )
-        {
-            QMessageBox messageBox;
-            messageBox.setText("Unsupported file format.");
-            messageBox.exec();
-        }
+        QMessageBox messageBox;
+        messageBox.setText( "Unsupported file format." );
+        messageBox.exec();
     }
 }
 
-void MasterWindow::estimateGridSize(unsigned int numElem, unsigned int &gridX, unsigned int &gridY)
+void MasterWindow::addContentDirectory( const QString& directoryName,
+                                        unsigned int gridX,
+                                        unsigned int gridY )
 {
-    assert(numElem > 0);
-    gridX = (unsigned int)(ceil(sqrt(numElem)));
-    assert(gridX > 0);
-    gridY = (gridX*(gridX-1)>=numElem) ? gridX-1 : gridX;
-}
-
-void MasterWindow::addContentDirectory(const QString& directoryName, unsigned int gridX, unsigned int gridY)
-{
-    QDir directory(directoryName);
-    directory.setFilter(QDir::Files);
-    directory.setNameFilters( ContentFactory::getSupportedFilesFilter() );
+    QDir directory( directoryName );
+    directory.setFilter( QDir::Files );
+    directory.setNameFilters( ContentFactory::getSupportedFilesFilter( ));
 
     QFileInfoList list = directory.entryInfoList();
 
     // Prevent opening of folders with an excessively large number of items
-    if (list.size() > 16)
+    if( list.size() > 16 )
     {
-        QString msg = "Opening this folder will create " + QString::number(list.size()) + " content elements. Are you sure you want to continue?";
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "Warning", msg, QMessageBox::Yes|QMessageBox::No);
-        if (reply != QMessageBox::Yes)
+        QString msg = "Opening this folder will create " +
+                      QString::number( list.size( )) +
+                      " content elements. Are you sure you want to continue?";
+
+        typedef QMessageBox::StandardButton button;
+        const button reply = QMessageBox::question( this, "Warning", msg,
+                                                    QMessageBox::Yes |
+                                                    QMessageBox::No );
+        if ( reply != QMessageBox::Yes )
             return;
     }
 
@@ -334,16 +349,20 @@ void MasterWindow::addContentDirectory(const QString& directoryName, unsigned in
 
 void MasterWindow::openContentsDirectory()
 {
-    const QString directoryName = QFileDialog::getExistingDirectory(this);
+    const QString dirName = QFileDialog::getExistingDirectory( this, QString(),
+                                                               contentFolder_ );
+    if( dirName.isEmpty( ))
+        return;
 
-    if(!directoryName.isEmpty())
-    {
-        int gridX = QInputDialog::getInt(this, "Grid X dimension", "Grid X dimension", 0, 0);
-        int gridY = QInputDialog::getInt(this, "Grid Y dimension", "Grid Y dimension", 0, 0);
-        assert( gridX >= 0 && gridY >= 0 );
+    contentFolder_ = dirName;
 
-        addContentDirectory(directoryName, gridX, gridY);
-    }
+    const int gridX = QInputDialog::getInt( this, "Grid X dimension",
+                                            "Grid X dimension", 0, 0 );
+    const int gridY = QInputDialog::getInt( this, "Grid Y dimension",
+                                            "Grid Y dimension", 0, 0 );
+    assert( gridX >= 0 && gridY >= 0 );
+
+    addContentDirectory( dirName, gridX, gridY );
 }
 
 void MasterWindow::openAboutWidget()
@@ -355,68 +374,90 @@ void MasterWindow::openAboutWidget()
     aboutMsg << std::endl;
     aboutMsg << "SCM revision: " << std::hex << revision << std::dec;
 
-    QMessageBox::about(this, "About Displaycluster", aboutMsg.str().c_str());
+    QMessageBox::about( this, "About Displaycluster", aboutMsg.str().c_str( ));
 }
 
 void MasterWindow::saveState()
 {
-    QString filename = QFileDialog::getSaveFileName(this, "Save State", "", "State files (*.dcx)");
+    QString filename = QFileDialog::getSaveFileName( this, "Save State",
+                                                     sessionFolder_,
+                                                     STATE_FILES_FILTER );
+    if( filename.isEmpty( ))
+        return;
 
-    if(!filename.isEmpty())
+    sessionFolder_ = QFileInfo( filename ).absoluteDir().path();
+
+    // make sure filename has .dcx extension
+    if( !filename.endsWith( ".dcx" ))
     {
-        // make sure filename has .dcx extension
-        if(!filename.endsWith(".dcx"))
-        {
-            put_flog(LOG_DEBUG, "appended .dcx filename extension");
-            filename.append(".dcx");
-        }
+        put_flog( LOG_DEBUG, "appended .dcx filename extension" );
+        filename.append( ".dcx" );
+    }
 
-        bool success = StateSerializationHelper(displayGroup_).save(filename);
-
-        if(!success)
-        {
-            QMessageBox::warning(this, "Error", "Could not save state file.",
-                                 QMessageBox::Ok, QMessageBox::Ok);
-        }
+    if( !StateSerializationHelper( displayGroup_ ).save( filename ))
+    {
+        QMessageBox::warning( this, "Error", "Could not save state file.",
+                              QMessageBox::Ok, QMessageBox::Ok );
     }
 }
 
 void MasterWindow::loadState()
 {
-    const QString filename = QFileDialog::getOpenFileName(this, "Load State", "", "State files (*.dcx)");
+    const QString filename = QFileDialog::getOpenFileName( this, "Load State",
+                                                           sessionFolder_,
+                                                           STATE_FILES_FILTER );
+    if( filename.isEmpty( ))
+        return;
 
-    if(!filename.isEmpty())
-    {
-        loadState(filename);
-    }
+    sessionFolder_ = QFileInfo( filename ).absoluteDir().path();
+
+    loadState( filename );
 }
 
-void MasterWindow::loadState(const QString& filename)
+void MasterWindow::loadState( const QString& filename )
 {
-    if( !StateSerializationHelper(displayGroup_).load(filename ))
+    if( !StateSerializationHelper( displayGroup_ ).load( filename ))
     {
-        QMessageBox::warning(this, "Error", "Could not load state file.",
-                             QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::warning( this, "Error", "Could not load state file.",
+                              QMessageBox::Ok, QMessageBox::Ok );
     }
 }
 
 void MasterWindow::computeImagePyramid()
 {
-    const QString imageFilename = QFileDialog::getOpenFileName(this, "Select image");
+    const QString filename = QFileDialog::getOpenFileName( this, "Select image",
+                                                           contentFolder_ );
+    if( filename.isEmpty( ))
+        return;
 
-    if(!imageFilename.isEmpty())
+    contentFolder_ = QFileInfo( filename ).absoluteDir().path();
+
+    put_flog( LOG_DEBUG, "source image filename %s",
+              filename.toLocal8Bit().constData( ));
+
+    const QString imagePyramidPath = filename +
+                                     DynamicTexture::pyramidFolderSuffix;
+
+    put_flog( LOG_DEBUG, "target image pyramid folder %s",
+              imagePyramidPath.toLocal8Bit().constData( ));
+
+    DynamicTexturePtr dynamicTexture( new DynamicTexture( filename ));
+    if ( !dynamicTexture->generateImagePyramid( imagePyramidPath ))
     {
-        put_flog(LOG_DEBUG, "source image filename %s", imageFilename.toLocal8Bit().constData());
-
-        const QString imagePyramidPath = imageFilename + DynamicTexture::pyramidFolderSuffix;
-
-        put_flog(LOG_DEBUG, "target image pyramid folder %s", imagePyramidPath.toLocal8Bit().constData());
-
-        DynamicTexturePtr dynamicTexture(new DynamicTexture(imageFilename));
-        dynamicTexture->generateImagePyramid(imagePyramidPath);
-
-        put_flog(LOG_DEBUG, "done");
+        QMessageBox::warning( this, "Error", "Image pyramid creation failed.",
+                              QMessageBox::Ok, QMessageBox::Ok );
     }
+
+    put_flog( LOG_DEBUG, "done generating pyramid" );
+}
+
+void MasterWindow::estimateGridSize( unsigned int numElem, unsigned int &gridX,
+                                     unsigned int &gridY )
+{
+    assert( numElem > 0 );
+    gridX = (unsigned int)( ceil( sqrt( numElem )));
+    assert( gridX > 0 );
+    gridY = ( gridX * ( gridX-1 ) >= numElem ) ? gridX-1 : gridX;
 }
 
 QStringList MasterWindow::extractValidContentUrls(const QMimeData* mimeData)
