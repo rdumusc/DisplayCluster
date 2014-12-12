@@ -61,7 +61,7 @@ class MasterWindow : public QMainWindow
 
 public:
     /** Constructor. */
-    MasterWindow(DisplayGroupPtr displayGroup, MasterConfiguration& config);
+    MasterWindow( DisplayGroupPtr displayGroup, MasterConfiguration& config );
 
     /** Destructor. */
     ~MasterWindow();
@@ -74,19 +74,19 @@ public:
 
 signals:
     /** Emitted when users want to open a dock. */
-    void openDock(QPointF pos);
+    void openDock( QPointF pos );
 
     /** Emitted when users want to hide the dock. */
     void hideDock();
 
     /** Emitted when users want to open a webbrowser. */
-    void openWebBrowser(QPointF pos, QSize size, QString url);
+    void openWebBrowser( QPointF pos, QSize size, QString url );
 
 protected:
     /** @name Drag events re-implemented from QMainWindow */
     //@{
-    void dragEnterEvent(QDragEnterEvent *event) override;
-    void dropEvent(QDropEvent *event) override;
+    void dragEnterEvent( QDragEnterEvent* event ) override;
+    void dropEvent( QDropEvent* event ) override;
     //@}
 
 private slots:
@@ -103,20 +103,25 @@ private slots:
 private:
     void setupMasterWindowUI();
 
-    void addContentDirectory(const QString &directoryName, unsigned int gridX=0, unsigned int gridY=0);
-    void loadState(const QString &filename);
+    void addContentDirectory( const QString& directoryName,
+                              unsigned int gridX = 0, unsigned int gridY = 0 );
+    void loadState( const QString &filename );
 
-    void estimateGridSize(unsigned int numElem, unsigned int& gridX, unsigned int& gridY);
+    void estimateGridSize( unsigned int numElem, unsigned int& gridX,
+                           unsigned int& gridY );
 
-    QStringList extractValidContentUrls(const QMimeData* mimeData);
-    QStringList extractFolderUrls(const QMimeData *mimeData);
-    QString extractStateFile(const QMimeData *mimeData);
+    QStringList extractValidContentUrls( const QMimeData* mimeData );
+    QStringList extractFolderUrls( const QMimeData* mimeData );
+    QString extractStateFile( const QMimeData* mimeData );
 
     DisplayGroupPtr displayGroup_;
     OptionsPtr options_;
     BackgroundWidget* backgroundWidget_;
     WebbrowserWidget* webbrowserWidget_;
     DisplayGroupGraphicsView* dggv_;
+
+    QString contentFolder_;
+    QString sessionFolder_;
 };
 
 #endif // MASTERWINDOW_H

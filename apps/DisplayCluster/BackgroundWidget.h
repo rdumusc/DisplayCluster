@@ -85,11 +85,13 @@ private slots:
 private:
     MasterConfiguration& configuration_;
 
-    QLabel *colorLabel_;
-    QLabel *backgroundLabel_;
+    QLabel* colorLabel_;
+    QLabel* backgroundLabel_;
 
     QColor previousColor_;
     QString previousBackgroundURI_;
+
+    QString backgroundFolder_;
 };
 
 #endif // BACKGROUNDWIDGET_H
