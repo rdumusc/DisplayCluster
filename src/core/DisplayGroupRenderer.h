@@ -56,7 +56,7 @@ class DisplayGroupRenderer : public QObject, public Renderable
 
 public:
     /** Constructor */
-    DisplayGroupRenderer(FactoriesPtr factories);
+    DisplayGroupRenderer( FactoriesPtr factories );
 
     /**
      * Render the associated DisplayGroup.
@@ -72,14 +72,15 @@ public slots:
      * Set the DisplayGroup to render, replacing the previous one.
      * @see render()
      */
-    void setDisplayGroup(DisplayGroupPtr displayGroup);
+    void setDisplayGroup( DisplayGroupPtr displayGroup );
 
 private:
+    FactoriesPtr factories_;
     DisplayGroupPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
 
-    void renderBackgroundContent(ContentWindowPtr backgroundContentWindow);
-    void renderContentWindows(ContentWindowPtrs contentWindows);
+    void render( ContentPtr backgroundContent );
+    void render( const ContentWindowPtrs& contentWindows );
 };
 
 #endif // DISPLAYGROUPRENDERER_H

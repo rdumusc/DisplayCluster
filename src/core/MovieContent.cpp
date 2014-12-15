@@ -91,7 +91,7 @@ void MovieContent::preRenderUpdate(Factories& factories, ContentWindowPtr window
     // Stop decoding when the window is moving.
     // This is to avoid saccades when reaching a new GLWindow.
     // The decoding resumes when the movement is finished.
-    if( window->isMoving() || window->isResizing( ))
+    if( window && ( window->isMoving() || window->isResizing( )))
         return;
 
     boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject( uri_ );
@@ -109,7 +109,7 @@ void MovieContent::postRenderUpdate(Factories& factories, ContentWindowPtr windo
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
-    if( window->isMoving() || window->isResizing( ))
+    if( window && ( window->isMoving() || window->isResizing( )))
         return;
 
     boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject( uri_ );

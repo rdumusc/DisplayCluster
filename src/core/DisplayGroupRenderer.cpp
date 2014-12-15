@@ -41,20 +41,27 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
-#include "Marker.h"
+#include "Factories.h"
 
-DisplayGroupRenderer::DisplayGroupRenderer(FactoriesPtr factories)
-    : windowRenderer_(factories)
+namespace
+{
+const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
+const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
+}
+
+DisplayGroupRenderer::DisplayGroupRenderer( FactoriesPtr factories )
+    : factories_( factories )
+    , windowRenderer_( factories )
 {
 }
 
 void DisplayGroupRenderer::render()
 {
-    if(!displayGroup_)
+    if( !displayGroup_ )
         return;
 
-    renderBackgroundContent(displayGroup_->getBackgroundContentWindow());
-    renderContentWindows(displayGroup_->getContentWindows());
+    render( displayGroup_->getBackgroundContent( ));
+    render( displayGroup_->getContentWindows( ));
 }
 
 ContentWindowRenderer& DisplayGroupRenderer::getWindowRenderer()
@@ -62,51 +69,58 @@ ContentWindowRenderer& DisplayGroupRenderer::getWindowRenderer()
     return windowRenderer_;
 }
 
-void DisplayGroupRenderer::setDisplayGroup(DisplayGroupPtr displayGroup)
+void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
     displayGroup_ = displayGroup;
 }
 
-void DisplayGroupRenderer::renderBackgroundContent(ContentWindowPtr backgroundContentWindow)
+void DisplayGroupRenderer::render( ContentPtr backgroundContent )
 {
-    // Render background content window
-    if (backgroundContentWindow)
-    {
-        glPushMatrix();
-        glTranslatef(0., 0., -1.f + std::numeric_limits<float>::epsilon());
+    if ( !backgroundContent )
+        return;
 
-        windowRenderer_.setContentWindow(backgroundContentWindow);
+    // Scale fullscreen, keep aspect ratio
+    QSizeF size( backgroundContent->getDimensions( ));
+    size.scale( displayGroup_->getCoordinates().size(), Qt::KeepAspectRatio );
+    QRectF coord( QPointF(), size );
+    coord.moveCenter( displayGroup_->getCoordinates().center( ));
+
+    glPushMatrix();
+    glTranslatef( coord.x(), coord.y(), BACKGROUND_Z_COORD );
+    glScalef( coord.width(), coord.height(), 1.f );
+
+    factories_->getFactoryObject( backgroundContent )->render( UNIT_RECTF );
+
+    glPopMatrix();
+}
+
+void DisplayGroupRenderer::render( const ContentWindowPtrs& contentWindows )
+{
+    const unsigned int windowCount = contentWindows.size();
+    unsigned int windowIndex = 0;
+    for( ContentWindowPtrs::const_iterator it = contentWindows.begin();
+         it != contentWindows.end(); ++it, ++windowIndex )
+    {
+        // It is currently not possible to cull windows that are invisible as
+        // this conflics with the "garbage collection" mechanism for Contents.
+        // In fact, "stale" objects are objects which have not been rendered for
+        // more than one frame (implicitly: objects without a window) and those
+        // are destroyed by Factory::clearStaleObjects(). It is currently the
+        // only way to remove a Content.
+        //if( !isRegionVisible( (*it)->getCoordinates( )))
+        //    continue;
+
+        // the visible depths are in the range (-1,1);
+        // make the content window depths be in the range (-1,0)
+        const float zCoordinate = -(float)( windowCount - windowIndex ) /
+                                   (float)( windowCount + 1 );
+
+        glPushMatrix();
+        glTranslatef( 0.f, 0.f, zCoordinate );
+
+        windowRenderer_.setContentWindow( *it );
         windowRenderer_.render();
 
         glPopMatrix();
-    }
-}
-
-void DisplayGroupRenderer::renderContentWindows(ContentWindowPtrs contentWindows)
-{
-    const unsigned int windowCount = contentWindows.size();
-    unsigned int i = 0;
-    for(ContentWindowPtrs::iterator it = contentWindows.begin(); it != contentWindows.end(); ++it)
-    {
-        // It is currently not possible to cull windows that are invisible as this conflics
-        // with the "garbage collection" mechanism for Contents. In fact, "stale" objects are objects
-        // which have not been rendered for more than one frame (implicitly: objects without a window)
-        // and those are destroyed by Factory::clearStaleObjects(). It is currently the only way to
-        // remove a Content.
-        //if ( isRegionVisible( (*it)->getCoordinates( )))
-        {
-            // the visible depths are in the range (-1,1); make the content window depths be in the range (-1,0)
-            const float zCoordinate = -(float)(windowCount - i) / (float)(windowCount + 1);
-
-            glPushMatrix();
-            glTranslatef(0.f, 0.f, zCoordinate);
-
-            windowRenderer_.setContentWindow(*it);
-            windowRenderer_.render();
-
-            glPopMatrix();
-        }
-
-        ++i;
     }
 }

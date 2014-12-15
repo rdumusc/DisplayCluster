@@ -68,8 +68,8 @@ public:
     /** Add a content window. */
     void addContentWindow( ContentWindowPtr contentWindow );
 
-    /** Get the background content window. */
-    ContentWindowPtr getBackgroundContentWindow() const;
+    /** Get the background content. */
+    ContentPtr getBackgroundContent() const;
 
     /**
      * Is the DisplayGroup empty.
@@ -107,7 +107,7 @@ public slots:
     /**
      * Set the background content.
      * @param content The content to set.
-     *                A null pointer removes the current background.
+     *        A null pointer removes the current background.
      */
     void setBackgroundContent( ContentPtr content );
 
@@ -144,12 +144,13 @@ private:
     {
         ar & contentWindows_;
         ar & backgroundContent_;
+        ar & coordinates_;
     }
 
     void watchChanges( ContentWindowPtr contentWindow );
 
     ContentWindowPtrs contentWindows_;
-    ContentWindowPtr backgroundContent_;
+    ContentPtr backgroundContent_;
 
     QRectF coordinates_;
 };

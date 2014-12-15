@@ -80,7 +80,7 @@ private:
 
     void preRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&) override;
 
-    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel&) override;
+    void postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&) override;
 };
 
 #endif

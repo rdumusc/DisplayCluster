@@ -107,7 +107,7 @@ void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
-ContentWindowPtr DisplayGroup::getBackgroundContentWindow() const
+ContentPtr DisplayGroup::getBackgroundContent() const
 {
     return backgroundContent_;
 }
@@ -163,14 +163,7 @@ void DisplayGroup::clear()
 
 void DisplayGroup::setBackgroundContent( ContentPtr content )
 {
-    if ( content )
-    {
-        backgroundContent_.reset( new ContentWindow( content ));
-        //backgroundContent_->adjustSize( SIZE_FULLSCREEN );
-        watchChanges( backgroundContent_ );
-    }
-    else
-        backgroundContent_.reset();
+    backgroundContent_ = content;
 
     sendDisplayGroup();
 }

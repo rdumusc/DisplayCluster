@@ -88,11 +88,7 @@ void DynamicTextureContent::preRenderUpdate(Factories& factories, ContentWindowP
     factories.getDynamicTextureFactory().getObject(getURI())->preRenderUpdate();
 }
 
-void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel&)
+void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&)
 {
-    // Don't clear children while moving or resizing for performance reasons
-    if( window->isMoving() || window->isResizing( ))
-        return;
-
     factories.getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
 }
