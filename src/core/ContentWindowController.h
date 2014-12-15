@@ -44,11 +44,19 @@
 
 #include <QtCore/QRectF>
 
+/** Common window size states. */
 enum SizeState
 {
     SIZE_1TO1,
     SIZE_FULLSCREEN,
     SIZE_NORMALIZED
+};
+
+/** Window point, used for affine transforms of the window. */
+enum WindowPoint
+{
+    TOP_LEFT,
+    CENTER
 };
 
 /**
@@ -60,15 +68,8 @@ public:
     ContentWindowController( ContentWindow& contentWindow,
                              const DisplayGroup& displayGroup );
 
-    /** Fixed point for affine transforms of the window. */
-    enum FixedPoint
-    {
-        TOP_LEFT,
-        CENTER
-    };
-
     /** Resize the window. */
-    void resize( const QSizeF& size, const FixedPoint = TOP_LEFT );
+    void resize( const QSizeF& size, const WindowPoint fixedPoint = TOP_LEFT );
 
     /** Scale the window by the given factor (around its center). */
     void scale( const double factor );
@@ -81,7 +82,13 @@ public:
     void toggleFullscreen();
 
     /** Move the window to the desired position. */
-    void moveTo( const QPointF& position );
+    void moveTo( const QPointF& position, const WindowPoint handle = TOP_LEFT );
+
+    /** Move the center of the window to the desired position. */
+    inline void moveCenterTo( const QPointF& position )
+    {
+        moveTo( position, CENTER );
+    }
 
     /** Toggle the state (selected / unselected). */
     void toggleWindowState();
@@ -93,9 +100,6 @@ private:
 
     ContentWindow& contentWindow_;
     const DisplayGroup& displayGroup_;
-
-    SizeState sizeState_;
-    QSizeF minArea_;
 };
 
 #endif // CONTENTWINDOWCONTROLLER_H

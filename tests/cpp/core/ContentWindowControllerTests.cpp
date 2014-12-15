@@ -76,15 +76,23 @@ BOOST_AUTO_TEST_CASE( testResizeAndMove )
 
     const QRectF& coords = window.getCoordinates();
 
-    BOOST_CHECK_EQUAL( coords.x(), targetPosition.x() );
-    BOOST_CHECK_EQUAL( coords.y(), targetPosition.y() );
+    BOOST_CHECK_EQUAL( coords.x(), targetPosition.x( ));
+    BOOST_CHECK_EQUAL( coords.y(), targetPosition.y( ));
+    BOOST_CHECK_EQUAL( coords.width(), targetSize.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), targetSize.height( ));
+
+    const QPointF targetCenterPosition( 568.2, 389.0 );
+    controller.moveCenterTo( targetCenterPosition );
+
+    BOOST_CHECK_EQUAL( coords.center().x(), targetCenterPosition.x( ));
+    BOOST_CHECK_EQUAL( coords.center().y(), targetCenterPosition.y( ));
     BOOST_CHECK_EQUAL( coords.width(), targetSize.width( ));
     BOOST_CHECK_EQUAL( coords.height(), targetSize.height( ));
 
     const QPointF fixedCenter = coords.center();
     const QSizeF centeredSize( 0.5 * QSizeF( content->getDimensions( )));
 
-    controller.resize( centeredSize, ContentWindowController::CENTER );
+    controller.resize( centeredSize, WindowPoint::CENTER );
 
     BOOST_CHECK_EQUAL( coords.center().x(), fixedCenter.x( ));
     BOOST_CHECK_EQUAL( coords.center().y(), fixedCenter.y( ));
@@ -128,10 +136,13 @@ BOOST_AUTO_TEST_CASE( testFullScreenSize )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     ContentWindowController controller( window, *displayGroup );
 
+    BOOST_REQUIRE( !window.hasBackupCoordinates( ));
+
     controller.toggleFullscreen();
     const QRectF& coords = window.getCoordinates();
 
     // full screen, center on wall
+    BOOST_CHECK( window.hasBackupCoordinates( ));
     BOOST_CHECK_EQUAL( coords.x(), 0.0 );
     BOOST_CHECK_EQUAL( coords.y(),  0.5 * ( wallSize.width() / CONTENT_AR ));
     BOOST_CHECK_EQUAL( coords.width(), wallSize.width( ));
@@ -147,22 +158,27 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     ContentWindowController controller( window, *displayGroup );
 
+    BOOST_REQUIRE( !window.hasBackupCoordinates( ));
+
     const QRectF target( QPointF( 100.0, 125.0 ),
                          content->getDimensions() * 1.75 );
     window.setCoordinates( target );
 
     QRectF coords = window.getCoordinates();
+    BOOST_CHECK( !window.hasBackupCoordinates( ));
     BOOST_CHECK_EQUAL( coords.x(), target.x( ));
     BOOST_CHECK_EQUAL( coords.y(), target.y( ));
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));
     BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 
     controller.toggleFullscreen();
+    BOOST_CHECK( window.hasBackupCoordinates( ));
     controller.toggleFullscreen();
 
     coords = window.getCoordinates();
 
     // back to original position and size
+    BOOST_CHECK( !window.hasBackupCoordinates( ));
     BOOST_CHECK_EQUAL( coords.x(), target.x( ));
     BOOST_CHECK_EQUAL( coords.y(), target.y( ));
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));

@@ -66,15 +66,14 @@ public:
      */
     PixelStreamWindowManager( DisplayGroup& displayGroup );
 
-    ~PixelStreamWindowManager();
-
     /**
      * Create a content window which will be associated to the pixel stream once
      * the stream is ready.
      *
      * @param uri the URI of the streamer
-     * @param pos the desired normalized position of the window
-     * @param size the desired size of the window in pixels
+     * @param pos the desired position for the center of the window in pixels.
+     *        If pos.isNull(), the window is centered on the DisplayWall.
+     * @param size the desired size of the window in pixels.
      * @return the window of the streamer. Is never NULL.
      */
     ContentWindowPtr createContentWindow( const QString& uri,

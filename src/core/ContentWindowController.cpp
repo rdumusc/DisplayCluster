@@ -47,22 +47,20 @@ namespace
 const qreal MAX_SIZE = 2.0;
 const qreal MIN_SIZE = 0.05;
 const qreal MIN_VISIBLE_AREA_PX = 50.0;
+const QSizeF MIN_AREA( MIN_VISIBLE_AREA_PX, MIN_VISIBLE_AREA_PX );
 }
 
 ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
                                                   const DisplayGroup& displayGroup )
     : contentWindow_( contentWindow )
     , displayGroup_( displayGroup )
-    , sizeState_( SIZE_NORMALIZED )
-    , minArea_( MIN_VISIBLE_AREA_PX, MIN_VISIBLE_AREA_PX )
 {
 }
 
 void ContentWindowController::resize( const QSizeF& size,
-                                      const FixedPoint fixedPoint )
+                                      const WindowPoint fixedPoint )
 {
     QSizeF windowSize = size;
-
     constrainSize( windowSize );
 
     QRectF coordinates( contentWindow_.getCoordinates( ));
@@ -103,23 +101,35 @@ void ContentWindowController::adjustSize( const SizeState state )
     case SIZE_NORMALIZED:
         contentWindow_.restoreCoordinates();
         break;
+
     default:
         return;
     }
-
-    sizeState_ = state;
 }
 
 void ContentWindowController::toggleFullscreen()
 {
-    adjustSize( sizeState_ == SIZE_NORMALIZED ? SIZE_FULLSCREEN : SIZE_NORMALIZED );
+    if( contentWindow_.hasBackupCoordinates( ))
+        adjustSize( SIZE_NORMALIZED );
+    else
+        adjustSize( SIZE_FULLSCREEN );
 }
 
-void ContentWindowController::moveTo( const QPointF& position )
+void ContentWindowController::moveTo( const QPointF& position,
+                                      const WindowPoint handle )
 {
     QRectF coordinates( contentWindow_.getCoordinates( ));
-    coordinates.moveTopLeft( position );
-
+    switch( handle )
+    {
+    case TOP_LEFT:
+        coordinates.moveTopLeft( position );
+        break;
+    case CENTER:
+        coordinates.moveCenter( position );
+        break;
+    default:
+        return;
+    }
     constrainPosition( coordinates );
 
     contentWindow_.setCoordinates( coordinates );
@@ -151,11 +161,11 @@ void ContentWindowController::constrainPosition( QRectF& window ) const
 {
     const QRectF& group = displayGroup_.getCoordinates();
 
-    const qreal minX = minArea_.width() - window.width();
-    const qreal minY = minArea_.height() - window.height();
+    const qreal minX = MIN_AREA.width() - window.width();
+    const qreal minY = MIN_AREA.height() - window.height();
 
-    const qreal maxX = group.width() - minArea_.width();
-    const qreal maxY = group.height() - minArea_.height();
+    const qreal maxX = group.width() - MIN_AREA.width();
+    const qreal maxY = group.height() - MIN_AREA.height();
 
     const QPointF position( std::max( minX, std::min( window.x(), maxX )),
                             std::max( minY, std::min( window.y(), maxY )));
@@ -169,7 +179,7 @@ QRectF ContentWindowController::getCenteredCoordinates( const QSizeF& size ) con
     const qreal totalHeight = displayGroup_.getCoordinates().height();
 
     // centered coordinates on the display group
-    return QRectF((totalWidth - size.width()) * 0.5,
-                  (totalHeight - size.height()) * 0.5,
-                  size.width(), size.height( ));
+    return QRectF( (totalWidth - size.width()) * 0.5,
+                   (totalHeight - size.height()) * 0.5,
+                   size.width(), size.height( ));
 }

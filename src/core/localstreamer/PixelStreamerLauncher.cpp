@@ -86,9 +86,9 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     options.setHeight( viewportSize.height( ));
 
     processes_[uri] = new QProcess( this );
-    if ( !processes_[uri]->startDetached( getLocalStreamerBin(),
-                                          options.getCommandLineArguments(),
-                                          QDir::currentPath( )))
+    if( !processes_[uri]->startDetached( getLocalStreamerBin(),
+                                         options.getCommandLineArguments(),
+                                         QDir::currentPath( )))
         put_flog( LOG_ERROR, "Browser process could not be started!" );
 }
 

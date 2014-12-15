@@ -62,8 +62,8 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( .4, .3 );
-    const QSizeF size( .1, .2 );
+    const QPointF pos( 400.0, 300.0 );
+    const QSizeF size( 100.0, 200.0 );
 
     ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( 400.f, 300.f );
+    const QPointF pos( 400.0, 300.0 );
     const QSize size( 100, 200 );
 
     ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
 
     const QString uri = CONTENT_URI;
     // window will be positioned centerred
-    const QPointF pos( wallSize.width() * 0.5f, wallSize.height() * 0.5f );
+    const QPointF pos( wallSize.width() * 0.5, wallSize.height() * 0.5 );
     const QSize size( 500, 400 ); // window will be sized 1TO1
 
     windowManager.openPixelStreamWindow( uri, size );

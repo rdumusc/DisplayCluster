@@ -79,9 +79,6 @@ public:
         HIDDEN      // the window is hidden (invisible, not interacting)
     };
 
-    /** No-argument constructor required for serialization. */
-    ContentWindow();
-
     /**
      * Create a new window.
      * @param content The Content to be displayed.
@@ -161,7 +158,10 @@ public:
     /** Backup the current coordinates. */
     void backupCoordinates();
 
-    /** Restore the lastest backed-up coordinates. */
+    /** Check if there are coordinates which can be restored. */
+    bool hasBackupCoordinates() const;
+
+    /** Restore and clear the backed-up coordinates. */
     void restoreCoordinates();
 
 signals:
@@ -182,6 +182,9 @@ signals:
 
 private:
     friend class boost::serialization::access;
+
+    /** No-argument constructor required for serialization. */
+    ContentWindow();
 
     /** Serialize for sending to Wall applications. */
     template< class Archive >

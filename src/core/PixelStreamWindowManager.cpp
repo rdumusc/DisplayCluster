@@ -41,6 +41,7 @@
 
 #include "configuration/Configuration.h"
 #include "ContentWindow.h"
+#include "ContentWindowController.h"
 #include "ContentFactory.h"
 #include "DisplayGroup.h"
 #include "log.h"
@@ -51,10 +52,6 @@ PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
 {
     connect( &displayGroup, SIGNAL( contentWindowRemoved( ContentWindowPtr )),
              this, SLOT( onContentWindowRemoved( ContentWindowPtr )));
-}
-
-PixelStreamWindowManager::~PixelStreamWindowManager()
-{
 }
 
 ContentWindowPtr
@@ -74,9 +71,10 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
         streamerWindows_[uri] = contentWindow;
     }
 
-    QRectF winCoord( QPointF(), size );
-    winCoord.moveCenter( pos );
-    contentWindow->setCoordinates( winCoord );
+    ContentWindowController controller( *contentWindow, displayGroup_ );
+    controller.resize( size );
+    controller.moveCenterTo( pos.isNull() ?
+                                displayGroup_.getCoordinates().center() : pos );
 
     return contentWindow;
 }

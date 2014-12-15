@@ -42,6 +42,7 @@
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
 #include "ContentFactory.h"
+#include "ContentWindowController.h"
 
 ContentLoader::ContentLoader( DisplayGroupPtr displayGroup )
     : displayGroup_( displayGroup )
@@ -57,18 +58,18 @@ bool ContentLoader::load( const QString& filename,
         return false;
 
     ContentWindowPtr contentWindow( new ContentWindow( content ));
+    ContentWindowController controller( *contentWindow, *displayGroup_ );
 
-    QRectF winCoord = contentWindow->getCoordinates();
-
-    if ( windowSize.isValid( ))
-        winCoord.setSize( windowSize );
-
-    if ( !windowCenterPosition.isNull( ))
-        winCoord.moveCenter( windowCenterPosition );
+    if( windowSize.isValid( ))
+        controller.resize( windowSize );
     else
-        winCoord.moveCenter( displayGroup_->getCoordinates().center( ));
+        controller.resize( content->getDimensions( ));
 
-    contentWindow->setCoordinates( winCoord );
+    if ( windowCenterPosition.isNull( ))
+        controller.moveCenterTo( displayGroup_->getCoordinates().center( ));
+    else
+        controller.moveCenterTo( windowCenterPosition );
+
     displayGroup_->addContentWindow( contentWindow );
 
     return true;

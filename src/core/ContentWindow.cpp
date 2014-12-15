@@ -75,7 +75,6 @@ ContentWindow::ContentWindow( ContentPtr content )
     assert( content );
     setContent( content );
     coordinates_.setSize( content_->getDimensions( ));
-    coordinatesBackup_ = coordinates_;
 }
 
 ContentWindow::~ContentWindow()
@@ -212,9 +211,18 @@ void ContentWindow::backupCoordinates()
     coordinatesBackup_ = coordinates_;
 }
 
+bool ContentWindow::hasBackupCoordinates() const
+{
+    return coordinatesBackup_.isValid();
+}
+
 void ContentWindow::restoreCoordinates()
 {
+    if( !hasBackupCoordinates( ))
+        return;
+
     setCoordinates( coordinatesBackup_ );
+    coordinatesBackup_ = QRectF();
 }
 
 void ContentWindow::createInteractionDelegate()
