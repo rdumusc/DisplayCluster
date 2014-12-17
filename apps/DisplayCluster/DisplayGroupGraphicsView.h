@@ -94,7 +94,7 @@ private:
     void tapAndHold( QTapAndHoldGesture* gesture );
 
     void grabGestures();
-    QPointF getNormalizedPosition( const QGesture* gesture ) const;
+    QPointF getScenePosition( const QGesture* gesture ) const;
     bool isOnBackground( const QPointF& position ) const;
 
     DisplayGroupPtr displayGroup_;

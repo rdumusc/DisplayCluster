@@ -89,12 +89,3 @@ void ContentInteractionDelegate::gestureEvent( QGestureEvent* event )
         swipe( static_cast< QSwipeGesture* >( gesture ));
     }
 }
-
-double ContentInteractionDelegate::adaptZoomFactor( const double pinchGestureScaleFactor ) const
-{
-    const double factor = (pinchGestureScaleFactor - 1.0) * 0.2 + 1.0;
-    if( std::isnan( factor ) || std::isinf( factor ))
-        return 0.0;
-    else
-        return factor;
-}

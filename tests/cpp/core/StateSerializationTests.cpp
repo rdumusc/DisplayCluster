@@ -61,12 +61,9 @@ namespace ut = boost::unit_test;
 #include <QtCore/QDir>
 #include <QtGui/QImage>
 
-#define PLEASE_REMOVE_ME
-
-#ifdef PLEASE_REMOVE_ME
+// QCoreApplication is required by QtXml for loading legacy configuration files
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
-#endif
 
 namespace
 {
@@ -115,7 +112,8 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
     }
 
     BOOST_REQUIRE_EQUAL( contentWindows.size(), 1 );
-    DummyContent* dummyContent = dynamic_cast< DummyContent* >( contentWindows[0]->getContent().get( ));
+    Content* content = contentWindows[0]->getContent().get();
+    DummyContent* dummyContent = dynamic_cast< DummyContent* >( content );
     BOOST_REQUIRE( dummyContent );
 
     const QSize dimensions = dummyContent->getDimensions();
@@ -124,7 +122,8 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
     BOOST_CHECK_EQUAL( dimensions.height(), CONTENT_HEIGHT );
     BOOST_CHECK_EQUAL( dummyContent->dummyParam_, DUMMY_PARAM_VALUE );
     BOOST_CHECK_EQUAL( dummyContent->getType(), CONTENT_TYPE_ANY );
-    BOOST_CHECK_EQUAL( dummyContent->getURI().toStdString(), DUMMY_URI.toStdString( ));
+    BOOST_CHECK_EQUAL( dummyContent->getURI().toStdString(),
+                       DUMMY_URI.toStdString( ));
 }
 
 BOOST_AUTO_TEST_CASE( testWhenOpeningInvalidLegacyStateThenReturnFalse )

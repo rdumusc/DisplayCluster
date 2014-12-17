@@ -70,9 +70,10 @@ bool State::legacyLoadXML( const QString& filename )
 
     QXmlQuery query;
 
-    if(!query.setFocus(QUrl(filename)))
+    if( !query.setFocus( QUrl( filename )))
     {
-        put_flog(LOG_DEBUG, "failed to load %s", filename.toLocal8Bit().constData( ));
+        put_flog( LOG_DEBUG, "failed to load %s",
+                  filename.toLocal8Bit().constData( ));
         return false;
     }
 
@@ -80,18 +81,16 @@ bool State::legacyLoadXML( const QString& filename )
         return false;
 
     int numContentWindows = 0;
-    query.setQuery("string(count(//state/ContentWindow))");
+    query.setQuery( "string(count(//state/ContentWindow))" );
 
     QString qstring;
-    if(query.evaluateTo(&qstring))
-    {
+    if( query.evaluateTo( &qstring ))
         numContentWindows = qstring.toInt();
-    }
 
-    put_flog(LOG_INFO, "%i content windows", numContentWindows);
+    put_flog( LOG_INFO, "%i content windows", numContentWindows );
     contentWindows_.reserve( numContentWindows );
 
-    for(int i=1; i<=numContentWindows; i++)
+    for( int i=1; i<=numContentWindows; i++ )
     {
         ContentPtr content = loadContent_( query, i );
         if( !content )

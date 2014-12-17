@@ -88,8 +88,6 @@ public:
     virtual void keyPressEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
     virtual void keyReleaseEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
 
-    double adaptZoomFactor( const double pinchGestureScaleFactor ) const;
-
 protected:
     ContentWindow& contentWindow_;
 };

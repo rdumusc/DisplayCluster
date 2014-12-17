@@ -109,18 +109,18 @@ protected:
 private:
     void gestureEvent( QGestureEvent* touchEvent );
     void doubleTapUnselected( DoubleTapGesture* gesture );
-    void tapAndHoldUnselected( QTapAndHoldGesture* gesture );
     void panUnselected( PanGesture* gesture );
     void pinchUnselected( PinchGesture* gesture );
+    void tapAndHoldUnselected( QTapAndHoldGesture* gesture );
 
-    void getButtonDimensions( float &width, float &height ) const;
+    bool isMovie() const;
 
-    bool hitCloseButton( const QPointF& hitPos ) const;
-    bool hitResizeButton( const QPointF& hitPos ) const;
-    bool hitFullscreenButton( const QPointF& hitPos ) const;
-    bool hitMovieControl( const QPointF& hitPos ) const;
-    bool hitPauseButton( const QPointF& hitPos ) const;
-    bool hitLoopButton( const QPointF& hitPos ) const;
+    QSizeF getButtonDimensions() const;
+    QRectF getCloseRect() const;
+    QRectF getResizeRect() const;
+    QRectF getFullscreenRect() const;
+    QRectF getPauseRect() const;
+    QRectF getLoopRect() const;
 
     void drawFrame_( QPainter* painter );
     void drawCloseButton_( QPainter* painter );

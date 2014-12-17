@@ -52,6 +52,8 @@ public:
 
     void mouseMoveEvent( QGraphicsSceneMouseEvent* event );
     void wheelEvent( QGraphicsSceneWheelEvent* event );
+
+    static double adaptZoomFactor( const double pinchGestureScaleFactor );
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

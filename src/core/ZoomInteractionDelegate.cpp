@@ -54,7 +54,6 @@ void ZoomInteractionDelegate::pan( PanGesture* gesture )
     contentWindow_.setZoomCenter( contentWindow_.getZoomCenter() - delta );
 }
 
-
 void ZoomInteractionDelegate::pinch( PinchGesture* gesture )
 {
     const double factor = adaptZoomFactor( gesture->scaleFactor( ));
@@ -64,28 +63,14 @@ void ZoomInteractionDelegate::pinch( PinchGesture* gesture )
     contentWindow_.setZoom( contentWindow_.getZoom() * factor );
 }
 
-
 void ZoomInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 {
     const QPointF mouseDelta = event->scenePos() - event->lastScenePos();
 
     if( event->buttons().testFlag( Qt::RightButton ))
     {
-        // if this is a touch event, use cross-product for determining change
-        // in zoom (counterclockwise rotation == zoom in, etc.)
-        // otherwise, use y as the change in zoom
-        double zoomDelta = 0.0;
-
-        if( event->modifiers().testFlag( Qt::AltModifier ))
-        {
-            zoomDelta = ( event->scenePos().x() - 0.5 ) * mouseDelta.y() -
-                        ( event->scenePos().y() - 0.5 ) * mouseDelta.x();
-            zoomDelta *= 2.0;
-        }
-        else
-            zoomDelta = mouseDelta.y();
-
-        contentWindow_.setZoom( contentWindow_.getZoom() * ( 1.0 - zoomDelta ));
+        const double zoomDelta = 1.0 - mouseDelta.y();
+        contentWindow_.setZoom( contentWindow_.getZoom() * zoomDelta );
     }
     else if( event->buttons().testFlag( Qt::LeftButton ))
     {
@@ -105,3 +90,12 @@ void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
     contentWindow_.setZoom( contentWindow_.getZoom() * ( 1.0 + zoomDelta ));
 }
 
+double ZoomInteractionDelegate::adaptZoomFactor( const double
+                                                 pinchGestureScaleFactor )
+{
+    const double factor = ( pinchGestureScaleFactor - 1.0 ) * 0.2 + 1.0;
+    if( std::isnan( factor ) || std::isinf( factor ))
+        return 0.0;
+    else
+        return factor;
+}

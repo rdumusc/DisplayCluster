@@ -45,43 +45,43 @@
 
 #define MARKER_IMAGE_FILENAME ":/img/marker.png"
 
-#define MARKER_WIDTH_PIXELS 30
+#define MARKER_SIZE_PIXELS 30
 
 MarkerRenderer::MarkerRenderer()
-    : markers_(new Markers)
+    : markers_( new Markers )
 {
 }
 
 void MarkerRenderer::render()
 {
     const MarkersMap& map = markers_->getMarkers();
-    for(MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it)
-        render(it->second);
+    for( MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it )
+        render( it->second );
 }
 
-void MarkerRenderer::setMarkers(MarkersPtr markers)
+void MarkerRenderer::setMarkers( MarkersPtr markers )
 {
     markers_ = markers;
 }
 
-void MarkerRenderer::render(const Marker& marker)
+void MarkerRenderer::render( const Marker& marker )
 {
-    if (!texture_.isValid() && !generateTexture())
+    if ( !texture_.isValid() && !generateTexture( ))
         return;
 
     const QPointF pos = marker.getPosition();
 
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
+    glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
 
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable( GL_DEPTH_TEST );
+    glEnable( GL_BLEND );
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
     glPushMatrix();
 
-    glTranslatef(pos.x(), pos.y(), 0);
-    glScalef(MARKER_WIDTH_PIXELS, MARKER_WIDTH_PIXELS, 1.f);
-    glTranslatef(-0.5f, -0.5f, 0); // Center unit quad
+    glTranslatef( pos.x(), pos.y(), 0.f );
+    glScalef( MARKER_SIZE_PIXELS, MARKER_SIZE_PIXELS, 1.f );
+    glTranslatef( -0.5f, -0.5f, 0.f ); // Center unit quad
 
     texture_.bind();
     quad_.render();
@@ -93,13 +93,14 @@ void MarkerRenderer::render(const Marker& marker)
 
 bool MarkerRenderer::generateTexture()
 {
-    const QImage image(MARKER_IMAGE_FILENAME);
+    const QImage image( MARKER_IMAGE_FILENAME );
 
-    if(image.isNull())
+    if( image.isNull( ))
     {
-        put_flog(LOG_ERROR, "error loading marker texture '%s'", MARKER_IMAGE_FILENAME);
+        put_flog( LOG_ERROR, "error loading marker texture '%s'",
+                  MARKER_IMAGE_FILENAME );
         return false;
     }
 
-    return texture_.init(image, GL_BGRA);
+    return texture_.init( image, GL_BGRA );
 }

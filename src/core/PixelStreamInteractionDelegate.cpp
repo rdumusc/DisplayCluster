@@ -132,7 +132,7 @@ void PixelStreamInteractionDelegate::swipe(QSwipeGesture *gesture)
 
 void PixelStreamInteractionDelegate::pinch(PinchGesture *gesture)
 {
-    const qreal factor = (gesture->scaleFactor() - 1.) * 0.2f;
+    const qreal factor = (gesture->scaleFactor() - 1.0) * 0.2;
     if( std::isnan( factor ) || std::isinf( factor ))
         return;
 
@@ -285,15 +285,9 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const QTapGesture *gesture
 {
     const QRectF& win = contentWindow_.getCoordinates();
 
-    // Overall wall dimensions (in pixels)
-//    const double tWidth = g_configuration->getTotalWidth();
-//    const double tHeight = g_configuration->getTotalHeight();
-
-    // For QTapGestures, position() is the position on the WALL
+    // For QTapGestures, position() is the position in the scene
     // (not QGraphicsView!) in pixels
     Event event;
-//    event.mouseX = ( gesture->position().x() / tWidth - win.x( )) / win.width();
-//    event.mouseY = ( gesture->position().y() / tHeight - win.y( )) / win.height();
     event.mouseX = ( gesture->position().x() - win.x( )) / win.width();
     event.mouseY = ( gesture->position().y() - win.y( )) / win.height();
 
@@ -317,17 +311,6 @@ Event PixelStreamInteractionDelegate::getGestureEvent(const PinchGesture *gestur
 
 void PixelStreamInteractionDelegate::setPanGestureNormalizedDelta(const PanGesture* gesture, Event& event)
 {
-//    // Bounding rectangle
-//    double w, h;
-//    contentWindow_.getSize(w, h);
-
-//    // Touchpad dimensions
-//    const double tWidth = g_configuration->getTotalWidth();
-//    const double tHeight = g_configuration->getTotalHeight();
-
-//    event.dx = (gesture->delta().x() / tWidth) / w;
-//    event.dy = (gesture->delta().y() / tHeight) / h;
-
     const QRectF& window = contentWindow_.getCoordinates();
 
     event.dx = gesture->delta().x() / window.width();

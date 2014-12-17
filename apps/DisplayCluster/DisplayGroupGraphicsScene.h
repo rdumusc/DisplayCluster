@@ -39,9 +39,9 @@
 #ifndef DISPLAY_GROUP_GRAPHICS_SCENE_H
 #define DISPLAY_GROUP_GRAPHICS_SCENE_H
 
-#include <QtGui/QGraphicsScene>
-
 #include "types.h"
+
+#include <QtGui/QGraphicsScene>
 
 /**
  * A scene to draw a representation of a DisplayGroup.
@@ -61,15 +61,12 @@ protected:
     /** @name Re-implemented QGraphicsScene events */
     //@{
     bool event( QEvent* event );
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
     //@}
 
 private:
     void addBackgroundRectangles();
 
-    QList< QRectF > screens_;
+    QList<QRectF> screens_;
 };
 
 #endif

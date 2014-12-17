@@ -40,28 +40,17 @@
 
 #include "configuration/Configuration.h"
 
-#include <QtGui/QGraphicsRectItem>
 #include <QtGui/QKeyEvent>
-#include <QtGui/QGraphicsSceneMouseEvent>
 
 DisplayGroupGraphicsScene::DisplayGroupGraphicsScene( const Configuration& config,
-                                                      QObject* parent_)
+                                                      QObject* parent_ )
     : QGraphicsScene( parent_ )
 {
-    setSceneRect( 0.f, 0.f,
-                  (qreal)config.getTotalWidth(),
-                  (qreal)config.getTotalHeight( ));
+    setSceneRect( QRectF( QPointF( 0.0, 0.0 ), config.getTotalSize( )));
 
     for( int i = 0; i < config.getTotalScreenCountX(); ++i )
-    {
         for( int j = 0; j < config.getTotalScreenCountY(); ++j )
-        {
-            const QPoint tileIndex( i, j );
-            const QRectF screen( config.getScreenRect( tileIndex ));
-
-            screens_.push_back( screen );
-        }
-    }
+            screens_.push_back( config.getScreenRect( QPoint( i, j )));
 
     addBackgroundRectangles();
 }
@@ -78,7 +67,7 @@ bool DisplayGroupGraphicsScene::event( QEvent *evt )
     {
     case QEvent::KeyPress:
     {
-        QKeyEvent *k = static_cast< QKeyEvent* >( evt );
+        QKeyEvent* k = static_cast< QKeyEvent* >( evt );
 
         // Override default behaviour to process TAB key events
         QGraphicsScene::keyPressEvent( k );
@@ -94,21 +83,6 @@ bool DisplayGroupGraphicsScene::event( QEvent *evt )
     default:
         return QGraphicsScene::event( evt );
     }
-}
-
-void DisplayGroupGraphicsScene::mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    QGraphicsScene::mouseMoveEvent( mouseEvent );
-}
-
-void DisplayGroupGraphicsScene::mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    QGraphicsScene::mousePressEvent( mouseEvent );
-}
-
-void DisplayGroupGraphicsScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    QGraphicsScene::mouseReleaseEvent( mouseEvent );
 }
 
 void DisplayGroupGraphicsScene::addBackgroundRectangles()

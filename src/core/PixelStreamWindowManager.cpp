@@ -67,7 +67,6 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
     {
         ContentPtr content = ContentFactory::getPixelStreamContent( uri );
         contentWindow.reset( new ContentWindow( content ));
-        //contentWindow->setState( ContentWindow::HIDDEN );
         streamerWindows_[uri] = contentWindow;
     }
 

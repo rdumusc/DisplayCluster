@@ -67,7 +67,7 @@ public slots:
      * Set the Markers to render, replacing the previous ones.
      * @see render()
      */
-    void setMarkers(MarkersPtr markers);
+    void setMarkers( MarkersPtr markers );
 
 private:
     GLTexture2D texture_;
@@ -75,7 +75,7 @@ private:
     MarkersPtr markers_;
 
     bool generateTexture();
-    void render(const Marker& marker);
+    void render( const Marker& marker );
 };
 
 #endif // MARKERRENDERER_H
