@@ -69,7 +69,7 @@ public:
                              const DisplayGroup& displayGroup );
 
     /** Resize the window. */
-    void resize( const QSizeF& size, const WindowPoint fixedPoint = TOP_LEFT );
+    void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );
 
     /** Scale the window by the given factor (around its center). */
     void scale( const double factor );
@@ -89,9 +89,6 @@ public:
     {
         moveTo( position, CENTER );
     }
-
-    /** Toggle the state (selected / unselected). */
-    void toggleWindowState();
 
 private:
     void constrainSize( QSizeF& windowSize ) const;

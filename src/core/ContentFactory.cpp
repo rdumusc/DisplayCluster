@@ -64,7 +64,7 @@
 
 namespace
 {
-const QSize maxTextureSize( 4096, 4096 );
+const QSize maxTextureSize( 16384, 16384 );
 }
 
 CONTENT_TYPE getContentTypeForFile(const QString& uri)

@@ -184,34 +184,3 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));
     BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 }
-
-BOOST_AUTO_TEST_CASE( testToggleWindowState )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-
-    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    ContentWindowController controller( window, *displayGroup );
-
-    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::UNSELECTED );
-
-    controller.toggleWindowState();
-    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::SELECTED );
-
-    controller.toggleWindowState();
-    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::UNSELECTED );
-
-    window.setState( ContentWindow::MOVING );
-    controller.toggleWindowState();
-    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::MOVING );
-
-    window.setState( ContentWindow::RESIZING );
-    controller.toggleWindowState();
-    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::RESIZING );
-
-    window.setState( ContentWindow::HIDDEN );
-    controller.toggleWindowState();
-    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
-}
-

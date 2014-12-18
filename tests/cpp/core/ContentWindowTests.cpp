@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( testWindowState )
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::UNSELECTED );
+    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::NONE );
     BOOST_REQUIRE( !window.isHidden( ));
     BOOST_REQUIRE( !window.isMoving( ));
     BOOST_REQUIRE( !window.isResizing( ));
@@ -267,4 +267,31 @@ BOOST_AUTO_TEST_CASE( testBackupCoordinates )
     BOOST_CHECK_EQUAL( coords.y(), coord1.y() );
     BOOST_CHECK_EQUAL( coords.width(), coord1.width() );
     BOOST_CHECK_EQUAL( coords.height(), coord1.height() );
+}
+
+BOOST_AUTO_TEST_CASE( testToggleSelectedState )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::NONE );
+
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::SELECTED );
+
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::NONE );
+
+    window.setState( ContentWindow::MOVING );
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::MOVING );
+
+    window.setState( ContentWindow::RESIZING );
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::RESIZING );
+
+    window.setState( ContentWindow::HIDDEN );
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
 }

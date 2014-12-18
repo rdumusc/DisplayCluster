@@ -48,6 +48,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentType.h
   ContentInteractionDelegate.h
   ContentWindow.h
+  ContentWindowController.h
   ContentWindowRenderer.h
   DisplayGroup.h
   DisplayGroupRenderer.h

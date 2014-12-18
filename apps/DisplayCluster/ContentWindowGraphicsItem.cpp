@@ -71,8 +71,6 @@ ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWi
     : contentWindow_( contentWindow )
     , controller_( *contentWindow, displayGroup )
 {
-    assert( contentWindow_ );
-
     connect( contentWindow_.get(), SIGNAL( coordinatesAboutToChange( )),
              this, SLOT( prepareToChangeGeometry( )));
 
@@ -250,7 +248,7 @@ void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent*
         return;
     }
 
-    controller_.toggleWindowState();
+    contentWindow_->toggleSelectedState();
 
     QGraphicsItem::mouseDoubleClickEvent( event_ );
 }
@@ -263,7 +261,7 @@ void ContentWindowGraphicsItem::mouseReleaseEvent( QGraphicsSceneMouseEvent* eve
         return;
     }
 
-    contentWindow_->setState( ContentWindow::UNSELECTED );
+    contentWindow_->setState( ContentWindow::NONE );
 
     QGraphicsItem::mouseReleaseEvent( event_ );
 }
@@ -306,7 +304,7 @@ void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* touchEvent )
     if( ( gesture = touchEvent->gesture( Qt::TapAndHoldGesture )))
     {
         touchEvent->accept( Qt::TapAndHoldGesture );
-        tapAndHoldUnselected( static_cast< QTapAndHoldGesture* >( gesture ));
+        tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
         return;
     }
 
@@ -319,40 +317,40 @@ void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* touchEvent )
     if( ( gesture = touchEvent->gesture( PanGestureRecognizer::type( ))))
     {
         touchEvent->accept( PanGestureRecognizer::type( ));
-        panUnselected( static_cast< PanGesture* >( gesture ));
+        pan( static_cast< PanGesture* >( gesture ));
     }
     else if( ( gesture = touchEvent->gesture( PinchGestureRecognizer::type( ))))
     {
         touchEvent->accept( PinchGestureRecognizer::type( ));
-        pinchUnselected( static_cast< PinchGesture* >( gesture ));
+        pinch( static_cast< PinchGesture* >( gesture ));
     }
     else if( ( gesture = touchEvent->gesture( DoubleTapGestureRecognizer::type( ))))
     {
         touchEvent->accept( DoubleTapGestureRecognizer::type( ));
-        doubleTapUnselected( static_cast< DoubleTapGesture* >( gesture ));
+        doubleTap( static_cast< DoubleTapGesture* >( gesture ));
     }
 }
 
-void ContentWindowGraphicsItem::doubleTapUnselected( DoubleTapGesture* gesture )
+void ContentWindowGraphicsItem::doubleTap( DoubleTapGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
         controller_.toggleFullscreen();
 }
 
-void ContentWindowGraphicsItem::panUnselected( PanGesture* gesture )
+void ContentWindowGraphicsItem::pan( PanGesture* gesture )
 {
     if( gesture->state() == Qt::GestureStarted )
         contentWindow_->setState( ContentWindow::MOVING );
 
     else if( gesture->state() == Qt::GestureCanceled ||
              gesture->state() == Qt::GestureFinished )
-        contentWindow_->setState( ContentWindow::UNSELECTED );
+        contentWindow_->setState( ContentWindow::NONE );
 
     const QPointF& windowPos = contentWindow_->getCoordinates().topLeft();
     controller_.moveTo( windowPos + gesture->delta( ));
 }
 
-void ContentWindowGraphicsItem::pinchUnselected( PinchGesture* gesture )
+void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
 {
     const double factor = ZoomInteractionDelegate::adaptZoomFactor( gesture->scaleFactor( ));
     if( factor == 0.0 )
@@ -363,15 +361,15 @@ void ContentWindowGraphicsItem::pinchUnselected( PinchGesture* gesture )
 
     else if( gesture->state() == Qt::GestureCanceled ||
              gesture->state() == Qt::GestureFinished )
-        contentWindow_->setState( ContentWindow::UNSELECTED );
+        contentWindow_->setState( ContentWindow::NONE );
 
     controller_.scale( factor );
 }
 
-void ContentWindowGraphicsItem::tapAndHoldUnselected( QTapAndHoldGesture* gesture )
+void ContentWindowGraphicsItem::tapAndHold( QTapAndHoldGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
-        controller_.toggleWindowState();
+        contentWindow_->toggleSelectedState();
 }
 
 bool ContentWindowGraphicsItem::isMovie() const

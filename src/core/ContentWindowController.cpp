@@ -57,14 +57,12 @@ ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
 {
 }
 
-void ContentWindowController::resize( const QSizeF& size,
-                                      const WindowPoint fixedPoint )
+void ContentWindowController::resize( QSizeF size, const WindowPoint fixedPoint )
 {
-    QSizeF windowSize = size;
-    constrainSize( windowSize );
+    constrainSize( size );
 
     QRectF coordinates( contentWindow_.getCoordinates( ));
-    coordinates.setSize( windowSize );
+    coordinates.setSize( size );
     if( fixedPoint == CENTER )
         coordinates.moveCenter( contentWindow_.getCoordinates().center( ));
     constrainPosition( coordinates );
@@ -133,14 +131,6 @@ void ContentWindowController::moveTo( const QPointF& position,
     constrainPosition( coordinates );
 
     contentWindow_.setCoordinates( coordinates );
-}
-
-void ContentWindowController::toggleWindowState()
-{
-    if ( contentWindow_.getState() == ContentWindow::UNSELECTED )
-        contentWindow_.setState( ContentWindow::SELECTED );
-    else if ( contentWindow_.getState() == ContentWindow::SELECTED )
-        contentWindow_.setState( ContentWindow::UNSELECTED );
 }
 
 void ContentWindowController::constrainSize( QSizeF& windowSize ) const

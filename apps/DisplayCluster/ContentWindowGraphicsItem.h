@@ -108,10 +108,10 @@ protected:
 
 private:
     void gestureEvent( QGestureEvent* touchEvent );
-    void doubleTapUnselected( DoubleTapGesture* gesture );
-    void panUnselected( PanGesture* gesture );
-    void pinchUnselected( PinchGesture* gesture );
-    void tapAndHoldUnselected( QTapAndHoldGesture* gesture );
+    void doubleTap( DoubleTapGesture* gesture );
+    void pan( PanGesture* gesture );
+    void pinch( PinchGesture* gesture );
+    void tapAndHold( QTapAndHoldGesture* gesture );
 
     bool isMovie() const;
 

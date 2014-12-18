@@ -204,7 +204,7 @@ QPointF DisplayGroupGraphicsView::getScenePosition( const QGesture* gesture ) co
     // coordinates", i.e. on the display where the Rank0 Qt MainWindow lives.
 
     // Some gestures also have a position attribute but it is inconsistent.
-    // For most gestures it the same as the hotSpot, but not for QTapGesture.
+    // For most gestures it is the same as the hotSpot, but not for QTapGesture.
     //
     // Examples taken from qstandardgestures.cpp:
     // QTapGesture.position() == touchPoint.pos()  (== viewPos)

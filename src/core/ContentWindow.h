@@ -72,7 +72,7 @@ public:
     /** The possible states of a window. */
     enum WindowState
     {
-        UNSELECTED, // not selected, interaction modifies position/size
+        NONE,       // not selected, interaction modifies position/size
         SELECTED,   // selected, interaction goes to ContentInteractionDelegate
         MOVING,     // the window is being moved
         RESIZING,   // the window is being resized
@@ -87,7 +87,7 @@ public:
     ContentWindow( ContentPtr content );
 
     /** Destructor. */
-    virtual ~ContentWindow();
+    ~ContentWindow();
 
     /** @return the unique identifier for this window. */
     const QUuid& getID() const;
@@ -126,6 +126,9 @@ public:
     /** Set the current state. */
     void setState( const ContentWindow::WindowState state );
 
+    /** Toggle the state (selected / unselected). */
+    void toggleSelectedState();
+
     /** Check if selected. */
     bool isSelected() const;
 
@@ -145,14 +148,14 @@ public:
     /** Does this window already have registered Event receiver(s) */
     bool hasEventReceivers() const;
 
-    /** Used by InteractionDelegate to emit eventChanged(). */
+    /** Used by InteractionDelegate to emit notify( Event ). */
     void dispatchEvent( const Event event );
 
     /**
      * Get the interaction delegate.
      * @note Rank0 only.
      */
-    ContentInteractionDelegate& getInteractionDelegate() const;
+    ContentInteractionDelegate& getInteractionDelegate();
 
 
     /** Backup the current coordinates. */
@@ -178,7 +181,7 @@ signals:
     void modified();
 
     /** Notify registered EventReceivers that an Event occured. */
-    void eventChanged( Event event );
+    void notify( Event event );
 
 private:
     friend class boost::serialization::access;
@@ -238,7 +241,7 @@ private:
     }
 
     void createInteractionDelegate();
-    void setEventToNewDimensions();
+    void sendSizeChangedEvent();
     void constrainZoomCenter();
 
     const QUuid uuid_;

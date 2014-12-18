@@ -60,7 +60,7 @@ public:
 protected:
     /** @name Re-implemented QGraphicsScene events */
     //@{
-    bool event( QEvent* event );
+    bool event( QEvent* event ) override;
     //@}
 
 private:

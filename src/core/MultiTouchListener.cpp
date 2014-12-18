@@ -111,6 +111,19 @@ QPointF MultiTouchListener::getScenePos( TUIO::TuioCursor* tcur ) const
                     tcur->getY() * graphicsView_->scene()->height( ));
 }
 
+void MultiTouchListener::fillBegin( QTouchEvent::TouchPoint& touchPoint ) const
+{
+    touchPoint.setStartPos( touchPoint.pos( ));
+    touchPoint.setStartScenePos( touchPoint.scenePos( ));
+    touchPoint.setStartScreenPos( touchPoint.screenPos( ));
+    touchPoint.setStartNormalizedPos( touchPoint.normalizedPos( ));
+
+    touchPoint.setLastPos( touchPoint.pos( ));
+    touchPoint.setLastScenePos( touchPoint.scenePos( ));
+    touchPoint.setLastScreenPos( touchPoint.screenPos( ));
+    touchPoint.setLastNormalizedPos( touchPoint.normalizedPos( ));
+}
+
 void MultiTouchListener::fill( QTouchEvent::TouchPoint& touchPoint,
                                const QTouchEvent::TouchPoint& prevPoint) const
 {
@@ -151,7 +164,7 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     {
     case QEvent::TouchBegin:
         touchPointStates = Qt::TouchPointPressed;
-        fill( touchPoint, touchPoint );
+        fillBegin( touchPoint );
         break;
 
     case QEvent::TouchUpdate:

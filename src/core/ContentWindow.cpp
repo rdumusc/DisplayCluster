@@ -60,7 +60,7 @@ ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomCenter_( 0.5, 0.5 )
     , zoom_( MIN_ZOOM )
-    , windowState_( UNSELECTED )
+    , windowState_( NONE )
     , eventReceiversCount_( 0 )
 {
 }
@@ -69,7 +69,7 @@ ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
     , zoomCenter_( 0.5, 0.5 )
     , zoom_( MIN_ZOOM )
-    , windowState_( UNSELECTED )
+    , windowState_( NONE )
     , eventReceiversCount_( 0 )
 {
     assert( content );
@@ -118,7 +118,7 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
 
     emit modified();
 
-    setEventToNewDimensions();
+    sendSizeChangedEvent();
 }
 
 qreal ContentWindow::getZoom() const
@@ -161,6 +161,14 @@ void ContentWindow::setState( const ContentWindow::WindowState state )
     emit modified();
 }
 
+void ContentWindow::toggleSelectedState()
+{
+    if ( windowState_ == ContentWindow::NONE )
+        windowState_ = ContentWindow::SELECTED;
+    else if ( windowState_ == ContentWindow::SELECTED )
+        windowState_ = ContentWindow::NONE;
+}
+
 bool ContentWindow::isSelected() const
 {
     return windowState_ == SELECTED;
@@ -183,7 +191,7 @@ bool ContentWindow::isHidden() const
 
 bool ContentWindow::registerEventReceiver( EventReceiver* receiver )
 {
-    const bool success = connect( this, SIGNAL( eventChanged( Event )),
+    const bool success = connect( this, SIGNAL( notify( Event )),
                                   receiver, SLOT( processEvent( Event )));
     if ( success )
         ++eventReceiversCount_;
@@ -198,10 +206,10 @@ bool ContentWindow::hasEventReceivers() const
 
 void ContentWindow::dispatchEvent( const Event event_ )
 {
-    emit eventChanged( event_ );
+    emit notify( event_ );
 }
 
-ContentInteractionDelegate& ContentWindow::getInteractionDelegate() const
+ContentInteractionDelegate& ContentWindow::getInteractionDelegate()
 {
     return *interactionDelegate_;
 }
@@ -245,14 +253,14 @@ void ContentWindow::createInteractionDelegate()
     }
 }
 
-void ContentWindow::setEventToNewDimensions()
+void ContentWindow::sendSizeChangedEvent()
 {
     Event state;
     state.type = Event::EVT_VIEW_SIZE_CHANGED;
     state.dx = coordinates_.width();
     state.dy = coordinates_.height();
 
-    emit eventChanged( state );
+    emit notify( state );
 }
 
 void ContentWindow::constrainZoomCenter()
