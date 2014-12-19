@@ -54,6 +54,9 @@ public:
     void wheelEvent( QGraphicsSceneWheelEvent* event );
 
     static double adaptZoomFactor( const double pinchGestureScaleFactor );
+
+private:
+    QPointF computeZoomPanDelta( const QPointF& sceneDelta ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

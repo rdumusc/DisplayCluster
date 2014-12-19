@@ -107,7 +107,7 @@ protected:
     //@}
 
 private:
-    void gestureEvent( QGestureEvent* touchEvent );
+    void gestureEvent( QGestureEvent* event );
     void doubleTap( DoubleTapGesture* gesture );
     void pan( PanGesture* gesture );
     void pinch( PinchGesture* gesture );

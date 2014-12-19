@@ -43,9 +43,13 @@
 #include <QTouchEvent>
 #include <QWidget>
 
+namespace
+{
 const int MAX_DELTA = 40; // pixel
 const int TAP_TIMEOUT = 500; // ms
 
+const QPointF NULL_POINT( -1, -1 );
+}
 
 Qt::GestureType DoubleTapGestureRecognizer::type_ = Qt::CustomGesture;
 
@@ -65,7 +69,7 @@ Qt::GestureType DoubleTapGestureRecognizer::type()
 }
 
 DoubleTapGestureRecognizer::DoubleTapGestureRecognizer()
-    : firstPoint_( -1, -1 )
+    : firstPoint_( NULL_POINT )
 {
 }
 
@@ -97,17 +101,17 @@ DoubleTapGestureRecognizer::recognize( QGesture* state, QObject* /*watched*/,
     {
     case QEvent::TouchBegin:
     {
-        if( firstPoint_ == QPointF( -1, -1 ))
+        if( firstPoint_ == NULL_POINT )
         {
             firstPointTime_.restart();
             return QGestureRecognizer::MayBeGesture;
         }
 
         // validate time and distance to first touch point, otherwise start fresh
-        const QPoint delta = touchPoint.pos().toPoint() - firstPoint_.toPoint();
+        const QPoint delta = touchPoint.scenePos().toPoint() - firstPoint_.toPoint();
         if( delta.manhattanLength() > MAX_DELTA || firstPointTime_.elapsed() > TAP_TIMEOUT )
         {
-            firstPoint_ = QPointF( -1, -1 );
+            firstPoint_ = NULL_POINT;
             firstPointTime_.restart();
         }
 
@@ -116,7 +120,7 @@ DoubleTapGestureRecognizer::recognize( QGesture* state, QObject* /*watched*/,
 
     case QEvent::TouchUpdate:
     {
-        const QPoint delta = touchPoint.pos().toPoint() - firstPoint_.toPoint();
+        const QPoint delta = touchPoint.scenePos().toPoint() - firstPoint_.toPoint();
         if( delta.manhattanLength() > MAX_DELTA )
             return cancel( gesture );
         return QGestureRecognizer::MayBeGesture;
@@ -125,20 +129,20 @@ DoubleTapGestureRecognizer::recognize( QGesture* state, QObject* /*watched*/,
     case QEvent::TouchEnd:
     {
         // validate time and distance to begin of touch
-        QPoint delta = touchPoint.pos().toPoint() - touchPoint.startPos().toPoint();
+        QPoint delta = touchPoint.scenePos().toPoint() - touchPoint.startPos().toPoint();
         if( delta.manhattanLength() > MAX_DELTA || firstPointTime_.elapsed() > TAP_TIMEOUT )
             return cancel( gesture );
 
         // confirm first touch point
-        if( firstPoint_ == QPointF( -1, -1 ))
+        if( firstPoint_ == NULL_POINT )
         {
-            firstPoint_ = touchPoint.pos();
+            firstPoint_ = touchPoint.scenePos();
             return QGestureRecognizer::MayBeGesture;
         }
 
-        gesture->setPosition( touchPoint.startScreenPos());
-        gesture->setHotSpot( gesture->position( ));
-        firstPoint_ = QPointF( -1, -1 );
+        gesture->setPosition( touchPoint.startScenePos( ));
+        gesture->setHotSpot( touchPoint.startScreenPos( ));
+        firstPoint_ = NULL_POINT;
         return QGestureRecognizer::FinishGesture;
     }
 
@@ -155,7 +159,7 @@ void DoubleTapGestureRecognizer::reset( QGesture* state )
 QGestureRecognizer::Result
 DoubleTapGestureRecognizer::cancel( DoubleTapGesture* gesture )
 {
-    firstPoint_ = QPointF( -1, -1 );
+    firstPoint_ = NULL_POINT;
     gesture->setPosition( firstPoint_ );
     gesture->setHotSpot( gesture->position( ));
     return QGestureRecognizer::CancelGesture;

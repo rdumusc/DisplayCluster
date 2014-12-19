@@ -42,6 +42,8 @@
 #include "gestures/PanGesture.h"
 #include "gestures/PinchGesture.h"
 
+#define ZOOM_PAN_GAIN_FACTOR  2.0
+
 ZoomInteractionDelegate::ZoomInteractionDelegate( ContentWindow& contentWindow )
     : ContentInteractionDelegate( contentWindow )
 {
@@ -49,8 +51,7 @@ ZoomInteractionDelegate::ZoomInteractionDelegate( ContentWindow& contentWindow )
 
 void ZoomInteractionDelegate::pan( PanGesture* gesture )
 {
-    const float zoom = contentWindow_.getZoom();
-    const QPointF delta( gesture->delta() * ( 2.0 / zoom ));
+    const QPointF delta = computeZoomPanDelta( gesture->delta( ));
     contentWindow_.setZoomCenter( contentWindow_.getZoomCenter() - delta );
 }
 
@@ -74,9 +75,7 @@ void ZoomInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
     }
     else if( event->buttons().testFlag( Qt::LeftButton ))
     {
-        // pan (move zoom center point)
-        const float zoom = contentWindow_.getZoom();
-        const QPointF delta( mouseDelta * ( 2.f / zoom ));
+        const QPointF delta = computeZoomPanDelta( mouseDelta );
         contentWindow_.setZoomCenter( contentWindow_.getZoomCenter() + delta );
     }
 }
@@ -88,6 +87,17 @@ void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
     // delta = 180*8 = 1440
     const double zoomDelta = (double)event->delta() / 1440.0;
     contentWindow_.setZoom( contentWindow_.getZoom() * ( 1.0 + zoomDelta ));
+}
+
+QPointF ZoomInteractionDelegate::computeZoomPanDelta( const QPointF&
+                                                      sceneDelta ) const
+{
+    const qreal zoom = contentWindow_.getZoom();
+    const QRectF& window = contentWindow_.getCoordinates();
+
+    const QPointF normalizedDelta( sceneDelta.x() / window.width(),
+                                   sceneDelta.y() / window.height( ));
+    return QPointF( normalizedDelta * ( ZOOM_PAN_GAIN_FACTOR / zoom ));
 }
 
 double ZoomInteractionDelegate::adaptZoomFactor( const double

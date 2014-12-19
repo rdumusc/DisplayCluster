@@ -71,15 +71,17 @@ public:
      */
     void gestureEvent( QGestureEvent* event );
 
-    // Virtual touch gestures
-    virtual void tap( QTapGesture* gesture ) { Q_UNUSED(gesture) }
-    virtual void doubleTap( DoubleTapGesture* gesture ) { Q_UNUSED(gesture) }
-    virtual void pan( PanGesture* gesture ) { Q_UNUSED(gesture) }
-    virtual void swipe( QSwipeGesture*gesture ) { Q_UNUSED(gesture) }
-    virtual void pinch( PinchGesture* gesture ) { Q_UNUSED(gesture) }
-    //virtual void tapAndHold( QTapAndHoldGesture* gesture ) { Q_UNUSED(gesture) }
+    /** @name Touch gesture handlers. */
+    //@{
+    virtual void tap( QTapGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void doubleTap( DoubleTapGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void pan( PanGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void swipe( QSwipeGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void pinch( PinchGesture* gesture ) { Q_UNUSED( gesture ) }
+    //@}
 
-    // Keyboard + Mouse input
+    /** @name Mouse and keyboard event handlers. */
+    //@{
     virtual void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
     virtual void mousePressEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
     virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
@@ -87,6 +89,7 @@ public:
     virtual void wheelEvent( QGraphicsSceneWheelEvent* event ) { Q_UNUSED( event ) }
     virtual void keyPressEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
     virtual void keyReleaseEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
+    //@}
 
 protected:
     ContentWindow& contentWindow_;

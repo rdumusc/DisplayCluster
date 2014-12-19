@@ -297,36 +297,36 @@ void ContentWindowGraphicsItem::keyReleaseEvent( QKeyEvent* event_ )
         contentWindow_->getInteractionDelegate().keyReleaseEvent( event_ );
 }
 
-void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* touchEvent )
+void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* event_ )
 {
     QGesture* gesture = 0;
 
-    if( ( gesture = touchEvent->gesture( Qt::TapAndHoldGesture )))
+    if( ( gesture = event_->gesture( Qt::TapAndHoldGesture )))
     {
-        touchEvent->accept( Qt::TapAndHoldGesture );
+        event_->accept( Qt::TapAndHoldGesture );
         tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
         return;
     }
 
     if( contentWindow_->isSelected( ))
     {
-        contentWindow_->getInteractionDelegate().gestureEvent( touchEvent );
+        contentWindow_->getInteractionDelegate().gestureEvent( event_ );
         return;
     }
 
-    if( ( gesture = touchEvent->gesture( PanGestureRecognizer::type( ))))
+    if( ( gesture = event_->gesture( PanGestureRecognizer::type( ))))
     {
-        touchEvent->accept( PanGestureRecognizer::type( ));
+        event_->accept( PanGestureRecognizer::type( ));
         pan( static_cast< PanGesture* >( gesture ));
     }
-    else if( ( gesture = touchEvent->gesture( PinchGestureRecognizer::type( ))))
+    else if( ( gesture = event_->gesture( PinchGestureRecognizer::type( ))))
     {
-        touchEvent->accept( PinchGestureRecognizer::type( ));
+        event_->accept( PinchGestureRecognizer::type( ));
         pinch( static_cast< PinchGesture* >( gesture ));
     }
-    else if( ( gesture = touchEvent->gesture( DoubleTapGestureRecognizer::type( ))))
+    else if( ( gesture = event_->gesture( DoubleTapGestureRecognizer::type( ))))
     {
-        touchEvent->accept( DoubleTapGestureRecognizer::type( ));
+        event_->accept( DoubleTapGestureRecognizer::type( ));
         doubleTap( static_cast< DoubleTapGesture* >( gesture ));
     }
 }

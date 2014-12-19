@@ -148,9 +148,10 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
 
     QTouchEvent::TouchPoint touchPoint( tcur->getCursorID( ));
     touchPoint.setPressure( 1.0 );
-    // According to Qt doc, touchPoint.pos() should be set to viewPos. However,
-    // it is more convienient for us to set it to scenePos, because QTapGesture
-    // and QPanGesture use it, and we want gestures to have scene positions.
+    // Note: According to Qt doc, touchPoint.pos() should be set to viewPos.
+    // However it is set to scenePos here because QTapGesture and QPanGesture
+    // use it, and gestures need to have scene positions for correct event
+    // processing in this application.
     touchPoint.setPos( scenePos );
     touchPoint.setScenePos( scenePos );
     touchPoint.setScreenPos( screenPos ); // used for QGesture::hotspot & itemAt
