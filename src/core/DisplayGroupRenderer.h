@@ -79,7 +79,7 @@ private:
     DisplayGroupPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
 
-    void render( ContentPtr backgroundContent );
+    void renderBackground( ContentPtr content );
     void render( const ContentWindowPtrs& contentWindows );
 };
 

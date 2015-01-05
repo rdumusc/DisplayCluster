@@ -51,6 +51,17 @@ class QString;
 class QXmlQuery;
 
 /**
+ * The different versions of the xml State files.
+ */
+enum StateVersion
+{
+    INVALID_FILE_VERSION = -1,
+    FIRST_BOOST_FILE_VERSION = 0,
+    LEGACY_FILE_VERSION = 1,
+    FIRST_PIXEL_COORDINATES_FILE_VERSION = 2
+};
+
+/**
  * A state is the collection of opened contents which can be saved and
  * restored using this class. It will save positions and dimensions of each
  * content and also content-specific information which is required to restore
@@ -78,7 +89,7 @@ public:
     bool legacyLoadXML( const QString& filename );
 
     /** Get the version that was last used for loading or saving. */
-    unsigned int getVersion() const;
+    StateVersion getVersion() const;
 
 private:
     friend class boost::serialization::access;
@@ -86,7 +97,7 @@ private:
     template<class Archive>
     void serialize( Archive & ar, const unsigned int version )
     {
-        version_ = version;
+        version_ = static_cast< StateVersion >( version );
         ar & boost::serialization::make_nvp( "contentWindows",
                                              contentWindows_ );
     }
@@ -98,9 +109,9 @@ private:
                                       const int index ) const;
 
     ContentWindowPtrs contentWindows_;
-    unsigned int version_;
+    StateVersion version_;
 };
 
-BOOST_CLASS_VERSION( State, 2 )
+BOOST_CLASS_VERSION( State, FIRST_PIXEL_COORDINATES_FILE_VERSION )
 
 #endif

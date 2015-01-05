@@ -361,7 +361,9 @@ void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
 
     else if( gesture->state() == Qt::GestureCanceled ||
              gesture->state() == Qt::GestureFinished )
+    {
         contentWindow_->setState( ContentWindow::NONE );
+    }
 
     controller_.scale( factor );
 }

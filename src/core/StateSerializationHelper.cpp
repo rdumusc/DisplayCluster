@@ -121,7 +121,7 @@ bool StateSerializationHelper::load( const QString& filename )
     ifs.close();
 
     ContentWindowPtrs contentWindows = state.getContentWindows();
-    if( state.getVersion() < 2 )
+    if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )
         scaleToDisplayGroup( contentWindows );
     validate( contentWindows );
 

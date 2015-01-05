@@ -128,9 +128,6 @@ public:
     /** Get the coordinates and dimensions of a screen in pixel units. */
     QRect getScreenRect( const QPoint& tileIndex ) const;
 
-    /** Get the normalized coordinates and dimensions of a screen. */
-    QRectF getNormalizedScreenRect(const QPoint& tileIndex) const;
-
     /** Display the windows in fullscreen mode. */
     bool getFullscreen() const;
 

@@ -60,7 +60,7 @@ void DisplayGroupRenderer::render()
     if( !displayGroup_ )
         return;
 
-    render( displayGroup_->getBackgroundContent( ));
+    renderBackground( displayGroup_->getBackgroundContent( ));
     render( displayGroup_->getContentWindows( ));
 }
 
@@ -74,13 +74,13 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     displayGroup_ = displayGroup;
 }
 
-void DisplayGroupRenderer::render( ContentPtr backgroundContent )
+void DisplayGroupRenderer::renderBackground( ContentPtr content )
 {
-    if ( !backgroundContent )
+    if ( !content )
         return;
 
     // Scale fullscreen, keep aspect ratio
-    QSizeF size( backgroundContent->getDimensions( ));
+    QSizeF size( content->getDimensions( ));
     size.scale( displayGroup_->getCoordinates().size(), Qt::KeepAspectRatio );
     QRectF coord( QPointF(), size );
     coord.moveCenter( displayGroup_->getCoordinates().center( ));
@@ -89,7 +89,7 @@ void DisplayGroupRenderer::render( ContentPtr backgroundContent )
     glTranslatef( coord.x(), coord.y(), BACKGROUND_Z_COORD );
     glScalef( coord.width(), coord.height(), 1.f );
 
-    factories_->getFactoryObject( backgroundContent )->render( UNIT_RECTF );
+    factories_->getFactoryObject( content )->render( UNIT_RECTF );
 
     glPopMatrix();
 }

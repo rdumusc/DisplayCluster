@@ -46,16 +46,14 @@
 #include <QtXml/QtXml>
 #include <QtXmlPatterns/QXmlQuery>
 
-#define LEGACY_STATE_FILE_VERSION_NUMBER 1
-
 State::State()
-    : version_( 0 )
+    : version_( INVALID_FILE_VERSION )
 {
 }
 
 State::State(const ContentWindowPtrs& contentWindows)
-    : contentWindows_(contentWindows)
-    , version_( 0 )
+    : contentWindows_( contentWindows )
+    , version_( INVALID_FILE_VERSION )
 {
 }
 
@@ -101,10 +99,12 @@ bool State::legacyLoadXML( const QString& filename )
             contentWindows_.push_back( contentWindow );
     }
 
+    version_ = LEGACY_FILE_VERSION;
+
     return true;
 }
 
-unsigned int State::getVersion() const
+StateVersion State::getVersion() const
 {
     return version_;
 }
@@ -121,10 +121,10 @@ bool State::checkVersion_( QXmlQuery& query ) const
         version = qstring.toInt();
     }
 
-    if( version != LEGACY_STATE_FILE_VERSION_NUMBER )
+    if( version != LEGACY_FILE_VERSION )
     {
         put_flog( LOG_DEBUG, "not a legacy state file. version: %i, legacy version %i",
-                  version, LEGACY_STATE_FILE_VERSION_NUMBER );
+                  version, LEGACY_FILE_VERSION );
         return false;
     }
     return true;

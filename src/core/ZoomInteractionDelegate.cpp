@@ -89,8 +89,8 @@ void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
     contentWindow_.setZoom( contentWindow_.getZoom() * ( 1.0 + zoomDelta ));
 }
 
-QPointF ZoomInteractionDelegate::computeZoomPanDelta( const QPointF&
-                                                      sceneDelta ) const
+QPointF
+ZoomInteractionDelegate::computeZoomPanDelta( const QPointF& sceneDelta ) const
 {
     const qreal zoom = contentWindow_.getZoom();
     const QRectF& window = contentWindow_.getCoordinates();
@@ -106,6 +106,5 @@ double ZoomInteractionDelegate::adaptZoomFactor( const double
     const double factor = ( pinchGestureScaleFactor - 1.0 ) * 0.2 + 1.0;
     if( std::isnan( factor ) || std::isinf( factor ))
         return 0.0;
-    else
-        return factor;
+    return factor;
 }

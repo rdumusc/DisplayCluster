@@ -72,7 +72,7 @@ public:
      *
      * @param uri the URI of the streamer
      * @param pos the desired position for the center of the window in pixels.
-     *        If pos.isNull(), the window is centered on the DisplayWall.
+     *        If pos.isNull(), the window is centered on the DisplayGroup.
      * @param size the desired size of the window in pixels.
      * @return the window of the streamer. Is never NULL.
      */

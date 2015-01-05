@@ -243,7 +243,7 @@ Event PixelStreamInteractionDelegate::getGestureEvent( const T* gesture )
 {
     // For some QGestures, position() is a screen position (Qt global).
     // However, QTapGesture has a scene position because it uses touchPoint.pos,
-    // which is intentionnaly set to scenePos in MultiTouchListener.
+    // which is intentionally set to scenePos in MultiTouchListener.
     // For custom gesture classes, we explicitly define the position to be
     // the scene position, so this method is correct for the following gestures:
     // QTapGesture, DoubleTapGesture, PanGesture, PinchGesture

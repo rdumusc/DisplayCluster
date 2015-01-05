@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
     BOOST_CHECK( files.contains( "test.dcxpreview" ));
 
     // 3) Check preview image.
-    //    Observations have shown that a 2% error maring is imperceptible.
+    //    Observations have shown that a 2% error margin is imperceptible.
     const float previewError = compareImages( TEST_DIR + "/test.dcxpreview",
                                               STATE_V0_PREVIEW_FILE );
     BOOST_CHECK_LT( previewError, 0.02f );
