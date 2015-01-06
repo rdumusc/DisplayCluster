@@ -42,7 +42,6 @@
 #include "Options.h"
 #include "ContentWindow.h"
 #include "Content.h"
-#include "GLWindow.h"
 #include "Factories.h"
 
 #define CONTEXT_VIEW_REL_SIZE       0.25f

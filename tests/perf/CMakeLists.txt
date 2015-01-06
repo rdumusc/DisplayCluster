@@ -22,13 +22,10 @@ set(TEST_LIBRARIES
   ${Boost_LIBRARIES}
 )
 
-if(BUILD_CORE_LIBRARY)
-  set(PERF_TEST_SOURCES
+set(PERF_TEST_SOURCES
     dcStreamTests.cpp
     dcBenchmarkMPI.cpp
-    dcBenchmarkStreamer.cpp
-  )
-endif()
+)
 
 # Create executables but do not add them to the tests target
 foreach(FILE ${PERF_TEST_SOURCES})

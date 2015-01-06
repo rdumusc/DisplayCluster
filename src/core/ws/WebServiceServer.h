@@ -42,7 +42,7 @@
 
 #include <QThread>
 
-#include "dcWebservice/types.h"
+#include <dcWebservice/types.h>
 
 /**
  * A Qt wrapper to run the dcWebservice::Server in a QThread.

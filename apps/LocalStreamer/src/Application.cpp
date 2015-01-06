@@ -43,8 +43,7 @@
 #include "localstreamer/PixelStreamerFactory.h"
 
 #include "localstreamer/CommandLineOptions.h"
-#include "dcstream/StreamPrivate.h"
-#include "dcstream/Socket.h"
+#include <deflect/Socket.h>
 
 #include <QTimer>
 #include <iostream>
@@ -75,8 +74,8 @@ bool Application::initialize(const CommandLineOptions& options)
     connect(pixelStreamer_, SIGNAL(sendCommand(QString)), this, SLOT(sendCommand(QString)));
 
     // Connect to DisplayCluster
-    dcStream_ = new dc::Stream( options.getName().toStdString(),
-                                DC_STREAM_HOST_ADDRESS );
+    dcStream_ = new deflect::Stream( options.getName().toStdString(),
+                                     DC_STREAM_HOST_ADDRESS );
     if( !dcStream_->isConnected( ))
     {
         std::cerr << "Could not connect to host!" << std::endl;
@@ -86,9 +85,9 @@ bool Application::initialize(const CommandLineOptions& options)
     }
 
     // Make sure to quit the application if the connection is closed.
-    connect(&dcStream_->impl_->dcSocket_, SIGNAL(disconnected()), QApplication::instance(), SLOT(quit()));
+    dcStream_->disconnected.connect( QApplication::quit );
 
-    // Use a timer to process Event received from the dc::Stream
+    // Use a timer to process Event received from the deflect::Stream
     QTimer* timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), SLOT(processPendingEvents()));
     timer->start(1);
@@ -99,16 +98,16 @@ bool Application::initialize(const CommandLineOptions& options)
 void Application::sendImage(QImage image)
 {
 #ifdef COMPRESS_IMAGES
-    // QImage Format_RGB32 (0xffRRGGBB) corresponds in fact to GL_BGRA == dc::BGRA
-    dc::ImageWrapper dcImage((const void*)image.bits(), image.width(), image.height(), dc::BGRA);
-    dcImage.compressionPolicy = dc::COMPRESSION_ON;
+    // QImage Format_RGB32 (0xffRRGGBB) corresponds in fact to GL_BGRA == deflect::BGRA
+    deflect::ImageWrapper deflectImage((const void*)image.bits(), image.width(), image.height(), deflect::BGRA);
+    deflectImage.compressionPolicy = deflect::COMPRESSION_ON;
 #else
     // This conversion is suboptimal, but the only solution until we send the PixelFormat with the PixelStreamSegment
     image = image.rgbSwapped();
-    dc::ImageWrapper dcImage((const void*)image.bits(), image.width(), image.height(), dc::RGBA);
-    dcImage.compressionPolicy = dc::COMPRESSION_OFF;
+    deflect::ImageWrapper deflectImage((const void*)image.bits(), image.width(), image.height(), deflect::RGBA);
+    deflectImage.compressionPolicy = deflect::COMPRESSION_OFF;
 #endif
-    bool success = dcStream_->send(dcImage) && dcStream_->finishFrame();
+    bool success = dcStream_->send(deflectImage) && dcStream_->finishFrame();
 
     if(!success)
     {
@@ -134,5 +133,5 @@ void Application::processPendingEvents()
 
 void Application::sendCommand(QString command)
 {
-    dcStream_->impl_->sendCommand(command);
+    dcStream_->sendCommand(command.toStdString());
 }

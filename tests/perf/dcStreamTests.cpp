@@ -46,13 +46,13 @@ namespace ut = boost::unit_test;
 #include "PixelStreamWindowManager.h"
 #include "MinimalGlobalQtApp.h"
 #include "NetworkListener.h"
-#include "dcstream/Stream.h"
+#include <deflect/Stream.h>
 #include "MPIChannel.h"
 
 #include <QThread>
 
 // Tests local throughput of the streaming library by sending raw as well as
-// blank and random images through dc::Stream. Baseline test for best-case
+// blank and random images through deflect::Stream. Baseline test for best-case
 // performance when streaming pixels.
 
 #define WIDTH  (3840u)
@@ -98,12 +98,12 @@ class DCThread : public QThread
         Timer timer;
         uint8_t* pixels = new uint8_t[ NBYTES ];
         ::memset( pixels, 0, NBYTES );
-        dc::ImageWrapper image( pixels, WIDTH, HEIGHT, dc::RGBA );
+        deflect::ImageWrapper image( pixels, WIDTH, HEIGHT, deflect::RGBA );
 
-        dc::Stream stream( "test", "localhost" );
+        deflect::Stream stream( "test", "localhost" );
         BOOST_CHECK( stream.isConnected( ));
 
-        image.compressionPolicy = dc::COMPRESSION_OFF;
+        image.compressionPolicy = deflect::COMPRESSION_OFF;
         timer.start();
         for( size_t i = 0; i < NIMAGES; ++i )
         {
@@ -115,7 +115,7 @@ class DCThread : public QThread
                   << " megapixel/s (" << NIMAGES / time << " FPS)" << std::endl;
 
 
-        image.compressionPolicy = dc::COMPRESSION_ON;
+        image.compressionPolicy = deflect::COMPRESSION_ON;
         timer.restart();
         for( size_t i = 0; i < NIMAGES; ++i )
         {

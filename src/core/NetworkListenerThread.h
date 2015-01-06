@@ -39,16 +39,17 @@
 #ifndef NETWORK_LISTENER_THREAD_H
 #define NETWORK_LISTENER_THREAD_H
 
-#include "MessageHeader.h"
-#include "Event.h"
-#include "PixelStreamSegment.h"
+#include <deflect/MessageHeader.h>
+#include <deflect/Event.h>
+#include <deflect/PixelStreamSegment.h>
 #include "EventReceiver.h"
 
 #include <QtNetwork/QTcpSocket>
 #include <QQueue>
 
-using dc::PixelStreamSegment;
-using dc::PixelStreamSegmentParameters;
+using deflect::MessageHeader;
+using deflect::PixelStreamSegment;
+using deflect::PixelStreamSegmentParameters;
 
 class NetworkListenerThread : public EventReceiver
 {

@@ -46,18 +46,18 @@ class PixelStreamWindowManager;
 class CommandHandler;
 
 /**
- * Listen to incoming PixelStream connections from dc::Stream clients.
+ * Listen to incoming PixelStream connections from deflect::Stream clients.
  */
 class NetworkListener : public QTcpServer
 {
     Q_OBJECT
 
 public:
-    /** The default port number used for dc::Stream connections. */
+    /** The default port number used for deflect::Stream connections. */
     static const int defaultPortNumber_;
 
     /**
-     * Create a new server listening for dc::Stream connections.
+     * Create a new server listening for deflect::Stream connections.
      * @param windowManager A manager to handle the creation of Stream windows.
      * @param port The port to listen on. Must be available.
      * @throw std::runtime_error if the server could not be started.

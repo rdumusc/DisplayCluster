@@ -11,12 +11,11 @@ set(LOCALSTREAMER_MOC_HEADERS
 )
 
 set(LOCALSTREAMER_SOURCES
-  ../../src/log.cpp
   src/main.cpp
   src/Application.cpp
 )
 
-set(LOCALSTREAMER_LINK_LIBRARIES dccore dcstream)
+set(LOCALSTREAMER_LINK_LIBRARIES dccore ${DEFLECT_LIBRARIES})
 
 qt4_wrap_cpp(MOC_OUTFILES ${LOCALSTREAMER_MOC_HEADERS})
 

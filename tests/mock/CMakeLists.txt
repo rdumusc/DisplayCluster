@@ -12,18 +12,8 @@ set(MOCK_HEADERS
   MinimalGlobalQtApp.h
 )
 
-set(MOCK_MOC_HEADERS
-  MockNetworkListener.h
-)
-
-set(MOCK_SOURCES
-  MockNetworkListener.cpp
-)
-
-if(BUILD_CORE_LIBRARY)
-  list(APPEND MOCK_MOC_HEADERS MockTextInputDispatcher.h)
-  list(APPEND MOCK_SOURCES MockTextInputDispatcher.cpp)
-endif()
+set(MOCK_MOC_HEADERS MockTextInputDispatcher.h)
+set(MOCK_SOURCES MockTextInputDispatcher.cpp)
 
 qt4_wrap_cpp(MOC_OUTFILES ${MOCK_MOC_HEADERS})
 

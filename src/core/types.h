@@ -62,13 +62,13 @@ class MarkerRenderer;
 class FactoryObject;
 struct PixelStreamFrame;
 
-namespace dc
+namespace deflect
 {
 struct PixelStreamSegment;
 class Event;
 }
-using dc::PixelStreamSegment;
-using dc::Event;
+using deflect::PixelStreamSegment;
+using deflect::Event;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;

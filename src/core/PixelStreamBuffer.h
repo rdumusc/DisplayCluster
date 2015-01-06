@@ -40,7 +40,7 @@
 #ifndef PIXELSTREAMBUFFER_H
 #define PIXELSTREAMBUFFER_H
 
-#include "PixelStreamSegment.h"
+#include <deflect/PixelStreamSegment.h>
 
 #include <QSize>
 
@@ -48,8 +48,8 @@
 #include <queue>
 #include <map>
 
-using dc::PixelStreamSegment;
-using dc::PixelStreamSegmentParameters;
+using deflect::PixelStreamSegment;
+using deflect::PixelStreamSegmentParameters;
 
 typedef unsigned int FrameIndex;
 

@@ -43,13 +43,13 @@
 #include <QApplication>
 #include <QImage>
 
-#include "Stream.h"
+#include <deflect/Stream.h>
 
 class PixelStreamer;
 class CommandLineOptions;
 
 /**
- * Generic application for using PixelStreamers with the dc::Stream library.
+ * Generic application for using PixelStreamers with the deflect::Stream library.
  */
 class Application : public QApplication
 {
@@ -82,7 +82,7 @@ private slots:
 
 private:
     PixelStreamer* pixelStreamer_;
-    dc::Stream* dcStream_;
+    deflect::Stream* dcStream_;
 };
 
 #endif // APPLICATION_H

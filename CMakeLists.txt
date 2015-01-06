@@ -33,16 +33,7 @@ add_definitions(-D__STDC_CONSTANT_MACROS)
 
 option(FORCE_BUILD_DCCORE "Force build the core library" OFF)
 
-if(OPENGL_FOUND AND MPI_FOUND AND FFMPEG_FOUND AND FCGI_FOUND)
-  include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-  set(BUILD_CORE_LIBRARY ON)
-else()
-  if(FORCE_BUILD_DCCORE)
-    message(FATAL_ERROR "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!")
-  else()
-    message(STATUS "One of OpenGL MPI ffmpeg fcgi was not found. Not building core library!")
-  endif()
-endif()
+include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
 if(TUIO_FOUND)
   option(ENABLE_TUIO_TOUCH_LISTENER "Enable TUIO touch listener for multi-touch events" ON)

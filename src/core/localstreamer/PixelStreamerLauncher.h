@@ -54,14 +54,14 @@ class MasterConfiguration;
  * Launch Pixel Streamers as separate processes.
  *
  * The processes connect to the Master application on localhost using the
- * dc::Stream API. They can be terminated by the user by closing their
+ * deflect::Stream API. They can be terminated by the user by closing their
  * associated window.
  *
  * Due to an incompatibility between QProcess and MPI(*), we must start the
  * processes DETACHED.
  * In theory they might stay alive after the main application has exited.
  * In practice, this doesn't seem to happen; our processes exit when the
- * dc::Stream is closed in any case.
+ * deflect::Stream is closed in any case.
  *
  * (*) MPI captures the SIGCHLD that QProcess relies on to detect that the
  * process has finished. Thus, the call to waitForFinished() blocks forever in

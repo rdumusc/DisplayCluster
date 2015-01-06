@@ -42,7 +42,7 @@
 namespace ut = boost::unit_test;
 
 #include "PixelStreamBuffer.h"
-#include "PixelStreamSegment.h"
+#include <deflect/PixelStreamSegment.h>
 
 BOOST_AUTO_TEST_CASE( TestAddAndRemoveSources )
 {
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( TestCompleteAFrame )
     PixelStreamBuffer buffer;
     buffer.addSource(sourceIndex);
 
-    dc::PixelStreamSegment segment;
+    deflect::PixelStreamSegment segment;
     segment.parameters.x = 0;
     segment.parameters.y = 0;
     segment.parameters.width = 128;
@@ -103,25 +103,25 @@ PixelStreamSegments generateTestSegments()
 {
     PixelStreamSegments segments;
 
-    dc::PixelStreamSegment segment1;
+    deflect::PixelStreamSegment segment1;
     segment1.parameters.x = 0;
     segment1.parameters.y = 0;
     segment1.parameters.width = 128;
     segment1.parameters.height = 256;
 
-    dc::PixelStreamSegment segment2;
+    deflect::PixelStreamSegment segment2;
     segment2.parameters.x = 128;
     segment2.parameters.y = 0;
     segment2.parameters.width = 64;
     segment2.parameters.height = 256;
 
-    dc::PixelStreamSegment segment3;
+    deflect::PixelStreamSegment segment3;
     segment3.parameters.x = 0;
     segment3.parameters.y = 256;
     segment3.parameters.width = 128;
     segment3.parameters.height = 512;
 
-    dc::PixelStreamSegment segment4;
+    deflect::PixelStreamSegment segment4;
     segment4.parameters.x = 128;
     segment4.parameters.y = 256;
     segment4.parameters.width = 64;
