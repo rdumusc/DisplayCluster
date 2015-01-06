@@ -47,7 +47,6 @@
 #include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
 
-#include "globals.h"
 #include "configuration/WallConfiguration.h"
 
 #include "RenderContext.h"
@@ -91,7 +90,6 @@ bool WallApplication::createConfig(const QString& filename, const int rank)
     try
     {
         config_.reset(new WallConfiguration(filename, rank));
-        g_configuration = config_.get();
     }
     catch (const std::runtime_error& e)
     {

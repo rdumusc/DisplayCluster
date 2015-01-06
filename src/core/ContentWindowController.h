@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,6 +37,66 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "globals.h"
+#ifndef CONTENTWINDOWCONTROLLER_H
+#define CONTENTWINDOWCONTROLLER_H
 
-Configuration * g_configuration = 0;
+#include "types.h"
+
+#include <QtCore/QRectF>
+
+/** Common window size states. */
+enum SizeState
+{
+    SIZE_1TO1,
+    SIZE_FULLSCREEN,
+    SIZE_NORMALIZED
+};
+
+/** Window point, used for affine transforms of the window. */
+enum WindowPoint
+{
+    TOP_LEFT,
+    CENTER
+};
+
+/**
+ * Controller for moving and resizing windows.
+ */
+class ContentWindowController
+{
+public:
+    ContentWindowController( ContentWindow& contentWindow,
+                             const DisplayGroup& displayGroup );
+
+    /** Resize the window. */
+    void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );
+
+    /** Scale the window by the given factor (around its center). */
+    void scale( const double factor );
+
+    /** Adjust the window coordinates to match the desired state. */
+    void adjustSize( const SizeState state );
+
+    /** Toggle between fullscreen and 'normalized' by keeping the position
+     *  and size after leaving fullscreen */
+    void toggleFullscreen();
+
+    /** Move the window to the desired position. */
+    void moveTo( const QPointF& position, const WindowPoint handle = TOP_LEFT );
+
+    /** Move the center of the window to the desired position. */
+    inline void moveCenterTo( const QPointF& position )
+    {
+        moveTo( position, CENTER );
+    }
+
+private:
+    void constrainSize( QSizeF& windowSize ) const;
+    void constrainPosition( QRectF& window ) const;
+    QRectF getCenteredCoordinates( const QSizeF& size ) const;
+
+    ContentWindow& contentWindow_;
+    const DisplayGroup& displayGroup_;
+};
+
+#endif // CONTENTWINDOWCONTROLLER_H

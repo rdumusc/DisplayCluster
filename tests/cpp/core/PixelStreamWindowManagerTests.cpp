@@ -45,25 +45,25 @@ namespace ut = boost::unit_test;
 #include "DisplayGroup.h"
 #include "Options.h"
 #include "PixelStreamWindowManager.h"
-#include "configuration/MasterConfiguration.h"
-#include "globals.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
-#define CONFIGURATION_FILE "configuration.xml"
 #define CONTENT_URI "bla"
+
+namespace
+{
+const QSize wallSize( 1000, 1000 );
+}
 
 BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup );
-    g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
-
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( .4, .3 );
-    const QSizeF size( .1, .2 );
+    const QPointF pos( 400.0, 300.0 );
+    const QSizeF size( 100.0, 200.0 );
 
     ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
@@ -78,29 +78,23 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 
     windowManager.removeContentWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup );
-    g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
-
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( .4, .3 );
-    const QSizeF size( .1, .2 );
-    const QSize pixels( g_configuration->getTotalWidth() * size.width(),
-                        g_configuration->getTotalHeight() * size.height( ));
+    const QPointF pos( 400.0, 300.0 );
+    const QSize size( 100, 200 );
 
     ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
 
-    windowManager.openPixelStreamWindow( uri, pixels );
+    windowManager.openPixelStreamWindow( uri, size );
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
 
     ContentPtr content = window->getContent();
@@ -116,24 +110,19 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup );
-    g_configuration = new MasterConfiguration( CONFIGURATION_FILE );
-
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( .5, .5 ); // window will be positioned centerred
-    const QSizeF size( .4, .3 ); // window will be 1to1 size
-    const QSize pixels( g_configuration->getTotalWidth() * size.width(),
-                        g_configuration->getTotalHeight() * size.height( ));
+    // window will be positioned centerred
+    const QPointF pos( wallSize.width() * 0.5, wallSize.height() * 0.5 );
+    const QSize size( 500, 400 ); // window will be sized 1TO1
 
-    windowManager.openPixelStreamWindow( uri, pixels );
+    windowManager.openPixelStreamWindow( uri, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
@@ -145,11 +134,9 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
     const QRectF& coords = window->getCoordinates();
     BOOST_CHECK_EQUAL( coords.center().x(), pos.x( ));
     BOOST_CHECK_EQUAL( coords.center().y(), pos.y( ));
-    BOOST_CHECK_CLOSE( coords.width(), size.width(), 0.05 );
-    BOOST_CHECK_CLOSE( coords.height(), size.height(), 0.05 );
+    BOOST_CHECK_EQUAL( coords.width(), size.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), size.height( ));
 
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
-
-    delete g_configuration;
 }

@@ -44,8 +44,9 @@
 
 /**
  * This class defines a pinch gesture. The implementation enhances the Qt
- * shipped PinchGesture to setup a normalized center point which is required in
- * the event handling of this application.
+ * shipped PinchGesture by adding a position() method to get the center of the
+ * pinch gesture in scene coordinates, which is required in the event handling
+ * of this application.
  * @sa QPinchGesture
  */
 class PinchGesture : public QGesture
@@ -84,8 +85,8 @@ public:
     /** @sa QPinchGesture::centerPoint */
     QPointF centerPoint() const { return _centerPoint; }
 
-    /** @return the normalized center position of the pinch */
-    QPointF normalizedCenterPoint() const { return _normalizedCenterPoint; }
+    /** @return the center of the pinch in scene coordinates */
+    QPointF position() const { return _sceneCenterPoint; }
 
     /** @sa QPinchGesture::setStartCenterPoint */
     void setStartCenterPoint(const QPointF &value) { _startCenterPoint = value; }
@@ -96,8 +97,8 @@ public:
     /** @sa QPinchGesture::setCenterPoint */
     void setCenterPoint(const QPointF &value) { _centerPoint = value; }
 
-    /** Set the normalized center position of the pinch */
-    void setNormalizedCenterPoint(const QPointF &value) { _normalizedCenterPoint = value; }
+    /** Set the position of the center of the pinch in scene coordinates */
+    void setPosition(const QPointF &value) { _sceneCenterPoint = value; }
 
     /** @sa QPinchGesture::totalScaleFactor */
     qreal totalScaleFactor() const { return _totalScaleFactor; }
@@ -144,7 +145,8 @@ private:
     QPointF _startCenterPoint;
     QPointF _lastCenterPoint;
     QPointF _centerPoint;
-    QPointF _normalizedCenterPoint;
+
+    QPointF _sceneCenterPoint;
 
     qreal _totalScaleFactor;
     qreal _lastScaleFactor;

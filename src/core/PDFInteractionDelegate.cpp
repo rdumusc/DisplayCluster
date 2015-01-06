@@ -38,10 +38,9 @@
 /*********************************************************************/
 
 #include "PDFInteractionDelegate.h"
-#include "configuration/Configuration.h"
+
 #include "ContentWindow.h"
 #include "PDFContent.h"
-#include "globals.h"
 
 #include <QTapGesture>
 #include <QSwipeGesture>
@@ -53,29 +52,26 @@ PDFInteractionDelegate::PDFInteractionDelegate(ContentWindow& contentWindow)
 }
 
 
-void PDFInteractionDelegate::tap(QTapGesture *gesture)
+void PDFInteractionDelegate::tap( QTapGesture *gesture )
 {
     if ( gesture->state() == Qt::GestureFinished )
     {
         const QRectF& coord = contentWindow_.getCoordinates();
 
-        const float winCenterX = ( coord.x() + 0.5 * coord.width( )) *
-                                 g_configuration->getTotalWidth();
-
-        if ( gesture->position().x() > winCenterX )
+        if ( gesture->position().x() > coord.center().x( ))
             getPDFContent()->nextPage();
         else
             getPDFContent()->previousPage();
     }
 }
 
-PDFContent *PDFInteractionDelegate::getPDFContent()
+PDFContent* PDFInteractionDelegate::getPDFContent()
 {
     return static_cast<PDFContent*>(contentWindow_.getContent().get());
 }
 
 
-void PDFInteractionDelegate::swipe(QSwipeGesture *gesture)
+void PDFInteractionDelegate::swipe(QSwipeGesture* gesture)
 {
     if (gesture->horizontalDirection() == QSwipeGesture::Left)
     {

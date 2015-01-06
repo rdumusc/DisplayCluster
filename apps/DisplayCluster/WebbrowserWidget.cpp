@@ -111,7 +111,7 @@ void WebbrowserWidget::accept()
 {
     const QSize dimensions(widthSpinBox_->value(), heightSpinBox_->value());
 
-    emit openWebBrowser(QPointF(.5,.5), dimensions, urlLineEdit_->text());
+    emit openWebBrowser(QPointF(), dimensions, urlLineEdit_->text());
 
     QDialog::accept();
 }

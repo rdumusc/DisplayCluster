@@ -39,8 +39,6 @@
 
 #include "ContentWindowRenderer.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
 #include "Options.h"
 #include "ContentWindow.h"
 #include "Content.h"
@@ -54,44 +52,52 @@
 #define CONTEXT_VIEW_BORDER_WIDTH   5.f
 #define WINDOW_BORDER_WIDTH_PIXELS  5.f
 
-ContentWindowRenderer::ContentWindowRenderer(FactoriesPtr factories)
-    : factories_(factories)
-    , showWindowBorders_(true)
-    , showZoomContext_(false)
-    , showSegmentBorders_(false)
-    , showSegmentStatistics_(false)
+ContentWindowRenderer::ContentWindowRenderer( FactoriesPtr factories )
+    : factories_( factories )
+    , showWindowBorders_( true )
+    , showZoomContext_( false )
+    , showSegmentBorders_( false )
+    , showSegmentStatistics_( false )
 {
-    quad_.setEnableTexture(false);
+    quad_.setEnableTexture( false );
 }
 
 void ContentWindowRenderer::render()
 {
-    if(!window_)
+    if( !window_ )
         return;
+
+    if( window_->isHidden( ))
+    {
+        // "Touch" the associated factory object to prevent it from being
+        // garbage collected
+        factories_->getFactoryObject( window_->getContent( ));
+        return;
+    }
 
     renderContent();
 
-    if(showWindowBorders_ || window_->selected())
+    if( showWindowBorders_ || window_->isSelected( ))
         renderWindowBorder();
 }
 
-void ContentWindowRenderer::setContentWindow(ContentWindowPtr window)
+void ContentWindowRenderer::setContentWindow( ContentWindowPtr window )
 {
     window_ = window;
 }
 
-void ContentWindowRenderer::setShowWindowBorders(const bool show)
+void ContentWindowRenderer::setShowWindowBorders( const bool show )
 {
     showWindowBorders_ = show;
 }
 
-void ContentWindowRenderer::setShowZoomContext(const bool show)
+void ContentWindowRenderer::setShowZoomContext( const bool show )
 {
     showZoomContext_ = show;
 }
 
-void ContentWindowRenderer::setPixelStreamOptions(const bool showSegmentBorders,
-                                                  const bool showSegmentStatistics)
+void ContentWindowRenderer::setPixelStreamOptions( const bool showSegmentBorders,
+                                                   const bool showSegmentStatistics )
 {
     showSegmentBorders_ = showSegmentBorders;
     showSegmentStatistics_ = showSegmentStatistics;
@@ -99,25 +105,22 @@ void ContentWindowRenderer::setPixelStreamOptions(const bool showSegmentBorders,
 
 void ContentWindowRenderer::renderWindowBorder()
 {
-    const float horizontalBorder = WINDOW_BORDER_WIDTH_PIXELS /
-            (float)g_configuration->getTotalHeight();
+    const float horizontalBorder = WINDOW_BORDER_WIDTH_PIXELS;
+    const float verticalBorder = WINDOW_BORDER_WIDTH_PIXELS;
 
-    const float verticalBorder = horizontalBorder /
-            g_configuration->getAspectRatio();
+    glPushAttrib( GL_CURRENT_BIT );
 
-    glPushAttrib(GL_CURRENT_BIT);
-
-    if(window_->selected())
-        glColor4f(1,0,0,1);
+    if( window_->isSelected( ))
+        glColor4f( 1.f, 0.f, 0.f, 1.f );
     else
-        glColor4f(1,1,1,1);
+        glColor4f( 1.f, 1.f, 1.f, 1.f );
 
     const QRectF winCoord = window_->getCoordinates();
 
-    drawQuad(QRectF(winCoord.x() - verticalBorder,
-                    winCoord.y() - horizontalBorder,
-                    winCoord.width() + 2.f*verticalBorder,
-                    winCoord.height() + 2.f*horizontalBorder));
+    drawQuad( QRectF( winCoord.x() - verticalBorder,
+                      winCoord.y() - horizontalBorder,
+                      winCoord.width() + 2.0 * verticalBorder,
+                      winCoord.height() + 2.0  *horizontalBorder ));
 
     glPopAttrib();
 }
@@ -131,93 +134,94 @@ void ContentWindowRenderer::renderContent()
     // can be rendered at (x,y,w,h) = (0,0,1,1)
     glPushMatrix();
 
-    glTranslatef(winCoord.x(), winCoord.y(), 0.f);
-    glScalef(winCoord.width(), winCoord.height(), 1.f);
+    glTranslatef( winCoord.x(), winCoord.y(), 0.f );
+    glScalef( winCoord.width(), winCoord.height(), 1.f );
 
-    FactoryObjectPtr object = factories_->getFactoryObject(window_->getContent());
+    FactoryObjectPtr object = factories_->getFactoryObject( window_->getContent( ));
 
-    PixelStream* pixelStream = dynamic_cast< PixelStream* >(object.get());
-    if(pixelStream)
-        pixelStream->setRenderingOptions(showSegmentBorders_, showSegmentStatistics_);
+    PixelStream* pixelStream = dynamic_cast< PixelStream* >( object.get( ));
+    if( pixelStream )
+        pixelStream->setRenderingOptions( showSegmentBorders_,
+                                          showSegmentStatistics_);
 
-    object->render(texCoord);
+    object->render( texCoord );
 
-    if(showZoomContext_ && window_->getZoom() > 1.)
-        renderContextView(object, texCoord);
+    if( showZoomContext_ && window_->getZoom() > 1.0 )
+        renderContextView( object, texCoord );
 
     glPopMatrix();
 }
 
 QRectF ContentWindowRenderer::getTexCoord() const
 {
-    double centerX, centerY;
-    window_->getCenter(centerX, centerY);
-
+    const QPointF& center = window_->getZoomCenter();
     const double zoom = window_->getZoom();
 
-    return QRectF(centerX - 0.5/zoom, centerY - 0.5/zoom, 1./zoom, 1./zoom);
+    return QRectF( center.x() - 0.5/zoom, center.y() - 0.5/zoom,
+                   1.0/zoom, 1.0/zoom );
 }
 
-void ContentWindowRenderer::renderContextView(FactoryObjectPtr object,
-                                              const QRectF& texCoord)
+void ContentWindowRenderer::renderContextView( FactoryObjectPtr object,
+                                               const QRectF& texCoord )
 {
-    const QRectF unitRect(0.f, 0.f, 1.f, 1.f);
+    const QRectF unitRect( 0.0, 0.0, 1.0, 1.0 );
 
-    glPushAttrib(GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT);
+    glPushAttrib( GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT );
     glPushMatrix();
 
     // position at lower left
-    glTranslatef(CONTEXT_VIEW_PADDING,
-                 1.f - CONTEXT_VIEW_REL_SIZE - CONTEXT_VIEW_PADDING,
-                 CONTEXT_VIEW_DELTA_Z);
-    glScalef(CONTEXT_VIEW_REL_SIZE, CONTEXT_VIEW_REL_SIZE, 1.f);
+    glTranslatef( CONTEXT_VIEW_PADDING,
+                  1.f - CONTEXT_VIEW_REL_SIZE - CONTEXT_VIEW_PADDING,
+                  CONTEXT_VIEW_DELTA_Z );
+    glScalef( CONTEXT_VIEW_REL_SIZE, CONTEXT_VIEW_REL_SIZE, 1.f );
 
     // render border rectangle
-    glColor4f(1,1,1,1);
-    drawQuadBorder(unitRect, CONTEXT_VIEW_BORDER_WIDTH);
+    glColor4f( 1.f, 1.f, 1.f, 1.f );
+    drawQuadBorder( unitRect, CONTEXT_VIEW_BORDER_WIDTH );
 
     // render the factory object (full view)
-    glTranslatef(0.f, 0.f, CONTEXT_VIEW_DELTA_Z);
-    object->render(unitRect);
+    glTranslatef( 0.f, 0.f, CONTEXT_VIEW_DELTA_Z );
+    object->render( unitRect );
 
-    glTranslatef(0.f, 0.f, CONTEXT_VIEW_DELTA_Z);
-    drawQuadBorder(texCoord, CONTEXT_VIEW_BORDER_WIDTH);
+    glTranslatef( 0.f, 0.f, CONTEXT_VIEW_DELTA_Z );
+    drawQuadBorder( texCoord, CONTEXT_VIEW_BORDER_WIDTH );
 
     // draw context rectangle blended
-    glTranslatef(0.f, 0.f, CONTEXT_VIEW_DELTA_Z);
+    glTranslatef( 0.f, 0.f, CONTEXT_VIEW_DELTA_Z );
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable( GL_BLEND );
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-    glColor4f(1.f, 1.f, 1.f, CONTEXT_VIEW_ALPHA);
-    drawQuad(texCoord);
+    glColor4f( 1.f, 1.f, 1.f, CONTEXT_VIEW_ALPHA );
+    drawQuad( texCoord );
 
     glPopMatrix();
     glPopAttrib();
 }
 
-void ContentWindowRenderer::drawQuad(const QRectF& coord)
+void ContentWindowRenderer::drawQuad( const QRectF& coord )
 {
     glPushMatrix();
 
-    glTranslatef(coord.x(), coord.y(), 0);
-    glScalef(coord.width(), coord.height(), 1.f);
+    glTranslatef( coord.x(), coord.y(), 0.f );
+    glScalef( coord.width(), coord.height(), 1.f );
 
-    quad_.setRenderMode(GL_QUADS);
+    quad_.setRenderMode( GL_QUADS );
     quad_.render();
 
     glPopMatrix();
 }
 
-void ContentWindowRenderer::drawQuadBorder(const QRectF& coord, const float width)
+void ContentWindowRenderer::drawQuadBorder( const QRectF& coord,
+                                            const float width )
 {
     glPushMatrix();
 
-    glTranslatef(coord.x(), coord.y(), 0);
-    glScalef(coord.width(), coord.height(), 1.f);
+    glTranslatef( coord.x(), coord.y(), 0.f );
+    glScalef( coord.width(), coord.height(), 1.f );
 
-    glLineWidth(width);
-    quad_.setRenderMode(GL_LINE_LOOP);
+    glLineWidth( width );
+    quad_.setRenderMode( GL_LINE_LOOP );
     quad_.render();
 
     glPopMatrix();

@@ -44,9 +44,6 @@
 #include "DisplayGroup.h"
 #include "ContentFactory.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include "log.h"
 
 #include <fstream>
@@ -55,114 +52,127 @@
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_archive_exception.hpp>
 
-StateSerializationHelper::StateSerializationHelper(DisplayGroupPtr displayGroup)
-    : displayGroup_(displayGroup)
+StateSerializationHelper::StateSerializationHelper( DisplayGroupPtr displayGroup )
+    : displayGroup_( displayGroup )
 {
 }
 
-bool StateSerializationHelper::save(const QString& filename, const bool generatePreview)
+bool StateSerializationHelper::save( const QString& filename, const bool generatePreview )
 {
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
 
-    if (generatePreview)
+    if( generatePreview )
     {
-        const QSize wallDimensions(g_configuration->getTotalWidth(), g_configuration->getTotalHeight());
-        StatePreview filePreview(filename);
-        filePreview.generateImage( wallDimensions, contentWindows );
+        const QSizeF& size = displayGroup_->getCoordinates().size();
+        const QSize dimensions( (int)size.width(), (int)size.height( ));
+        StatePreview filePreview( filename );
+        filePreview.generateImage( dimensions, contentWindows );
         filePreview.saveToFile();
     }
 
     // serialize state
-    std::ofstream ofs(filename.toStdString());
-    if (!ofs.good())
+    std::ofstream ofs( filename.toStdString( ));
+    if ( !ofs.good( ))
         return false;
 
     // brace this so destructor is called on archive before we use the stream
     {
-        State state(contentWindows);
-        boost::archive::xml_oarchive oa(ofs);
-        oa << BOOST_SERIALIZATION_NVP(state);
+        State state( contentWindows );
+        boost::archive::xml_oarchive oa( ofs );
+        oa << BOOST_SERIALIZATION_NVP( state );
     }
     ofs.close();
 
     return true;
 }
 
-bool StateSerializationHelper::load(const QString& filename)
+bool StateSerializationHelper::load( const QString& filename )
 {
     State state;
 
     // For backward compatibility, try to load the file as a legacy state file first
     if( state.legacyLoadXML( filename ))
     {
-        displayGroup_->setContentWindows(state.getContentWindows());
+        displayGroup_->setContentWindows( state.getContentWindows( ));
         return true;
     }
 
     // De-serialize state file
-    std::ifstream ifs(filename.toStdString());
-    if (!ifs.good())
+    std::ifstream ifs( filename.toStdString( ));
+    if ( !ifs.good( ))
         return false;
     try
     {
-        boost::archive::xml_iarchive ia(ifs);
-        ia >> BOOST_SERIALIZATION_NVP(state);
+        boost::archive::xml_iarchive ia( ifs );
+        ia >> BOOST_SERIALIZATION_NVP( state );
     }
-    catch(const boost::archive::archive_exception& e)
+    catch( const boost::archive::archive_exception& e )
     {
-        put_flog(LOG_ERROR, "Could not restore session/state %s: %s",
-                 filename.toStdString().c_str(), e.what());
+        put_flog( LOG_ERROR, "Could not restore session/state %s: %s",
+                  filename.toStdString().c_str(), e.what( ));
         return false;
     }
-    catch (const std::exception& e)
+    catch( const std::exception& e )
     {
-        put_flog(LOG_ERROR, "Could not restore state, wrong file format %s: %s",
-                 filename.toStdString().c_str(), e.what());
+        put_flog( LOG_ERROR, "Could not restore state, wrong file format %s: %s",
+                  filename.toStdString().c_str(), e.what( ));
         return false;
     }
     ifs.close();
 
     ContentWindowPtrs contentWindows = state.getContentWindows();
-    validate(contentWindows);
+    if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )
+        scaleToDisplayGroup( contentWindows );
+    validate( contentWindows );
 
-    displayGroup_->setContentWindows(contentWindows);
+    displayGroup_->setContentWindows( contentWindows );
     return true;
+}
+
+void StateSerializationHelper::scaleToDisplayGroup( ContentWindowPtrs&
+                                                    contentWindows ) const
+{
+    const QRectF& group = displayGroup_->getCoordinates();
+
+    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
+    {
+        const QRectF& norm = window->getCoordinates();
+        window->setCoordinates( QRectF( norm.x() * group.width(),
+                                        norm.y() * group.height(),
+                                        norm.width() * group.width(),
+                                        norm.height() * group.height( )));
+    }
 }
 
 void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
 {
     ContentWindowPtrs validContentWindows;
-    validContentWindows.reserve(contentWindows.size());
+    validContentWindows.reserve( contentWindows.size( ));
 
-    BOOST_FOREACH(ContentWindowPtr contentWindow, contentWindows)
+    BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
-        if (!contentWindow->getContent())
+        if( !contentWindow->getContent( ))
         {
-            put_flog(LOG_WARN, "Window '%s' does not have a Content.",
-                     contentWindow->getID().toString().toStdString().c_str());
+            put_flog( LOG_WARN, "Window '%s' does not have a Content.",
+                      contentWindow->getID().toString().toStdString().c_str( ));
             continue;
         }
         // PixelStreams are not supported yet, don't restore them.
         // This feature will be implemented in DISCL-6
-        if (isPixelStream((contentWindow)))
+        if( isPixelStream( *contentWindow ))
             continue;
 
-        finalize(contentWindow);
-        validContentWindows.push_back(contentWindow);
+        // Refresh content information, files can have been modified or removed
+        // since the state was saved.
+        if ( !contentWindow->getContent()->readMetadata( ))
+            contentWindow->setContent( ContentFactory::getErrorContent( ));
+
+        validContentWindows.push_back( contentWindow );
     }
     contentWindows = validContentWindows;
 }
 
-bool StateSerializationHelper::isPixelStream(ContentWindowPtr contentWindow) const
+bool StateSerializationHelper::isPixelStream( const ContentWindow& contentWindow ) const
 {
-    return contentWindow->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM;
-}
-
-void StateSerializationHelper::finalize(ContentWindowPtr contentWindow) const
-{
-    // Refresh content informations. Files can have changed since the State was saved.
-    if (contentWindow->getContent()->readMetadata())
-        contentWindow->createInteractionDelegate();
-    else
-        contentWindow->setContent(ContentFactory::getErrorContent());
+    return contentWindow.getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM;
 }

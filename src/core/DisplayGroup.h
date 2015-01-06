@@ -46,6 +46,7 @@
 
 #include <QObject>
 #include <QUuid>
+#include <QRectF>
 
 /**
  * A collection of ContentWindows.
@@ -59,7 +60,7 @@ class DisplayGroup : public QObject,
 
 public:
     /** Constructor */
-    DisplayGroup();
+    DisplayGroup( const QSizeF& size );
 
     /** Destructor */
     virtual ~DisplayGroup();
@@ -67,8 +68,8 @@ public:
     /** Add a content window. */
     void addContentWindow( ContentWindowPtr contentWindow );
 
-    /** Get the background content window. */
-    ContentWindowPtr getBackgroundContentWindow() const;
+    /** Get the background content. */
+    ContentPtr getBackgroundContent() const;
 
     /**
      * Is the DisplayGroup empty.
@@ -96,6 +97,9 @@ public:
      */
     void setContentWindows( ContentWindowPtrs contentWindows );
 
+    /** Get the coordinates of the display group on the wall in pixel units. */
+    const QRectF& getCoordinates() const;
+
 public slots:
     /** Clear all ContentWindows */
     void clear();
@@ -103,7 +107,7 @@ public slots:
     /**
      * Set the background content.
      * @param content The content to set.
-     *                A null pointer removes the current background.
+     *        A null pointer removes the current background.
      */
     void setBackgroundContent( ContentPtr content );
 
@@ -132,17 +136,23 @@ private slots:
 private:
     friend class boost::serialization::access;
 
+    /** No-argument constructor required for serialization. */
+    DisplayGroup();
+
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
         ar & contentWindows_;
         ar & backgroundContent_;
+        ar & coordinates_;
     }
 
     void watchChanges( ContentWindowPtr contentWindow );
 
     ContentWindowPtrs contentWindows_;
-    ContentWindowPtr backgroundContent_;
+    ContentPtr backgroundContent_;
+
+    QRectF coordinates_;
 };
 
 #endif

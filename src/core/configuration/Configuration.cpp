@@ -136,29 +136,25 @@ int Configuration::getTotalHeight() const
             (totalScreenCountY_ - 1) * getMullionHeight();
 }
 
+QSize Configuration::getTotalSize() const
+{
+    return QSize( getTotalWidth(), getTotalHeight( ));
+}
+
 double Configuration::getAspectRatio() const
 {
     return double(getTotalWidth()) / getTotalHeight();
 }
 
-QRectF Configuration::getNormalizedScreenRect(const QPoint& tileIndex) const
+QRect Configuration::getScreenRect( const QPoint& tileIndex ) const
 {
-    assert(tileIndex.x() < totalScreenCountX_);
-    assert(tileIndex.y() < totalScreenCountY_);
+    assert( tileIndex.x() < totalScreenCountX_ );
+    assert( tileIndex.y() < totalScreenCountY_ );
 
-    const int xPos = tileIndex.x() * (screenWidth_ + mullionWidth_);
-    const int yPos = tileIndex.y() * (screenHeight_ + mullionHeight_);
+    const int xPos = tileIndex.x() * ( screenWidth_ + mullionWidth_ );
+    const int yPos = tileIndex.y() * ( screenHeight_ + mullionHeight_ );
 
-    // normalize to 0->1
-    const float totalWidth = (float)getTotalWidth();
-    const float totalHeight = (float)getTotalHeight();
-
-    const float screenLeft = (float)xPos / totalWidth;
-    const float screenTop = (float)yPos / totalHeight;
-    const float screenWidth = (float)screenWidth_ / totalWidth;
-    const float screenHeight = (float)screenHeight_ / totalHeight;
-
-    return QRectF(screenLeft, screenTop, screenWidth, screenHeight);
+    return QRect( xPos, yPos, screenWidth_, screenHeight_ );
 }
 
 bool Configuration::getFullscreen() const

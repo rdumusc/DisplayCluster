@@ -38,47 +38,27 @@
 
 #include "DisplayGroupGraphicsScene.h"
 
-#include "globals.h"
 #include "configuration/Configuration.h"
 
-#include <QtGui/QGraphicsRectItem>
 #include <QtGui/QKeyEvent>
-#include <QtGui/QGraphicsSceneMouseEvent>
 
-DisplayGroupGraphicsScene::DisplayGroupGraphicsScene( QObject* parent_ )
+DisplayGroupGraphicsScene::DisplayGroupGraphicsScene( const Configuration& config,
+                                                      QObject* parent_ )
     : QGraphicsScene( parent_ )
 {
-    setSceneRect(0., 0., 1., 1.);
-    refreshTileRects();
+    setSceneRect( QRectF( QPointF( 0.0, 0.0 ), config.getTotalSize( )));
+
+    for( int i = 0; i < config.getTotalScreenCountX(); ++i )
+        for( int j = 0; j < config.getTotalScreenCountY(); ++j )
+            screens_.push_back( config.getScreenRect( QPoint( i, j )));
+
+    addBackgroundRectangles();
 }
 
-void DisplayGroupGraphicsScene::refreshTileRects()
+void DisplayGroupGraphicsScene::clearAndRestoreBackground()
 {
-    // clear existing tile rects
-    for( TileRectItems::iterator it = tileRects_.begin(); it != tileRects_.end(); ++it )
-        delete *it;
-    tileRects_.clear();
-
-    // Add rectangle for the wall area
-    tileRects_.push_back( addRect( 0., 0., 1., 1. ));
-
-    // Add 1 rectangle for each monitor
-    const int numTilesX = g_configuration->getTotalScreenCountX();
-    const int numTilesY = g_configuration->getTotalScreenCountY();
-
-    const QPen pen( QColor( 0, 0, 0 )); // border
-    const QBrush brush( QColor( 0, 0, 0, 32 )); // fill color / opacity
-
-    for( int i=0; i<numTilesX; ++i )
-    {
-        for( int j=0; j<numTilesY; ++j )
-        {
-            const QPoint tileIndex( i, j );
-            const QRectF screen = g_configuration->getNormalizedScreenRect( tileIndex );
-
-            tileRects_.push_back( addRect( screen, pen, brush ));
-        }
-    }
+    clear();
+    addBackgroundRectangles();
 }
 
 bool DisplayGroupGraphicsScene::event( QEvent *evt )
@@ -87,7 +67,7 @@ bool DisplayGroupGraphicsScene::event( QEvent *evt )
     {
     case QEvent::KeyPress:
     {
-        QKeyEvent *k = static_cast< QKeyEvent* >( evt );
+        QKeyEvent* k = static_cast< QKeyEvent* >( evt );
 
         // Override default behaviour to process TAB key events
         QGraphicsScene::keyPressEvent( k );
@@ -105,17 +85,13 @@ bool DisplayGroupGraphicsScene::event( QEvent *evt )
     }
 }
 
-void DisplayGroupGraphicsScene::mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent )
+void DisplayGroupGraphicsScene::addBackgroundRectangles()
 {
-    QGraphicsScene::mouseMoveEvent( mouseEvent );
-}
+    addRect( sceneRect( )); // Background rectangle for the wall area
 
-void DisplayGroupGraphicsScene::mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    QGraphicsScene::mousePressEvent( mouseEvent );
-}
+    const QPen pen( QColor( Qt::black ));       // screen border
+    const QBrush brush( QColor( 0, 0, 0, 32 )); // screen fill color
 
-void DisplayGroupGraphicsScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    QGraphicsScene::mouseReleaseEvent( mouseEvent );
+    foreach( const QRectF& screen, screens_ )
+        addRect( screen, pen, brush );
 }

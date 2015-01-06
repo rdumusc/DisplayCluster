@@ -41,118 +41,60 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
-#include <globals.h>
-#include <Options.h>
-#include <ContentWindow.h>
-#include <configuration/MasterConfiguration.h>
+#include "ContentWindow.h"
+#include "DisplayGroup.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 #include "DummyContent.h"
 
+#include "EventReceiver.h"
+
+class DummyEventReceiver : public EventReceiver
+{
+public:
+    DummyEventReceiver() : success_( false ) {}
+    virtual void processEvent( Event /*event*/ )
+    {
+        success_ = true;
+    }
+    bool success_;
+};
+
+namespace
+{
+const QSize wallSize( 1000, 1000 );
 const int WIDTH = 512;
 const int HEIGHT = 512;
+}
 
 BOOST_AUTO_TEST_CASE( testInitialSize )
 {
-    g_configuration = new Configuration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     const QRectF& coords = window.getCoordinates();
 
-    const double normWidth = double(WIDTH) / g_configuration->getTotalWidth();
-    const double normHeight = double(HEIGHT) / g_configuration->getTotalHeight();
-
-    // default 1:1 size, center on wall
-    BOOST_CHECK_EQUAL( window.getSizeState(), SIZE_1TO1 );
-    BOOST_CHECK_EQUAL( coords.x(), (1. - normWidth) * .5 );
-    BOOST_CHECK_EQUAL( coords.y(), (1. - normHeight) * .5 );
-    BOOST_CHECK_EQUAL( coords.width(), normWidth );
-    BOOST_CHECK_EQUAL( coords.height(), normHeight );
-
-    delete g_configuration;
-}
-
-BOOST_AUTO_TEST_CASE( testFullScreenSize )
-{
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-
-    window.toggleFullscreen();
-
-    const QRectF& coords = window.getCoordinates();
-
-    const double wallAR = 1. / g_configuration->getAspectRatio();
-    const double normWidth = 1. * wallAR;
-    const double normHeight = 1.;
-
-    // full screen, center on wall
-    BOOST_CHECK_EQUAL( coords.x(), (1. - normWidth) * .5 );
-    BOOST_CHECK_EQUAL( coords.y(), (1. - normHeight) * .5 );
-    BOOST_CHECK_EQUAL( coords.width(), normWidth );
-    BOOST_CHECK_EQUAL( coords.height(), normHeight );
-
-    delete g_configuration;
-}
-
-BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
-{
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-
-    QRectF target( 0.9, 0.7, 0.2, 1 );
-    target.setHeight( target.width() * g_configuration->getAspectRatio());
-
-    window.setSize( target.width(), target.height( ));
-    window.setPosition( target.x(), target.y( ));
-
-    QRectF coords = window.getCoordinates();
-    BOOST_CHECK_EQUAL( coords.x(), target.x( ));
-    BOOST_CHECK_EQUAL( coords.y(), target.y( ));
-    BOOST_CHECK_EQUAL( coords.width(), target.width( ));
-    BOOST_CHECK_EQUAL( coords.height(), target.height( ));
-
-    window.toggleFullscreen();
-    window.toggleFullscreen();
-
-    coords = window.getCoordinates();
-
-    // back to original position and size
-    BOOST_CHECK_EQUAL( coords.x(), target.x( ));
-    BOOST_CHECK_EQUAL( coords.y(), target.y( ));
-    BOOST_CHECK_EQUAL( coords.width(), target.width( ));
-    BOOST_CHECK_EQUAL( coords.height(), target.height( ));
-
-    delete g_configuration;
+    // default 1:1 size, left-corner at the origin
+    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
+    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
 }
 
 BOOST_AUTO_TEST_CASE( testValidID )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
     BOOST_CHECK( window.getID() != QUuid());
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testUniqueID )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
 
@@ -163,25 +105,193 @@ BOOST_AUTO_TEST_CASE( testUniqueID )
     BOOST_CHECK( window2.getID() != QUuid());
 
     BOOST_CHECK( window1.getID() != window2.getID());
-
-    delete g_configuration;
 }
 
 BOOST_AUTO_TEST_CASE( testSetContent )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
     ContentPtr content( new DummyContent );
     content->setDimensions( QSize( WIDTH, HEIGHT ));
 
-    ContentWindow window;
-    BOOST_CHECK( !window.getContent( ));
-
-    window.setContent( content );
+    ContentWindow window( content );
     BOOST_CHECK_EQUAL( window.getContent(), content );
 
-    window.setContent( ContentPtr( ));
-    BOOST_CHECK( !window.getContent( ));
+    ContentPtr secondContent( new DummyContent );
+    secondContent->setDimensions( QSize( 2 * WIDTH, 3 * HEIGHT ));
 
-    delete g_configuration;
+    window.setContent( secondContent );
+    BOOST_CHECK_EQUAL( window.getContent(), secondContent );
+
+    const QRectF& coords = window.getCoordinates();
+
+    // Dimensions are currently not modified by the change of content,
+    // because the only use case is to set an error content of the same size.
+    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
+    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
+    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
+}
+
+BOOST_AUTO_TEST_CASE( testZoom )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    const QPointF zoomCenter( 0.5, 0.5 );
+    BOOST_REQUIRE_EQUAL( window.getZoom(), 1.0 );
+
+    window.setZoom( 0.5 );
+    BOOST_CHECK_EQUAL( window.getZoom(), 1.0 );
+    window.setZoom( 8.7 );
+    BOOST_CHECK_EQUAL( window.getZoom(), 8.7 );
+    window.setZoom( 16.0 );
+    BOOST_CHECK_EQUAL( window.getZoom(), 16.0 );
+    window.setZoom( 17.0 );
+    BOOST_CHECK_EQUAL( window.getZoom(), 16.0 );
+}
+
+BOOST_AUTO_TEST_CASE( testZoomCenter )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    const QPointF zoomCenter( 0.5, 0.5 );
+    BOOST_REQUIRE_EQUAL( window.getZoomCenter().x(), zoomCenter.x() );
+    BOOST_REQUIRE_EQUAL( window.getZoomCenter().y(), zoomCenter.y() );
+
+    window.setZoomCenter( QPointF( 0.4, 0.6 ));
+    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), zoomCenter.x() );
+    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), zoomCenter.y() );
+
+    window.setZoom( 8.7 );
+    window.setZoomCenter( QPointF( 0.4, 0.6 ));
+    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 0.4 );
+    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 0.6 );
+
+    window.setZoom( 15.0 );
+    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 0.4 );
+    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 0.6 );
+
+    const double zoom = 9.57;
+    window.setZoom( zoom );
+    window.setZoomCenter( QPointF( 0.0, 0.0 ));
+    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 0.5 * ( 1.0 / zoom ));
+    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 0.5 * ( 1.0 / zoom ));
+
+    window.setZoomCenter( QPointF( 2.0, 3.0 ));
+    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 1.0 - 0.5 * ( 1.0 / zoom ));
+    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 1.0 - 0.5 * ( 1.0 / zoom ));
+
+    window.setZoom( 1.0 );
+    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), zoomCenter.x() );
+    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), zoomCenter.y() );
+}
+
+BOOST_AUTO_TEST_CASE( testWindowState )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::NONE );
+    BOOST_REQUIRE( !window.isHidden( ));
+    BOOST_REQUIRE( !window.isMoving( ));
+    BOOST_REQUIRE( !window.isResizing( ));
+    BOOST_REQUIRE( !window.isSelected( ));
+
+    window.setState( ContentWindow::SELECTED );
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::SELECTED );
+    BOOST_CHECK( window.isSelected( ));
+
+    window.setState( ContentWindow::MOVING );
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::MOVING );
+    BOOST_CHECK( window.isMoving( ));
+
+    window.setState( ContentWindow::RESIZING );
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::RESIZING );
+    BOOST_CHECK( window.isResizing( ));
+
+    window.setState( ContentWindow::HIDDEN );
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
+    BOOST_CHECK( window.isHidden( ));
+}
+
+BOOST_AUTO_TEST_CASE( testEventReceiver )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    BOOST_REQUIRE( !window.hasEventReceivers() );
+
+    DummyEventReceiver receiver;
+    BOOST_REQUIRE( !receiver.success_ );
+
+    window.dispatchEvent( Event( ));
+    BOOST_CHECK( !receiver.success_ );
+
+    BOOST_CHECK( window.registerEventReceiver( &receiver ));
+    BOOST_CHECK( window.hasEventReceivers() );
+    BOOST_CHECK( !receiver.success_ );
+    window.dispatchEvent( Event( ));
+    BOOST_CHECK( receiver.success_ );
+}
+
+BOOST_AUTO_TEST_CASE( testBackupCoordinates )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+    const QRectF& coords = window.getCoordinates();
+
+    const QRectF coord1( 100.0, 200.0, 300.0, 400.0 );
+    const QRectF coord2( 432.0, 523.0, 123.0, 98.0 );
+
+
+    window.setCoordinates( coord1 );
+    window.backupCoordinates();
+    BOOST_CHECK_EQUAL( coords.x(), coord1.x() );
+    BOOST_CHECK_EQUAL( coords.y(), coord1.y() );
+    BOOST_CHECK_EQUAL( coords.width(), coord1.width() );
+    BOOST_CHECK_EQUAL( coords.height(), coord1.height() );
+
+    window.setCoordinates( coord2 );
+    BOOST_CHECK_EQUAL( coords.x(), coord2.x() );
+    BOOST_CHECK_EQUAL( coords.y(), coord2.y() );
+    BOOST_CHECK_EQUAL( coords.width(), coord2.width() );
+    BOOST_CHECK_EQUAL( coords.height(), coord2.height() );
+
+    window.restoreCoordinates();
+    BOOST_CHECK_EQUAL( coords.x(), coord1.x() );
+    BOOST_CHECK_EQUAL( coords.y(), coord1.y() );
+    BOOST_CHECK_EQUAL( coords.width(), coord1.width() );
+    BOOST_CHECK_EQUAL( coords.height(), coord1.height() );
+}
+
+BOOST_AUTO_TEST_CASE( testToggleSelectedState )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    BOOST_REQUIRE_EQUAL( window.getState(), ContentWindow::NONE );
+
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::SELECTED );
+
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::NONE );
+
+    window.setState( ContentWindow::MOVING );
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::MOVING );
+
+    window.setState( ContentWindow::RESIZING );
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::RESIZING );
+
+    window.setState( ContentWindow::HIDDEN );
+    window.toggleSelectedState();
+    BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
 }

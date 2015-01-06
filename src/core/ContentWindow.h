@@ -52,31 +52,15 @@
 #ifndef Q_MOC_RUN
 // https://bugreports.qt.nokia.com/browse/QTBUG-22829: When Qt moc runs on CGAL
 // files, do not process <boost/type_traits/has_operator.hpp>
-#  include <boost/shared_ptr.hpp>
-#  include <boost/date_time/posix_time/posix_time.hpp>
 #  include <boost/serialization/shared_ptr.hpp>
-#  include <boost/date_time/posix_time/time_serialize.hpp>
+#  include <boost/serialization/split_member.hpp>
 #endif
 
 class EventReceiver;
-
-enum ControlState
-{
-    STATE_PAUSED = 1 << 0,
-    STATE_LOOP   = 1 << 1
-};
-
-enum SizeState
-{
-    SIZE_1TO1,
-    SIZE_FULLSCREEN,
-    SIZE_NORMALIZED
-};
-
 class ContentInteractionDelegate;
 
 /**
- * A window for placing a Content on the Wall.
+ * A window for displaying Content on the Wall.
  *
  * Can be serialized and distributed to the Wall applications.
  */
@@ -85,25 +69,29 @@ class ContentWindow : public QObject
     Q_OBJECT
 
 public:
-    /** The possible states of the window. */
+    /** The possible states of a window. */
     enum WindowState
     {
-        UNSELECTED, // not selected, interaction modifies position/size
-        SELECTED    // selected, interaction goes to ContentInteractionDelegate
+        NONE,       // not selected, interaction modifies position/size
+        SELECTED,   // selected, interaction goes to ContentInteractionDelegate
+        MOVING,     // the window is being moved
+        RESIZING,   // the window is being resized
+        HIDDEN      // the window is hidden (invisible, not interacting)
     };
-
-    /** No-argument constructor required for serialization. */
-    ContentWindow();
 
     /**
      * Create a new window.
-     * @param content The Content for this window.
+     * @param content The Content to be displayed.
      * @note Rank0 only.
      */
     ContentWindow( ContentPtr content );
 
     /** Destructor. */
-    virtual ~ContentWindow();
+    ~ContentWindow();
+
+    /** @return the unique identifier for this window. */
+    const QUuid& getID() const;
+
 
     /** Get the content. */
     ContentPtr getContent() const;
@@ -111,45 +99,48 @@ public:
     /** Set the content, replacing the existing one. @note Rank0 only. */
     void setContent( ContentPtr content );
 
-    /** @return the unique identifier for this window. */
-    const QUuid& getID() const;
 
-    /** Get the normalized window coordiates. */
+    /** Get the coordiates in pixel units. */
     const QRectF& getCoordinates() const;
 
-    /** Get the normalized position. */
-    void getPosition( double &x, double &y ) const;
+    /** Set the coordinates in pixel units. */
+    void setCoordinates( const QRectF& coordinates );
 
-    /** Get the normalized size. */
-    void getSize( double &w, double &h ) const;
 
-    /** Get the normalized center position. */
-    void getCenter( double &centerX, double &centerY ) const;
+    /** Get the zoom factor [1.0; 16.0]. */
+    qreal getZoom() const;
 
-    /** Get the zoom factor [1;inf]. */
-    double getZoom() const;
+    /** Set the zoom factor [1.0; 16.0]. */
+    void setZoom( const qreal zoom );
 
-    /** Get the current size state. */
-    SizeState getSizeState() const;
+    /** Get the zoom center in normalized coordinates. */
+    const QPointF& getZoomCenter() const;
 
-    /** Get the control state. */
-    ControlState getControlState() const;
+    /** Set the zoom center in normalized coordinates. */
+    void setZoomCenter( const QPointF& zoomCenter );
 
-    /** Set the control state. */
-    void setControlState( const ControlState state );
 
-    /** Toggle the window state. */
-    void toggleWindowState();
+    /** Get the current state. */
+    ContentWindow::WindowState getState() const;
 
-    /** Toggle between fullscreen and 'normalized' by keeping the position
-     *  and size after leaving fullscreen */
-    void toggleFullscreen();
+    /** Set the current state. */
+    void setState( const ContentWindow::WindowState state );
 
-    /** Get the window state. */
-    ContentWindow::WindowState getWindowState() const;
+    /** Toggle the state (selected / unselected). */
+    void toggleSelectedState();
 
-    /** Is the window selected. */
-    bool selected() const;
+    /** Check if selected. */
+    bool isSelected() const;
+
+    /** Check if moving. */
+    bool isMoving() const;
+
+    /** Check if resizing. */
+    bool isResizing() const;
+
+    /** Check if hidden. */
+    bool isHidden() const;
+
 
     /** Register an object to receive this window's Events. */
     bool registerEventReceiver( EventReceiver* receiver );
@@ -157,45 +148,24 @@ public:
     /** Does this window already have registered Event receiver(s) */
     bool hasEventReceivers() const;
 
+    /** Used by InteractionDelegate to emit notify( Event ). */
+    void dispatchEvent( const Event event );
+
     /**
      * Get the interaction delegate.
-     * @see createInteractionDelegate()
      * @note Rank0 only.
      */
-    ContentInteractionDelegate& getInteractionDelegate() const;
+    ContentInteractionDelegate& getInteractionDelegate();
 
-    /**
-     * Create a delegate to handle user interaction through dc::Events.
-     * The type of delegate created depends on the ContentType.
-     * @note Rank0 only.
-     */
-    void createInteractionDelegate();
 
-    /** Get the position of the window center. */
-    QPointF getWindowCenterPosition() const;
+    /** Backup the current coordinates. */
+    void backupCoordinates();
 
-    /**
-     * Move the window to a new position.
-     * @param position The position for the window center
-     * @param constrainToWindowBorders If true, the new position will be
-     *        adjusted so that the window does not exceed the screen boundaries.
-     */
-    void centerPositionAround( const QPointF& position,
-                               const bool constrainToWindowBorders );
+    /** Check if there are coordinates which can be restored. */
+    bool hasBackupCoordinates() const;
 
-    void setPosition( const double x, const double y );
-    void setSize( const double w, const double h );
-    void setCoordinates( const QRectF& coordinates );
-    void scaleSize( const double factor );
-    void adjustSize( const SizeState state );
-
-    void setCenter( double centerX, double centerY );
-    void setZoom( const double zoom );
-
-    void setWindowState( const ContentWindow::WindowState state );
-
-    /** Used by InteractionDelegate to emit eventChanged(). */
-    void dispatchEvent( const Event event );
+    /** Restore and clear the backed-up coordinates. */
+    void restoreCoordinates();
 
 signals:
     /** Emitted when the Content signals that it has been modified. */
@@ -211,17 +181,13 @@ signals:
     void modified();
 
     /** Notify registered EventReceivers that an Event occured. */
-    void eventChanged( Event event );
+    void notify( Event event );
 
 private:
-    void setEventToNewDimensions();
-
-    bool isValidSize( const QSizeF& size ) const;
-    QSizeF getNormalized1To1Size() const;
-    void clampSize( QSizeF& size ) const;
-    QRectF getCenteredCoordinates( const QSizeF& size ) const;
-
     friend class boost::serialization::access;
+
+    /** No-argument constructor required for serialization. */
+    ContentWindow();
 
     /** Serialize for sending to Wall applications. */
     template< class Archive >
@@ -229,49 +195,74 @@ private:
     {
         ar & content_;
         ar & coordinates_;
-        ar & centerX_;
-        ar & centerY_;
         ar & zoom_;
-        ar & controlState_;
+        ar & zoomCenter_;
         ar & windowState_;
     }
 
     /** Serialize for saving to an xml file */
     template< class Archive >
-    void serialize_for_xml( Archive & ar, const unsigned int )
+    void serialize_members_xml( Archive & ar, const unsigned int version )
     {
-        int contentWidth = 0, contentHeight = 0; // For reading legacy archives
         ar & boost::serialization::make_nvp( "content", content_ );
-        ar & boost::serialization::make_nvp( "contentWidth", contentWidth );
-        ar & boost::serialization::make_nvp( "contentHeight", contentHeight );
+        if( version < 1 )
+        {
+            int contentWidth = 0, contentHeight = 0;
+            ar & boost::serialization::make_nvp( "contentWidth", contentWidth );
+            ar & boost::serialization::make_nvp( "contentHeight", contentHeight );
+        }
         ar & boost::serialization::make_nvp( "coordinates", coordinates_ );
         ar & boost::serialization::make_nvp( "coordinatesBackup", coordinatesBackup_ );
-        ar & boost::serialization::make_nvp( "centerX", centerX_ );
-        ar & boost::serialization::make_nvp( "centerY", centerY_ );
+        ar & boost::serialization::make_nvp( "centerX", zoomCenter_.rx() );
+        ar & boost::serialization::make_nvp( "centerY", zoomCenter_.ry() );
         ar & boost::serialization::make_nvp( "zoom", zoom_ );
-        ar & boost::serialization::make_nvp( "controlState", controlState_ );
+        if( version < 1 )
+        {
+            int controlState = 0;
+            ar & boost::serialization::make_nvp( "controlState", controlState );
+        }
         ar & boost::serialization::make_nvp( "windowState", windowState_ );
     }
 
-    const QUuid uuid_;
+    /** Saving to xml. */
+    void serialize_for_xml( boost::archive::xml_iarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
+    }
 
-    // normalized window coordinates
+    /** Loading from xml. */
+    void serialize_for_xml( boost::archive::xml_oarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
+        // The InteractionDelegate is not serialized and must be recreated
+        createInteractionDelegate();
+    }
+
+    void createInteractionDelegate();
+    void sendSizeChangedEvent();
+    void constrainZoomCenter();
+
+    const QUuid uuid_;
+    ContentPtr content_;
+
+    // coordinates in pixels, relative to the parent DisplayGroup
     QRectF coordinates_;
     QRectF coordinatesBackup_;
 
     // panning and zooming
-    double centerX_;
-    double centerY_;
-    double zoom_;
+    QPointF zoomCenter_;
+    qreal zoom_;
 
     ContentWindow::WindowState windowState_;
-    SizeState sizeState_;
-    ControlState controlState_;
+
     unsigned int eventReceiversCount_;
 
-    ContentPtr content_;
     boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
 };
+
+BOOST_CLASS_VERSION( ContentWindow, 2 )
 
 DECLARE_SERIALIZE_FOR_XML( ContentWindow )
 

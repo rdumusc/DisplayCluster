@@ -93,9 +93,6 @@ public:
     /** Get the aspect ratio. */
     float getAspectRatio() const;
 
-    /** Used to indicate that the window is being moved. TODO: move to ContentWindow. */
-    void blockAdvance( bool block ) { blockAdvance_ = block; }
-
     /** Re-implement this method to update or synchronize before rendering. */
     virtual void preRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
 
@@ -113,18 +110,24 @@ protected:
     Content() {}
 
     template< class Archive >
-    void serialize( Archive & ar, const unsigned int )
+    void serialize( Archive & ar, const unsigned int version )
     {
         ar & boost::serialization::make_nvp( "uri", uri_ );
         ar & boost::serialization::make_nvp( "width", size_.rwidth( ));
         ar & boost::serialization::make_nvp( "height", size_.rheight( ));
-        ar & boost::serialization::make_nvp( "block_advance", blockAdvance_ );
+
+        if ( version < 2 )
+        {
+            bool blockAdvance = false;
+            ar & boost::serialization::make_nvp( "block_advance", blockAdvance );
+        }
     }
 
     QString uri_;
     QSize size_;
-    bool blockAdvance_;
 };
+
+BOOST_CLASS_VERSION( Content, 2 )
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT( Content )
 

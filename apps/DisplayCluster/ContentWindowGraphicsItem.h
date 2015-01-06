@@ -41,7 +41,17 @@
 
 #include "types.h"
 
+#include "ContentWindowController.h"
+
 #include <QtGui/QGraphicsObject>
+
+class QGestureEvent;
+class DoubleTapGesture;
+class PanGesture;
+class PinchGesture;
+class QTapGesture;
+class QSwipeGesture;
+class QTapAndHoldGesture;
 
 /**
  * Represent a ContentWindow in a QListView.
@@ -52,7 +62,8 @@ class ContentWindowGraphicsItem : public QGraphicsObject
 
 public:
     /** Constructor. */
-    explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow );
+    explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
+                                        const DisplayGroup& displayGroup );
 
     /** Destructor. */
     virtual ~ContentWindowGraphicsItem();
@@ -96,13 +107,20 @@ protected:
     //@}
 
 private:
-    void getButtonDimensions( float &width, float &height ) const;
+    void gestureEvent( QGestureEvent* event );
+    void doubleTap( DoubleTapGesture* gesture );
+    void pan( PanGesture* gesture );
+    void pinch( PinchGesture* gesture );
+    void tapAndHold( QTapAndHoldGesture* gesture );
 
-    bool hitCloseButton( const QPointF& hitPos ) const;
-    bool hitResizeButton( const QPointF& hitPos ) const;
-    bool hitFullscreenButton( const QPointF& hitPos ) const;
-    bool hitPauseButton( const QPointF& hitPos ) const;
-    bool hitLoopButton( const QPointF& hitPos ) const;
+    bool isMovie() const;
+
+    QSizeF getButtonDimensions() const;
+    QRectF getCloseRect() const;
+    QRectF getResizeRect() const;
+    QRectF getFullscreenRect() const;
+    QRectF getPauseRect() const;
+    QRectF getLoopRect() const;
 
     void drawFrame_( QPainter* painter );
     void drawCloseButton_( QPainter* painter );
@@ -110,10 +128,10 @@ private:
     void drawFullscreenButton_( QPainter* painter );
     void drawMovieControls_( QPainter* painter );
     void drawTextLabel_( QPainter* painter );
+    void drawWindowInfo_( QPainter* painter );
 
     ContentWindowPtr contentWindow_;
-    bool resizing_;
-    bool moving_;
+    ContentWindowController controller_;
 
     // counter used to determine stacking order in the UI
     static qreal zCounter_;

@@ -52,25 +52,36 @@ class QTapGesture;
 class QSwipeGesture;
 class QTapAndHoldGesture;
 
-
+/**
+ * Handle user interaction with the Content of a ContentWindow.
+ *
+ * This class is abstract and should be reimplemented for the
+ * different Content type.
+ */
 class ContentInteractionDelegate
 {
 public:
-    ContentInteractionDelegate(ContentWindow& contentWindow);
+    ContentInteractionDelegate( ContentWindow& contentWindow );
     virtual ~ContentInteractionDelegate();
 
-    // Main entry point for gesture events
-    void gestureEvent( QGestureEvent *event );
+    /**
+     * Process a touch gesture event.
+     * This function will call the appropriate touch gesture handler function.
+     * @param event The event to process
+     */
+    void gestureEvent( QGestureEvent* event );
 
-    // Virtual touch gestures
-    virtual void tap( QTapGesture* gesture ) { Q_UNUSED(gesture) }
-    virtual void doubleTap( DoubleTapGesture* gesture ) { Q_UNUSED(gesture) }
-    virtual void pan( PanGesture* gesture ) { Q_UNUSED(gesture) }
-    virtual void swipe( QSwipeGesture*gesture ) { Q_UNUSED(gesture) }
-    virtual void pinch( PinchGesture* gesture ) { Q_UNUSED(gesture) }
-    //virtual void tapAndHold( QTapAndHoldGesture* gesture ) { Q_UNUSED(gesture) }
+    /** @name Touch gesture handlers. */
+    //@{
+    virtual void tap( QTapGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void doubleTap( DoubleTapGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void pan( PanGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void swipe( QSwipeGesture* gesture ) { Q_UNUSED( gesture ) }
+    virtual void pinch( PinchGesture* gesture ) { Q_UNUSED( gesture ) }
+    //@}
 
-    // Keyboard + Mouse input
+    /** @name Mouse and keyboard event handlers. */
+    //@{
     virtual void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
     virtual void mousePressEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
     virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
@@ -78,19 +89,10 @@ public:
     virtual void wheelEvent( QGraphicsSceneWheelEvent* event ) { Q_UNUSED( event ) }
     virtual void keyPressEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
     virtual void keyReleaseEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
+    //@}
 
 protected:
     ContentWindow& contentWindow_;
-
-    double adaptZoomFactor( double pinchGestureScaleFactor );
-
-private:
-    // Touch gestures when ContentWindow is not in interaction mode
-    void doubleTapUnselected( DoubleTapGesture* gesture );
-    void tapAndHoldUnselected( QTapAndHoldGesture* gesture );
-    void panUnselected( PanGesture* gesture );
-    void pinchUnselected( PinchGesture* gesture );
-
 };
 
 #endif // CONTENTINTERACTIONDELEGATE_H

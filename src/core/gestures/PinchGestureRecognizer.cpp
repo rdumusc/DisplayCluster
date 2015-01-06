@@ -72,8 +72,8 @@ QGesture* PinchGestureRecognizer::create( QObject* target )
 }
 
 QGestureRecognizer::Result PinchGestureRecognizer::recognize( QGesture* state,
-                                                            QObject*,
-                                                            QEvent* event )
+                                                              QObject*,
+                                                              QEvent* event )
 {
     PinchGesture* gesture = static_cast<PinchGesture *>( state );
 
@@ -111,7 +111,7 @@ QGestureRecognizer::Result PinchGestureRecognizer::recognize( QGesture* state,
                 gesture->_lastCenterPoint = gesture->_centerPoint;
             }
             gesture->_centerPoint = centerPoint;
-            gesture->_normalizedCenterPoint = (p1.normalizedPos() + p2.normalizedPos()) / 2.0;;
+            gesture->_sceneCenterPoint = (p1.scenePos() + p2.scenePos()) / 2.0;
 
             gesture->_changeFlags = static_cast< PinchGesture::ChangeFlags >(gesture->_changeFlags | PinchGesture::CenterPointChanged);
 

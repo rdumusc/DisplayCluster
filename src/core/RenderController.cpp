@@ -59,7 +59,7 @@ RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr 
     , markerRenderer_(new MarkerRenderer)
     , fpsRenderer_(new FpsRenderer(renderContext))
     , syncQuit_(false)
-    , syncDisplayGroup_(boost::make_shared<DisplayGroup>())
+    , syncDisplayGroup_(boost::make_shared<DisplayGroup>(QSize()))
     , syncOptions_(boost::make_shared<Options>())
 {
     renderContext_->addRenderable(displayGroupRenderer_);

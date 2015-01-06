@@ -39,89 +39,72 @@
 
 #include "ZoomInteractionDelegate.h"
 #include "ContentWindow.h"
-#include "globals.h"
-#include "configuration/Configuration.h"
 #include "gestures/PanGesture.h"
 #include "gestures/PinchGesture.h"
 
-ZoomInteractionDelegate::ZoomInteractionDelegate(ContentWindow& contentWindow)
-    : ContentInteractionDelegate(contentWindow)
+#define ZOOM_PAN_GAIN_FACTOR  2.0
+
+ZoomInteractionDelegate::ZoomInteractionDelegate( ContentWindow& contentWindow )
+    : ContentInteractionDelegate( contentWindow )
 {
 }
 
-void ZoomInteractionDelegate::pan(PanGesture *gesture)
+void ZoomInteractionDelegate::pan( PanGesture* gesture )
 {
-    const QPointF& delta = gesture->delta();
-    const double dx = delta.x() / g_configuration->getTotalWidth();
-    const double dy = delta.y() / g_configuration->getTotalHeight();
-
-    double zoom = contentWindow_.getZoom();
-    double centerX, centerY;
-    contentWindow_.getCenter(centerX, centerY);
-    centerX = centerX - 2.*dx / zoom;
-    centerY = centerY - 2.*dy / zoom;
-    contentWindow_.setCenter(centerX, centerY);
+    const QPointF delta = computeZoomPanDelta( gesture->delta( ));
+    contentWindow_.setZoomCenter( contentWindow_.getZoomCenter() - delta );
 }
 
-
-void ZoomInteractionDelegate::pinch(PinchGesture *gesture)
+void ZoomInteractionDelegate::pinch( PinchGesture* gesture )
 {
-    const double factor = adaptZoomFactor(gesture->scaleFactor());
+    const double factor = adaptZoomFactor( gesture->scaleFactor( ));
     if( factor == 0.0 )
         return;
 
     contentWindow_.setZoom( contentWindow_.getZoom() * factor );
 }
 
-
-void ZoomInteractionDelegate::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void ZoomInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 {
-    // handle zooms / pans
-    QPointF delta = event->scenePos() - event->lastScenePos();
+    const QPointF mouseDelta = event->scenePos() - event->lastScenePos();
 
-    if(event->buttons().testFlag(Qt::RightButton))
+    if( event->buttons().testFlag( Qt::RightButton ))
     {
-        // increment zoom
-
-        // if this is a touch event, use cross-product for determining change in zoom (counterclockwise rotation == zoom in, etc.)
-        // otherwise, use y as the change in zoom
-        double zoomDelta;
-
-        if(event->modifiers().testFlag(Qt::AltModifier))
-        {
-            zoomDelta = (event->scenePos().x()-0.5) * delta.y() - (event->scenePos().y()-0.5) * delta.x();
-            zoomDelta *= 2.;
-        }
-        else
-        {
-            zoomDelta = delta.y();
-        }
-
-        double zoom = contentWindow_.getZoom() * (1. - zoomDelta);
-
-        contentWindow_.setZoom(zoom);
+        const double zoomDelta = 1.0 - mouseDelta.y();
+        contentWindow_.setZoom( contentWindow_.getZoom() * zoomDelta );
     }
-    else if(event->buttons().testFlag(Qt::LeftButton))
+    else if( event->buttons().testFlag( Qt::LeftButton ))
     {
-        // pan (move center coordinates)
-        double zoom = contentWindow_.getZoom();
-        double centerX, centerY;
-        contentWindow_.getCenter(centerX, centerY);
-
-        centerX = centerX + 2.*delta.x() / zoom;
-        centerY = centerY + 2.*delta.y() / zoom;
-
-        contentWindow_.setCenter(centerX, centerY);
+        const QPointF delta = computeZoomPanDelta( mouseDelta );
+        contentWindow_.setZoomCenter( contentWindow_.getZoomCenter() + delta );
     }
 }
 
-void ZoomInteractionDelegate::wheelEvent(QGraphicsSceneWheelEvent *event)
+void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
 {
-    // change zoom based on wheel delta
-    // deltas are counted in 1/8 degrees. so, scale based on 180 degrees => delta = 180*8 = 1440
-    double zoomDelta = (double)event->delta() / 1440.;
-    double zoom = contentWindow_.getZoom() * (1. + zoomDelta);
-
-    contentWindow_.setZoom(zoom);
+    // change zoom based on wheel delta.
+    // deltas are counted in 1/8 degrees, so scale based on 180 degrees =>
+    // delta = 180*8 = 1440
+    const double zoomDelta = (double)event->delta() / 1440.0;
+    contentWindow_.setZoom( contentWindow_.getZoom() * ( 1.0 + zoomDelta ));
 }
 
+QPointF
+ZoomInteractionDelegate::computeZoomPanDelta( const QPointF& sceneDelta ) const
+{
+    const qreal zoom = contentWindow_.getZoom();
+    const QRectF& window = contentWindow_.getCoordinates();
+
+    const QPointF normalizedDelta( sceneDelta.x() / window.width(),
+                                   sceneDelta.y() / window.height( ));
+    return QPointF( normalizedDelta * ( ZOOM_PAN_GAIN_FACTOR / zoom ));
+}
+
+double ZoomInteractionDelegate::adaptZoomFactor( const double
+                                                 pinchGestureScaleFactor )
+{
+    const double factor = ( pinchGestureScaleFactor - 1.0 ) * 0.2 + 1.0;
+    if( std::isnan( factor ) || std::isinf( factor ))
+        return 0.0;
+    return factor;
+}

@@ -46,9 +46,7 @@ namespace ut = boost::unit_test;
 #include "PixelStreamWindowManager.h"
 #include "MinimalGlobalQtApp.h"
 #include "NetworkListener.h"
-#include "configuration/MasterConfiguration.h"
 #include "dcstream/Stream.h"
-#include "globals.h"
 #include "MPIChannel.h"
 
 #include <QThread>
@@ -68,6 +66,8 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 namespace
 {
+const QSize wallSize( 1000, 1000 );
+
 class Timer
 {
 public:
@@ -151,9 +151,7 @@ class DCThread : public QThread
 
 BOOST_AUTO_TEST_CASE( testSocketConnection )
 {
-    g_configuration = new MasterConfiguration( "configuration.xml" );
-
-    DisplayGroupPtr displayGroup( new DisplayGroup);
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     PixelStreamWindowManager pixelStreamWindowManager( *displayGroup );
     NetworkListener listener( pixelStreamWindowManager );
 #ifdef NTHREADS

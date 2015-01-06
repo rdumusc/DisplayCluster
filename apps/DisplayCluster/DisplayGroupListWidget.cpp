@@ -65,7 +65,7 @@ void DisplayGroupListWidget::setModel( DisplayGroupPtr displayGroup )
     connect( displayGroup_.get(), SIGNAL( contentWindowAdded( ContentWindowPtr )),
              this, SLOT( addContentWindow( ContentWindowPtr )));
     connect( displayGroup_.get(), SIGNAL( contentWindowRemoved( ContentWindowPtr )),
-            this, SLOT(removeContentWindow(ContentWindowPtr)));
+             this, SLOT( removeContentWindow( ContentWindowPtr )));
     connect( displayGroup_.get(), SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
 }

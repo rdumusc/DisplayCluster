@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE( testValidDoubleTap )
     BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, release ),
                        QGestureRecognizer::FinishGesture );
     BOOST_CHECK_EQUAL( result.position().x(),
-                       position.x() * widgetSize.width());
+                       position.x() * wallSize.width());
     BOOST_CHECK_EQUAL( result.position().y(),
-                       position.y() * widgetSize.height() );
+                       position.y() * wallSize.height() );
     delete press;
     delete release;
 }
@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE( testMultipleDoubleTaps )
     BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, release1 ),
                        QGestureRecognizer::FinishGesture );
     BOOST_CHECK_EQUAL( result.position().x(),
-                       position1.x() * widgetSize.width());
+                       position1.x() * wallSize.width());
     BOOST_CHECK_EQUAL( result.position().y(),
-                       position1.y() * widgetSize.height() );
+                       position1.y() * wallSize.height() );
 
     BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, press1 ),
                        QGestureRecognizer::MayBeGesture );
@@ -127,9 +127,9 @@ BOOST_AUTO_TEST_CASE( testMultipleDoubleTaps )
     BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, release2 ),
                        QGestureRecognizer::FinishGesture );
     BOOST_CHECK_EQUAL( result.position().x(),
-                       position2.x() * widgetSize.width());
+                       position2.x() * wallSize.width());
     BOOST_CHECK_EQUAL( result.position().y(),
-                       position2.y() * widgetSize.height() );
+                       position2.y() * wallSize.height() );
 
     BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, press3 ),
                        QGestureRecognizer::MayBeGesture );
@@ -140,9 +140,9 @@ BOOST_AUTO_TEST_CASE( testMultipleDoubleTaps )
     BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, release3 ),
                        QGestureRecognizer::FinishGesture );
     BOOST_CHECK_EQUAL( result.position().x(),
-                       position3.x() * widgetSize.width());
+                       position3.x() * wallSize.width());
     BOOST_CHECK_EQUAL( result.position().y(),
-                       position3.y() * widgetSize.height() );
+                       position3.y() * wallSize.height() );
     delete press1;
     delete release1;
     delete press2;

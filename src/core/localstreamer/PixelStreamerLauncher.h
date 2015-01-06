@@ -53,8 +53,9 @@ class MasterConfiguration;
 /**
  * Launch Pixel Streamers as separate processes.
  *
- * The processes connect to the Master application on localhost using the dc::Stream API.
- * They can be terminated by the user by closing their associated window.
+ * The processes connect to the Master application on localhost using the
+ * dc::Stream API. They can be terminated by the user by closing their
+ * associated window.
  *
  * Due to an incompatibility between QProcess and MPI(*), we must start the
  * processes DETACHED.
@@ -62,8 +63,9 @@ class MasterConfiguration;
  * In practice, this doesn't seem to happen; our processes exit when the
  * dc::Stream is closed in any case.
  *
- * (*) MPI captures the SIGCHLD that QProcess relies on to detect that the process has finished.
- * Thus, the call to waitForFinished() blocks forever in QProcess destructor...
+ * (*) MPI captures the SIGCHLD that QProcess relies on to detect that the
+ * process has finished. Thus, the call to waitForFinished() blocks forever in
+ * QProcess destructor...
  */
 class PixelStreamerLauncher : public QObject
 {
@@ -76,18 +78,20 @@ public:
      * @param windowManager Manages the windows of the streamers
      * @param config The configuration for the default parameters
      */
-    PixelStreamerLauncher(PixelStreamWindowManager& windowManager, const MasterConfiguration& config);
+    PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
+                           const MasterConfiguration& config );
 
 public slots:
     /**
      * Open a WebBrowser.
      *
-     * @param pos The position of the center of the browser window. If pos.isNull(),
-     *        the window will be centered on the DisplayWall.
+     * @param pos The position of the center of the browser window.
+     *        If pos.isNull(), the window is centered on the DisplayWall.
      * @param size The initial size of the viewport of the webbrowser in pixels.
      * @param url The webpage to open.
      */
-    void openWebBrowser(const QPointF pos, const QSize size, const QString url);
+    void openWebBrowser( const QPointF pos, const QSize size,
+                         const QString url );
 
     /**
      * Open the Dock using default parameters.
@@ -96,7 +100,7 @@ public slots:
      * Dock instance is moved to the given position.
      * @param pos The position of the center of the Dock
      */
-    void openDock(const QPointF pos);
+    void openDock( const QPointF pos );
 
     /**
      * Open the Dock.
@@ -107,26 +111,23 @@ public slots:
      * @param size The initial size of the Dock in pixels.
      * @param rootDir The initial root directory of the Dock.
      */
-    void openDock(const QPointF pos, const QSize size, const QString rootDir);
+    void openDock( const QPointF pos, const QSize size, const QString rootDir );
 
-    /**
-     * Hide the Dock.
-     *
-     * Currently, the dock is simply moved ouside of the viewport and remains open.
-     */
+    /** Hide the Dock. */
     void hideDock();
 
 private slots:
-    void dereferenceLocalStreamer(const QString uri);
+    void dereferenceLocalStreamer( const QString uri );
 
 private:
-    typedef std::map<QString, QProcess*> Streamers;
+    typedef std::map< QString, QProcess* > Streamers;
     Streamers processes_;
 
     PixelStreamWindowManager& windowManager_;
     const MasterConfiguration& config_;
 
-    bool createDock(const QSize& size, const QString& rootDir);
+    bool createDock( const QSize& size, const QString& rootDir );
+    QString getLocalStreamerBin() const;
 };
 
 #endif // PIXELSTREAMERLAUNCHER_H

@@ -22,6 +22,7 @@ if(NOT BUILD_CORE_LIBRARY)
     core/ConfigurationTests.cpp
     core/ConfigurationTests.cpp
     core/ContentWindowTests.cpp
+    core/ContentWindowControllerTests.cpp
     core/DockToolbarTests.cpp
     core/DoubleTapGestureTests.cpp
     core/LocalPixelStreamerTests.cpp

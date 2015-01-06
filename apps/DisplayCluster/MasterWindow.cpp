@@ -40,6 +40,7 @@
 #include "MasterWindow.h"
 
 #include "Options.h"
+#include "configuration/MasterConfiguration.h"
 #include "log.h"
 #include "dc/version.h"
 #include "configuration/MasterConfiguration.h"
@@ -72,6 +73,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     , options_( new Options )
     , backgroundWidget_( new BackgroundWidget( config, this ))
     , webbrowserWidget_( new WebbrowserWidget( config, this ))
+    , dggv_( new DisplayGroupGraphicsView( config, this ))
     , contentFolder_( config.getDockStartDir( ))
     , sessionFolder_( config.getDockStartDir( ))
 {
@@ -244,7 +246,6 @@ void MasterWindow::setupMasterWindowUI()
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    dggv_ = new DisplayGroupGraphicsView(this);
     dggv_->setModel(displayGroup_);
     mainWidget->addTab((QWidget *)dggv_, "Display group 0");
     // Forward background touch events
@@ -313,37 +314,35 @@ void MasterWindow::addContentDirectory( const QString& directoryName,
     }
 
     // If the grid size is unspecified, compute one large enough to hold all the elements
-    if (gridX == 0 || gridY == 0)
-    {
-        estimateGridSize(list.size(), gridX, gridY);
-    }
-
-    const float w = 1./(float)gridX;
-    const float h = 1./(float)gridY;
+    if ( gridX == 0 || gridY == 0 )
+        estimateGridSize( list.size(), gridX, gridY );
 
     unsigned int contentIndex = 0;
 
-    for(int i=0; i<list.size() && contentIndex < gridX*gridY; i++)
+    const QSizeF win( displayGroup_->getCoordinates().width() / (qreal)gridX,
+                      displayGroup_->getCoordinates().height() / (qreal)gridY );
+
+    ContentLoader contentLoader( displayGroup_ );
+
+    for( int i = 0; i < list.size() && contentIndex < gridX * gridY; ++i )
     {
         const QFileInfo& fileInfo = list.at(i);
         const QString& filename = fileInfo.absoluteFilePath();
 
         const unsigned int x_coord = contentIndex % gridX;
         const unsigned int y_coord = contentIndex / gridX;
-        const QPointF position(x_coord*w + 0.5*w, y_coord*h + 0.5*h);
-        const QSizeF windowSize(w, h);
+        const QPointF position( x_coord * win.width() + 0.5 * win.width(),
+                                y_coord * win.height() + 0.5 * win.height( ));
 
-        const bool success = ContentLoader(displayGroup_).load(filename, position, windowSize);
-
-        if(success)
+        if( contentLoader.load( filename, position, win ))
         {
             ++contentIndex;
-            put_flog(LOG_DEBUG, "added file %s", fileInfo.absoluteFilePath().toStdString().c_str());
+            put_flog( LOG_DEBUG, "added file %s",
+                      fileInfo.absoluteFilePath().toStdString().c_str( ));
         }
         else
-        {
-            put_flog(LOG_DEBUG, "ignoring unsupported file %s", fileInfo.absoluteFilePath().toStdString().c_str());
-        }
+            put_flog( LOG_DEBUG, "ignoring unsupported file %s",
+                      fileInfo.absoluteFilePath().toStdString().c_str( ));
     }
 }
 

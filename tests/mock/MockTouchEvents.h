@@ -42,35 +42,40 @@
 
 #include <QTouchEvent>
 
-const QSize widgetSize( 400, 400 );
+const QSize wallSize( 1600, 800 );
+const QRect widget( QPoint( 510, 353 ), QSize( 435, 212 ));
+
 QMap< int, QTouchEvent::TouchPoint > touchPointMap;
 
 QEvent* createTouchEvent( const int id, const QEvent::Type eventType,
                           const Qt::TouchPointState state,
-                          const QPointF& normalizedPosition )
+                          const QPointF& normalizedPos )
 {
-    const QPoint position( widgetSize.width()  * normalizedPosition.x(),
-                           widgetSize.height() * normalizedPosition.y( ));
+    const QPoint scenePos( wallSize.width()  * normalizedPos.x(),
+                           wallSize.height() * normalizedPos.y( ));
+
+    const QPoint screenPos( widget.x() + widget.width()  * normalizedPos.x(),
+                            widget.y() + widget.height() * normalizedPos.y( ));
 
     const Qt::TouchPointStates touchPointStates = Qt::TouchPointPrimary | state;
     QTouchEvent::TouchPoint touchPoint( id );
     touchPoint.setPressure( 1.0 );
-    touchPoint.setNormalizedPos( normalizedPosition );
-    touchPoint.setPos( position );
-    touchPoint.setScenePos( normalizedPosition );
-    touchPoint.setScreenPos( position );
+    touchPoint.setNormalizedPos( normalizedPos );
+    touchPoint.setPos( scenePos );
+    touchPoint.setScenePos( scenePos );
+    touchPoint.setScreenPos( screenPos );
 
     switch( eventType )
     {
     case QEvent::TouchBegin:
-        touchPoint.setStartNormalizedPos( normalizedPosition );
+        touchPoint.setStartNormalizedPos( touchPoint.normalizedPos( ));
         touchPoint.setStartPos( touchPoint.pos( ));
-        touchPoint.setStartScreenPos( position );
+        touchPoint.setStartScreenPos( touchPoint.screenPos( ));
         touchPoint.setStartScenePos( touchPoint.scenePos( ));
 
-        touchPoint.setLastNormalizedPos( normalizedPosition );
+        touchPoint.setLastNormalizedPos( touchPoint.normalizedPos( ));
         touchPoint.setLastPos( touchPoint.pos( ));
-        touchPoint.setLastScreenPos( position );
+        touchPoint.setLastScreenPos( touchPoint.screenPos( ));
         touchPoint.setLastScenePos( touchPoint.scenePos( ));
         break;
 

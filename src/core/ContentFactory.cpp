@@ -39,9 +39,6 @@
 
 #include "ContentFactory.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
 #include "log.h"
 #include "config.h"
 
@@ -64,6 +61,11 @@
 #include <boost/make_shared.hpp>
 
 #define ERROR_IMAGE_FILENAME ":/img/error.png"
+
+namespace
+{
+const QSize maxTextureSize( 16384, 16384 );
+}
 
 CONTENT_TYPE getContentTypeForFile(const QString& uri)
 {
@@ -90,8 +92,8 @@ CONTENT_TYPE getContentTypeForFile(const QString& uri)
     {
         const QSize size = imageReader.size();
 
-        if(size.width() <= g_configuration->getTotalWidth() &&
-                size.height() <= g_configuration->getTotalHeight())
+        if(size.width() <= maxTextureSize.width() &&
+           size.height() <= maxTextureSize.height())
             return CONTENT_TYPE_TEXTURE;
 
         return CONTENT_TYPE_DYNAMIC_TEXTURE;

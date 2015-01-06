@@ -57,7 +57,8 @@ class DisplayGroupGraphicsView : public QGraphicsView
 
 public:
     /** Constructor. */
-    DisplayGroupGraphicsView( QWidget* parent = 0 );
+    DisplayGroupGraphicsView( const Configuration& config,
+                              QWidget* parent = 0 );
 
     /** Destructor */
     virtual ~DisplayGroupGraphicsView();
@@ -93,7 +94,7 @@ private:
     void tapAndHold( QTapAndHoldGesture* gesture );
 
     void grabGestures();
-    QPointF getNormalizedPosition( const QGesture* gesture ) const;
+    QPointF getScenePosition( const QGesture* gesture ) const;
     bool isOnBackground( const QPointF& position ) const;
 
     DisplayGroupPtr displayGroup_;

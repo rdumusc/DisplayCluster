@@ -40,33 +40,37 @@
 
 #include "ContentWindow.h"
 #include "Content.h"
-#include "ContentInteractionDelegate.h"
+#include "MovieContent.h"
+#include "ZoomInteractionDelegate.h"
 
-#include "globals.h"
-#include "configuration/Configuration.h"
-
+#include "gestures/DoubleTapGesture.h"
 #include "gestures/DoubleTapGestureRecognizer.h"
+#include "gestures/PanGesture.h"
 #include "gestures/PanGestureRecognizer.h"
+#include "gestures/PinchGesture.h"
 #include "gestures/PinchGestureRecognizer.h"
 
+#include <QtCore/QEvent>
+#include <QtGui/QSwipeGesture>
+#include <QtGui/QTapGesture>
 #include <QtGui/QPainter>
-#include <QtGui/QGraphicsScene>
-#include <QtGui/QGraphicsView>
-
-#include <QEvent>
-#include <QGestureEvent>
 
 #define STD_WHEEL_DELTA 120 // Common value for the delta of mouse wheel events
 
+#define WHEEL_SCALE_SPEED   0.1
+
+#define BUTTON_REL_WIDTH    0.23
+#define BUTTON_REL_HEIGHT   0.45
+#define WINDOW_INFO_FONT_SIZE_REL_TO_BUTTON_SIZE   0.15
+#define TEXT_LABEL_FONT_SIZE_REL_TO_BUTTON_SIZE    0.25
+
 qreal ContentWindowGraphicsItem::zCounter_ = 0;
 
-ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWindow )
+ContentWindowGraphicsItem::ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
+                                                      const DisplayGroup& displayGroup )
     : contentWindow_( contentWindow )
-    , resizing_( false )
-    , moving_( false )
+    , controller_( *contentWindow, displayGroup )
 {
-    assert( contentWindow_ );
-
     connect( contentWindow_.get(), SIGNAL( coordinatesAboutToChange( )),
              this, SLOT( prepareToChangeGeometry( )));
 
@@ -99,12 +103,16 @@ void ContentWindowGraphicsItem::paint( QPainter* painter,
                                        const QStyleOptionGraphicsItem*,
                                        QWidget* )
 {
+    if( contentWindow_->isHidden( ))
+        return;
+
     drawFrame_( painter );
     drawCloseButton_( painter );
     drawResizeIndicator_( painter );
     drawFullscreenButton_( painter );
     drawMovieControls_( painter );
     drawTextLabel_( painter );
+    drawWindowInfo_( painter );
 }
 
 void ContentWindowGraphicsItem::setZToFront()
@@ -124,11 +132,14 @@ QRectF ContentWindowGraphicsItem::boundingRect() const
 
 bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
 {
+    if( contentWindow_->isHidden( ))
+        return false;
+
     switch( event_->type( ))
     {
     case QEvent::Gesture:
         emit moveToFront( contentWindow_ );
-        contentWindow_->getInteractionDelegate().gestureEvent( static_cast< QGestureEvent* >( event_ ));
+        gestureEvent( static_cast< QGestureEvent* >( event_ ));
         return true;
     case QEvent::KeyPress:
         // Override default behaviour to process TAB key events
@@ -141,7 +152,7 @@ bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
 
 void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
 {
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
     {
         contentWindow_->getInteractionDelegate().mouseMoveEvent( event_ );
         return;
@@ -149,30 +160,26 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
 
     if( event_->buttons().testFlag( Qt::LeftButton ))
     {
-        if( resizing_ )
+        if( contentWindow_->isResizing( ))
         {
             QRectF coordinates = boundingRect();
-            coordinates.setBottomRight( event_->pos( ));
+            coordinates.setBottomRight( event_->scenePos( ));
 
-            float targetAR = contentWindow_->getContent()->getAspectRatio();
-            targetAR /= g_configuration->getAspectRatio();
+            const qreal targetAR = contentWindow_->getContent()->getAspectRatio();
+            const qreal eventCoordAR = coordinates.width() / coordinates.height();
 
-            const float eventCoordAR = coordinates.width() / coordinates.height();
             if( eventCoordAR < targetAR )
-                contentWindow_->setSize( coordinates.width(),
-                                         coordinates.width() / targetAR );
+                controller_.resize( QSizeF( coordinates.width(),
+                                            coordinates.width() / targetAR ));
             else
-                contentWindow_->setSize( coordinates.height() * targetAR,
-                                         coordinates.height( ));
+                controller_.resize( QSizeF( coordinates.height() * targetAR,
+                                            coordinates.height( )));
         }
-        else
+        else if( contentWindow_->isMoving( ))
         {
-            const QPointF delta = event_->pos() - event_->lastPos();
-
-            const double new_x = boundingRect().x() + delta.x();
-            const double new_y = boundingRect().y() + delta.y();
-
-            contentWindow_->setPosition( new_x, new_y );
+            const QPointF delta = event_->scenePos() - event_->lastScenePos();
+            const QPointF newPos = boundingRect().topLeft() + delta;
+            controller_.moveTo( newPos );
         }
     }
 }
@@ -189,7 +196,7 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
         return;
     }
 
-    if( hitCloseButton( event_->pos( )))
+    if( getCloseRect().contains( event_->pos( )))
     {
         emit close( contentWindow_ );
         return;
@@ -197,28 +204,34 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
 
     emit moveToFront( contentWindow_ );
 
-    if ( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
     {
         contentWindow_->getInteractionDelegate().mousePressEvent( event_ );
         return;
     }
 
-    contentWindow_->getContent()->blockAdvance( true );
+    if( getResizeRect().contains( event_->pos( )))
+        contentWindow_->setState( ContentWindow::RESIZING );
 
-    if( hitResizeButton( event_->pos( )))
-        resizing_ = true;
+    else if( getFullscreenRect().contains( event_->pos( )))
+        controller_.toggleFullscreen();
 
-    else if( hitFullscreenButton( event_->pos( )))
-        contentWindow_->toggleFullscreen();
+    else if( isMovie() && getPauseRect().contains( event_->pos( )))
+    {
+        ContentPtr content = contentWindow_->getContent();
+        MovieContent* movie = static_cast< MovieContent* >( content.get( ));
+        movie->setControlState( ControlState( movie->getControlState() ^ STATE_PAUSED ));
+    }
 
-    else if( hitPauseButton( event_->pos( )))
-        contentWindow_->setControlState( ControlState( contentWindow_->getControlState() ^ STATE_PAUSED ));
-
-    else if( hitLoopButton( event_->pos( )))
-        contentWindow_->setControlState( ControlState( contentWindow_->getControlState() ^ STATE_LOOP ));
+    else if( isMovie() && getLoopRect().contains( event_->pos( )))
+    {
+        ContentPtr content = contentWindow_->getContent();
+        MovieContent* movie = static_cast< MovieContent* >( content.get( ));
+        movie->setControlState( ControlState( movie->getControlState() ^ STATE_LOOP ));
+    }
 
     else
-        moving_ = true;
+        contentWindow_->setState( ContentWindow::MOVING );
 
     QGraphicsItem::mousePressEvent( event_ );
 }
@@ -235,20 +248,20 @@ void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent*
         return;
     }
 
-    contentWindow_->toggleWindowState();
+    contentWindow_->toggleSelectedState();
 
     QGraphicsItem::mouseDoubleClickEvent( event_ );
 }
 
 void ContentWindowGraphicsItem::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
 {
-    resizing_ = false;
-    moving_ = false;
-
-    contentWindow_->getContent()->blockAdvance( false );
-
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
+    {
         contentWindow_->getInteractionDelegate().mouseReleaseEvent( event_ );
+        return;
+    }
+
+    contentWindow_->setState( ContentWindow::NONE );
 
     QGraphicsItem::mouseReleaseEvent( event_ );
 }
@@ -265,250 +278,286 @@ void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
         return;
     }
 
-    if ( contentWindow_->selected( ))
+    if ( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
     else
-        contentWindow_->scaleSize( 1. + (double)event_->delta() / ( 10. * STD_WHEEL_DELTA ));
+        controller_.scale( 1.0 + WHEEL_SCALE_SPEED *
+                           (double)event_->delta() / STD_WHEEL_DELTA );
 }
 
 void ContentWindowGraphicsItem::keyPressEvent( QKeyEvent* event_ )
 {
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().keyPressEvent( event_ );
 }
 
 void ContentWindowGraphicsItem::keyReleaseEvent( QKeyEvent* event_ )
 {
-    if( contentWindow_->selected( ))
+    if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().keyReleaseEvent( event_ );
 }
 
-void ContentWindowGraphicsItem::getButtonDimensions( float& width, float& height ) const
+void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* event_ )
 {
-    const float sceneHeightFraction = 0.125f;
-    const double screenAspect = g_configuration->getAspectRatio();
+    QGesture* gesture = 0;
 
-    width = sceneHeightFraction / screenAspect;
-    height = sceneHeightFraction;
+    if( ( gesture = event_->gesture( Qt::TapAndHoldGesture )))
+    {
+        event_->accept( Qt::TapAndHoldGesture );
+        tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
+        return;
+    }
 
-    // clamp to half rect dimensions
-    if( width > 0.5 * boundingRect().width( ))
-        width = 0.49 * boundingRect().width();
+    if( contentWindow_->isSelected( ))
+    {
+        contentWindow_->getInteractionDelegate().gestureEvent( event_ );
+        return;
+    }
 
-    if( height > 0.5 * boundingRect().height( ))
-        height = 0.49 * boundingRect().height();
+    if( ( gesture = event_->gesture( PanGestureRecognizer::type( ))))
+    {
+        event_->accept( PanGestureRecognizer::type( ));
+        pan( static_cast< PanGesture* >( gesture ));
+    }
+    else if( ( gesture = event_->gesture( PinchGestureRecognizer::type( ))))
+    {
+        event_->accept( PinchGestureRecognizer::type( ));
+        pinch( static_cast< PinchGesture* >( gesture ));
+    }
+    else if( ( gesture = event_->gesture( DoubleTapGestureRecognizer::type( ))))
+    {
+        event_->accept( DoubleTapGestureRecognizer::type( ));
+        doubleTap( static_cast< DoubleTapGesture* >( gesture ));
+    }
 }
 
-bool ContentWindowGraphicsItem::hitCloseButton( const QPointF& hitPos ) const
+void ContentWindowGraphicsItem::doubleTap( DoubleTapGesture* gesture )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF r = boundingRect();
-
-    return ( fabs( ( r.x() + r.width( )) - hitPos.x( )) <= buttonWidth &&
-             fabs( r.y() - hitPos.y( )) <= buttonHeight );
+    if( gesture->state() == Qt::GestureFinished )
+        controller_.toggleFullscreen();
 }
 
-bool ContentWindowGraphicsItem::hitResizeButton(const QPointF& hitPos ) const
+void ContentWindowGraphicsItem::pan( PanGesture* gesture )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF r = boundingRect();
+    if( gesture->state() == Qt::GestureStarted )
+        contentWindow_->setState( ContentWindow::MOVING );
 
-    return ( fabs( ( r.x() + r.width( )) - hitPos.x( )) <= buttonWidth &&
-             fabs( ( r.y() + r.height( )) - hitPos.y( )) <= buttonHeight );
+    else if( gesture->state() == Qt::GestureCanceled ||
+             gesture->state() == Qt::GestureFinished )
+        contentWindow_->setState( ContentWindow::NONE );
+
+    const QPointF& windowPos = contentWindow_->getCoordinates().topLeft();
+    controller_.moveTo( windowPos + gesture->delta( ));
 }
 
-bool ContentWindowGraphicsItem::hitFullscreenButton(const QPointF& hitPos) const
+void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF r = boundingRect();
+    const double factor = ZoomInteractionDelegate::adaptZoomFactor( gesture->scaleFactor( ));
+    if( factor == 0.0 )
+        return;
 
-    return ( fabs( r.x() - hitPos.x( )) <= buttonWidth &&
-             fabs( ( r.y() + r.height( )) - hitPos.y( )) <= buttonHeight );
+    if( gesture->state() == Qt::GestureStarted )
+        contentWindow_->setState( ContentWindow::RESIZING );
+
+    else if( gesture->state() == Qt::GestureCanceled ||
+             gesture->state() == Qt::GestureFinished )
+    {
+        contentWindow_->setState( ContentWindow::NONE );
+    }
+
+    controller_.scale( factor );
 }
 
-bool ContentWindowGraphicsItem::hitPauseButton(const QPointF& hitPos) const
+void ContentWindowGraphicsItem::tapAndHold( QTapAndHoldGesture* gesture )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF r = boundingRect();
-
-    return ( fabs( ( ( r.x() + r.width( )) / 2) - hitPos.x() - buttonWidth ) <= buttonWidth &&
-             fabs( ( r.y() + r.height( )) - hitPos.y( )) <= buttonHeight );
+    if( gesture->state() == Qt::GestureFinished )
+        contentWindow_->toggleSelectedState();
 }
 
-bool ContentWindowGraphicsItem::hitLoopButton(const QPointF& hitPos) const
+bool ContentWindowGraphicsItem::isMovie() const
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF r = boundingRect();
+    return contentWindow_->getContent()->getType() == CONTENT_TYPE_MOVIE;
+}
 
-    return ( fabs( ( ( r.x() + r.width( )) / 2) - hitPos.x( )) <= buttonWidth &&
-             fabs( ( r.y() + r.height( )) - hitPos.y( )) <= buttonHeight );
+QSizeF ContentWindowGraphicsItem::getButtonDimensions() const
+{
+    const qreal size = std::min( BUTTON_REL_WIDTH * boundingRect().width(),
+                                 BUTTON_REL_HEIGHT * boundingRect().height( ));
+    return QSizeF( size, size );
+}
+
+QRectF ContentWindowGraphicsItem::getCloseRect() const
+{
+    const QSizeF button = getButtonDimensions();
+    const QRectF coord = boundingRect();
+
+    return QRectF( coord.x() + coord.width() - button.width(),
+                   coord.y(), button.width(), button.height( ));
+}
+
+QRectF ContentWindowGraphicsItem::getResizeRect() const
+{
+    const QSizeF button = getButtonDimensions();
+    const QRectF coord = boundingRect();
+
+    return QRectF( coord.x() + coord.width() - button.width(),
+                   coord.y() + coord.height() - button.height(),
+                   button.width(), button.height( ));
+}
+
+QRectF ContentWindowGraphicsItem::getFullscreenRect() const
+{
+    const QSizeF button = getButtonDimensions();
+    const QRectF coord = boundingRect();
+
+    return QRectF( coord.x(), coord.y() + coord.height() - button.height(),
+                   button.width(), button.height( ));
+}
+
+QRectF ContentWindowGraphicsItem::getPauseRect() const
+{
+    const QSizeF button = getButtonDimensions();
+    const QRectF coord = boundingRect();
+
+    return QRectF( coord.x() + 0.5 * coord.width() - button.width(),
+                   coord.y() + coord.height() - button.height(),
+                   button.width(), button.height() );
+}
+
+QRectF ContentWindowGraphicsItem::getLoopRect() const
+{
+    const QSizeF button = getButtonDimensions();
+    const QRectF coord = boundingRect();
+
+    return QRectF( coord.x() + 0.5 * coord.width(),
+                   coord.y() + coord.height() - button.height(),
+                   button.width(), button.height() );
 }
 
 void ContentWindowGraphicsItem::drawCloseButton_( QPainter* painter )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF coordinates = boundingRect();
-
-    QRectF closeRect(coordinates.x() + coordinates.width() - buttonWidth,
-                     coordinates.y(), buttonWidth, buttonHeight);
+    const QRectF closeRect = getCloseRect();
     QPen pen;
-    pen.setColor(QColor(255,0,0));
-    painter->setPen(pen);
-    painter->drawRect(closeRect);
-    painter->drawLine(QPointF(coordinates.x() + coordinates.width() - buttonWidth, coordinates.y()),
-                      QPointF(coordinates.x() + coordinates.width(), coordinates.y() + buttonHeight));
-    painter->drawLine(QPointF(coordinates.x() + coordinates.width(), coordinates.y()),
-                      QPointF(coordinates.x() + coordinates.width() - buttonWidth, coordinates.y() + buttonHeight));
+    pen.setColor( QColor( Qt::red ));
+    painter->setPen( pen );
+    painter->drawRect( closeRect );
+    painter->drawLine( closeRect.topLeft(), closeRect.bottomRight( ));
+    painter->drawLine( closeRect.topRight(), closeRect.bottomLeft( ));
 }
 
 void ContentWindowGraphicsItem::drawResizeIndicator_( QPainter* painter )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF coordinates = boundingRect();
-
-    QRectF resizeRect(coordinates.x() + coordinates.width() - buttonWidth,
-                      coordinates.y() + coordinates.height() - buttonHeight,
-                      buttonWidth, buttonHeight);
+    const QRectF resizeRect = getResizeRect();
     QPen pen;
-    pen.setColor(QColor(128,128,128));
-    painter->setPen(pen);
-    painter->drawRect(resizeRect);
-    painter->drawLine(QPointF(coordinates.x() + coordinates.width(),
-                              coordinates.y() + coordinates.height() - buttonHeight),
-                      QPointF(coordinates.x() + coordinates.width() - buttonWidth,
-                              coordinates.y() + coordinates.height()));
+    pen.setColor( Qt::gray );
+    painter->setPen( pen );
+    painter->drawRect( resizeRect );
+    painter->drawLine( resizeRect.bottomLeft(), resizeRect.topRight( ));
 }
 
 void ContentWindowGraphicsItem::drawFullscreenButton_( QPainter* painter )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF coordinates = boundingRect();
-
-    QRectF fullscreenRect(coordinates.x(),
-                          coordinates.y() + coordinates.height() - buttonHeight,
-                          buttonWidth, buttonHeight);
+    const QRectF fullscreenRect = getFullscreenRect();
     QPen pen;
-    pen.setColor(QColor(128,128,128));
-    painter->setPen(pen);
-    painter->drawRect(fullscreenRect);
+    pen.setColor( QColor( Qt::gray ));
+    painter->setPen( pen );
+    painter->drawRect( fullscreenRect );
 }
 
 void ContentWindowGraphicsItem::drawMovieControls_( QPainter* painter )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF coordinates = boundingRect();
+    if( contentWindow_->getContent()->getType() != CONTENT_TYPE_MOVIE )
+        return;
+
+    ContentPtr content = contentWindow_->getContent();
+    MovieContent* movie = static_cast< MovieContent* >( content.get( ));
+    const ControlState controlState = movie->getControlState();
 
     QPen pen;
+    const QRectF pauseRect = getPauseRect();
+    pen.setColor( QColor( controlState & STATE_PAUSED ? 128 : 200, 0, 0 ));
+    painter->setPen( pen );
+    painter->fillRect( pauseRect, pen.color( ));
 
-    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_MOVIE )
-    {
-        // play/pause
-        QRectF playPauseRect(coordinates.x() + coordinates.width()/2 - buttonWidth,
-                             coordinates.y() + coordinates.height() - buttonHeight,
-                             buttonWidth, buttonHeight);
-        pen.setColor(QColor(contentWindow_->getControlState() & STATE_PAUSED ? 128 :200,0,0));
-        painter->setPen(pen);
-        painter->fillRect(playPauseRect, pen.color());
-
-        // loop
-        QRectF loopRect(coordinates.x() + coordinates.width()/2,
-                        coordinates.y() + coordinates.height() - buttonHeight,
-                        buttonWidth, buttonHeight);
-        pen.setColor(QColor(0,contentWindow_->getControlState() & STATE_LOOP ? 200 :128,0));
-        painter->setPen(pen);
-        painter->fillRect(loopRect, pen.color());
-    }
+    const QRectF loopRect = getLoopRect();
+    pen.setColor( QColor( 0, controlState & STATE_LOOP ? 200 : 128, 0 ));
+    painter->setPen( pen );
+    painter->fillRect( loopRect, pen.color( ));
 }
 
 void ContentWindowGraphicsItem::drawTextLabel_( QPainter* painter )
 {
-    float buttonWidth, buttonHeight;
-    getButtonDimensions( buttonWidth, buttonHeight );
-    const QRectF coordinates = boundingRect();
+    const QSizeF button = getButtonDimensions();
 
-    const float fontSize = 24.;
+    const QString label( contentWindow_->getContent()->getURI( ));
+    const QString labelSection = label.section( "/", -1, -1 ).prepend( " " );
 
     QFont font;
-    font.setPixelSize(fontSize);
-    painter->setFont(font);
+    font.setPixelSize( TEXT_LABEL_FONT_SIZE_REL_TO_BUTTON_SIZE *
+                       button.height( ));
+    painter->setFont( font );
 
-    // color the text black
     QPen pen;
-    pen.setColor(QColor(0,0,0));
-    painter->setPen(pen);
+    pen.setColor( QColor( Qt::black ));
+    painter->setPen( pen );
 
-    // scale the text size down to the height of the graphics view
-    // and, calculate the bounding rectangle for the text based on this scale
-    // the dimensions of the view need to be corrected for the tiled display aspect ratio
-    // recall the tiled display UI is only part of the graphics view since we show it at the correct aspect ratio
-    // TODO refactor this for clarity!
-    float viewWidth = (float)scene()->views()[0]->width();
-    float viewHeight = (float)scene()->views()[0]->height();
+    QRectF textBoundingRect = boundingRect();
+    textBoundingRect.setWidth( textBoundingRect.width() - button.width() );
 
-    const float tiledDisplayAspect = g_configuration->getAspectRatio();
+    painter->drawText( textBoundingRect, Qt::AlignLeft | Qt::AlignTop,
+                       labelSection );
+}
 
-    if(viewWidth / viewHeight > tiledDisplayAspect)
-        viewWidth = viewHeight * tiledDisplayAspect;
+void ContentWindowGraphicsItem::drawWindowInfo_( QPainter* painter )
+{
+    const QRectF coord = boundingRect();
 
-    else if(viewWidth / viewHeight <= tiledDisplayAspect)
-        viewHeight = viewWidth / tiledDisplayAspect;
+    const QString coordinatesLabel = QString(" (") +
+                                     QString::number( coord.x(), 'f', 2 ) +
+                                     QString(" ,") +
+                                     QString::number( coord.y(), 'f', 2 ) +
+                                     QString(", ") +
+                                     QString::number( coord.width(), 'f', 2 ) +
+                                     QString(", ") +
+                                     QString::number( coord.height(), 'f', 2 ) +
+                                     QString(")\n");
 
-    float verticalTextScale = 1. / viewHeight;
-    float horizontalTextScale = viewHeight / viewWidth * verticalTextScale;
+    const qreal zoom = contentWindow_->getZoom();
+    const QPointF& zoomCenter = contentWindow_->getZoomCenter();
+    const QString zoomCenterLabel = QString(" zoom = ") +
+                                    QString::number( zoom, 'f', 2 ) +
+                                    QString(" @ (") +
+                                    QString::number( zoomCenter.x(), 'f', 2 ) +
+                                    QString(", ") +
+                                    QString::number( zoomCenter.y(), 'f', 2 ) +
+                                    QString(")");
 
-    painter->scale(horizontalTextScale, verticalTextScale);
+    const QString windowInfoLabel = coordinatesLabel + zoomCenterLabel;
 
-    QRectF textBoundingRect = QRectF(coordinates.x() / horizontalTextScale,
-                                     coordinates.y() / verticalTextScale,
-                                     coordinates.width() / horizontalTextScale,
-                                     coordinates.height() / verticalTextScale);
+    const QSizeF button = getButtonDimensions();
+    const QRectF textBoundingRect( coord.x() + button.width(),
+                                   coord.y(),
+                                   coord.width() - 2.0 * button.width(),
+                                   coord.height( ));
+    QPen pen;
+    pen.setColor( QColor( Qt::black ));
+    painter->setPen( pen );
 
-    // get the label and render it
-    QString label(contentWindow_->getContent()->getURI());
-    QString labelSection = label.section("/", -1, -1).prepend(" ");
-    painter->drawText(textBoundingRect, Qt::AlignLeft | Qt::AlignTop, labelSection);
-
-    // draw window info at smaller scale
-    verticalTextScale *= 0.5;
-    horizontalTextScale *= 0.5;
-
-    painter->scale(0.5, 0.5);
-
-    textBoundingRect = QRectF((coordinates.x()+buttonWidth) / horizontalTextScale,
-                               coordinates.y() / verticalTextScale,
-                              (coordinates.width()-buttonWidth) / horizontalTextScale,
-                               coordinates.height() / verticalTextScale);
-
-    QString coordinatesLabel = QString(" (") + QString::number(coordinates.x(), 'f', 2) + QString(" ,") +
-                                               QString::number(coordinates.y(), 'f', 2) + QString(", ") +
-                                               QString::number(coordinates.width(), 'f', 2) + QString(", ") +
-                                               QString::number(coordinates.height(), 'f', 2) + QString(")\n");
-    double centerX, centerY;
-    contentWindow_->getCenter( centerX, centerY );
-    QString zoomCenterLabel = QString(" zoom = ") + QString::number(contentWindow_->getZoom(), 'f', 2) + QString(" @ (") +
-                              QString::number(centerX, 'f', 2) + QString(", ") +
-                              QString::number(centerY, 'f', 2) + QString(")");
-
-    QString windowInfoLabel = coordinatesLabel + zoomCenterLabel;
-    painter->drawText(textBoundingRect, Qt::AlignLeft | Qt::AlignBottom, windowInfoLabel);
+    QFont font;
+    font.setPixelSize( WINDOW_INFO_FONT_SIZE_REL_TO_BUTTON_SIZE *
+                       button.height( ));
+    painter->setFont( font );
+    painter->drawText( textBoundingRect, Qt::AlignLeft | Qt::AlignBottom,
+                       windowInfoLabel );
 }
 
 void ContentWindowGraphicsItem::drawFrame_( QPainter* painter )
 {
     QPen pen;
-    if( contentWindow_->selected( ))
-        pen.setColor( QColor( 255, 0, 0 ));
+    if( contentWindow_->isSelected( ))
+        pen.setColor( QColor( Qt::red ));
     else
-        pen.setColor( QColor( 0, 0, 0 ));
+        pen.setColor( QColor( Qt::black ));
 
     painter->setPen( pen );
     painter->setBrush( QBrush( QColor( 0, 0, 0, 128 )));

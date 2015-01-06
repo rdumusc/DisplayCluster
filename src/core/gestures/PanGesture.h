@@ -44,7 +44,7 @@
 
 /**
  * This class defines a pan gesture. The implementation enhances the Qt
- * shipped PanGesture to setup a normalized position which is required in
+ * shipped PanGesture to setup a scene position which is required in
  * the event handling of this application.
  * @sa QPanGesture
  */
@@ -54,7 +54,7 @@ public:
     /** @sa QGesture */
     PanGesture( QObject* parent = 0 );
 
-    /** @return the normalized center position of the pan */
+    /** @return the center position of the pan in scene coordinates */
     const QPointF& position() const { return _position; }
 
     /** @sa QPanGesture::lastOffset */
@@ -69,7 +69,7 @@ public:
     /** @sa QPanGesture::acceleration */
     qreal acceleration() const { return _acceleration; }
 
-    /** Set the normalized center position of the pan */
+    /** Set the center position of the pan in scene coordinates */
     void setPosition( const QPointF& value ) { _position = value; }
 
     /** @sa QPanGesture::setLastOffset */

@@ -76,6 +76,10 @@ signals:
     void touchPointRemoved( int id );
 
 private:
+    QPointF getScenePos( TUIO::TuioCursor* tcur ) const;
+    void fillBegin( QTouchEvent::TouchPoint& touchPoint ) const;
+    void fill( QTouchEvent::TouchPoint& touchPoint,
+               const QTouchEvent::TouchPoint& prevPoint ) const;
     void handleEvent( TUIO::TuioCursor* tcur,
                       const QEvent::Type eventType );
 

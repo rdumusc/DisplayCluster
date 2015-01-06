@@ -51,6 +51,17 @@ class QString;
 class QXmlQuery;
 
 /**
+ * The different versions of the xml State files.
+ */
+enum StateVersion
+{
+    INVALID_FILE_VERSION = -1,
+    FIRST_BOOST_FILE_VERSION = 0,
+    LEGACY_FILE_VERSION = 1,
+    FIRST_PIXEL_COORDINATES_FILE_VERSION = 2
+};
+
+/**
  * A state is the collection of opened contents which can be saved and
  * restored using this class. It will save positions and dimensions of each
  * content and also content-specific information which is required to restore
@@ -65,7 +76,7 @@ public:
      * Constructor
      * @param contentWindows a list of contentWindows to serialize
      */
-    State(const ContentWindowPtrs& contentWindows);
+    State( const ContentWindowPtrs& contentWindows );
 
     /** Get the content windows */
     const ContentWindowPtrs& getContentWindows() const;
@@ -77,22 +88,30 @@ public:
      */
     bool legacyLoadXML( const QString& filename );
 
+    /** Get the version that was last used for loading or saving. */
+    StateVersion getVersion() const;
+
 private:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int version )
     {
-        ar & boost::serialization::make_nvp("contentWindows", contentWindows_);
+        version_ = static_cast< StateVersion >( version );
+        ar & boost::serialization::make_nvp( "contentWindows",
+                                             contentWindows_ );
     }
-
-    ContentWindowPtrs contentWindows_;
 
     /** Legacy methods. @deprecated */
     bool checkVersion_( QXmlQuery& query ) const;
     ContentPtr loadContent_( QXmlQuery& query, const int index ) const;
     ContentWindowPtr restoreContent_( QXmlQuery& query, ContentPtr content,
                                       const int index ) const;
+
+    ContentWindowPtrs contentWindows_;
+    StateVersion version_;
 };
+
+BOOST_CLASS_VERSION( State, FIRST_PIXEL_COORDINATES_FILE_VERSION )
 
 #endif

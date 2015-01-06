@@ -39,6 +39,8 @@
 #ifndef DISPLAY_GROUP_GRAPHICS_SCENE_H
 #define DISPLAY_GROUP_GRAPHICS_SCENE_H
 
+#include "types.h"
+
 #include <QtGui/QGraphicsScene>
 
 /**
@@ -49,23 +51,22 @@ class DisplayGroupGraphicsScene : public QGraphicsScene
 {
 public:
     /** Constructor. */
-    DisplayGroupGraphicsScene( QObject* parent = 0 );
+    DisplayGroupGraphicsScene( const Configuration& config,
+                               QObject* parent = 0 );
 
-    /** Refresh the background tiled rectangles that reprent the Displays. */
-    void refreshTileRects();
+    /** Clear the scene and restore the background. */
+    void clearAndRestoreBackground();
 
 protected:
     /** @name Re-implemented QGraphicsScene events */
     //@{
-    bool event( QEvent* event );
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
+    bool event( QEvent* event ) override;
     //@}
 
 private:
-    typedef std::vector< QGraphicsRectItem* > TileRectItems;
-    TileRectItems tileRects_;
+    void addBackgroundRectangles();
+
+    QList<QRectF> screens_;
 };
 
 #endif

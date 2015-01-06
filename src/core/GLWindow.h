@@ -52,23 +52,21 @@ class GLWindow : public QGLWidget
 public:
     /**
      * Create a new window.
-     * @param normalizedCoordinates The normalized window coordinates.
      * @param windowRect The position and dimensions for the window in pixels.
      * @param shareWidget An optional widget to share an existing GLContext.
      *                    A new GLContext is allocated if not provided.
      * @throw std::runtime_error if the initialization failed.
      */
-    GLWindow(const QRectF& normalizedCoordinates, const QRect& windowRect,
-             QGLWidget* shareWidget = 0);
+    GLWindow( const QRect& windowRect, QGLWidget* shareWidget = 0 );
 
     /** Destructor. */
     ~GLWindow();
 
     /** Add an object to be rendered. */
-    void addRenderable(RenderablePtr renderable);
+    void addRenderable( RenderablePtr renderable );
 
     /** Set the background color */
-    void setBackgroundColor(const QColor& color);
+    void setBackgroundColor( const QColor& color );
 
     /**
      * Is the given region visible in this window.
@@ -76,7 +74,7 @@ public:
      *        of tiled display is (0,0) and bottom-right is (1,1)
      * @return true if (partially) visible, false otherwise
      */
-    bool isRegionVisible(const QRectF& region) const;
+    bool isRegionVisible( const QRectF& region ) const;
 
     /**
      * Get the region spanned by a unit rectangle {(0;0),(1;1)} in the current
@@ -87,22 +85,22 @@ public:
      * @return The region in pixel units.
      * @deprecated
      */
-    static QRectF getProjectedPixelRect(const bool clampToViewportBorders);
+    static QRectF getProjectedPixelRect( const bool clampToViewportBorders );
 
 protected:
     /** @name Overloaded methods from QGLWidget */
     //@{
     void initializeGL() override;
     void paintGL() override;
-    void resizeGL(int w, int h) override;
+    void resizeGL( int w, int h ) override;
     //@}
 
 private:
     QColor backgroundColor_;
-    QRectF normalizedCoordinates_;
+    QRectF coordinates_;
     QList<RenderablePtr> renderables_;
 
-    void clear(const QColor& clearColor);
+    void clear( const QColor& clearColor );
     void setOrthographicView();
 };
 

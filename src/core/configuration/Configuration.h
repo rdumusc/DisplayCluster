@@ -119,11 +119,14 @@ public:
      */
     int getTotalHeight() const;
 
-    /** Get the aspect ratio of the DisplayWall, including Mulltion padding. */
+    /** Get the total size of the DisplayWall, including Mullion padding. */
+    QSize getTotalSize() const;
+
+    /** Get the aspect ratio of the DisplayWall, including Mullion padding. */
     double getAspectRatio() const;
 
-    /** Get the normalized coordinates and dimensions of a screen. */
-    QRectF getNormalizedScreenRect(const QPoint& tileIndex) const;
+    /** Get the coordinates and dimensions of a screen in pixel units. */
+    QRect getScreenRect( const QPoint& tileIndex ) const;
 
     /** Display the windows in fullscreen mode. */
     bool getFullscreen() const;

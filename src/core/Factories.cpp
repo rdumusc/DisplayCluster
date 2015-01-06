@@ -85,34 +85,34 @@ void Factories::clear()
     pixelStreamFactory_.clear();
 }
 
-void Factories::preRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel)
+void Factories::preRenderUpdate( DisplayGroup& displayGroup, WallToWallChannel& wallChannel )
 {
     ContentWindowPtrs contentWindows = displayGroup.getContentWindows();
 
     // note that if we have multiple ContentWindows for a single Content object,
     // we will call advance() multiple times per frame on that Content object...
-    BOOST_FOREACH(ContentWindowPtr contentWindow, contentWindows)
+    BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
-        contentWindow->getContent()->preRenderUpdate(*this, contentWindow, wallChannel);
+        contentWindow->getContent()->preRenderUpdate( *this, contentWindow, wallChannel );
     }
-    ContentWindowPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
-    if (backgroundWindow)
-        backgroundWindow->getContent()->preRenderUpdate(*this, backgroundWindow, wallChannel);
+    ContentPtr backgroundContent = displayGroup.getBackgroundContent();
+    if( backgroundContent )
+        backgroundContent->preRenderUpdate( *this, ContentWindowPtr(), wallChannel );
 }
 
-void Factories::postRenderUpdate(DisplayGroup& displayGroup, WallToWallChannel& wallChannel)
+void Factories::postRenderUpdate( DisplayGroup& displayGroup, WallToWallChannel& wallChannel )
 {
     ContentWindowPtrs contentWindows = displayGroup.getContentWindows();
 
     // note that if we have multiple ContentWindows for a single Content object,
     // we will call advance() multiple times per frame on that Content object...
-    BOOST_FOREACH(ContentWindowPtr contentWindow, contentWindows)
+    BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
-        contentWindow->getContent()->postRenderUpdate(*this, contentWindow, wallChannel);
+        contentWindow->getContent()->postRenderUpdate( *this, contentWindow, wallChannel );
     }
-    ContentWindowPtr backgroundWindow = displayGroup.getBackgroundContentWindow();
-    if (backgroundWindow)
-        backgroundWindow->getContent()->postRenderUpdate(*this, backgroundWindow, wallChannel);
+    ContentPtr backgroundContent = displayGroup.getBackgroundContent();
+    if( backgroundContent )
+        backgroundContent->postRenderUpdate( *this, ContentWindowPtr(), wallChannel );
 
     clearStaleFactoryObjects();
 }

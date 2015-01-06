@@ -46,14 +46,14 @@
 #include <QtXml/QtXml>
 #include <QtXmlPatterns/QXmlQuery>
 
-#define LEGACY_STATE_FILE_VERSION_NUMBER 1
-
 State::State()
+    : version_( INVALID_FILE_VERSION )
 {
 }
 
 State::State(const ContentWindowPtrs& contentWindows)
-    : contentWindows_(contentWindows)
+    : contentWindows_( contentWindows )
+    , version_( INVALID_FILE_VERSION )
 {
 }
 
@@ -62,15 +62,16 @@ const ContentWindowPtrs& State::getContentWindows() const
     return contentWindows_;
 }
 
-bool State::legacyLoadXML( const QString& filename)
+bool State::legacyLoadXML( const QString& filename )
 {
     contentWindows_.clear();
 
     QXmlQuery query;
 
-    if(!query.setFocus(QUrl(filename)))
+    if( !query.setFocus( QUrl( filename )))
     {
-        put_flog(LOG_DEBUG, "failed to load %s", filename.toLocal8Bit().constData( ));
+        put_flog( LOG_DEBUG, "failed to load %s",
+                  filename.toLocal8Bit().constData( ));
         return false;
     }
 
@@ -78,18 +79,16 @@ bool State::legacyLoadXML( const QString& filename)
         return false;
 
     int numContentWindows = 0;
-    query.setQuery("string(count(//state/ContentWindow))");
+    query.setQuery( "string(count(//state/ContentWindow))" );
 
     QString qstring;
-    if(query.evaluateTo(&qstring))
-    {
+    if( query.evaluateTo( &qstring ))
         numContentWindows = qstring.toInt();
-    }
 
-    put_flog(LOG_INFO, "%i content windows", numContentWindows);
+    put_flog( LOG_INFO, "%i content windows", numContentWindows );
     contentWindows_.reserve( numContentWindows );
 
-    for(int i=1; i<=numContentWindows; i++)
+    for( int i=1; i<=numContentWindows; i++ )
     {
         ContentPtr content = loadContent_( query, i );
         if( !content )
@@ -100,7 +99,14 @@ bool State::legacyLoadXML( const QString& filename)
             contentWindows_.push_back( contentWindow );
     }
 
+    version_ = LEGACY_FILE_VERSION;
+
     return true;
+}
+
+StateVersion State::getVersion() const
+{
+    return version_;
 }
 
 bool State::checkVersion_( QXmlQuery& query ) const
@@ -115,10 +121,10 @@ bool State::checkVersion_( QXmlQuery& query ) const
         version = qstring.toInt();
     }
 
-    if( version != LEGACY_STATE_FILE_VERSION_NUMBER )
+    if( version != LEGACY_FILE_VERSION )
     {
-        put_flog( LOG_ERROR, "could not load state file with version %i, expected version %i",
-                  version, LEGACY_STATE_FILE_VERSION_NUMBER );
+        put_flog( LOG_DEBUG, "not a legacy state file. version: %i, legacy version %i",
+                  version, LEGACY_FILE_VERSION );
         return false;
     }
     return true;
@@ -211,28 +217,21 @@ ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,
         zoom = qstring.toDouble();
     }
 
-    ContentWindowPtr contentWindow(new ContentWindow(content));
+    ContentWindowPtr contentWindow( new ContentWindow( content ));
 
-    // now, apply settings if we got them from the XML file
-    if(x != -1. || y != -1.)
-    {
-        contentWindow->setPosition(x, y);
-    }
-
-    if(w != -1. || h != -1.)
-    {
-        contentWindow->setSize(w, h);
-    }
+    QRectF windowCoordinates( contentWindow->getCoordinates( ));
+    if( x != -1. || y != -1. )
+        windowCoordinates.moveTopLeft( QPointF( x, y ));
+    if( w != -1. || h != -1. )
+        windowCoordinates.setSize( QSizeF( w, h ));
+    contentWindow->setCoordinates( windowCoordinates );
 
     // zoom needs to be set before center because of clamping
-    if(zoom != -1.)
-    {
-        contentWindow->setZoom(zoom);
-    }
+    if( zoom != -1. )
+        contentWindow->setZoom( zoom );
 
-    if(centerX != -1. || centerY != -1.)
-    {
-        contentWindow->setCenter(centerX, centerY);
-    }
+    if( centerX != -1. || centerY != -1. )
+        contentWindow->setZoomCenter( QPointF( centerX, centerY ));
+
     return contentWindow;
 }

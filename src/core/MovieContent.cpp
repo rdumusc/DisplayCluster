@@ -49,8 +49,9 @@
 #include <boost/serialization/export.hpp>
 BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
 
-MovieContent::MovieContent(const QString& uri)
-    : Content(uri)
+MovieContent::MovieContent( const QString& uri )
+    : Content( uri )
+    , controlState_( STATE_LOOP )
 {
 }
 
@@ -90,13 +91,13 @@ void MovieContent::preRenderUpdate(Factories& factories, ContentWindowPtr window
     // Stop decoding when the window is moving.
     // This is to avoid saccades when reaching a new GLWindow.
     // The decoding resumes when the movement is finished.
-    if( blockAdvance_ )
+    if( window && ( window->isMoving() || window->isResizing( )))
         return;
 
-    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject(getURI());
+    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject( uri_ );
 
-    movie->setPause( window->getControlState() & STATE_PAUSED );
-    movie->setLoop( window->getControlState() & STATE_LOOP );
+    movie->setPause( controlState_ & STATE_PAUSED );
+    movie->setLoop( controlState_ & STATE_LOOP );
 
     const RenderContext* renderContext = movie->getRenderContext();
     movie->setVisible(renderContext->isRegionVisible(window->getCoordinates()));
@@ -104,13 +105,23 @@ void MovieContent::preRenderUpdate(Factories& factories, ContentWindowPtr window
     movie->preRenderUpdate( wallToWallChannel );
 }
 
-void MovieContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel& wallToWallChannel)
+void MovieContent::postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel)
 {
     // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
     // The decoding resumes when the movement is finished
-    if( blockAdvance_ )
+    if( window && ( window->isMoving() || window->isResizing( )))
         return;
 
-    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject(getURI());
+    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject( uri_ );
     movie->postRenderUpdate( wallToWallChannel );
+}
+
+ControlState MovieContent::getControlState() const
+{
+    return controlState_;
+}
+
+void MovieContent::setControlState( const ControlState state )
+{
+    controlState_ = state;
 }

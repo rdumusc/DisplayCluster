@@ -48,6 +48,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentType.h
   ContentInteractionDelegate.h
   ContentWindow.h
+  ContentWindowController.h
   ContentWindowRenderer.h
   DisplayGroup.h
   DisplayGroupRenderer.h
@@ -65,7 +66,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   GLQuad.h
   GLTexture2D.h
   GLWindow.h
-  globals.h
   gestures/DoubleTapGestureRecognizer.h
   gestures/PanGesture.h
   gestures/PanGestureRecognizer.h
@@ -186,6 +186,7 @@ list(APPEND DCCORE_SOURCES
   ContentType.cpp
   ContentInteractionDelegate.cpp
   ContentWindow.cpp
+  ContentWindowController.cpp
   ContentWindowRenderer.cpp
   DisplayGroup.cpp
   DisplayGroupRenderer.cpp
@@ -203,7 +204,6 @@ list(APPEND DCCORE_SOURCES
   GLQuad.cpp
   GLTexture2D.cpp
   GLWindow.cpp
-  globals.cpp
   ImageJpegDecompressor.cpp
   Marker.cpp
   Markers.cpp

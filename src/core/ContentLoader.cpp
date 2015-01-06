@@ -42,24 +42,33 @@
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
 #include "ContentFactory.h"
+#include "ContentWindowController.h"
 
-ContentLoader::ContentLoader(DisplayGroupPtr displayGroup)
-    : displayGroup_(displayGroup)
+ContentLoader::ContentLoader( DisplayGroupPtr displayGroup )
+    : displayGroup_( displayGroup )
 {
 }
 
-bool ContentLoader::load(const QString& filename, const QPointF& windowCenterPosition, const QSizeF& windowSize)
+bool ContentLoader::load( const QString& filename,
+                          const QPointF& windowCenterPosition,
+                          const QSizeF& windowSize )
 {
     ContentPtr content = ContentFactory::getContent( filename );
     if( !content )
         return false;
 
     ContentWindowPtr contentWindow( new ContentWindow( content ));
+    ContentWindowController controller( *contentWindow, *displayGroup_ );
 
-    if (!windowSize.isNull())
-        contentWindow->setSize(windowSize.width(), windowSize.height());
+    if( windowSize.isValid( ))
+        controller.resize( windowSize );
+    else
+        controller.resize( content->getDimensions( ));
 
-    contentWindow->centerPositionAround(windowCenterPosition, true);
+    if ( windowCenterPosition.isNull( ))
+        controller.moveCenterTo( displayGroup_->getCoordinates().center( ));
+    else
+        controller.moveCenterTo( windowCenterPosition );
 
     displayGroup_->addContentWindow( contentWindow );
 

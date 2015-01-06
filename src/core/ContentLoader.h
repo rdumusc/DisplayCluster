@@ -57,7 +57,7 @@ public:
      *
      * @param displayGroup The target DisplayGroup for displaying the content.
      */
-    ContentLoader(DisplayGroupPtr displayGroup);
+    ContentLoader( DisplayGroupPtr displayGroup );
 
     /**
      * Load a Content from a file and create a window for it.
@@ -70,8 +70,9 @@ public:
      *        window is automatically adjusted to its content dimensions.
      * @return true if operation was successful, false otherwise.
      */
-    bool load(const QString& filename, const QPointF& windowCenterPosition = QPointF(),
-              const QSizeF& windowSize = QSizeF());
+    bool load( const QString& filename,
+               const QPointF& windowCenterPosition = QPointF(),
+               const QSizeF& windowSize = QSizeF( ));
 
 private:
     DisplayGroupPtr displayGroup_;

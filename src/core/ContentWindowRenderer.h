@@ -56,7 +56,7 @@ public:
      * Constructor.
      * @param factories Used to retrieve FactoryObjects for rendering Contents.
      */
-    ContentWindowRenderer(FactoriesPtr factories);
+    ContentWindowRenderer( FactoriesPtr factories );
 
     /**
      * Render the associated ContentWindow.
@@ -68,17 +68,17 @@ public:
      * Set the ContentWindow to be rendered.
      * @see render()
      */
-    void setContentWindow(ContentWindowPtr window);
+    void setContentWindow( ContentWindowPtr window );
 
     /** Display the window borders. */
-    void setShowWindowBorders(const bool show);
+    void setShowWindowBorders( const bool show );
 
     /** Display the zoom context. */
-    void setShowZoomContext(const bool show);
+    void setShowZoomContext( const bool show );
 
     /** Set PixelStream rendering options. */
-    void setPixelStreamOptions(const bool showSegmentBorders,
-                               const bool showSegmentStatistics);
+    void setPixelStreamOptions( const bool showSegmentBorders,
+                                const bool showSegmentStatistics );
 
 private:
     FactoriesPtr factories_;
@@ -93,11 +93,11 @@ private:
 
     void renderWindowBorder();
     void renderContent();
-    void renderContextView(FactoryObjectPtr object, const QRectF& texCoord);
+    void renderContextView( FactoryObjectPtr object, const QRectF& texCoord );
     QRectF getTexCoord() const;
 
-    void drawQuad(const QRectF& coord);
-    void drawQuadBorder(const QRectF& coord, const float width);
+    void drawQuad( const QRectF& coord );
+    void drawQuadBorder( const QRectF& coord, const float width );
 };
 
 #endif // CONTENTWINDOWRENDERER_H

@@ -47,6 +47,11 @@ DisplayGroup::DisplayGroup()
 {
 }
 
+DisplayGroup::DisplayGroup( const QSizeF& size )
+{
+    coordinates_.setSize( size );
+}
+
 DisplayGroup::~DisplayGroup()
 {
 }
@@ -102,7 +107,7 @@ void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
-ContentWindowPtr DisplayGroup::getBackgroundContentWindow() const
+ContentPtr DisplayGroup::getBackgroundContent() const
 {
     return backgroundContent_;
 }
@@ -145,6 +150,11 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
     }
 }
 
+const QRectF& DisplayGroup::getCoordinates() const
+{
+    return coordinates_;
+}
+
 void DisplayGroup::clear()
 {
     while( !contentWindows_.empty( ))
@@ -153,14 +163,7 @@ void DisplayGroup::clear()
 
 void DisplayGroup::setBackgroundContent( ContentPtr content )
 {
-    if ( content )
-    {
-        backgroundContent_.reset( new ContentWindow( content ));
-        backgroundContent_->adjustSize( SIZE_FULLSCREEN );
-        watchChanges( backgroundContent_ );
-    }
-    else
-        backgroundContent_.reset();
+    backgroundContent_ = content;
 
     sendDisplayGroup();
 }

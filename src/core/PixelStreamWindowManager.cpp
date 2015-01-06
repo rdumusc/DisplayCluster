@@ -41,6 +41,7 @@
 
 #include "configuration/Configuration.h"
 #include "ContentWindow.h"
+#include "ContentWindowController.h"
 #include "ContentFactory.h"
 #include "DisplayGroup.h"
 #include "log.h"
@@ -49,12 +50,8 @@ PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
     , displayGroup_( displayGroup )
 {
-    connect(&displayGroup, SIGNAL(contentWindowRemoved(ContentWindowPtr)),
-            this, SLOT(onContentWindowRemoved(ContentWindowPtr)));
-}
-
-PixelStreamWindowManager::~PixelStreamWindowManager()
-{
+    connect( &displayGroup, SIGNAL( contentWindowRemoved( ContentWindowPtr )),
+             this, SLOT( onContentWindowRemoved( ContentWindowPtr )));
 }
 
 ContentWindowPtr
@@ -63,27 +60,21 @@ PixelStreamWindowManager::createContentWindow( const QString& uri,
                                                const QSizeF& size )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
-    if(contentWindow)
-        put_flog( LOG_WARN, "Already have a window for stream: '%s'", uri.toStdString().c_str( ));
+    if( contentWindow )
+        put_flog( LOG_WARN, "Already have a window for stream: '%s'",
+                  uri.toStdString().c_str( ));
     else
-        contentWindow.reset( new ContentWindow );
-
-    // constrain to wall size
-    double width = size.width();
-    double height = size.height();
-    const double ar = width/height;
-
-    height = std::min( height, 1. );
-    width = ar * height;
-    if( width > 1. )
     {
-        height /= width;
-        width = 1.;
+        ContentPtr content = ContentFactory::getPixelStreamContent( uri );
+        contentWindow.reset( new ContentWindow( content ));
+        streamerWindows_[uri] = contentWindow;
     }
 
-    contentWindow->setSize( width, height );
-    contentWindow->centerPositionAround( pos, true );
-    streamerWindows_[uri] = contentWindow;
+    ContentWindowController controller( *contentWindow, displayGroup_ );
+    controller.resize( size );
+    controller.moveCenterTo( pos.isNull() ?
+                                displayGroup_.getCoordinates().center() : pos );
+
     return contentWindow;
 }
 
@@ -99,58 +90,59 @@ PixelStreamWindowManager::getContentWindow( const QString& uri ) const
     return it != streamerWindows_.end() ? it->second : ContentWindowPtr();
 }
 
-void PixelStreamWindowManager::updateDimension( QString uri, QSize size )
+void PixelStreamWindowManager::updateDimension( const QString& uri,
+                                                const QSize& size )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( !contentWindow )
         return;
 
-    ContentPtr content = contentWindow->getContent();
-    content->setDimensions( size );
+    contentWindow->getContent()->setDimensions( size );
 }
 
 void PixelStreamWindowManager::hideWindow( const QString& uri )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
-    {
-        double x, y;
-        contentWindow->getSize( x, y );
-        contentWindow->setPosition( 0, -2*y );
-    }
+        contentWindow->setState( ContentWindow::HIDDEN );
+}
+
+void PixelStreamWindowManager::showWindow( const QString& uri )
+{
+    ContentWindowPtr contentWindow = getContentWindow( uri );
+    if( contentWindow )
+        contentWindow->setState( ContentWindow::SELECTED );
 }
 
 void PixelStreamWindowManager::openPixelStreamWindow( QString uri, QSize size )
 {
-    put_flog( LOG_DEBUG, "adding pixel stream: %s", uri.toLocal8Bit().constData());
-
-    ContentPtr content = ContentFactory::getPixelStreamContent( uri );
-    content->setDimensions( size );
+    put_flog( LOG_DEBUG, "adding pixel stream: %s",
+              uri.toLocal8Bit().constData( ));
 
     ContentWindowPtr contentWindow = getContentWindow( uri );
-    if( contentWindow )
-        contentWindow->setContent( content );
-    else
+    if( !contentWindow )
     {
         // external streamers have no window yet
-        contentWindow = createContentWindow( uri, QPointF(), QSizeF( ));
-        contentWindow->setContent( content );
-        contentWindow->adjustSize( SIZE_1TO1 );
+        const QPointF center = displayGroup_.getCoordinates().center();
+        contentWindow = createContentWindow( uri, center, size );
     }
-
+    contentWindow->getContent()->setDimensions( size );
+    contentWindow->setState( ContentWindow::SELECTED );
     displayGroup_.addContentWindow( contentWindow );
 }
 
-void PixelStreamWindowManager::closePixelStreamWindow( const QString& uri )
+void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
 {
-    put_flog( LOG_DEBUG, "deleting pixel stream: %s", uri.toLocal8Bit().constData( ));
+    put_flog( LOG_DEBUG, "deleting pixel stream: %s",
+              uri.toLocal8Bit().constData( ));
 
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
         displayGroup_.removeContentWindow( contentWindow );
 }
 
-void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusive,
+void PixelStreamWindowManager::registerEventReceiver( const QString uri,
+                                                      const bool exclusive,
                                                       EventReceiver* receiver )
 {
     bool success = false;
@@ -160,28 +152,26 @@ void PixelStreamWindowManager::registerEventReceiver( QString uri, bool exclusiv
     {
         put_flog( LOG_DEBUG, "found window: '%s'", uri.toStdString().c_str( ));
 
-        // If a receiver is already registered, don't register this one if exclusive was requested
+        // If a receiver is already registered, don't register this one if
+        // "exclusive" was requested
         if( !exclusive || !contentWindow->hasEventReceivers( ))
         {
             success = contentWindow->registerEventReceiver( receiver );
 
             if( success )
-                contentWindow->setWindowState( ContentWindow::SELECTED );
+                contentWindow->setState( ContentWindow::SELECTED );
         }
     }
     else
-        put_flog( LOG_ERROR, "could not find window: '%s'", uri.toStdString().c_str( ));
+        put_flog( LOG_ERROR, "could not find window: '%s'",
+                  uri.toStdString().c_str( ));
 
     emit eventRegistrationReply( uri, success );
 }
 
-void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr contentWindow )
+void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
 {
-    ContentPtr content = contentWindow->getContent();
-    if( !content )
-        return;
-
-    const QString& uri = content->getURI();
+    const QString& uri = window->getContent()->getURI();
     if( !getContentWindow( uri ))
         return;
 

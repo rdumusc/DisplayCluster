@@ -57,7 +57,7 @@ public:
     virtual ~EventReceiver() {}
 
 public slots:
-    virtual void processEvent(Event event) = 0;
+    virtual void processEvent( Event event ) = 0;
 };
 
 #endif // EVENTRECEIVER_H
