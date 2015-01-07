@@ -46,6 +46,9 @@
 #include "DisplayGroup.h"
 #include "log.h"
 
+#include <deflect/PixelStreamBuffer.h>
+#include <deflect/PixelStreamFrame.h>
+
 PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
     , displayGroup_( displayGroup )
@@ -143,7 +146,7 @@ void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
 
 void PixelStreamWindowManager::registerEventReceiver( const QString uri,
                                                       const bool exclusive,
-                                                      EventReceiver* receiver )
+                                                      deflect::EventReceiver* receiver )
 {
     bool success = false;
 
@@ -177,4 +180,11 @@ void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
 
     removeContentWindow( uri );
     emit pixelStreamWindowClosed( uri );
+}
+
+void PixelStreamWindowManager::onSendFrame( deflect::PixelStreamFramePtr frame )
+{
+    const QSize& size =
+            deflect::PixelStreamBuffer::computeFrameDimensions( frame->segments );
+    updateDimension( frame->uri, size );
 }

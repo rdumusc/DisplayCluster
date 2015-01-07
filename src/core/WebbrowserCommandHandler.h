@@ -40,7 +40,7 @@
 #ifndef WEBBROWSERCOMMANDHANDLER_H
 #define WEBBROWSERCOMMANDHANDLER_H
 
-#include "AbstractCommandHandler.h"
+#include <deflect/AbstractCommandHandler.h>
 
 #include <QObject>
 #include <QPointF>
@@ -52,7 +52,7 @@ class PixelStreamWindowManager;
 /**
  * Handle webbrowser Commands.
  */
-class WebbrowserCommandHandler : public QObject, public AbstractCommandHandler
+class WebbrowserCommandHandler : public QObject, public deflect::AbstractCommandHandler
 {
     Q_OBJECT
 
@@ -63,7 +63,7 @@ public:
                              const QString& defaultURL);
 
     /** Get the type of commands handled by the implementation. */
-    CommandType getType() const override;
+    deflect::CommandType getType() const override;
 
     /**
      * Handles an open web browser Command. It uses the command arguments as the
@@ -74,7 +74,7 @@ public:
      * @param command The Command to handle.
      * @param senderUri The identifier of the sender (optional).
      */
-    void handle(const Command& command, const QString& senderUri = QString()) override;
+    void handle(const deflect::Command& command, const QString& senderUri = QString()) override;
 
 signals:
     /** Signal the PixelStreamLauncher to open a Webbrowser */

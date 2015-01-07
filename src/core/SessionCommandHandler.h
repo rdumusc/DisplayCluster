@@ -40,14 +40,14 @@
 #ifndef SESSIONCOMMANDHANDLER_H
 #define SESSIONCOMMANDHANDLER_H
 
-#include "AbstractCommandHandler.h"
+#include <deflect/AbstractCommandHandler.h>
 
 class DisplayGroup;
 
 /**
  * Handle session Commands.
  */
-class SessionCommandHandler : public AbstractCommandHandler
+class SessionCommandHandler : public deflect::AbstractCommandHandler
 {
 public:
     /**
@@ -57,14 +57,15 @@ public:
     SessionCommandHandler(DisplayGroup& displayGroup);
 
     /** Get the type of commands handled by the implementation. */
-    CommandType getType() const override;
+    deflect::CommandType getType() const override;
 
     /**
      * Handle a session Command.
      * @param command The Command to handle.
      * @param senderUri The identifier of the sender (optional).
      */
-    void handle(const Command& command, const QString& senderUri = QString()) override;
+    void handle(const deflect::Command& command,
+                const QString& senderUri = QString()) override;
 
 private:
     DisplayGroup& displayGroup_;

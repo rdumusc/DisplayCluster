@@ -42,13 +42,11 @@
 #include "WallToWallChannel.h"
 #include "RenderContext.h"
 #include "log.h"
-#include "PixelStreamFrame.h"
-
 #include "PixelStreamSegmentRenderer.h"
-#include "PixelStreamSegmentDecoder.h"
 
+#include <deflect/PixelStreamFrame.h>
+#include <deflect/PixelStreamSegmentDecoder.h>
 #include <deflect/PixelStreamSegmentParameters.h>
-using deflect::PixelStreamSegmentParameters;
 
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
@@ -101,7 +99,7 @@ void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& w
     decodeVisibleTextures(windowRect);
 }
 
-void PixelStream::updateRenderers(const PixelStreamSegments& segments)
+void PixelStream::updateRenderers(const deflect::PixelStreamSegments& segments)
 {
     assert(segmentRenderers_.size() == segments.size());
 
@@ -141,14 +139,14 @@ void PixelStream::swapBuffers()
     buffersSwapped_ = true;
 }
 
-void PixelStream::recomputeDimensions(const PixelStreamSegments &segments)
+void PixelStream::recomputeDimensions(const deflect::PixelStreamSegments &segments)
 {
     width_ = 0;
     height_ = 0;
 
     for(size_t i=0; i<segments.size(); i++)
     {
-        const PixelStreamSegmentParameters& params = segments[i].parameters;
+        const deflect::PixelStreamSegmentParameters& params = segments[i].parameters;
         width_ = std::max(width_, params.width+params.x);
         height_ = std::max(height_, params.height+params.y);
     }
@@ -159,7 +157,7 @@ void PixelStream::decodeVisibleTextures(const QRectF& windowRect)
     assert(frameDecoders_.size() == frontBuffer_.size());
 
     std::vector<PixelStreamSegmentDecoderPtr>::iterator frameDecoder_it = frameDecoders_.begin();
-    PixelStreamSegments::iterator segment_it = frontBuffer_.begin();
+    deflect::PixelStreamSegments::iterator segment_it = frontBuffer_.begin();
     for ( ; segment_it != frontBuffer_.end(); ++segment_it, ++frameDecoder_it )
     {
         if ( segment_it->parameters.compressed && isVisible(*segment_it, windowRect) )
@@ -187,7 +185,7 @@ void PixelStream::adjustFrameDecodersCount(const size_t count)
 {
     // We need to insert NEW objects in the vector if it is smaller
     for (size_t i=frameDecoders_.size(); i<count; ++i)
-        frameDecoders_.push_back( PixelStreamSegmentDecoderPtr(new PixelStreamSegmentDecoder()) );
+        frameDecoders_.push_back( PixelStreamSegmentDecoderPtr(new deflect::PixelStreamSegmentDecoder()) );
     // Or resize it if it is bigger
     frameDecoders_.resize( count );
 }
@@ -203,7 +201,7 @@ void PixelStream::adjustSegmentRendererCount(const size_t count)
     }
 }
 
-void PixelStream::setNewFrame(const PixelStreamFramePtr frame)
+void PixelStream::setNewFrame(const deflect::PixelStreamFramePtr frame)
 {
     syncPixelStreamFrame_.update(frame);
 }

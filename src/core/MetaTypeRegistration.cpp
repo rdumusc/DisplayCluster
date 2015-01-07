@@ -55,13 +55,13 @@ struct MetaTypeRegistration
     MetaTypeRegistration()
     {
         qRegisterMetaType< size_t >( "size_t" );
-        qRegisterMetaType< Event >( "Event" );
+        qRegisterMetaType< deflect::Event >( "deflect::Event" );
         qRegisterMetaType< OptionsPtr >( "OptionsPtr" );
         qRegisterMetaType< MarkersPtr >( "MarkersPtr" );
         qRegisterMetaType< DisplayGroupPtr >( "DisplayGroupPtr" );
         qRegisterMetaType< ContentWindowPtr >( "ContentWindowPtr" );
-        qRegisterMetaType< PixelStreamSegment >( "PixelStreamSegment" );
-        qRegisterMetaType< PixelStreamFramePtr >( "PixelStreamFramePtr" );
+        qRegisterMetaType< deflect::PixelStreamSegment >( "PixelStreamSegment" );
+        qRegisterMetaType< deflect::PixelStreamFramePtr >( "deflect::PixelStreamFramePtr" );
         qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
         qRegisterMetaType< MPIMessageType >( "MPIMessageType" );
         qRegisterMetaType< std::string >( "std::string" );

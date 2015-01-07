@@ -99,7 +99,7 @@ signals:
      * @see receiveMessage()
      * @param frame The frame that was received
      */
-    void received(PixelStreamFramePtr frame);
+    void received(deflect::PixelStreamFramePtr frame);
 
     /**
      * Emitted when the quit message was recieved

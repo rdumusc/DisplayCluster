@@ -42,7 +42,7 @@
 #include "Content.h"
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
-#include "PixelStreamFrame.h"
+#include <deflect/PixelStreamFrame.h>
 
 #include <boost/foreach.hpp>
 
@@ -150,7 +150,7 @@ FactoryObjectPtr Factories::getFactoryObject(ContentPtr content)
     return object;
 }
 
-void Factories::updatePixelStream(PixelStreamFramePtr frame)
+void Factories::updatePixelStream(deflect::PixelStreamFramePtr frame)
 {
     typedef boost::shared_ptr<PixelStream> PixelStreamPtr;
     PixelStreamPtr pixelStream = pixelStreamFactory_.getObject(frame->uri);

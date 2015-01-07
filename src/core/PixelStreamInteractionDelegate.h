@@ -66,10 +66,10 @@ private:
     QPointF mousePressPos_;
 
     template <typename T>
-    Event getMouseEvent( const T* qtEvent );
+    deflect::Event getMouseEvent( const T* qtEvent );
 
     template <typename T>
-    Event getGestureEvent( const T* gesture );
+    deflect::Event getGestureEvent( const T* gesture );
 };
 
 #endif // PIXELSTREAMINTERACTIONDELEGATE_H

@@ -124,23 +124,23 @@ BOOST_AUTO_TEST_CASE( test_webgl_interaction )
     BOOST_REQUIRE( frame );
 
     // Normalized mouse coordinates
-    Event pressState;
+    deflect::Event pressState;
     pressState.mouseX = 0.1;
     pressState.mouseY = 0.1;
     pressState.mouseLeft = true;
-    pressState.type = Event::EVT_PRESS;
+    pressState.type = deflect::Event::EVT_PRESS;
 
-    Event moveState;
+    deflect::Event moveState;
     moveState.mouseX = 0.2;
     moveState.mouseY = 0.2;
     moveState.mouseLeft = true;
-    moveState.type = Event::EVT_MOVE;
+    moveState.type = deflect::Event::EVT_MOVE;
 
-    Event releaseState;
+    deflect::Event releaseState;
     releaseState.mouseX = 0.2;
     releaseState.mouseY = 0.2;
     releaseState.mouseLeft = true;
-    releaseState.type = Event::EVT_RELEASE;
+    releaseState.type = deflect::Event::EVT_RELEASE;
 
     streamer->processEvent(pressState);
     streamer->processEvent(moveState);
@@ -181,11 +181,11 @@ BOOST_AUTO_TEST_CASE( test_webgl_click )
     BOOST_REQUIRE( frame );
 
     // Normalized mouse coordinates
-    Event clickState;
+    deflect::Event clickState;
     clickState.mouseX = 0.1;
     clickState.mouseY = 0.1;
     clickState.mouseLeft = true;
-    clickState.type = Event::EVT_CLICK;
+    clickState.type = deflect::Event::EVT_CLICK;
 
     streamer->processEvent(clickState);
 
@@ -221,11 +221,11 @@ BOOST_AUTO_TEST_CASE( test_webgl_wheel )
     BOOST_REQUIRE( frame );
 
     // Normalized mouse coordinates
-    Event wheelState;
+    deflect::Event wheelState;
     wheelState.mouseX = 0.1;
     wheelState.mouseY = 0.1;
     wheelState.dy = 40;
-    wheelState.type = Event::EVT_WHEEL;
+    wheelState.type = deflect::Event::EVT_WHEEL;
 
     streamer->processEvent(wheelState);
 

@@ -44,7 +44,7 @@
 #include "ContentWindow.h"
 #include "Options.h"
 #include "Markers.h"
-#include "PixelStreamFrame.h"
+#include <deflect/PixelStreamFrame.h>
 
 #define RANK0 0
 
@@ -75,7 +75,7 @@ void WallFromMasterChannel::receiveMessage()
         emit received(receiveBroadcast<MarkersPtr>(mh.size));
         break;
     case MPI_MESSAGE_TYPE_PIXELSTREAM:
-        emit received(receiveBroadcast<PixelStreamFramePtr>(mh.size));
+        emit received(receiveBroadcast<deflect::PixelStreamFramePtr>(mh.size));
         break;
     case MPI_MESSAGE_TYPE_QUIT:
         processMessages_ = false;

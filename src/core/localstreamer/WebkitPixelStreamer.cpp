@@ -103,34 +103,34 @@ void WebkitPixelStreamer::processEvent(deflect::Event dcEvent)
 
     switch(dcEvent.type)
     {
-    case Event::EVT_CLICK:
+    case deflect::Event::EVT_CLICK:
         processClickEvent(dcEvent);
         break;
-    case Event::EVT_PRESS:
+    case deflect::Event::EVT_PRESS:
         processPressEvent(dcEvent);
         break;
-    case Event::EVT_MOVE:
+    case deflect::Event::EVT_MOVE:
         processMoveEvent(dcEvent);
         break;
-    case Event::EVT_WHEEL:
+    case deflect::Event::EVT_WHEEL:
         processWheelEvent(dcEvent);
         break;
-    case Event::EVT_RELEASE:
+    case deflect::Event::EVT_RELEASE:
         processReleaseEvent(dcEvent);
         break;
-    case Event::EVT_SWIPE_LEFT:
+    case deflect::Event::EVT_SWIPE_LEFT:
         webView_.back();
         break;
-    case Event::EVT_SWIPE_RIGHT:
+    case deflect::Event::EVT_SWIPE_RIGHT:
         webView_.forward();
         break;
-    case Event::EVT_KEY_PRESS:
+    case deflect::Event::EVT_KEY_PRESS:
         processKeyPress(dcEvent);
         break;
-    case Event::EVT_KEY_RELEASE:
+    case deflect::Event::EVT_KEY_RELEASE:
         processKeyRelease(dcEvent);
         break;
-    case Event::EVT_VIEW_SIZE_CHANGED:
+    case deflect::Event::EVT_VIEW_SIZE_CHANGED:
         processViewSizeChange(dcEvent);
         break;
     default:
@@ -138,7 +138,7 @@ void WebkitPixelStreamer::processEvent(deflect::Event dcEvent)
     }
 }
 
-void WebkitPixelStreamer::processClickEvent(const Event &clickEvent)
+void WebkitPixelStreamer::processClickEvent(const deflect::Event &clickEvent)
 {
     // TODO History navigation (until swipe gestures are fixed)
     if (clickEvent.mouseX < 0.02)
@@ -160,7 +160,7 @@ void WebkitPixelStreamer::processClickEvent(const Event &clickEvent)
         webView_.load( hitResult.linkUrl( ));
 }
 
-void WebkitPixelStreamer::processPressEvent(const Event &pressEvent)
+void WebkitPixelStreamer::processPressEvent(const deflect::Event &pressEvent)
 {
     const QWebHitTestResult& hitResult = performHitTest(pressEvent);
 
@@ -179,7 +179,7 @@ void WebkitPixelStreamer::processPressEvent(const Event &pressEvent)
 }
 
 
-void WebkitPixelStreamer::processMoveEvent(const Event &moveEvent)
+void WebkitPixelStreamer::processMoveEvent(const deflect::Event &moveEvent)
 {
     const QPoint& pointerPos = getPointerPosition(moveEvent);
 
@@ -204,7 +204,7 @@ void WebkitPixelStreamer::processMoveEvent(const Event &moveEvent)
     }
 }
 
-void WebkitPixelStreamer::processReleaseEvent(const Event &releaseEvent)
+void WebkitPixelStreamer::processReleaseEvent(const deflect::Event &releaseEvent)
 {
     const QPoint& pointerPos = getPointerPosition(releaseEvent);
 
@@ -217,7 +217,7 @@ void WebkitPixelStreamer::processReleaseEvent(const Event &releaseEvent)
     interactionModeActive_ = false;
 }
 
-void WebkitPixelStreamer::processWheelEvent(const Event &wheelEvent)
+void WebkitPixelStreamer::processWheelEvent(const deflect::Event &wheelEvent)
 {
     const QWebHitTestResult& hitResult = performHitTest(wheelEvent);
 
@@ -231,7 +231,7 @@ void WebkitPixelStreamer::processWheelEvent(const Event &wheelEvent)
     }
 }
 
-void WebkitPixelStreamer::processKeyPress(const Event& keyEvent)
+void WebkitPixelStreamer::processKeyPress(const deflect::Event& keyEvent)
 {
     QKeyEvent myEvent(QEvent::KeyPress, keyEvent.key,
                       (Qt::KeyboardModifiers)keyEvent.modifiers,
@@ -240,7 +240,7 @@ void WebkitPixelStreamer::processKeyPress(const Event& keyEvent)
     webView_.page()->event(&myEvent);
 }
 
-void WebkitPixelStreamer::processKeyRelease(const Event &keyEvent)
+void WebkitPixelStreamer::processKeyRelease(const deflect::Event &keyEvent)
 {
     QKeyEvent myEvent(QEvent::KeyRelease, keyEvent.key,
                       (Qt::KeyboardModifiers)keyEvent.modifiers,
@@ -249,7 +249,7 @@ void WebkitPixelStreamer::processKeyRelease(const Event &keyEvent)
     webView_.page()->event(&myEvent);
 }
 
-void WebkitPixelStreamer::processViewSizeChange(const Event &sizeEvent)
+void WebkitPixelStreamer::processViewSizeChange(const deflect::Event &sizeEvent)
 {
     setSize( QSize((int)sizeEvent.dx, (int)sizeEvent.dy) );
     recomputeZoomFactor();
@@ -291,14 +291,14 @@ void WebkitPixelStreamer::update()
     }
 }
 
-QWebHitTestResult WebkitPixelStreamer::performHitTest(const Event &dcEvent) const
+QWebHitTestResult WebkitPixelStreamer::performHitTest(const deflect::Event &dcEvent) const
 {
     const QPoint& pointerPos = getPointerPosition(dcEvent);
     QWebFrame *pFrame = webView_.page()->frameAt(pointerPos);
     return pFrame ? pFrame->hitTestContent(pointerPos) : QWebHitTestResult();
 }
 
-QPoint WebkitPixelStreamer::getPointerPosition(const Event &dcEvent) const
+QPoint WebkitPixelStreamer::getPointerPosition(const deflect::Event &dcEvent) const
 {
     QWebPage* page = webView_.page();
 

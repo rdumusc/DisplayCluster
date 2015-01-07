@@ -57,41 +57,41 @@ void PixelStreamInteractionDelegate::tap( QTapGesture* gesture )
     if ( gesture->state() != Qt::GestureFinished )
         return;
 
-    Event event = getGestureEvent( gesture );
-    event.type = Event::EVT_CLICK;
+    deflect::Event event = getGestureEvent( gesture );
+    event.type = deflect::Event::EVT_CLICK;
 
     contentWindow_.dispatchEvent( event );
 }
 
 void PixelStreamInteractionDelegate::doubleTap( DoubleTapGesture* gesture )
 {
-    Event event = getGestureEvent( gesture );
-    event.type = Event::EVT_DOUBLECLICK;
+    deflect::Event event = getGestureEvent( gesture );
+    event.type = deflect::Event::EVT_DOUBLECLICK;
 
     contentWindow_.dispatchEvent( event );
 }
 
 void PixelStreamInteractionDelegate::pan( PanGesture* gesture )
 {
-    Event event = getGestureEvent( gesture );
+    deflect::Event event = getGestureEvent( gesture );
 
     switch( gesture->state( ))
     {
     case Qt::GestureStarted:
-        event.type = Event::EVT_PRESS;
+        event.type = deflect::Event::EVT_PRESS;
         break;
     case Qt::GestureUpdated:
-        event.type = Event::EVT_MOVE;
+        event.type = deflect::Event::EVT_MOVE;
         event.dx = gesture->delta().x() / contentWindow_.getCoordinates().width();
         event.dy = gesture->delta().y() / contentWindow_.getCoordinates().height();
         break;
     case Qt::GestureFinished:
-        event.type = Event::EVT_RELEASE;
+        event.type = deflect::Event::EVT_RELEASE;
         break;
     case Qt::NoGesture:
     case Qt::GestureCanceled:
     default:
-        event.type = Event::EVT_NONE;
+        event.type = deflect::Event::EVT_NONE;
         break;
     }
 
@@ -100,21 +100,21 @@ void PixelStreamInteractionDelegate::pan( PanGesture* gesture )
 
 void PixelStreamInteractionDelegate::swipe( QSwipeGesture* gesture )
 {
-    Event event;
+    deflect::Event event;
 
     if( gesture->horizontalDirection() == QSwipeGesture::Left )
-        event.type = Event::EVT_SWIPE_LEFT;
+        event.type = deflect::Event::EVT_SWIPE_LEFT;
 
     else if( gesture->horizontalDirection() == QSwipeGesture::Right )
-        event.type = Event::EVT_SWIPE_LEFT;
+        event.type = deflect::Event::EVT_SWIPE_LEFT;
 
     else if( gesture->verticalDirection() == QSwipeGesture::Up )
-        event.type = Event::EVT_SWIPE_UP;
+        event.type = deflect::Event::EVT_SWIPE_UP;
 
     else if( gesture->verticalDirection() == QSwipeGesture::Down )
-        event.type = Event::EVT_SWIPE_DOWN;
+        event.type = deflect::Event::EVT_SWIPE_DOWN;
 
-    if( event.type != Event::EVT_NONE )
+    if( event.type != deflect::Event::EVT_NONE )
         contentWindow_.dispatchEvent( event );
 }
 
@@ -124,8 +124,8 @@ void PixelStreamInteractionDelegate::pinch( PinchGesture* gesture )
     if( std::isnan( factor ) || std::isinf( factor ))
         return;
 
-    Event event = getGestureEvent( gesture );
-    event.type = Event::EVT_WHEEL;
+    deflect::Event event = getGestureEvent( gesture );
+    event.type = deflect::Event::EVT_WHEEL;
     event.mouseLeft = false;
     event.dy = factor;
 
@@ -134,8 +134,8 @@ void PixelStreamInteractionDelegate::pinch( PinchGesture* gesture )
 
 void PixelStreamInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    Event event = getMouseEvent( mouseEvent );
-    event.type = Event::EVT_MOVE;
+    deflect::Event event = getMouseEvent( mouseEvent );
+    event.type = deflect::Event::EVT_MOVE;
 
     const QPointF delta = mouseEvent->pos() - mouseEvent->lastPos();
     event.dx = delta.x() / contentWindow_.getCoordinates().width();
@@ -146,8 +146,8 @@ void PixelStreamInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* m
 
 void PixelStreamInteractionDelegate::mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    Event event = getMouseEvent( mouseEvent );
-    event.type = Event::EVT_PRESS;
+    deflect::Event event = getMouseEvent( mouseEvent );
+    event.type = deflect::Event::EVT_PRESS;
 
     mousePressPos_ = mouseEvent->pos();
 
@@ -156,16 +156,16 @@ void PixelStreamInteractionDelegate::mousePressEvent( QGraphicsSceneMouseEvent* 
 
 void PixelStreamInteractionDelegate::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    Event event = getMouseEvent( mouseEvent );
-    event.type = Event::EVT_DOUBLECLICK;
+    deflect::Event event = getMouseEvent( mouseEvent );
+    event.type = deflect::Event::EVT_DOUBLECLICK;
 
     contentWindow_.dispatchEvent( event );
 }
 
 void PixelStreamInteractionDelegate::mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent )
 {
-    Event event = getMouseEvent( mouseEvent );
-    event.type = Event::EVT_RELEASE;
+    deflect::Event event = getMouseEvent( mouseEvent );
+    event.type = deflect::Event::EVT_RELEASE;
 
     contentWindow_.dispatchEvent( event );
 
@@ -174,15 +174,15 @@ void PixelStreamInteractionDelegate::mouseReleaseEvent( QGraphicsSceneMouseEvent
     const double epsilon = std::numeric_limits< double >::epsilon();
     if( fabs( delta.x( )) < epsilon && fabs( delta.y( )) < epsilon )
     {
-        event.type = Event::EVT_CLICK;
+        event.type = deflect::Event::EVT_CLICK;
         contentWindow_.dispatchEvent( event );
     }
 }
 
 void PixelStreamInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* evt )
 {
-    Event event = getMouseEvent( evt );
-    event.type = Event::EVT_WHEEL;
+    deflect::Event event = getMouseEvent( evt );
+    event.type = deflect::Event::EVT_WHEEL;
 
     if( evt->orientation() == Qt::Vertical )
     {
@@ -200,8 +200,8 @@ void PixelStreamInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* evt )
 
 void PixelStreamInteractionDelegate::keyPressEvent( QKeyEvent* keyEvent )
 {
-    Event event;
-    event.type = Event::EVT_KEY_PRESS;
+    deflect::Event event;
+    event.type = deflect::Event::EVT_KEY_PRESS;
     event.key = keyEvent->key();
     event.modifiers = keyEvent->modifiers();
     strncpy( event.text, keyEvent->text().toStdString().c_str(),
@@ -212,8 +212,8 @@ void PixelStreamInteractionDelegate::keyPressEvent( QKeyEvent* keyEvent )
 
 void PixelStreamInteractionDelegate::keyReleaseEvent( QKeyEvent* keyEvent )
 {
-    Event event;
-    event.type = Event::EVT_KEY_RELEASE;
+    deflect::Event event;
+    event.type = deflect::Event::EVT_KEY_RELEASE;
     event.key = keyEvent->key();
     event.modifiers = keyEvent->modifiers();
     strncpy( event.text, keyEvent->text().toStdString().c_str(),
@@ -223,11 +223,11 @@ void PixelStreamInteractionDelegate::keyReleaseEvent( QKeyEvent* keyEvent )
 }
 
 template <typename T>
-Event PixelStreamInteractionDelegate::getMouseEvent( const T* qtEvent )
+deflect::Event PixelStreamInteractionDelegate::getMouseEvent( const T* qtEvent )
 {
     const QRectF& window = contentWindow_.getCoordinates();
 
-    Event event;
+    deflect::Event event;
     event.mouseX = ( qtEvent->pos().x() - window.x( )) / window.width();
     event.mouseY = ( qtEvent->pos().y() - window.y( )) / window.height();
 
@@ -239,7 +239,7 @@ Event PixelStreamInteractionDelegate::getMouseEvent( const T* qtEvent )
 }
 
 template <typename T>
-Event PixelStreamInteractionDelegate::getGestureEvent( const T* gesture )
+deflect::Event PixelStreamInteractionDelegate::getGestureEvent( const T* gesture )
 {
     // For some QGestures, position() is a screen position (Qt global).
     // However, QTapGesture has a scene position because it uses touchPoint.pos,
@@ -252,7 +252,7 @@ Event PixelStreamInteractionDelegate::getGestureEvent( const T* gesture )
 
     const QRectF& win = contentWindow_.getCoordinates();
 
-    Event event;
+    deflect::Event event;
     event.mouseLeft = true;
     event.mouseX = ( gesture->position().x() - win.x( )) / win.width();
     event.mouseY = ( gesture->position().y() - win.y( )) / win.height();
