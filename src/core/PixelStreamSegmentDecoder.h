@@ -43,11 +43,11 @@
 #include <QFuture>
 #include <boost/noncopyable.hpp>
 
-namespace dc
+namespace deflect
 {
 struct PixelStreamSegment;
 }
-using dc::PixelStreamSegment;
+using deflect::PixelStreamSegment;
 
 class ImageJpegDecompressor;
 

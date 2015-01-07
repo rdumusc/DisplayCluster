@@ -39,7 +39,7 @@
 #ifndef CONTENT_WINDOW_H
 #define CONTENT_WINDOW_H
 
-#include "Event.h"
+#include <deflect/Event.h>
 #include "types.h"
 
 #include "serializationHelpers.h"

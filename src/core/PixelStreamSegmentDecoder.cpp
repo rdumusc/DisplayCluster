@@ -39,7 +39,7 @@
 
 #include "PixelStreamSegmentDecoder.h"
 
-#include "PixelStreamSegment.h"
+#include <deflect/PixelStreamSegment.h>
 #include "ImageJpegDecompressor.h"
 #include "log.h"
 
@@ -66,7 +66,7 @@ void decodeSegment(ImageJpegDecompressor* decompressor, PixelStreamSegment* segm
     }
 }
 
-void PixelStreamSegmentDecoder::startDecoding(dc::PixelStreamSegment& segment)
+void PixelStreamSegmentDecoder::startDecoding(deflect::PixelStreamSegment& segment)
 {
     // drop frames if we're currently processing
     if(isRunning())

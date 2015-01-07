@@ -47,8 +47,8 @@
 #include "PixelStreamSegmentRenderer.h"
 #include "PixelStreamSegmentDecoder.h"
 
-#include "PixelStreamSegmentParameters.h"
-using dc::PixelStreamSegmentParameters;
+#include <deflect/PixelStreamSegmentParameters.h>
+using deflect::PixelStreamSegmentParameters;
 
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
@@ -253,7 +253,7 @@ bool PixelStream::isVisible(const QRect& segment, const QRectF& windowRect)
     return renderContext_->isRegionVisible(QRectF(segmentX, segmentY, segmentW, segmentH));
 }
 
-bool PixelStream::isVisible(const dc::PixelStreamSegment& segment, const QRectF& windowRect)
+bool PixelStream::isVisible(const deflect::PixelStreamSegment& segment, const QRectF& windowRect)
 {
     QRect segmentRegion(segment.parameters.x, segment.parameters.y,
                         segment.parameters.width, segment.parameters.height);

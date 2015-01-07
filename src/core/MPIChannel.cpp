@@ -40,7 +40,6 @@
 #include "MPIChannel.h"
 
 #include "MPIContext.h"
-#include "MessageHeader.h"
 
 #include "log.h"
 

@@ -40,9 +40,10 @@
 #define PIXEL_STREAM_H
 
 #include "FactoryObject.h"
-#include "PixelStreamSegment.h"
 #include "SwapSyncObject.h"
 #include "types.h"
+
+#include <deflect/PixelStreamSegment.h>
 
 #include <QObject>
 #include <QRectF>

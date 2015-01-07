@@ -89,7 +89,10 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
         if( configuration.getFullscreen( ))
             glw->showFullScreen();
         else
+        {
+            glw->setWindowFlags(Qt::FramelessWindowHint);
             glw->show();
+        }
     }
 }
 

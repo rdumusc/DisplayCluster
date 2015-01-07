@@ -41,7 +41,7 @@
 #define PIXELSTREAMFRAME_H
 
 #include "types.h"
-#include "PixelStreamSegment.h"
+#include <deflect/PixelStreamSegment.h>
 
 #include <QString>
 #include <boost/serialization/access.hpp>

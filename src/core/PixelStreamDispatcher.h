@@ -47,7 +47,7 @@
 
 #include "types.h"
 
-#include "PixelStreamSegment.h"
+#include <deflect/PixelStreamSegment.h>
 #include "PixelStreamBuffer.h"
 
 class PixelStreamWindowManager;

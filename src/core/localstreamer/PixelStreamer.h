@@ -41,7 +41,7 @@
 #define PIXELSTREAMER_H
 
 #include "types.h"
-#include "Event.h"
+#include <deflect/Event.h>
 
 #include <QObject>
 #include <QSize>

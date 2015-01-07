@@ -12,12 +12,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 endif()
 
-# Libraries to link the tests executables with
-set(DC_LIBRARIES dcstream)
-
-if(BUILD_CORE_LIBRARY)
-  list(APPEND DC_LIBRARIES dccore dcwebservice)
-endif()
+list(APPEND DC_LIBRARIES dccore dcwebservice)
 
 add_subdirectory(cpp)
 add_subdirectory(mock)

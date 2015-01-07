@@ -40,7 +40,6 @@
 #include "FpsRenderer.h"
 
 #include "RenderContext.h"
-#include "GLWindow.h"
 
 #include <QtOpenGL/qgl.h>
 

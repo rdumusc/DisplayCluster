@@ -41,12 +41,12 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
-#include "dcstream/ImageWrapper.h"
-#include "dcstream/ImageJpegCompressor.h"
+#include <deflect/ImageWrapper.h>
+#include <deflect/ImageJpegCompressor.h>
 #include "ImageJpegDecompressor.h"
 
-#include "dcstream/ImageSegmenter.h"
-#include "PixelStreamSegment.h"
+#include <deflect/ImageSegmenter.h>
+#include <deflect/PixelStreamSegment.h>
 #include "PixelStreamSegmentDecoder.h"
 
 #include <boost/bind.hpp>
@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE( testImageCompressionAndDecompression )
     // Vector of RGBA data
     std::vector<char> data;
     fillTestImage(data);
-    dc::ImageWrapper imageWrapper(data.data(), 8, 8, dc::RGBA);
+    deflect::ImageWrapper imageWrapper(data.data(), 8, 8, deflect::RGBA);
 
     // Compress image
-    dc::ImageJpegCompressor compressor;
+    deflect::ImageJpegCompressor compressor;
     QByteArray jpegData = compressor.computeJpeg(imageWrapper, QRect(0,0,8,8));
 
     BOOST_REQUIRE( jpegData.size() > 0 );
@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE( testImageCompressionAndDecompression )
                                    dataOut, dataOut+data.size() );
 }
 
-static bool append( dc::PixelStreamSegments& segments,
-                    const dc::PixelStreamSegment& segment )
+static bool append( deflect::PixelStreamSegments& segments,
+                    const deflect::PixelStreamSegment& segment )
 {
     static QMutex lock_;
     QMutexLocker locker( &lock_ );
@@ -106,18 +106,18 @@ BOOST_AUTO_TEST_CASE( testImageSegmentationWithCompressionAndDecompression )
     fillTestImage(data);
 
     // Compress image
-    dc::ImageWrapper imageWrapper(data.data(), 8, 8, dc::RGBA);
-    imageWrapper.compressionPolicy = dc::COMPRESSION_ON;
+    deflect::ImageWrapper imageWrapper(data.data(), 8, 8, deflect::RGBA);
+    imageWrapper.compressionPolicy = deflect::COMPRESSION_ON;
 
-    dc::PixelStreamSegments segments;
-    dc::ImageSegmenter segmenter;
-    const dc::ImageSegmenter::Handler appendFunc =
+    deflect::PixelStreamSegments segments;
+    deflect::ImageSegmenter segmenter;
+    const deflect::ImageSegmenter::Handler appendFunc =
         boost::bind( &append, boost::ref( segments ), _1 );
 
     segmenter.generate( imageWrapper, appendFunc );
     BOOST_REQUIRE_EQUAL( segments.size(), 1 );
 
-    dc::PixelStreamSegment& segment = segments.front();
+    deflect::PixelStreamSegment& segment = segments.front();
     BOOST_REQUIRE( segment.parameters.compressed );
     BOOST_REQUIRE( segment.imageData.size() != (int)data.size() );
 

@@ -92,7 +92,7 @@ public:
 
 public slots:
     /** Process an Event. */
-    void processEvent(dc::Event event) override;
+    void processEvent(deflect::Event event) override;
 
 private slots:
     void update();

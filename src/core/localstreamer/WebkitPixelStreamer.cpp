@@ -97,7 +97,7 @@ const QWebView* WebkitPixelStreamer::getView() const
     return &webView_;
 }
 
-void WebkitPixelStreamer::processEvent(dc::Event dcEvent)
+void WebkitPixelStreamer::processEvent(deflect::Event dcEvent)
 {
     QMutexLocker locker(&mutex_);
 

@@ -42,7 +42,7 @@
 
 #include <QObject>
 
-#include "dcWebservice/Handler.h"
+#include <dcWebservice/Handler.h>
 
 #include "types.h"
 

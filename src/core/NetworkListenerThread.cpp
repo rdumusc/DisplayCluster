@@ -39,7 +39,7 @@
 #include "NetworkListenerThread.h"
 
 // increment this every time the network protocol changes in a major way
-#include "NetworkProtocol.h"
+#include <deflect/NetworkProtocol.h>
 #include "PixelStream.h"
 #include "log.h"
 
@@ -171,7 +171,7 @@ void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader,
 
     switch(messageHeader.type)
     {
-    case MESSAGE_TYPE_QUIT:
+    case deflect::MESSAGE_TYPE_QUIT:
         if (pixelStreamUri_ == uri)
         {
             emit receivedRemovePixelStreamSource(uri, socketDescriptor_);
@@ -179,7 +179,7 @@ void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader,
         }
         break;
 
-    case MESSAGE_TYPE_PIXELSTREAM_OPEN:
+    case deflect::MESSAGE_TYPE_PIXELSTREAM_OPEN:
         if (pixelStreamUri_.isEmpty())
         {
             pixelStreamUri_ = uri;
@@ -189,30 +189,30 @@ void NetworkListenerThread::handleMessage(const MessageHeader& messageHeader,
             put_flog(LOG_ERROR, "Error: PixelStream already opened!");
         break;
 
-    case MESSAGE_TYPE_PIXELSTREAM_FINISH_FRAME:
+    case deflect::MESSAGE_TYPE_PIXELSTREAM_FINISH_FRAME:
         if (pixelStreamUri_ == uri)
         {
             emit receivedPixelStreamFinishFrame(uri, socketDescriptor_);
         }
         break;
 
-    case MESSAGE_TYPE_PIXELSTREAM:
+    case deflect::MESSAGE_TYPE_PIXELSTREAM:
         handlePixelStreamMessage(uri, byteArray);
         break;
 
-    case MESSAGE_TYPE_COMMAND:
+    case deflect::MESSAGE_TYPE_COMMAND:
         emit receivedCommand(QString(byteArray.data()), uri);
         break;
 
-    case MESSAGE_TYPE_BIND_EVENTS:
-    case MESSAGE_TYPE_BIND_EVENTS_EX:
+    case deflect::MESSAGE_TYPE_BIND_EVENTS:
+    case deflect::MESSAGE_TYPE_BIND_EVENTS_EX:
         if (registeredToEvents_)
         {
             put_flog(LOG_DEBUG, "We are already bound!!");
         }
         else
         {
-            const bool eventRegistrationExclusive = (messageHeader.type == MESSAGE_TYPE_BIND_EVENTS_EX);
+            const bool eventRegistrationExclusive = (messageHeader.type == deflect::MESSAGE_TYPE_BIND_EVENTS_EX);
             emit registerToEvents(pixelStreamUri_, eventRegistrationExclusive, this);
         }
         break;
@@ -276,7 +276,7 @@ void NetworkListenerThread::sendProtocolVersion()
 
 void NetworkListenerThread::sendBindReply(const bool successful)
 {
-    MessageHeader mh(MESSAGE_TYPE_BIND_EVENTS_REPLY, sizeof(bool));
+    MessageHeader mh(deflect::MESSAGE_TYPE_BIND_EVENTS_REPLY, sizeof(bool));
     send(mh);
 
     tcpSocket_->write((const char *)&successful, sizeof(bool));
@@ -286,7 +286,7 @@ void NetworkListenerThread::sendBindReply(const bool successful)
 void NetworkListenerThread::send(const Event& evt)
 {
     // send message header
-    MessageHeader mh(MESSAGE_TYPE_EVENT, Event::serializedSize);
+    MessageHeader mh(deflect::MESSAGE_TYPE_EVENT, Event::serializedSize);
     send(mh);
 
     {
@@ -298,7 +298,7 @@ void NetworkListenerThread::send(const Event& evt)
 
 void NetworkListenerThread::sendQuit()
 {
-    MessageHeader mh(MESSAGE_TYPE_QUIT, 0);
+    MessageHeader mh(deflect::MESSAGE_TYPE_QUIT, 0);
     send(mh);
     flushSocket();
 }

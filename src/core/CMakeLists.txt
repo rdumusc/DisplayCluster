@@ -6,6 +6,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(DCCORE_LINK_LIBRARIES
   dcwebservice
+  ${DEFLECT_LIBRARIES}
   ${Boost_LIBRARIES}
   ${QT_LIBRARIES}
   ${OPENGL_LIBRARIES}
@@ -72,6 +73,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   gestures/PinchGesture.h
   gestures/PinchGestureRecognizer.h
   ImageJpegDecompressor.h
+  log.h
   Marker.h
   Markers.h
   MarkerRenderer.h
@@ -176,7 +178,6 @@ list(APPEND DCCORE_MOC_HEADERS
 
 list(APPEND DCCORE_SOURCES
   ${COMMON_SOURCES}
-  ${DISPLAYCLUSTER_SHARED_SOURCES}
   Command.cpp
   CommandHandler.cpp
   CommandType.cpp
@@ -205,6 +206,7 @@ list(APPEND DCCORE_SOURCES
   GLTexture2D.cpp
   GLWindow.cpp
   ImageJpegDecompressor.cpp
+  log.cpp
   Marker.cpp
   Markers.cpp
   MarkerRenderer.cpp

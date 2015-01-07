@@ -11,23 +11,5 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 endif()
 
-set(DISPLAYCLUSTER_SHARED_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/MessageHeader.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/NetworkProtocol.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/PixelStreamSegment.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/PixelStreamSegmentParameters.h
-)
-
-set(DISPLAYCLUSTER_SHARED_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/Event.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/MessageHeader.cpp
-)
-
-if(BUILD_CORE_LIBRARY)
-  add_subdirectory(core)
-  add_subdirectory(dcWebservice)
-endif()
-
-add_subdirectory(dcstream)
+add_subdirectory(dcWebservice)
+add_subdirectory(core)

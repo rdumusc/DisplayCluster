@@ -72,7 +72,7 @@ void PixelStreamDispatcher::removeSource(const QString uri, const size_t sourceI
     }
 }
 
-void PixelStreamDispatcher::processSegment(const QString uri, const size_t sourceIndex, dc::PixelStreamSegment segment)
+void PixelStreamDispatcher::processSegment(const QString uri, const size_t sourceIndex, deflect::PixelStreamSegment segment)
 {
     if (streamBuffers_.count(uri))
         streamBuffers_[uri].insertSegment(segment, sourceIndex);

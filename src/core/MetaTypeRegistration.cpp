@@ -40,8 +40,8 @@
 #include "config.h"
 #include "types.h"
 
-#include "PixelStreamSegment.h"
-#include "Event.h"
+#include <deflect/PixelStreamSegment.h>
+#include <deflect/Event.h>
 #include "ContentWindow.h"
 #include "MPIHeader.h"
 

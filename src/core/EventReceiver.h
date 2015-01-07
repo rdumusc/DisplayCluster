@@ -40,11 +40,11 @@
 #ifndef EVENTRECEIVER_H
 #define EVENTRECEIVER_H
 
-#include "Event.h"
+#include <deflect/Event.h>
 
 #include <QObject>
 
-using dc::Event;
+using deflect::Event;
 
 /**
  * Interface for classes to register as receivers for events.
