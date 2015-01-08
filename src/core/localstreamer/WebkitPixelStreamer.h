@@ -110,17 +110,17 @@ private:
 
     unsigned int initialWidth_;
 
-    void processClickEvent(const Event &clickEvent);
-    void processPressEvent(const Event &pressEvent);
-    void processMoveEvent(const Event &moveEvent);
-    void processReleaseEvent(const Event &releaseEvent);
-    void processWheelEvent(const Event &wheelEvent);
-    void processKeyPress(const Event &keyEvent);
-    void processKeyRelease(const Event &keyEvent);
-    void processViewSizeChange(const Event &sizeEvent);
+    void processClickEvent(const deflect::Event &clickEvent);
+    void processPressEvent(const deflect::Event &pressEvent);
+    void processMoveEvent(const deflect::Event &moveEvent);
+    void processReleaseEvent(const deflect::Event &releaseEvent);
+    void processWheelEvent(const deflect::Event &wheelEvent);
+    void processKeyPress(const deflect::Event &keyEvent);
+    void processKeyRelease(const deflect::Event &keyEvent);
+    void processViewSizeChange(const deflect::Event &sizeEvent);
 
-    QWebHitTestResult performHitTest(const Event &dcEvent) const;
-    QPoint getPointerPosition(const Event &dcEvent) const;
+    QWebHitTestResult performHitTest(const deflect::Event &dcEvent) const;
+    QPoint getPointerPosition(const deflect::Event &dcEvent) const;
     bool isWebGLElement(const QWebElement &element) const;
     void setSize(const QSize& webpageSize);
     void recomputeZoomFactor();

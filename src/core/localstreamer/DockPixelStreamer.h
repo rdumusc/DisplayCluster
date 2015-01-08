@@ -72,7 +72,7 @@ public:
     static QSize constrainSize(const QSize& targetSize);
 
 public slots:
-    void processEvent(Event evt) override;
+    void processEvent(deflect::Event evt) override;
 
 private slots:
     void update(const QImage &image);
@@ -101,7 +101,7 @@ private:
     void createToolbar(const unsigned int width, const unsigned int height);
     void createImageLoader();
 
-    void processClickEvent(const Event& clickEvent);
+    void processClickEvent(const deflect::Event& clickEvent);
     void onItem();
     void changeDirectory( const QString& dir );
     void addRootDirToFlow();

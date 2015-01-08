@@ -49,13 +49,13 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 #include "DummyContent.h"
 
-#include "EventReceiver.h"
+#include <deflect/EventReceiver.h>
 
-class DummyEventReceiver : public EventReceiver
+class DummyEventReceiver : public deflect::EventReceiver
 {
 public:
     DummyEventReceiver() : success_( false ) {}
-    virtual void processEvent( Event /*event*/ )
+    virtual void processEvent( deflect::Event /*event*/ )
     {
         success_ = true;
     }
@@ -228,13 +228,13 @@ BOOST_AUTO_TEST_CASE( testEventReceiver )
     DummyEventReceiver receiver;
     BOOST_REQUIRE( !receiver.success_ );
 
-    window.dispatchEvent( Event( ));
+    window.dispatchEvent( deflect::Event( ));
     BOOST_CHECK( !receiver.success_ );
 
     BOOST_CHECK( window.registerEventReceiver( &receiver ));
     BOOST_CHECK( window.hasEventReceivers() );
     BOOST_CHECK( !receiver.success_ );
-    window.dispatchEvent( Event( ));
+    window.dispatchEvent( deflect::Event( ));
     BOOST_CHECK( receiver.success_ );
 }
 

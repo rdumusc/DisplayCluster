@@ -12,7 +12,6 @@ set(DCCORE_LINK_LIBRARIES
   ${OPENGL_LIBRARIES}
   ${FFMPEG_LIBRARIES}
   ${MPI_CXX_LIBRARIES}
-  ${LibJpegTurbo_LIBRARIES}
 )
 
 if(ENABLE_TUIO_TOUCH_LISTENER)
@@ -40,9 +39,6 @@ endif()
 
 list(APPEND DCCORE_PUBLIC_HEADERS
   ${COMMON_INCLUDES}
-  Command.h
-  CommandHandler.h
-  CommandType.h
   Content.h
   ContentFactory.h
   ContentLoader.h
@@ -72,7 +68,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   gestures/PanGestureRecognizer.h
   gestures/PinchGesture.h
   gestures/PinchGestureRecognizer.h
-  ImageJpegDecompressor.h
   log.h
   Marker.h
   Markers.h
@@ -83,15 +78,10 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   MovieContent.h
   MPIChannel.h
   MPIContext.h
-  NetworkListener.h
-  NetworkListenerThread.h
   Options.h
   PixelStream.h
-  PixelStreamBuffer.h
   PixelStreamContent.h
-  PixelStreamDispatcher.h
   PixelStreamInteractionDelegate.h
-  PixelStreamSegmentDecoder.h
   PixelStreamSegmentRenderer.h
   PixelStreamWindowManager.h
   RenderContext.h
@@ -141,22 +131,17 @@ list(APPEND DCCORE_PUBLIC_HEADERS
 )
 
 list(APPEND DCCORE_MOC_HEADERS
-  CommandHandler.h
   Content.h
   ContentWindow.h
   DisplayGroup.h
   DisplayGroupRenderer.h
-  EventReceiver.h
   Factories.h
   Markers.h
   MarkerRenderer.h
   MasterFromWallChannel.h
   MasterToWallChannel.h
-  NetworkListener.h
-  NetworkListenerThread.h
   Options.h
   PixelStream.h
-  PixelStreamDispatcher.h
   PixelStreamWindowManager.h
   RenderController.h
   WallFromMasterChannel.h
@@ -178,9 +163,6 @@ list(APPEND DCCORE_MOC_HEADERS
 
 list(APPEND DCCORE_SOURCES
   ${COMMON_SOURCES}
-  Command.cpp
-  CommandHandler.cpp
-  CommandType.cpp
   Content.cpp
   ContentFactory.cpp
   ContentLoader.cpp
@@ -205,7 +187,6 @@ list(APPEND DCCORE_SOURCES
   GLQuad.cpp
   GLTexture2D.cpp
   GLWindow.cpp
-  ImageJpegDecompressor.cpp
   log.cpp
   Marker.cpp
   Markers.cpp
@@ -217,15 +198,10 @@ list(APPEND DCCORE_SOURCES
   MovieContent.cpp
   MPIChannel.cpp
   MPIContext.cpp
-  NetworkListener.cpp
-  NetworkListenerThread.cpp
   Options.cpp
   PixelStream.cpp
-  PixelStreamBuffer.cpp
   PixelStreamContent.cpp
-  PixelStreamDispatcher.cpp
   PixelStreamInteractionDelegate.cpp
-  PixelStreamSegmentDecoder.cpp
   PixelStreamSegmentRenderer.cpp
   PixelStreamWindowManager.cpp
   RenderContext.cpp

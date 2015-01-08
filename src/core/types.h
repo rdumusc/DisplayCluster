@@ -40,6 +40,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <deflect/types.h>
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
@@ -48,47 +49,36 @@ class Content;
 class ContentWindow;
 class DisplayGroup;
 class DisplayGroupAdapter;
+class DisplayGroupRenderer;
 class DynamicTexture;
-class Options;
-class Markers;
-class GLWindow;
-class MPIChannel;
-class PixelStreamWindowManager;
 class Factories;
+class FactoryObject;
+class GLWindow;
+class MarkerRenderer;
+class Markers;
+class MPIChannel;
+class Options;
+class PixelStreamWindowManager;
 class Renderable;
 class RenderContext;
-class DisplayGroupRenderer;
-class MarkerRenderer;
-class FactoryObject;
-struct PixelStreamFrame;
-
-namespace deflect
-{
-struct PixelStreamSegment;
-class Event;
-}
-using deflect::PixelStreamSegment;
-using deflect::Event;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;
-typedef boost::shared_ptr< DisplayGroup > DisplayGroupPtr;
 typedef boost::shared_ptr< DisplayGroupAdapter > DisplayGroupAdapterPtr;
+typedef boost::shared_ptr< DisplayGroup > DisplayGroupPtr;
+typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
 typedef boost::shared_ptr< DynamicTexture > DynamicTexturePtr;
-typedef boost::shared_ptr< Options > OptionsPtr;
-typedef boost::shared_ptr< Markers > MarkersPtr;
-typedef boost::shared_ptr< GLWindow > GLWindowPtr;
-typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
 typedef boost::shared_ptr< Factories > FactoriesPtr;
+typedef boost::shared_ptr< FactoryObject > FactoryObjectPtr;
+typedef boost::shared_ptr< GLWindow > GLWindowPtr;
+typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
+typedef boost::shared_ptr< Markers > MarkersPtr;
+typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
+typedef boost::shared_ptr< Options > OptionsPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< RenderContext > RenderContextPtr;
-typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
-typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
-typedef boost::shared_ptr< FactoryObject > FactoryObjectPtr;
-typedef boost::shared_ptr< PixelStreamFrame > PixelStreamFramePtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< GLWindowPtr > GLWindowPtrs;
-typedef std::vector< PixelStreamSegment > PixelStreamSegments;
 
 #endif

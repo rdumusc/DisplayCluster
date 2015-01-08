@@ -47,8 +47,6 @@
 
 #include "types.h"
 
-class EventReceiver;
-
 /**
  * Handles window creation, association and updates for pixel streamers, both
  * local and external. The association is one streamer to one window.
@@ -148,7 +146,13 @@ public slots:
      * @param receiver the event receiver instance
      */
     void registerEventReceiver( QString uri, bool exclusive,
-                                EventReceiver* receiver );
+                                deflect::EventReceiver* receiver );
+
+    /**
+     * Update the dimension of the content according to the stream's dimension
+     * @param frame the new stream frame to check its dimension
+     */
+    void onSendFrame( deflect::PixelStreamFramePtr frame );
 
 signals:
     /**

@@ -52,9 +52,8 @@
 #include <vector>
 
 class PixelStreamSegmentRenderer;
-class PixelStreamSegmentDecoder;
 class WallToWallChannel;
-typedef boost::shared_ptr<PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
+typedef boost::shared_ptr<deflect::PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
 typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRendererPtr;
 
 class PixelStream : public QObject, public FactoryObject
@@ -69,7 +68,7 @@ public:
     void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
     void render(const QRectF& texCoords) override;
 
-    void setNewFrame(const PixelStreamFramePtr frame);
+    void setNewFrame(const deflect::PixelStreamFramePtr frame);
 
     void setRenderingOptions(const bool showSegmentBorders,
                              const bool showSegmentStatistics);
@@ -80,7 +79,7 @@ signals:
 private:
     void sync(WallToWallChannel& wallToWallChannel);
 
-    SwapSyncObject<PixelStreamFramePtr> syncPixelStreamFrame_;
+    SwapSyncObject<deflect::PixelStreamFramePtr> syncPixelStreamFrame_;
 
     // pixel stream identifier
     QString uri_;
@@ -90,9 +89,9 @@ private:
     unsigned int height_;
 
     // The front buffer is decoded by the frameDecoders and then used to upload the frameRenderers
-    PixelStreamSegments frontBuffer_;
+    deflect::PixelStreamSegments frontBuffer_;
     // The back buffer contains the next frame to process (last frame received)
-    PixelStreamSegments backBuffer_;
+    deflect::PixelStreamSegments backBuffer_;
     bool buffersSwapped_;
 
     // The list of decoded images for the next frame
@@ -107,10 +106,10 @@ private:
     bool showSegmentBorders_;
     bool showSegmentStatistics_;
 
-    void updateRenderers(const PixelStreamSegments& segments);
+    void updateRenderers(const deflect::PixelStreamSegments& segments);
     void updateVisibleTextures(const QRectF& windowRect);
     void swapBuffers();
-    void recomputeDimensions(const PixelStreamSegments& segments);
+    void recomputeDimensions(const deflect::PixelStreamSegments& segments);
     void decodeVisibleTextures(const QRectF& windowRect);
 
     void adjustFrameDecodersCount(const size_t count);
@@ -119,7 +118,8 @@ private:
     bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
 
     bool isVisible(const QRect& segment, const QRectF& windowRect);
-    bool isVisible(const PixelStreamSegment& segment, const QRectF& windowRect);
+    bool isVisible(const deflect::PixelStreamSegment& segment,
+                   const QRectF& windowRect);
 };
 
 

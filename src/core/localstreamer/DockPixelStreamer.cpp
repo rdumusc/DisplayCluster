@@ -47,7 +47,7 @@
 #include "thumbnail/ThumbnailGeneratorFactory.h"
 #include "thumbnail/FolderThumbnailGenerator.h"
 
-#include "Command.h"
+#include <deflect/Command.h>
 
 #define DOCK_ASPECT_RATIO        0.45
 #define SLIDE_REL_HEIGHT_FACTOR  0.55
@@ -97,21 +97,21 @@ DockPixelStreamer::~DockPixelStreamer()
     delete toolbar_;
 }
 
-void DockPixelStreamer::processEvent(Event evt)
+void DockPixelStreamer::processEvent(deflect::Event evt)
 {
-    if (evt.type == Event::EVT_CLICK)
+    if (evt.type == deflect::Event::EVT_CLICK)
     {
         processClickEvent(evt);
     }
 
-    else if (evt.type == Event::EVT_MOVE || evt.type == Event::EVT_WHEEL)
+    else if (evt.type == deflect::Event::EVT_MOVE || evt.type == deflect::Event::EVT_WHEEL)
     {
         const int offs = evt.dx * flow_->size().width() * COVERFLOW_SPEED_FACTOR;
         flow_->showSlide( flow_->centerIndex() - offs );
     }
 }
 
-void DockPixelStreamer::processClickEvent(const Event& clickEvent)
+void DockPixelStreamer::processClickEvent(const deflect::Event& clickEvent)
 {
     // click position in pixel units inside the dock
     const int xPos = clickEvent.mouseX * flow_->size().width();
@@ -168,7 +168,7 @@ void DockPixelStreamer::onItem()
 
     if( image.text( "dir" ).isEmpty( ))
     {
-        Command command(COMMAND_TYPE_FILE, source);
+        deflect::Command command(deflect::COMMAND_TYPE_FILE, source);
         emit sendCommand(command.getCommand());
     }
     else
@@ -238,11 +238,11 @@ void DockPixelStreamer::createToolbar(const unsigned int width, const unsigned i
 {
     toolbar_ = new DockToolbar(QSize(width, height));
 
-    Command webbrowserCommand(COMMAND_TYPE_WEBBROWSER, "");
+    deflect::Command webbrowserCommand(deflect::COMMAND_TYPE_WEBBROWSER, "");
     toolbar_->addButton( new ToolbarButton( "Webbrowser", QImage(WEBBROWSER_ICON),
                                             webbrowserCommand.getCommand() ));
 
-    Command clearallCommand(COMMAND_TYPE_SESSION, "clearall");
+    deflect::Command clearallCommand(deflect::COMMAND_TYPE_SESSION, "clearall");
     toolbar_->addButton( new ToolbarButton( "Clear all", QImage(CLEARALL_ICON),
                                             clearallCommand.getCommand() ));
 }

@@ -40,14 +40,14 @@
 #ifndef FILECOMMANDHANDLER_H
 #define FILECOMMANDHANDLER_H
 
-#include "AbstractCommandHandler.h"
+#include <deflect/AbstractCommandHandler.h>
 
 #include "types.h"
 
 /**
  * Handle file Commands.
  */
-class FileCommandHandler : public AbstractCommandHandler
+class FileCommandHandler : public deflect::AbstractCommandHandler
 {
 public:
     /**
@@ -60,14 +60,14 @@ public:
                        PixelStreamWindowManager& windowManager);
 
     /** Get the type of commands handled by the implementation. */
-    CommandType getType() const override;
+    deflect::CommandType getType() const override;
 
     /**
      * Handle a file Command.
      * @param command The Command to handle.
      * @param senderUri The identifier of the sender (optional).
      */
-    void handle(const Command& command, const QString& senderUri) override;
+    void handle(const deflect::Command& command, const QString& senderUri) override;
 
 private:
     DisplayGroupPtr displayGroup_;

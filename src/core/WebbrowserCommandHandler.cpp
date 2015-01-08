@@ -39,7 +39,7 @@
 
 #include "WebbrowserCommandHandler.h"
 
-#include "Command.h"
+#include <deflect/Command.h>
 #include "localstreamer/PixelStreamerLauncher.h"
 
 #include "ContentWindow.h"
@@ -55,12 +55,12 @@ WebbrowserCommandHandler::WebbrowserCommandHandler(PixelStreamWindowManager& win
             &pixelStreamLauncher, SLOT(openWebBrowser(QPointF,QSize,QString)));
 }
 
-CommandType WebbrowserCommandHandler::getType() const
+deflect::CommandType WebbrowserCommandHandler::getType() const
 {
-    return COMMAND_TYPE_WEBBROWSER;
+    return deflect::COMMAND_TYPE_WEBBROWSER;
 }
 
-void WebbrowserCommandHandler::handle(const Command& command, const QString& senderUri)
+void WebbrowserCommandHandler::handle(const deflect::Command& command, const QString& senderUri)
 {
     QString url = command.getArguments();
     if (url.isEmpty())

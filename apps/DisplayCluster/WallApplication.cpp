@@ -150,8 +150,8 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
     connect(fromMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
             renderController_.get(), SLOT(updateMarkers(MarkersPtr)));
 
-    connect(fromMasterChannel_.get(), SIGNAL(received(PixelStreamFramePtr)),
-            factories_.get(), SLOT(updatePixelStream(PixelStreamFramePtr)));
+    connect(fromMasterChannel_.get(), SIGNAL(received(deflect::PixelStreamFramePtr)),
+            factories_.get(), SLOT(updatePixelStream(deflect::PixelStreamFramePtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
             toMasterChannel_.get(), SLOT(sendQuit()));

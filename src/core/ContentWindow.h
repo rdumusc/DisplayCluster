@@ -56,7 +56,6 @@
 #  include <boost/serialization/split_member.hpp>
 #endif
 
-class EventReceiver;
 class ContentInteractionDelegate;
 
 /**
@@ -143,13 +142,13 @@ public:
 
 
     /** Register an object to receive this window's Events. */
-    bool registerEventReceiver( EventReceiver* receiver );
+    bool registerEventReceiver( deflect::EventReceiver* receiver );
 
     /** Does this window already have registered Event receiver(s) */
     bool hasEventReceivers() const;
 
     /** Used by InteractionDelegate to emit notify( Event ). */
-    void dispatchEvent( const Event event );
+    void dispatchEvent( const deflect::Event event );
 
     /**
      * Get the interaction delegate.
@@ -181,7 +180,7 @@ signals:
     void modified();
 
     /** Notify registered EventReceivers that an Event occured. */
-    void notify( Event event );
+    void notify( deflect::Event event );
 
 private:
     friend class boost::serialization::access;

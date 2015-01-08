@@ -66,7 +66,7 @@ public:
 
 public slots:
     /** Process an Event. */
-    virtual void processEvent(Event event) = 0;
+    virtual void processEvent(deflect::Event event) = 0;
 
 signals:
     /** Emit this signal after a new image has been generated. */

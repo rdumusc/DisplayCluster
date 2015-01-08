@@ -94,7 +94,7 @@ public slots:
      * Send pixel stream frame to the wall processes.
      * @param frame The frame to send
      */
-    void send( PixelStreamFramePtr frame );
+    void send( deflect::PixelStreamFramePtr frame );
 
     /**
      * Send quit message to the wall processes, terminating the application.

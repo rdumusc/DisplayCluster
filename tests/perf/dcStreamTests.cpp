@@ -45,7 +45,7 @@ namespace ut = boost::unit_test;
 #include "DisplayGroup.h"
 #include "PixelStreamWindowManager.h"
 #include "MinimalGlobalQtApp.h"
-#include "NetworkListener.h"
+#include <deflect/NetworkListener.h>
 #include <deflect/Stream.h>
 #include "MPIChannel.h"
 
@@ -151,9 +151,7 @@ class DCThread : public QThread
 
 BOOST_AUTO_TEST_CASE( testSocketConnection )
 {
-    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    PixelStreamWindowManager pixelStreamWindowManager( *displayGroup );
-    NetworkListener listener( pixelStreamWindowManager );
+    deflect::NetworkListener listener;
 #ifdef NTHREADS
     QThreadPool::globalInstance()->setMaxThreadCount( NTHREADS );
 #endif

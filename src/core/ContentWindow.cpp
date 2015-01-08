@@ -40,7 +40,7 @@
 
 #include "DisplayGroup.h"
 #include "ContentInteractionDelegate.h"
-#include "EventReceiver.h"
+#include <deflect/EventReceiver.h>
 
 #include "config.h"
 #include "log.h"
@@ -189,10 +189,10 @@ bool ContentWindow::isHidden() const
     return windowState_ == HIDDEN;
 }
 
-bool ContentWindow::registerEventReceiver( EventReceiver* receiver )
+bool ContentWindow::registerEventReceiver( deflect::EventReceiver* receiver )
 {
-    const bool success = connect( this, SIGNAL( notify( Event )),
-                                  receiver, SLOT( processEvent( Event )));
+    const bool success = connect( this, SIGNAL( notify( deflect::Event )),
+                                  receiver, SLOT( processEvent( deflect::Event )));
     if ( success )
         ++eventReceiversCount_;
 
@@ -204,7 +204,7 @@ bool ContentWindow::hasEventReceivers() const
     return eventReceiversCount_ > 0;
 }
 
-void ContentWindow::dispatchEvent( const Event event_ )
+void ContentWindow::dispatchEvent( const deflect::Event event_ )
 {
     emit notify( event_ );
 }
@@ -255,8 +255,8 @@ void ContentWindow::createInteractionDelegate()
 
 void ContentWindow::sendSizeChangedEvent()
 {
-    Event state;
-    state.type = Event::EVT_VIEW_SIZE_CHANGED;
+    deflect::Event state;
+    state.type = deflect::Event::EVT_VIEW_SIZE_CHANGED;
     state.dx = coordinates_.width();
     state.dy = coordinates_.height();
 

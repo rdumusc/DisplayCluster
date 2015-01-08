@@ -51,17 +51,14 @@
 #include "Markers.h"
 
 #if ENABLE_TUIO_TOUCH_LISTENER
-#include "MultiTouchListener.h"
-#include "DisplayGroupGraphicsView.h" // Required to cast to QGraphicsView
+#  include "MultiTouchListener.h"
+#  include "DisplayGroupGraphicsView.h" // Required to cast to QGraphicsView
 #endif
 
-#include "NetworkListener.h"
 #include "localstreamer/PixelStreamerLauncher.h"
 #include "StateSerializationHelper.h"
 #include "PixelStreamWindowManager.h"
-#include "PixelStreamDispatcher.h"
 
-#include "CommandHandler.h"
 #include "SessionCommandHandler.h"
 #include "FileCommandHandler.h"
 #include "WebbrowserCommandHandler.h"
@@ -70,6 +67,10 @@
 #include "ws/TextInputDispatcher.h"
 #include "ws/TextInputHandler.h"
 #include "ws/DisplayGroupAdapter.h"
+
+#include <deflect/CommandHandler.h>
+#include <deflect/NetworkListener.h>
+#include <deflect/PixelStreamDispatcher.h>
 
 #include <stdexcept>
 
@@ -147,7 +148,7 @@ void MasterApplication::startNetworkListener()
 
     try
     {
-        networkListener_.reset(new NetworkListener(*pixelStreamWindowManager_));
+        networkListener_.reset(new deflect::NetworkListener);
     }
     catch (const std::runtime_error& e)
     {
@@ -155,7 +156,15 @@ void MasterApplication::startNetworkListener()
         return;
     }
 
-    CommandHandler& handler = networkListener_->getCommandHandler();
+    deflect::PixelStreamDispatcher& dispatcher = networkListener_->getPixelStreamDispatcher();
+    connect(&dispatcher, SIGNAL(openPixelStream(QString, QSize)),
+            pixelStreamWindowManager_.get(), SLOT(openPixelStreamWindow(QString, QSize)));
+    connect(&dispatcher, SIGNAL(deletePixelStream(QString)),
+            pixelStreamWindowManager_.get(), SLOT(closePixelStreamWindow(QString)));
+    connect(pixelStreamWindowManager_.get(), SIGNAL(pixelStreamWindowClosed(QString)),
+            &dispatcher, SLOT(deleteStream(QString)));
+
+    deflect::CommandHandler& handler = networkListener_->getCommandHandler();
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));
     handler.registerCommandHandler(new SessionCommandHandler(*displayGroup_));
 
@@ -226,13 +235,31 @@ void MasterApplication::initMPIConnection()
              masterToWallChannel_.get(), SLOT( sendAsync( MarkersPtr )),
              Qt::DirectConnection );
 
-    connect( networkListener_->getPixelStreamDispatcher(),
-             SIGNAL( sendFrame( PixelStreamFramePtr )),
-             masterToWallChannel_.get(), SLOT( send( PixelStreamFramePtr )));
+    connect( &networkListener_->getPixelStreamDispatcher(),
+             SIGNAL( sendFrame( deflect::PixelStreamFramePtr )),
+             masterToWallChannel_.get(),
+             SLOT( send( deflect::PixelStreamFramePtr )));
+    connect( &networkListener_->getPixelStreamDispatcher(),
+             SIGNAL( sendFrame( deflect::PixelStreamFramePtr )),
+             pixelStreamWindowManager_.get(),
+             SLOT( onSendFrame( deflect::PixelStreamFramePtr )));
+    connect( networkListener_.get(),
+             SIGNAL( registerToEvents( QString, bool, deflect::EventReceiver*)),
+             pixelStreamWindowManager_.get(),
+             SLOT( registerEventReceiver( QString, bool,
+                                          deflect::EventReceiver* )));
+
+    connect( pixelStreamWindowManager_.get(),
+             SIGNAL( pixelStreamWindowClosed( QString )),
+             networkListener_.get(), SLOT(onPixelStreamerClosed( QString )));
+    connect( pixelStreamWindowManager_.get(),
+             SIGNAL( eventRegistrationReply( QString, bool )),
+             networkListener_.get(),
+             SLOT( onEventRegistrationReply( QString, bool )));
 
     connect( masterFromWallChannel_.get(),
              SIGNAL( receivedRequestFrame( const QString )),
-             networkListener_->getPixelStreamDispatcher(),
+             &networkListener_->getPixelStreamDispatcher(),
              SLOT( requestFrame( const QString )));
 
     connect( &mpiReceiveThread_, SIGNAL( started( )),

@@ -39,7 +39,7 @@
 
 #include "FileCommandHandler.h"
 
-#include "Command.h"
+#include <deflect/Command.h>
 #include "DisplayGroup.h"
 #include "ContentLoader.h"
 #include "ContentFactory.h"
@@ -57,12 +57,12 @@ FileCommandHandler::FileCommandHandler(DisplayGroupPtr displayGroup,
 {
 }
 
-CommandType FileCommandHandler::getType() const
+deflect::CommandType FileCommandHandler::getType() const
 {
-    return COMMAND_TYPE_FILE;
+    return deflect::COMMAND_TYPE_FILE;
 }
 
-void FileCommandHandler::handle(const Command& command, const QString& senderUri)
+void FileCommandHandler::handle(const deflect::Command& command, const QString& senderUri)
 {
     const QString& uri = command.getArguments();
     const QString& extension = QFileInfo(uri).suffix().toLower();

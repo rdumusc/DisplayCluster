@@ -111,7 +111,7 @@ public slots:
      * The object accessed or created will not be garbage collected this frame.
      * @see clearStaleFactoryObjects()
      */
-    void updatePixelStream(PixelStreamFramePtr frame);
+    void updatePixelStream(deflect::PixelStreamFramePtr frame);
 
 private:
     /**

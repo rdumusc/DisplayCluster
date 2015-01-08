@@ -39,7 +39,7 @@
 
 #include "SessionCommandHandler.h"
 
-#include "Command.h"
+#include <deflect/Command.h>
 #include "DisplayGroup.h"
 #include "log.h"
 
@@ -50,12 +50,12 @@ SessionCommandHandler::SessionCommandHandler(DisplayGroup& displayGroup)
 {
 }
 
-CommandType SessionCommandHandler::getType() const
+deflect::CommandType SessionCommandHandler::getType() const
 {
-    return COMMAND_TYPE_SESSION;
+    return deflect::COMMAND_TYPE_SESSION;
 }
 
-void SessionCommandHandler::handle(const Command& command, const QString&)
+void SessionCommandHandler::handle(const deflect::Command& command, const QString&)
 {
     const QString& arguments = command.getArguments();
 
