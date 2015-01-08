@@ -79,14 +79,10 @@ RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr 
 void RenderController::setupTestPattern(const int rank,
                                         const WallConfiguration& config)
 {
-    for (size_t i = 0; i < renderContext_->getGLWindowCount(); ++i)
-    {
-        RenderablePtr testPattern(new TestPattern(renderContext_, config, rank, i));
-        testPattern->setVisible(false);
-        testPatterns_.append(testPattern);
-        GLWindowPtr glWindow = renderContext_->getGLWindow(i);
-        glWindow->addRenderable(testPattern);
-    }
+    RenderablePtr testPattern( new TestPattern( renderContext_, config, rank, 0 ));
+    testPattern->setVisible( false );
+    testPatterns_.append( testPattern );
+    renderContext_->addRenderable( testPattern );
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const

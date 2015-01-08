@@ -145,6 +145,7 @@ list(APPEND DCCORE_MOC_HEADERS
   PixelStreamWindowManager.h
   RenderController.h
   WallFromMasterChannel.h
+  WallGraphicsScene.h
   WallToMasterChannel.h
   WallToWallChannel.h
   WebbrowserCommandHandler.h
@@ -216,6 +217,7 @@ list(APPEND DCCORE_SOURCES
   Texture.cpp
   TextureContent.cpp
   WallFromMasterChannel.cpp
+  WallGraphicsScene.cpp
   WallToMasterChannel.cpp
   WallToWallChannel.cpp
   WebbrowserCommandHandler.cpp

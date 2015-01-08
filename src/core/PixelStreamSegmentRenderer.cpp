@@ -41,6 +41,8 @@
 #include "FpsCounter.h"
 #include "RenderContext.h"
 
+#define TEXT_SIZE_PX 24
+
 PixelStreamSegmentRenderer::PixelStreamSegmentRenderer(RenderContext* renderContext)
     : renderContext_(renderContext)
     , x_(0)
@@ -110,17 +112,11 @@ bool PixelStreamSegmentRenderer::render(bool showSegmentBorders, bool showSegmen
         glPushMatrix();
         glTranslatef(0.,0.,0.05);
 
-        // render segment borders
         if(showSegmentBorders)
-        {
             drawSegmentBorders();
-        }
 
-        // render segment statistics
         if(showSegmentStatistics)
-        {
-            drawSegmentStatistics();
-        }
+            drawStatistics();
 
         glPopMatrix();
         glPopAttrib();
@@ -154,12 +150,10 @@ void PixelStreamSegmentRenderer::drawSegmentBorders()
     glEnd();
 }
 
-void PixelStreamSegmentRenderer::drawSegmentStatistics()
+void PixelStreamSegmentRenderer::drawStatistics()
 {
     QFont font;
-    font.setPixelSize(48);
-
-    glDisable(GL_DEPTH_TEST);
-    glColor4f(1.,0.,0.,1.);
-    renderContext_->renderText(0.1, 0.95, 0., segmentStatistics->toString(), font);
+    font.setPixelSize( TEXT_SIZE_PX );
+    renderContext_->renderText( 0.1, 0.95, 0.0, segmentStatistics->toString(),
+                                font, QColor( Qt::red ));
 }

@@ -111,6 +111,7 @@ public:
     /** Set the zoom rectangle in normalized coordinates. */
     void setZoomRect( const QRectF& zoomRect );
 
+
     /** Get the current state. */
     ContentWindow::WindowState getState() const;
 

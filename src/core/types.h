@@ -62,6 +62,8 @@ class PixelStreamWindowManager;
 class Renderable;
 class RenderContext;
 
+class QGraphicsView;
+
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;
 typedef boost::shared_ptr< DisplayGroupAdapter > DisplayGroupAdapterPtr;
@@ -70,7 +72,7 @@ typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
 typedef boost::shared_ptr< DynamicTexture > DynamicTexturePtr;
 typedef boost::shared_ptr< Factories > FactoriesPtr;
 typedef boost::shared_ptr< FactoryObject > FactoryObjectPtr;
-typedef boost::shared_ptr< GLWindow > GLWindowPtr;
+typedef boost::shared_ptr< QGraphicsView > WindowPtr;
 typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
 typedef boost::shared_ptr< Markers > MarkersPtr;
 typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
@@ -79,6 +81,6 @@ typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< RenderContext > RenderContextPtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
-typedef std::vector< GLWindowPtr > GLWindowPtrs;
+typedef std::vector< WindowPtr > WindowPtrs;
 
 #endif

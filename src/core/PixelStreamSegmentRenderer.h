@@ -98,7 +98,7 @@ public:
      * @param showSegmentStatistics Show the statistics for this segment
      * @return true on successful render; false if no texture available.
      */
-    bool render(bool showSegmentBorders, bool showSegmentStatistics);
+    bool render( bool showSegmentBorders, bool showSegmentStatistics );
 
 private:
     /** A reference to the render context. */
@@ -121,7 +121,7 @@ private:
     // Rendering
     void drawUnitTexturedQuad();
     void drawSegmentBorders();
-    void drawSegmentStatistics();
+    void drawStatistics();
 };
 
 #endif

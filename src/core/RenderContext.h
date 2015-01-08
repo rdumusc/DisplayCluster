@@ -41,6 +41,8 @@
 
 #include "types.h"
 
+#include "WallGraphicsScene.h"
+
 #include <QRectF>
 #include <QColor>
 #include <QFont>
@@ -58,36 +60,28 @@ public:
      * @param configuration The configuration that describes the window settings
      * @throw std::runtime_error if the context initialization failed.
      */
-    RenderContext(const WallConfiguration& configuration);
-
-    /** Destructor. */
-    ~RenderContext();
+    RenderContext( const WallConfiguration& configuration );
 
     /** Set the background color of all windows. */
-    void setBackgroundColor(const QColor& color);
-
-    /** Get a specific GL window. */
-    GLWindowPtr getGLWindow(const int index=0) const;
-
-    /** Get the count of GL windows. */
-    size_t getGLWindowCount() const;
+    void setBackgroundColor( const QColor& color );
 
     /** Get the index of the active window during rendering. @deprecated */
     int getActiveGLWindowIndex() const;
 
-    /** Render text. @see QGLWidget::renderText */
-    void renderText(const int x, const int y, const QString & str,
-                    const QFont& font);
+    /** Render text in window coordinates. */
+    void renderTextInWindow( const int x, const int y, const QString & str,
+                             const QFont& font, const QColor& color );
 
-    /** Render text. @see QGLWidget::renderText */
-    void renderText(const double x, const double y, const double z,
-                    const QString & str, const QFont& font);
+    /** Render text in scene coordinates. */
+    void renderText( const double x, const double y, const double z,
+                     const QString & str, const QFont& font,
+                     const QColor& color );
 
     /** Add an object to be rendered. */
-    void addRenderable(RenderablePtr renderable);
+    void addRenderable( RenderablePtr renderable );
 
     /** Check if a region is visible. */
-    bool isRegionVisible(const QRectF& region) const;
+    bool isRegionVisible( const QRectF& region ) const;
 
     /** Render GL objects on all windows. */
     void updateGLWindows();
@@ -98,8 +92,12 @@ public:
 private:
     void setupOpenGLWindows( const WallConfiguration& configuration );
 
-    GLWindowPtrs glWindows_;
-    GLWindowPtr activeGLWindow_;
+    WallGraphicsScene scene_;
+    WindowPtrs windows_;
+    QRect visibleWallArea_;
+
+    std::vector< GLWindow* > glWindows_;
+    GLWindow* activeGLWindow_;
     int activeGLWindowIndex_;
 };
 

@@ -106,11 +106,10 @@ void TestPattern::renderCrossPattern()
 void TestPattern::renderLabels()
 {
     QFont textFont;
-    textFont.setPixelSize(FONT_SIZE);
-
-    glColor3f(1.,1.,1.);
+    textFont.setPixelSize( FONT_SIZE );
 
     unsigned int pos = 0;
-    foreach (QString label, labels_)
-        renderContext_->renderText(TEXT_POS_X, ++pos * FONT_SIZE, label, textFont);
+    foreach( QString label, labels_ )
+        renderContext_->renderTextInWindow( TEXT_POS_X, ++pos * FONT_SIZE, label,
+                                            textFont, QColor( Qt::white ));
 }
