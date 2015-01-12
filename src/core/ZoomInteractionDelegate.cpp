@@ -70,7 +70,7 @@ void ZoomInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 
     if( event->buttons().testFlag( Qt::RightButton ))
     {
-        const double zoomDelta = 1.0 - mouseDelta.y();
+        const double zoomDelta = 1.0 - getNormalizedDelta( mouseDelta ).y();
         contentWindow_.setZoom( contentWindow_.getZoom() * zoomDelta );
     }
     else if( event->buttons().testFlag( Qt::LeftButton ))
@@ -92,12 +92,17 @@ void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
 QPointF
 ZoomInteractionDelegate::computeZoomPanDelta( const QPointF& sceneDelta ) const
 {
+    const QPointF normalizedDelta = getNormalizedDelta( sceneDelta );
     const qreal zoom = contentWindow_.getZoom();
-    const QRectF& window = contentWindow_.getCoordinates();
-
-    const QPointF normalizedDelta( sceneDelta.x() / window.width(),
-                                   sceneDelta.y() / window.height( ));
     return QPointF( normalizedDelta * ( ZOOM_PAN_GAIN_FACTOR / zoom ));
+}
+
+QPointF
+ZoomInteractionDelegate::getNormalizedDelta( const QPointF& sceneDelta ) const
+{
+    const QRectF& window = contentWindow_.getCoordinates();
+    return QPointF ( sceneDelta.x() / window.width(),
+                     sceneDelta.y() / window.height( ));
 }
 
 double ZoomInteractionDelegate::adaptZoomFactor( const double

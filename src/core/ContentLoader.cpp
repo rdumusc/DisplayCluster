@@ -63,9 +63,18 @@ bool ContentLoader::load( const QString& filename,
     if( windowSize.isValid( ))
         controller.resize( windowSize );
     else
-        controller.resize( content->getDimensions( ));
+    {
+        QSizeF size = content->getDimensions();
+        const QSizeF wallSize = displayGroup_->getCoordinates().size();
+        if( size.width() >  wallSize.width() ||
+            size.height() > wallSize.height( ))
+        {
+            size.scale( wallSize, Qt::KeepAspectRatio );
+        }
+        controller.resize( size );
+    }
 
-    if ( windowCenterPosition.isNull( ))
+    if( windowCenterPosition.isNull( ))
         controller.moveCenterTo( displayGroup_->getCoordinates().center( ));
     else
         controller.moveCenterTo( windowCenterPosition );
