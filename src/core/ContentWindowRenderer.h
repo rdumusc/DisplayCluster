@@ -94,7 +94,6 @@ private:
     void renderWindowBorder();
     void renderContent();
     void renderContextView( FactoryObjectPtr object, const QRectF& texCoord );
-    QRectF getTexCoord() const;
 
     void drawQuad( const QRectF& coord );
     void drawQuadBorder( const QRectF& coord, const float width );

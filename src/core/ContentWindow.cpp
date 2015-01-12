@@ -38,7 +38,6 @@
 
 #include "ContentWindow.h"
 
-#include "DisplayGroup.h"
 #include "ContentInteractionDelegate.h"
 #include <deflect/EventReceiver.h>
 
@@ -51,15 +50,11 @@
 #  include "PDFInteractionDelegate.h"
 #endif
 
-#define MIN_ZOOM  1.0
-#define MAX_ZOOM 16.0
-
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
-    , zoomCenter_( 0.5, 0.5 )
-    , zoom_( MIN_ZOOM )
+    , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
     , windowState_( NONE )
     , eventReceiversCount_( 0 )
 {
@@ -67,8 +62,7 @@ ContentWindow::ContentWindow()
 
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
-    , zoomCenter_( 0.5, 0.5 )
-    , zoom_( MIN_ZOOM )
+    , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
     , windowState_( NONE )
     , eventReceiversCount_( 0 )
 {
@@ -121,31 +115,14 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
     sendSizeChangedEvent();
 }
 
-qreal ContentWindow::getZoom() const
+const QRectF& ContentWindow::getZoomRect() const
 {
-    return zoom_;
+    return zoomRect_;
 }
 
-void ContentWindow::setZoom( const qreal zoom )
+void ContentWindow::setZoomRect( const QRectF& zoomRect )
 {
-    zoom_ = std::max( MIN_ZOOM, std::min( zoom, MAX_ZOOM ) );
-
-    constrainZoomCenter();
-
-    emit modified();
-}
-
-const QPointF& ContentWindow::getZoomCenter() const
-{
-    return zoomCenter_;
-}
-
-void ContentWindow::setZoomCenter( const QPointF& zoomCenter )
-{
-    zoomCenter_ = zoomCenter;
-
-    constrainZoomCenter();
-
+    zoomRect_ = zoomRect;
     emit modified();
 }
 
@@ -261,26 +238,4 @@ void ContentWindow::sendSizeChangedEvent()
     state.dy = coordinates_.height();
 
     emit notify( state );
-}
-
-void ContentWindow::constrainZoomCenter()
-{
-    // clamp center point such that view rectangle dimensions are constrained [0,1]
-    const qreal tX = zoomCenter_.x() - 0.5 / zoom_;
-    const qreal tY = zoomCenter_.y() - 0.5 / zoom_;
-    const qreal tW = 1.0 / zoom_;
-    const qreal tH = 1.0 / zoom_;
-
-    if( !QRectF( 0.0, 0.0, 1.0, 1.0 ).contains( QRectF( tX, tY, tW, tH )))
-    {
-        if( tX < 0.0 )
-            zoomCenter_.setX( 0.5 / zoom_ );
-        else if( tX+tW > 1.0 )
-            zoomCenter_.setX( 1.0 - tW + 0.5 / zoom_ );
-
-        if( tY < 0.0 )
-            zoomCenter_.setY( 0.5 / zoom_ );
-        else if( tY+tH > 1.0 )
-            zoomCenter_.setY( 1.0 - tH + 0.5 / zoom_ );
-    }
 }

@@ -127,7 +127,7 @@ void ContentWindowRenderer::renderWindowBorder()
 void ContentWindowRenderer::renderContent()
 {
     const QRectF winCoord = window_->getCoordinates();
-    const QRectF texCoord = getTexCoord();
+    const QRectF texCoord = window_->getZoomRect();
 
     // transform to a normalize coordinate system so the content
     // can be rendered at (x,y,w,h) = (0,0,1,1)
@@ -145,19 +145,10 @@ void ContentWindowRenderer::renderContent()
 
     object->render( texCoord );
 
-    if( showZoomContext_ && window_->getZoom() > 1.0 )
+    if( showZoomContext_ && texCoord.size() != QSizeF( 1.0,1.0 ))
         renderContextView( object, texCoord );
 
     glPopMatrix();
-}
-
-QRectF ContentWindowRenderer::getTexCoord() const
-{
-    const QPointF& center = window_->getZoomCenter();
-    const double zoom = window_->getZoom();
-
-    return QRectF( center.x() - 0.5/zoom, center.y() - 0.5/zoom,
-                   1.0/zoom, 1.0/zoom );
 }
 
 void ContentWindowRenderer::renderContextView( FactoryObjectPtr object,

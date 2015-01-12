@@ -105,19 +105,11 @@ public:
     /** Set the coordinates in pixel units. */
     void setCoordinates( const QRectF& coordinates );
 
+    /** Get the zoom rectangle in normalized coordinates, [0,0,1,1] default */
+    const QRectF& getZoomRect() const;
 
-    /** Get the zoom factor [1.0; 16.0]. */
-    qreal getZoom() const;
-
-    /** Set the zoom factor [1.0; 16.0]. */
-    void setZoom( const qreal zoom );
-
-    /** Get the zoom center in normalized coordinates. */
-    const QPointF& getZoomCenter() const;
-
-    /** Set the zoom center in normalized coordinates. */
-    void setZoomCenter( const QPointF& zoomCenter );
-
+    /** Set the zoom rectangle in normalized coordinates. */
+    void setZoomRect( const QRectF& zoomRect );
 
     /** Get the current state. */
     ContentWindow::WindowState getState() const;
@@ -194,8 +186,7 @@ private:
     {
         ar & content_;
         ar & coordinates_;
-        ar & zoom_;
-        ar & zoomCenter_;
+        ar & zoomRect_;
         ar & windowState_;
     }
 
@@ -212,9 +203,15 @@ private:
         }
         ar & boost::serialization::make_nvp( "coordinates", coordinates_ );
         ar & boost::serialization::make_nvp( "coordinatesBackup", coordinatesBackup_ );
-        ar & boost::serialization::make_nvp( "centerX", zoomCenter_.rx() );
-        ar & boost::serialization::make_nvp( "centerY", zoomCenter_.ry() );
-        ar & boost::serialization::make_nvp( "zoom", zoom_ );
+        QPointF zoomCenter = zoomRect_.center();
+        qreal zoom = 1.0/zoomRect_.width();
+        ar & boost::serialization::make_nvp( "centerX", zoomCenter.rx( ));
+        ar & boost::serialization::make_nvp( "centerY", zoomCenter.ry( ));
+        ar & boost::serialization::make_nvp( "zoom", zoom );
+        QRectF zoomRect;
+        zoomRect.moveCenter( zoomCenter );
+        zoomRect.setSize( QSizeF( 1.0/zoom, 1.0/zoom ));
+        setZoomRect( zoomRect );
         if( version < 1 )
         {
             int controlState = 0;
@@ -241,7 +238,6 @@ private:
 
     void createInteractionDelegate();
     void sendSizeChangedEvent();
-    void constrainZoomCenter();
 
     const QUuid uuid_;
     ContentPtr content_;
@@ -250,9 +246,8 @@ private:
     QRectF coordinates_;
     QRectF coordinatesBackup_;
 
-    // panning and zooming
-    QPointF zoomCenter_;
-    qreal zoom_;
+    // zooming
+    QRectF zoomRect_;
 
     ContentWindow::WindowState windowState_;
 

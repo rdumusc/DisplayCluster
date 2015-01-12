@@ -53,11 +53,13 @@ public:
     void mouseMoveEvent( QGraphicsSceneMouseEvent* event );
     void wheelEvent( QGraphicsSceneWheelEvent* event );
 
-    static double adaptZoomFactor( const double pinchGestureScaleFactor );
+    static qreal adaptZoomFactor( const qreal pinchGestureScaleFactor );
 
 private:
-    QPointF computeZoomPanDelta( const QPointF& sceneDelta ) const;
-    QPointF getNormalizedDelta( const QPointF& sceneDelta ) const;
+    void moveZoomRect( const QPointF& sceneDelta ) const;
+    void scaleZoomRect( const QPointF& center, const qreal zoomFactor ) const;
+    void constrainZoomRectPosition( QRectF& zoomRect ) const;
+    QPointF getNormalizedPoint( const QPointF& point ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

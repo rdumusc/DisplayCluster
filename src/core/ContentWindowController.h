@@ -71,8 +71,15 @@ public:
     /** Resize the window. */
     void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );
 
-    /** Scale the window by the given factor (around its center). */
-    void scale( const double factor );
+    /**
+     * Resize the window around a given center point.
+     * @param center the center of scaling
+     * @param size the new desired size
+     */
+    void resize( const QPointF& center, QSizeF size );
+
+    /** Scale the window by the given factor (around the given center). */
+    void scale( const QPointF& center, const double factor );
 
     /** Adjust the window coordinates to match the desired state. */
     void adjustSize( const SizeState state );
