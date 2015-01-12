@@ -57,6 +57,7 @@ public:
 
 private:
     QPointF computeZoomPanDelta( const QPointF& sceneDelta ) const;
+    QPointF getNormalizedDelta( const QPointF& sceneDelta ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H
