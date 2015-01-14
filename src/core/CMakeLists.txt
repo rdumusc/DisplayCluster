@@ -133,6 +133,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
 list(APPEND DCCORE_MOC_HEADERS
   Content.h
   ContentWindow.h
+  Coordinates.h
   DisplayGroup.h
   DisplayGroupRenderer.h
   Factories.h
@@ -172,6 +173,7 @@ list(APPEND DCCORE_SOURCES
   ContentWindow.cpp
   ContentWindowController.cpp
   ContentWindowRenderer.cpp
+  Coordinates.cpp
   DisplayGroup.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp

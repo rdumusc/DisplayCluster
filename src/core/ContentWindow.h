@@ -43,6 +43,7 @@
 #include "types.h"
 
 #include "serializationHelpers.h"
+#include "Coordinates.h"
 #include "Content.h" // needed for serialization
 
 #include <QObject>
@@ -63,9 +64,14 @@ class ContentInteractionDelegate;
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class ContentWindow : public QObject
+class ContentWindow : public Coordinates
 {
     Q_OBJECT
+    Q_PROPERTY( bool selected READ isSelected NOTIFY selectedChanged )
+    Q_PROPERTY( bool moving READ isMoving NOTIFY movingChanged )
+    Q_PROPERTY( bool resizing READ isResizing NOTIFY resizingChanged )
+    Q_PROPERTY( bool hidden READ isHidden NOTIFY hiddenChanged )
+    Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
 
 public:
     /** The possible states of a window. */
@@ -99,9 +105,6 @@ public:
     void setContent( ContentPtr content );
 
 
-    /** Get the coordiates in pixel units. */
-    const QRectF& getCoordinates() const;
-
     /** Set the coordinates in pixel units. */
     void setCoordinates( const QRectF& coordinates );
 
@@ -119,7 +122,7 @@ public:
     void setState( const ContentWindow::WindowState state );
 
     /** Toggle the state (selected / unselected). */
-    void toggleSelectedState();
+    Q_INVOKABLE void toggleSelectedState();
 
     /** Check if selected. */
     bool isSelected() const;
@@ -159,12 +162,12 @@ public:
     /** Restore and clear the backed-up coordinates. */
     void restoreCoordinates();
 
+    /** Get the label for the window */
+    QString getLabel() const;
+
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
-
-    /** Emitted just before the coordinates are going to change. */
-    void coordinatesAboutToChange();
 
     /**
      * Emitted whenever this object is modified.
@@ -172,8 +175,17 @@ signals:
      */
     void modified();
 
-    /** Notify registered EventReceivers that an Event occured. */
+    /** @internal Notify registered EventReceivers that an Event occured. */
     void notify( deflect::Event event );
+
+    /** @name QProperty notifiers */
+    //@{
+    void selectedChanged();
+    void movingChanged();
+    void resizingChanged();
+    void hiddenChanged();
+    void labelChanged();
+    //@}
 
 private:
     friend class boost::serialization::access;
@@ -244,7 +256,6 @@ private:
     ContentPtr content_;
 
     // coordinates in pixels, relative to the parent DisplayGroup
-    QRectF coordinates_;
     QRectF coordinatesBackup_;
 
     // zooming

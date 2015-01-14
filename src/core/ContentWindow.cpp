@@ -99,16 +99,14 @@ void ContentWindow::setContent( ContentPtr content )
     createInteractionDelegate();
 }
 
-const QRectF& ContentWindow::getCoordinates() const
-{
-    return coordinates_;
-}
-
 void ContentWindow::setCoordinates( const QRectF& coordinates )
 {
-    emit coordinatesAboutToChange();
-
     coordinates_ = coordinates;
+
+    emit xChanged();
+    emit yChanged();
+    emit widthChanged();
+    emit heightChanged();
 
     emit modified();
 
@@ -135,15 +133,20 @@ void ContentWindow::setState( const ContentWindow::WindowState state )
 {
     windowState_ = state;
 
+    emit selectedChanged();
+    emit movingChanged();
+    emit resizingChanged();
+    emit hiddenChanged();
+
     emit modified();
 }
 
 void ContentWindow::toggleSelectedState()
 {
     if ( windowState_ == ContentWindow::NONE )
-        windowState_ = ContentWindow::SELECTED;
+        setState( ContentWindow::SELECTED );
     else if ( windowState_ == ContentWindow::SELECTED )
-        windowState_ = ContentWindow::NONE;
+        setState( ContentWindow::NONE );
 }
 
 bool ContentWindow::isSelected() const
@@ -208,6 +211,11 @@ void ContentWindow::restoreCoordinates()
 
     setCoordinates( coordinatesBackup_ );
     coordinatesBackup_ = QRectF();
+}
+
+QString ContentWindow::getLabel() const
+{
+    return content_->getURI().section( "/", -1, -1 );
 }
 
 void ContentWindow::createInteractionDelegate()

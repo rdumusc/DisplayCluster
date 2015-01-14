@@ -29,6 +29,7 @@ set(DISPLAYCLUSTER_SOURCES
   DisplayGroupListWidget.cpp
   MasterApplication.cpp
   MasterWindow.cpp
+  QmlTypeRegistration.cpp
   WallApplication.cpp
   WebbrowserWidget.cpp
 )

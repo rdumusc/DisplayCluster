@@ -40,6 +40,7 @@
 #define DISPLAY_GROUP_H
 
 #include "types.h"
+#include "Coordinates.h"
 
 #include <boost/serialization/access.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -53,7 +54,7 @@
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class DisplayGroup : public QObject,
+class DisplayGroup : public Coordinates,
         public boost::enable_shared_from_this<DisplayGroup>
 {
     Q_OBJECT
@@ -96,9 +97,6 @@ public:
      * @param contentWindows The list of windows to set.
      */
     void setContentWindows( ContentWindowPtrs contentWindows );
-
-    /** Get the coordinates of the display group on the wall in pixel units. */
-    const QRectF& getCoordinates() const;
 
 public slots:
     /** Clear all ContentWindows */
@@ -151,8 +149,6 @@ private:
 
     ContentWindowPtrs contentWindows_;
     ContentPtr backgroundContent_;
-
-    QRectF coordinates_;
 };
 
 #endif

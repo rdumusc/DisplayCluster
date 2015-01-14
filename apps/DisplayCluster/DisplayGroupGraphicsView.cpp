@@ -49,12 +49,15 @@
 #include "gestures/PinchGestureRecognizer.h"
 
 #include <boost/foreach.hpp>
+#include <QDeclarativeComponent>
+#include <QDeclarativeContext>
 
 #define VIEW_MARGIN 0.05
 
 DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
                                                     QWidget* parent_ )
     : QGraphicsView( parent_ )
+    , displayGroupItem_( 0 )
 {
     setScene( new DisplayGroupGraphicsScene( config, this ));
     setAlignment( Qt::AlignLeft | Qt::AlignTop );
@@ -70,7 +73,7 @@ DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
 {
 }
 
-void DisplayGroupGraphicsView::setModel( DisplayGroupPtr displayGroup )
+void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
 {
     if( displayGroup_ )
     {
@@ -94,10 +97,15 @@ void DisplayGroupGraphicsView::setModel( DisplayGroupPtr displayGroup )
              this, SLOT( addContentWindow( ContentWindowPtr )));
     connect( displayGroup_.get(),
              SIGNAL( contentWindowRemoved( ContentWindowPtr )),
-            this, SLOT(removeContentWindow(ContentWindowPtr)));
+             this, SLOT( removeContentWindow( ContentWindowPtr )));
     connect( displayGroup_.get(),
              SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
+
+    engine_.rootContext()->setContextProperty( "displaygroup", displayGroup_.get( ));
+    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/DisplayGroup.qml" ));
+    displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
+    scene()->addItem( displayGroupItem_ );
 }
 
 void DisplayGroupGraphicsView::grabGestures()
@@ -227,10 +235,16 @@ bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
 
 void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow )
 {
-    assert( displayGroup_ );
+    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/ContentWindow.qml" ));
 
-    ContentWindowGraphicsItem* cwgi = new ContentWindowGraphicsItem( contentWindow, *displayGroup_ );
-    scene()->addItem( static_cast< QGraphicsItem* >( cwgi ) );
+    // New Context, ownership retained by the windowItem (set as parent QObject)
+    QDeclarativeContext* windowContext = new QDeclarativeContext( engine_.rootContext( ));
+    windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
+    QObject* windowItem = component.create( windowContext );
+    windowContext->setParent( windowItem );
+
+    ContentWindowGraphicsItem* cwgi = windowItem->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
+    cwgi->init( contentWindow, *displayGroup_ );
 
     connect( cwgi, SIGNAL( moveToFront( ContentWindowPtr )),
              displayGroup_.get(),
@@ -239,20 +253,34 @@ void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow 
     connect( cwgi, SIGNAL( close( ContentWindowPtr )),
              displayGroup_.get(),
              SLOT( removeContentWindow( ContentWindowPtr )));
+
+    qobject_cast<QGraphicsObject*>( windowItem )->setParentItem( displayGroupItem_ );
+}
+
+QGraphicsItem* DisplayGroupGraphicsView::getItemFor( ContentWindowPtr contentWindow )
+{
+    QList<QGraphicsItem*> windows = displayGroupItem_->childItems();
+
+    foreach( QGraphicsItem* item, windows )
+    {
+        QGraphicsObject* obj = item->toGraphicsObject();
+        if( !obj )
+            continue;
+
+        ContentWindowGraphicsItem* cwgi = obj->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
+        if( cwgi && cwgi->getContentWindow() == contentWindow )
+            return item;
+    }
+    return 0;
 }
 
 void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWindow )
 {
-    assert( displayGroup_ );
+    QGraphicsItem* itemToRemove = getItemFor( contentWindow );
+    if( !itemToRemove )
+        return;
 
-    QList< QGraphicsItem* > itemsList = scene()->items();
-
-    foreach( QGraphicsItem* item, itemsList )
-    {
-        ContentWindowGraphicsItem* cwgi = dynamic_cast< ContentWindowGraphicsItem* >( item );
-        if( cwgi && cwgi->getContentWindow() == contentWindow )
-            scene()->removeItem( item );
-    }
+    scene()->removeItem( itemToRemove );
 
     // Qt WAR: when all items with grabbed gestures are removed, the viewport
     // also looses any registered gestures, which harms our dock to open...
@@ -263,14 +291,19 @@ void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWind
 
 void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr contentWindow )
 {
-    assert( displayGroup_ );
+    QGraphicsItem* itemToRaise = getItemFor( contentWindow );
+    if( !itemToRaise )
+        return;
 
-    QList< QGraphicsItem* > itemsList = scene()->items();
-
-    foreach( QGraphicsItem* item, itemsList )
+    QList<QGraphicsItem*> windows = displayGroupItem_->childItems();
+    foreach( QGraphicsItem* item, windows )
     {
-        ContentWindowGraphicsItem* cwgi = dynamic_cast< ContentWindowGraphicsItem* >( item );
-        if( cwgi && cwgi->getContentWindow() == contentWindow )
-            cwgi->setZToFront();
+        QGraphicsObject* obj = item->toGraphicsObject();
+        if( !obj )
+            continue;
+
+        ContentWindowGraphicsItem* cwgi = obj->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
+        if( cwgi )
+            item->stackBefore( itemToRaise );
     }
 }

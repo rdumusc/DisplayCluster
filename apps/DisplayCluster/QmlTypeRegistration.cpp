@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,83 +37,18 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_GRAPHICS_ITEM_H
-#define CONTENT_WINDOW_GRAPHICS_ITEM_H
-
-#include "types.h"
-
-#include "ContentWindowController.h"
-
-#include <QtDeclarative/QDeclarativeItem>
-
-class QGestureEvent;
-class DoubleTapGesture;
-class PanGesture;
-class PinchGesture;
-class QTapGesture;
-class QSwipeGesture;
-class QTapAndHoldGesture;
+#include "ContentWindowGraphicsItem.h"
 
 /**
- * Represent a ContentWindow in a QML View.
+ * Register types for use in Qml
  */
-class ContentWindowGraphicsItem : public QDeclarativeItem
+struct QmlTypeRegistration
 {
-    Q_OBJECT
-
-public:
-    /** Constructor. */
-    ContentWindowGraphicsItem();
-
-    /** Destructor. */
-    virtual ~ContentWindowGraphicsItem();
-
-    /** Init must be separate from the constructor for instanciation in QML. */
-    void init( ContentWindowPtr contentWindow,
-               const DisplayGroup& displayGroup );
-
-    /** Get the associated ContentWindow. */
-    ContentWindowPtr getContentWindow() const;
-
-public slots:
-    /** Close this window. */
-    void close();
-
-    /** Maximize the window. */
-    void toggleFullscreen();
-
-signals:
-    /** Emitted when a user clicks the window to bring it to the front. */
-    void moveToFront( ContentWindowPtr contentWindow );
-
-    /** Emitted when the user clicks the close button. */
-    void close( ContentWindowPtr contentWindow );
-
-protected:
-    /** @name Re-implemented QGraphicsRectItem events */
-    //@{
-    bool sceneEvent( QEvent* event ) override;
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
-    void keyPressEvent( QKeyEvent* event ) override;
-    void keyReleaseEvent( QKeyEvent* event ) override;
-    //@}
-
-private:
-    void gestureEvent( QGestureEvent* event );
-    void doubleTap( DoubleTapGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
-    void tapAndHold( QTapAndHoldGesture* gesture );
-
-    QSizeF getButtonDimensions() const;
-    QRectF getResizeRect() const;
-
-    ContentWindowPtr contentWindow_;
-    ContentWindowController* controller_;
+    QmlTypeRegistration()
+    {
+        qmlRegisterType<ContentWindowGraphicsItem>("DisplayCluster", 1, 0, "ContentWindowItem");
+    }
 };
 
-#endif
+// Static instance to register types during library static initialisation phase
+static QmlTypeRegistration staticInstance;

@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,83 +37,78 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_GRAPHICS_ITEM_H
-#define CONTENT_WINDOW_GRAPHICS_ITEM_H
+#include "Coordinates.h"
 
-#include "types.h"
-
-#include "ContentWindowController.h"
-
-#include <QtDeclarative/QDeclarativeItem>
-
-class QGestureEvent;
-class DoubleTapGesture;
-class PanGesture;
-class PinchGesture;
-class QTapGesture;
-class QSwipeGesture;
-class QTapAndHoldGesture;
-
-/**
- * Represent a ContentWindow in a QML View.
- */
-class ContentWindowGraphicsItem : public QDeclarativeItem
+Coordinates::Coordinates()
 {
-    Q_OBJECT
+}
 
-public:
-    /** Constructor. */
-    ContentWindowGraphicsItem();
+Coordinates::~Coordinates()
+{
+}
 
-    /** Destructor. */
-    virtual ~ContentWindowGraphicsItem();
+Coordinates::Coordinates( const QRectF& coordinates )
+    : coordinates_( coordinates )
+{
+}
 
-    /** Init must be separate from the constructor for instanciation in QML. */
-    void init( ContentWindowPtr contentWindow,
-               const DisplayGroup& displayGroup );
+const QRectF& Coordinates::getCoordinates() const
+{
+    return coordinates_;
+}
 
-    /** Get the associated ContentWindow. */
-    ContentWindowPtr getContentWindow() const;
+qreal Coordinates::x() const
+{
+    return coordinates_.x();
+}
 
-public slots:
-    /** Close this window. */
-    void close();
+qreal Coordinates::y() const
+{
+    return coordinates_.y();
+}
 
-    /** Maximize the window. */
-    void toggleFullscreen();
+qreal Coordinates::width() const
+{
+    return coordinates_.width();
+}
 
-signals:
-    /** Emitted when a user clicks the window to bring it to the front. */
-    void moveToFront( ContentWindowPtr contentWindow );
+qreal Coordinates::height() const
+{
+    return coordinates_.height();
+}
 
-    /** Emitted when the user clicks the close button. */
-    void close( ContentWindowPtr contentWindow );
+void Coordinates::setX( const qreal x_ )
+{
+    if( x_ == coordinates_.x( ))
+        return;
 
-protected:
-    /** @name Re-implemented QGraphicsRectItem events */
-    //@{
-    bool sceneEvent( QEvent* event ) override;
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
-    void keyPressEvent( QKeyEvent* event ) override;
-    void keyReleaseEvent( QKeyEvent* event ) override;
-    //@}
+    coordinates_.setX( x_ );
+    emit xChanged();
+}
 
-private:
-    void gestureEvent( QGestureEvent* event );
-    void doubleTap( DoubleTapGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
-    void tapAndHold( QTapAndHoldGesture* gesture );
+void Coordinates::setY( const qreal y_ )
+{
+    if( y_ == coordinates_.y( ))
+        return;
 
-    QSizeF getButtonDimensions() const;
-    QRectF getResizeRect() const;
+    coordinates_.setY( y_ );
+    emit yChanged();
+}
 
-    ContentWindowPtr contentWindow_;
-    ContentWindowController* controller_;
-};
+void Coordinates::setWidth( const qreal w )
+{
+    if( w == coordinates_.width( ))
+        return;
 
-#endif
+    coordinates_.setWidth( w );
+    emit widthChanged();
+}
+
+void Coordinates::setHeight( const qreal h )
+{
+    if( h == coordinates_.height( ))
+        return;
+
+    coordinates_.setHeight( h );
+    emit heightChanged();
+}

@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,83 +37,48 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_GRAPHICS_ITEM_H
-#define CONTENT_WINDOW_GRAPHICS_ITEM_H
+#ifndef COORDINATES_H
+#define COORDINATES_H
 
-#include "types.h"
-
-#include "ContentWindowController.h"
-
-#include <QtDeclarative/QDeclarativeItem>
-
-class QGestureEvent;
-class DoubleTapGesture;
-class PanGesture;
-class PinchGesture;
-class QTapGesture;
-class QSwipeGesture;
-class QTapAndHoldGesture;
+#include <QObject>
+#include <QRectF>
 
 /**
- * Represent a ContentWindow in a QML View.
+ * Exposes the coordinates of a rectangle as QProperties for QML binding.
  */
-class ContentWindowGraphicsItem : public QDeclarativeItem
+class Coordinates : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY( qreal x READ x WRITE setX NOTIFY xChanged )
+    Q_PROPERTY( qreal y READ y WRITE setY NOTIFY yChanged )
+    Q_PROPERTY( qreal width READ width WRITE setWidth NOTIFY widthChanged )
+    Q_PROPERTY( qreal height READ height WRITE setHeight NOTIFY heightChanged )
 
 public:
-    /** Constructor. */
-    ContentWindowGraphicsItem();
+    Coordinates();
+    Coordinates( const QRectF& coordinates );
+    virtual ~Coordinates();
 
-    /** Destructor. */
-    virtual ~ContentWindowGraphicsItem();
+    const QRectF& getCoordinates() const;
 
-    /** Init must be separate from the constructor for instanciation in QML. */
-    void init( ContentWindowPtr contentWindow,
-               const DisplayGroup& displayGroup );
+    qreal x() const;
+    qreal y() const;
+    qreal width() const;
+    qreal height() const;
 
-    /** Get the associated ContentWindow. */
-    ContentWindowPtr getContentWindow() const;
-
-public slots:
-    /** Close this window. */
-    void close();
-
-    /** Maximize the window. */
-    void toggleFullscreen();
+    void setX( const qreal x );
+    void setY( const qreal y );
+    void setWidth( const qreal w );
+    void setHeight( const qreal h );
 
 signals:
-    /** Emitted when a user clicks the window to bring it to the front. */
-    void moveToFront( ContentWindowPtr contentWindow );
-
-    /** Emitted when the user clicks the close button. */
-    void close( ContentWindowPtr contentWindow );
+    void xChanged();
+    void yChanged();
+    void widthChanged();
+    void heightChanged();
 
 protected:
-    /** @name Re-implemented QGraphicsRectItem events */
-    //@{
-    bool sceneEvent( QEvent* event ) override;
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
-    void keyPressEvent( QKeyEvent* event ) override;
-    void keyReleaseEvent( QKeyEvent* event ) override;
-    //@}
-
-private:
-    void gestureEvent( QGestureEvent* event );
-    void doubleTap( DoubleTapGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
-    void tapAndHold( QTapAndHoldGesture* gesture );
-
-    QSizeF getButtonDimensions() const;
-    QRectF getResizeRect() const;
-
-    ContentWindowPtr contentWindow_;
-    ContentWindowController* controller_;
+    QRectF coordinates_;
 };
 
-#endif
+#endif // COORDINATES_H
