@@ -137,55 +137,14 @@ BOOST_AUTO_TEST_CASE( testZoom )
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    const QPointF zoomCenter( 0.5, 0.5 );
-    BOOST_REQUIRE_EQUAL( window.getZoom(), 1.0 );
+    BOOST_REQUIRE( window.getZoomRect() == QRectF( 0.0, 0.0, 1.0, 1.0 ));
 
-    window.setZoom( 0.5 );
-    BOOST_CHECK_EQUAL( window.getZoom(), 1.0 );
-    window.setZoom( 8.7 );
-    BOOST_CHECK_EQUAL( window.getZoom(), 8.7 );
-    window.setZoom( 16.0 );
-    BOOST_CHECK_EQUAL( window.getZoom(), 16.0 );
-    window.setZoom( 17.0 );
-    BOOST_CHECK_EQUAL( window.getZoom(), 16.0 );
-}
-
-BOOST_AUTO_TEST_CASE( testZoomCenter )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-
-    const QPointF zoomCenter( 0.5, 0.5 );
-    BOOST_REQUIRE_EQUAL( window.getZoomCenter().x(), zoomCenter.x() );
-    BOOST_REQUIRE_EQUAL( window.getZoomCenter().y(), zoomCenter.y() );
-
-    window.setZoomCenter( QPointF( 0.4, 0.6 ));
-    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), zoomCenter.x() );
-    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), zoomCenter.y() );
-
-    window.setZoom( 8.7 );
-    window.setZoomCenter( QPointF( 0.4, 0.6 ));
-    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 0.4 );
-    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 0.6 );
-
-    window.setZoom( 15.0 );
-    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 0.4 );
-    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 0.6 );
-
-    const double zoom = 9.57;
-    window.setZoom( zoom );
-    window.setZoomCenter( QPointF( 0.0, 0.0 ));
-    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 0.5 * ( 1.0 / zoom ));
-    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 0.5 * ( 1.0 / zoom ));
-
-    window.setZoomCenter( QPointF( 2.0, 3.0 ));
-    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), 1.0 - 0.5 * ( 1.0 / zoom ));
-    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), 1.0 - 0.5 * ( 1.0 / zoom ));
-
-    window.setZoom( 1.0 );
-    BOOST_CHECK_EQUAL( window.getZoomCenter().x(), zoomCenter.x() );
-    BOOST_CHECK_EQUAL( window.getZoomCenter().y(), zoomCenter.y() );
+    window.setZoomRect( QRectF( 0.2, 0.2, 0.7, 0.7 ));
+    BOOST_CHECK( window.getZoomRect() == QRectF( 0.2, 0.2, 0.7, 0.7 ));
+    window.setZoomRect( QRectF( -0.1, 0.2, 0.7, 0.7 ));
+    BOOST_CHECK( window.getZoomRect() == QRectF( -0.1, 0.2, 0.7, 0.7 ));
+    window.setZoomRect( QRectF( 0.1, 0.5, 2.0, 2.0 ));
+    BOOST_CHECK( window.getZoomRect() == QRectF( 0.1, 0.5, 2.0, 2.0 ));
 }
 
 BOOST_AUTO_TEST_CASE( testWindowState )

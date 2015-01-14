@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
 
 void checkLegacyWindow( ContentWindowPtr window )
 {
-    BOOST_CHECK_EQUAL( window->getZoom(), 1.5 );
+    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0/1.5 );
 
     BOOST_CHECK_EQUAL( window->getCoordinates().x(), 0.25 );
     BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 );
@@ -182,7 +182,7 @@ void checkLegacyWindow( ContentWindowPtr window )
 
 void checkWindow( ContentWindowPtr window )
 {
-    BOOST_CHECK_EQUAL( window->getZoom(), 1.5 );
+    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0/1.5 );
 
     BOOST_CHECK_EQUAL( window->getCoordinates().x(), 0.25 * wallSize.width( ));
     BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 * wallSize.height( ));
@@ -235,7 +235,7 @@ DisplayGroupPtr createTestDisplayGroup()
     ContentWindowPtr contentWindow( new ContentWindow( content ));
     const QPointF position( 0.25 * wallSize.width(), 0.25 * wallSize.height( ));
     contentWindow->setCoordinates( QRectF( position, 0.5 * wallSize ));
-    contentWindow->setZoom( 1.5 );
+    contentWindow->setZoomRect( QRectF( 0.1, 0.2, 1.0/1.5, 1.0/1.5 ));
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     displayGroup->addContentWindow( contentWindow );
     return displayGroup;

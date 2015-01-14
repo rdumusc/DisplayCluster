@@ -281,8 +281,9 @@ void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
     if ( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
     else
-        controller_.scale( 1.0 + WHEEL_SCALE_SPEED *
+        controller_.scale( event_->pos(), 1.0 + WHEEL_SCALE_SPEED *
                            (double)event_->delta() / STD_WHEEL_DELTA );
+    update();
 }
 
 void ContentWindowGraphicsItem::keyPressEvent( QKeyEvent* event_ )
@@ -352,7 +353,8 @@ void ContentWindowGraphicsItem::pan( PanGesture* gesture )
 
 void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
 {
-    const double factor = ZoomInteractionDelegate::adaptZoomFactor( gesture->scaleFactor( ));
+    const double factor =
+             ZoomInteractionDelegate::adaptZoomFactor( gesture->scaleFactor( ));
     if( factor == 0.0 )
         return;
 
@@ -365,7 +367,7 @@ void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
         contentWindow_->setState( ContentWindow::NONE );
     }
 
-    controller_.scale( factor );
+    controller_.scale( gesture->position(), factor );
 }
 
 void ContentWindowGraphicsItem::tapAndHold( QTapAndHoldGesture* gesture )
@@ -522,8 +524,8 @@ void ContentWindowGraphicsItem::drawWindowInfo_( QPainter* painter )
                                      QString::number( coord.height(), 'f', 2 ) +
                                      QString(")\n");
 
-    const qreal zoom = contentWindow_->getZoom();
-    const QPointF& zoomCenter = contentWindow_->getZoomCenter();
+    const qreal zoom = contentWindow_->getZoomRect().width();
+    const QPointF& zoomCenter = contentWindow_->getZoomRect().center();
     const QString zoomCenterLabel = QString(" zoom = ") +
                                     QString::number( zoom, 'f', 2 ) +
                                     QString(" @ (") +

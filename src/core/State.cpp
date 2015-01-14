@@ -226,12 +226,12 @@ ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,
         windowCoordinates.setSize( QSizeF( w, h ));
     contentWindow->setCoordinates( windowCoordinates );
 
-    // zoom needs to be set before center because of clamping
+    QRectF zoomRect( contentWindow->getZoomRect( ));
     if( zoom != -1. )
-        contentWindow->setZoom( zoom );
-
+        zoomRect.setSize( QSizeF( 1.0/zoom, 1.0/zoom ));
     if( centerX != -1. || centerY != -1. )
-        contentWindow->setZoomCenter( QPointF( centerX, centerY ));
+        zoomRect.moveCenter( QPointF( centerX, centerY ));
+    contentWindow->setZoomRect( zoomRect );
 
     return contentWindow;
 }

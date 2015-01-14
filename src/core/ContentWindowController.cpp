@@ -42,6 +42,8 @@
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
 
+#include <QTransform>
+
 namespace
 {
 const qreal MAX_SIZE = 2.0;
@@ -69,12 +71,28 @@ void ContentWindowController::resize( QSizeF size, const WindowPoint fixedPoint 
     contentWindow_.setCoordinates( coordinates );
 }
 
-void ContentWindowController::scale( const double factor )
+void ContentWindowController::resize( const QPointF& center, QSizeF size )
+{
+    constrainSize( size );
+
+    QRectF coordinates( contentWindow_.getCoordinates( ));
+    QTransform transform;
+    transform.translate( center.x(), center.y( ));
+    transform.scale( size.width()/coordinates.width(),
+                     size.height()/coordinates.height( ));
+    transform.translate( -center.x(), -center.y( ));
+
+    coordinates = transform.mapRect( coordinates );
+    constrainPosition( coordinates );
+    contentWindow_.setCoordinates( coordinates );
+}
+
+void ContentWindowController::scale( const QPointF& center, const double factor)
 {
     if( factor <= 0.0 )
         return;
 
-    resize( contentWindow_.getCoordinates().size() * factor, CENTER );
+    resize( center, contentWindow_.getCoordinates().size() * factor );
 }
 
 void ContentWindowController::adjustSize( const SizeState state )
