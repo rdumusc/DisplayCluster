@@ -178,7 +178,7 @@ void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
     if ( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
     else
-        controller_->scale( event_->pos(), 1.0 + WHEEL_SCALE_SPEED *
+        controller_->scale( event_->scenePos(), 1.0 + WHEEL_SCALE_SPEED *
                             (double)event_->delta() / STD_WHEEL_DELTA );
 }
 

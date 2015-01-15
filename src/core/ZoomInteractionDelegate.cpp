@@ -85,7 +85,7 @@ void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
     // deltas are counted in 1/8 degrees, so scale based on 180 degrees =>
     // delta = 180*8 = 1440
     const qreal zoomFactor = 1.0 - (qreal)event->delta() / 1440.0;
-    const QPointF pos = event->pos() - contentWindow_.getCoordinates().topLeft();
+    const QPointF pos = event->scenePos() - contentWindow_.getCoordinates().topLeft();
     scaleZoomRect( getNormalizedPoint( pos ), zoomFactor );
 }
 

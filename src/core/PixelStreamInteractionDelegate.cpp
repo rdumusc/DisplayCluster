@@ -228,8 +228,8 @@ deflect::Event PixelStreamInteractionDelegate::getMouseEvent( const T* qtEvent )
     const QRectF& window = contentWindow_.getCoordinates();
 
     deflect::Event event;
-    event.mouseX = ( qtEvent->pos().x() - window.x( )) / window.width();
-    event.mouseY = ( qtEvent->pos().y() - window.y( )) / window.height();
+    event.mouseX = ( qtEvent->scenePos().x() - window.x( )) / window.width();
+    event.mouseY = ( qtEvent->scenePos().y() - window.y( )) / window.height();
 
     event.mouseLeft = qtEvent->buttons().testFlag( Qt::LeftButton );
     event.mouseMiddle = qtEvent->buttons().testFlag( Qt::MidButton );
