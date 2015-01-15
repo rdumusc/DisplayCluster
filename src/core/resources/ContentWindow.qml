@@ -77,14 +77,14 @@ Rectangle {
                 onPressed: {
                     startMousePos = Qt.point(mouse.x, mouse.y);
                     startSize = Qt.size(contentwindow.width, contentwindow.height)
-                    contentwindow.resizing = true
+                    contentwindow.state = ContentWindow.RESIZING
                 }
                 onPositionChanged: {
                     var newSize = Qt.size(mouse.x - startMousePos.x + startSize.width,
                                           mouse.y - startMousePos.y + startSize.height)
                     controller.resize(newSize);
                 }
-                onReleased: contentwindow.resizing = false
+                onReleased: contentwindow.state = ContentWindow.NONE
             }
         }
 
@@ -109,22 +109,22 @@ Rectangle {
     states: [
         State {
             name: "selected"
-            when: contentwindow.selected
+            when: contentwindow.state == ContentWindow.SELECTED
             PropertyChanges { target: rootObj; border.color: "red" }
         },
         State {
             name: "moving"
-            when: contentwindow.moving
+            when: contentwindow.state == ContentWindow.MOVING
             PropertyChanges { target: rootObj; border.color: "green" }
         },
         State {
             name: "resizing"
-            when: contentwindow.resizing
+            when: contentwindow.state == ContentWindow.RESIZING
             PropertyChanges { target: rootObj; border.color: "blue" }
         },
         State {
             name: "hidden"
-            when: contentwindow.hidden
+            when: contentwindow.state == ContentWindow.HIDDEN
             PropertyChanges { target: rootObj; visible: false }
         }
     ]
