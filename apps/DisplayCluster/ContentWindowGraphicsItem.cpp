@@ -95,14 +95,14 @@ ContentWindowPtr ContentWindowGraphicsItem::getContentWindow() const
     return contentWindow_;
 }
 
+ContentWindowController* ContentWindowGraphicsItem::getWindowController()
+{
+    return controller_;
+}
+
 void ContentWindowGraphicsItem::close()
 {
     emit close( contentWindow_ );
-}
-
-void ContentWindowGraphicsItem::toggleFullscreen()
-{
-    controller_->toggleFullscreen();
 }
 
 bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
@@ -135,23 +135,7 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
 
     if( event_->buttons().testFlag( Qt::LeftButton ))
     {
-        if( contentWindow_->isResizing( ))
-        {
-            QRectF coordinates = parentItem()->boundingRect();
-            coordinates.moveTo( pos( ));
-            coordinates.setBottomRight( event_->scenePos( ));
-
-            const qreal targetAR = contentWindow_->getContent()->getAspectRatio();
-            const qreal eventCoordAR = coordinates.width() / coordinates.height();
-
-            if( eventCoordAR < targetAR )
-                controller_->resize( QSizeF( coordinates.width(),
-                                             coordinates.width() / targetAR ));
-            else
-                controller_->resize( QSizeF( coordinates.height() * targetAR,
-                                             coordinates.height( )));
-        }
-        else if( contentWindow_->isMoving( ))
+        if( contentWindow_->isMoving( ))
         {
             const QPointF delta = event_->scenePos() - event_->lastScenePos();
             const QPointF newPos = parentItem()->pos() + delta;
@@ -170,10 +154,7 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
         return;
     }
 
-    if( getResizeRect().contains( event_->pos( )))
-        contentWindow_->setState( ContentWindow::RESIZING );
-    else
-        contentWindow_->setState( ContentWindow::MOVING );
+    contentWindow_->setState( ContentWindow::MOVING );
 }
 
 void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* )
@@ -289,21 +270,4 @@ void ContentWindowGraphicsItem::tapAndHold( QTapAndHoldGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
         contentWindow_->toggleSelectedState();
-}
-
-QSizeF ContentWindowGraphicsItem::getButtonDimensions() const
-{
-    const qreal size = std::min( BUTTON_REL_WIDTH * boundingRect().width(),
-                                 BUTTON_REL_HEIGHT * boundingRect().height( ));
-    return QSizeF( size, size );
-}
-
-QRectF ContentWindowGraphicsItem::getResizeRect() const
-{
-    const QSizeF button = getButtonDimensions();
-    const QRectF coord = boundingRect();
-
-    return QRectF( coord.x() + coord.width() - button.width(),
-                   coord.y() + coord.height() - button.height(),
-                   button.width(), button.height( ));
 }

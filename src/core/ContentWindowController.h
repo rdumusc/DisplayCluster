@@ -42,6 +42,7 @@
 
 #include "types.h"
 
+#include <QtCore/QObject>
 #include <QtCore/QRectF>
 
 /** Common window size states. */
@@ -62,14 +63,16 @@ enum WindowPoint
 /**
  * Controller for moving and resizing windows.
  */
-class ContentWindowController
+class ContentWindowController : public QObject
 {
+    Q_OBJECT
+
 public:
     ContentWindowController( ContentWindow& contentWindow,
                              const DisplayGroup& displayGroup );
 
     /** Resize the window. */
-    void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );
+    Q_INVOKABLE void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );
 
     /**
      * Resize the window around a given center point.
@@ -86,10 +89,10 @@ public:
 
     /** Toggle between fullscreen and 'normalized' by keeping the position
      *  and size after leaving fullscreen */
-    void toggleFullscreen();
+    Q_INVOKABLE void toggleFullscreen();
 
     /** Move the window to the desired position. */
-    void moveTo( const QPointF& position, const WindowPoint handle = TOP_LEFT );
+    Q_INVOKABLE void moveTo( const QPointF& position, const WindowPoint handle = TOP_LEFT );
 
     /** Move the center of the window to the desired position. */
     inline void moveCenterTo( const QPointF& position )

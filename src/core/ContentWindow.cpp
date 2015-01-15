@@ -169,6 +169,38 @@ bool ContentWindow::isHidden() const
     return windowState_ == HIDDEN;
 }
 
+void ContentWindow::setSelected( bool value )
+{
+    if( value )
+        setState( SELECTED );
+    else
+        setState( NONE );
+}
+
+void ContentWindow::setMoving( bool value )
+{
+    if( value )
+        setState( MOVING );
+    else
+        setState( NONE );
+}
+
+void ContentWindow::setResizing( bool value )
+{
+    if( value )
+        setState( RESIZING );
+    else
+        setState( NONE );
+}
+
+void ContentWindow::setHidden( bool value )
+{
+    if( value )
+        setState( HIDDEN );
+    else
+        setState( NONE );
+}
+
 bool ContentWindow::registerEventReceiver( deflect::EventReceiver* receiver )
 {
     const bool success = connect( this, SIGNAL( notify( deflect::Event )),

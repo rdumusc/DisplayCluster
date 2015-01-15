@@ -245,6 +245,7 @@ void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow 
 
     ContentWindowGraphicsItem* cwgi = windowItem->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
     cwgi->init( contentWindow, *displayGroup_ );
+    windowContext->setContextProperty( "controller", cwgi->getWindowController( ));
 
     connect( cwgi, SIGNAL( moveToFront( ContentWindowPtr )),
              displayGroup_.get(),

@@ -74,12 +74,12 @@ public:
     /** Get the associated ContentWindow. */
     ContentWindowPtr getContentWindow() const;
 
+    /** Get the window controller for exposing it in the Qml context. */
+    ContentWindowController* getWindowController();
+
 public slots:
     /** Close this window. */
     void close();
-
-    /** Maximize the window. */
-    void toggleFullscreen();
 
 signals:
     /** Emitted when a user clicks the window to bring it to the front. */
@@ -107,9 +107,6 @@ private:
     void pan( PanGesture* gesture );
     void pinch( PinchGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
-
-    QSizeF getButtonDimensions() const;
-    QRectF getResizeRect() const;
 
     ContentWindowPtr contentWindow_;
     ContentWindowController* controller_;

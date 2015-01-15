@@ -4,7 +4,7 @@ import DisplayCluster 1.0
 Rectangle {
     id: rootObj
 
-    color: "grey"
+    color: "#80000000"
     border.color: "black"
     border.width: 10
 
@@ -30,28 +30,6 @@ Rectangle {
         objectName: "contentWindowItem"
         id: contentWindowItem
         anchors.fill: parent
-
-//        MouseArea {
-//            anchors.fill: parent
-//            onDoubleClicked: contentwindow.toggleSelectedState()
-//            drag.target: rootObj
-//            preventStealing: true
-//        }
-
-//        Rectangle {
-//            id: closeButton
-//            width: 0.23 * parent.width
-//            height: 0.45 * width
-//            color: "blue"
-//            anchors.horizontalCenter: parent.horizontalCenter
-//            anchors.bottom: parent.bottom
-//            anchors.bottomMargin: 20
-//            MouseArea {
-//                anchors.fill: parent
-//                preventStealing: true
-//                onClicked: contentWindowItem.close()
-//            }
-//        }
 
         Text {
             id: contentLabel
@@ -91,6 +69,23 @@ Rectangle {
             // Force redraw the SVG
             sourceSize.width: width
             sourceSize.height: height
+            MouseArea {
+                anchors.fill: parent
+                preventStealing: true
+                property variant startMousePos
+                property variant startSize
+                onPressed: {
+                    startMousePos = Qt.point(mouse.x, mouse.y);
+                    startSize = Qt.size(contentwindow.width, contentwindow.height)
+                    contentwindow.resizing = true
+                }
+                onPositionChanged: {
+                    var newSize = Qt.size(mouse.x - startMousePos.x + startSize.width,
+                                          mouse.y - startMousePos.y + startSize.height)
+                    controller.resize(newSize);
+                }
+                onReleased: contentwindow.resizing = false
+            }
         }
 
         Image {
@@ -106,7 +101,7 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 preventStealing: true
-                onClicked: contentWindowItem.toggleFullscreen()
+                onClicked: controller.toggleFullscreen()
             }
         }
     }
@@ -118,9 +113,9 @@ Rectangle {
             PropertyChanges { target: rootObj; border.color: "red" }
         },
         State {
-            name: "hidden"
-            when: contentwindow.hidden
-            PropertyChanges { target: rootObj; visible: false }
+            name: "moving"
+            when: contentwindow.moving
+            PropertyChanges { target: rootObj; border.color: "green" }
         },
         State {
             name: "resizing"
@@ -128,9 +123,9 @@ Rectangle {
             PropertyChanges { target: rootObj; border.color: "blue" }
         },
         State {
-            name: "moving"
-            when: contentwindow.moving
-            PropertyChanges { target: rootObj; border.color: "green" }
+            name: "hidden"
+            when: contentwindow.hidden
+            PropertyChanges { target: rootObj; visible: false }
         }
     ]
 

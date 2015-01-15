@@ -67,10 +67,10 @@ class ContentInteractionDelegate;
 class ContentWindow : public Coordinates
 {
     Q_OBJECT
-    Q_PROPERTY( bool selected READ isSelected NOTIFY selectedChanged )
-    Q_PROPERTY( bool moving READ isMoving NOTIFY movingChanged )
-    Q_PROPERTY( bool resizing READ isResizing NOTIFY resizingChanged )
-    Q_PROPERTY( bool hidden READ isHidden NOTIFY hiddenChanged )
+    Q_PROPERTY( bool selected READ isSelected WRITE setSelected NOTIFY selectedChanged )
+    Q_PROPERTY( bool moving READ isMoving WRITE setMoving NOTIFY movingChanged )
+    Q_PROPERTY( bool resizing READ isResizing WRITE setResizing NOTIFY resizingChanged )
+    Q_PROPERTY( bool hidden READ isHidden WRITE setHidden NOTIFY hiddenChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
 
 public:
@@ -135,6 +135,19 @@ public:
 
     /** Check if hidden. */
     bool isHidden() const;
+
+
+    /** Set selected state. */
+    void setSelected( bool value );
+
+    /** Set moving state. */
+    void setMoving( bool value );
+
+    /** Set resizing state. */
+    void setResizing( bool value );
+
+    /** Set hidden state. */
+    void setHidden( bool value );
 
 
     /** Register an object to receive this window's Events. */
@@ -238,6 +251,8 @@ private:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
+        // The InteractionDelegate is not serialized and must be recreated
+        createInteractionDelegate();
     }
 
     /** Loading from xml. */
@@ -245,8 +260,6 @@ private:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
-        // The InteractionDelegate is not serialized and must be recreated
-        createInteractionDelegate();
     }
 
     void createInteractionDelegate();
