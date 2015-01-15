@@ -42,7 +42,7 @@
 
 #include "types.h"
 
-#include <QGraphicsScene>
+#include <QtGui/QGraphicsScene>
 
 /**
  * The scene representing the whole wall area.
@@ -66,13 +66,14 @@ public:
 private:
     void drawBackground( QPainter* painter, const QRectF &rect ) override;
 
-    QColor backgroundColor_;
-    QList<RenderablePtr> renderables_;
-
     void clear( const QColor& clearColor );
     void setOrthographicView( const QRectF& rect );
 
-public:
+    QColor backgroundColor_;
+    QList<RenderablePtr> renderables_;
+
+    // For text rendering with Qt functionss
+    friend class RenderContext;
     QPainter* painter_;
     QRectF painterRect_;
 };

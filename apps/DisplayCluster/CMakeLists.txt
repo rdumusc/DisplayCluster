@@ -14,6 +14,7 @@ set(DISPLAYCLUSTER_MOC_HEADERS
   DisplayGroupListWidget.h
   MasterApplication.h
   MasterWindow.h
+  TouchArea.h
   WallApplication.h
   WebbrowserWidget.h
 )
@@ -30,6 +31,7 @@ set(DISPLAYCLUSTER_SOURCES
   MasterApplication.cpp
   MasterWindow.cpp
   QmlTypeRegistration.cpp
+  TouchArea.cpp
   WallApplication.cpp
   WebbrowserWidget.cpp
 )

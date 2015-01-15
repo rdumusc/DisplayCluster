@@ -17,9 +17,11 @@
         <file>selectboxit/jquery.min.js</file>
         <file>selectboxit/jquery.selectBoxIt.min.js</file>
         <file>selectboxit/selectboxit.css</file>
+        <file>qml/WallContentWindow.qml</file>
     </qresource>
     <qresource prefix="/qml">
         <file>ContentWindow.qml</file>
         <file>DisplayGroup.qml</file>
+        <file>WindowControls.qml</file>
     </qresource>
 </RCC>

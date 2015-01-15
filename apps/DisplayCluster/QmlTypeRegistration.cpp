@@ -39,6 +39,7 @@
 
 #include "ContentWindowGraphicsItem.h"
 #include "ContentWindow.h"
+#include "TouchArea.h"
 
 /**
  * Register types for use in Qml
@@ -49,6 +50,7 @@ struct QmlTypeRegistration
     {
         qmlRegisterType<ContentWindowGraphicsItem>("DisplayCluster", 1, 0, "ContentWindowItem");
         qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports WindowState enum to QML");
+        qmlRegisterType<TouchArea>("DisplayCluster", 1, 0, "TouchArea");
     }
 };
 

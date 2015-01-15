@@ -31,6 +31,18 @@ Rectangle {
         id: contentWindowItem
         anchors.fill: parent
 
+        onMoveToFront: theAnim.restart()
+
+        WindowControls {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 30
+            onClose: contentWindowItem.close()
+            onToggleFullscreen: controller.toggleFullscreen()
+            opacity: 0.1
+            visible: contentwindow.controlsOpacity > 0 && contentwindow.label != "Dock"
+        }
+
         Text {
             id: contentLabel
             text: contentwindow.label
@@ -129,4 +141,13 @@ Rectangle {
         }
     ]
 
+    NumberAnimation {
+        id: theAnim
+        target: contentwindow
+        property: "controlsOpacity"
+        from: 1
+        to: 0
+        duration: 2000
+        easing.type: Easing.InExpo
+    }
 }

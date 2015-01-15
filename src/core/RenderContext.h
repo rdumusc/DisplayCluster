@@ -47,6 +47,8 @@
 #include <QColor>
 #include <QFont>
 
+#include <QtDeclarative/QDeclarativeEngine>
+
 class WallConfiguration;
 
 /**
@@ -89,14 +91,21 @@ public:
     /** Swap GL buffers on all windows. */
     void swapBuffers();
 
+    /** Get access to the scene object. */
+    WallGraphicsScene& getScene();
+
+    /** Get the QML engine. */
+    QDeclarativeEngine& getQmlEngine();
+
 private:
     void setupOpenGLWindows( const WallConfiguration& configuration );
 
     WallGraphicsScene scene_;
-    WindowPtrs windows_;
+    WallWindowPtrs windows_;
     QRect visibleWallArea_;
 
-    std::vector< GLWindow* > glWindows_;
+    QDeclarativeEngine engine_;
+
     int activeGLWindowIndex_;
 };
 

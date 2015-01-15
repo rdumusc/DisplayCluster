@@ -45,10 +45,9 @@
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
-
-    // glu functions deprecated in 10.9
-#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    // glu functions are deprecated from OSX 10.9
+    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else
     #include <GL/glu.h>
 #endif
@@ -80,24 +79,23 @@ void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
         return;
     }
 
-    painter->beginNativePainting();
-
     painter_ = painter;
     painterRect_ = rect;
-
-    glEnable( GL_DEPTH_TEST );
-    glDisable( GL_LIGHTING );
 
     clear( backgroundColor_ );
     setOrthographicView( rect );
 
+    glPushAttrib( GL_ENABLE_BIT );
+    glEnable( GL_DEPTH_TEST );
+    glDisable( GL_LIGHTING );
+
     foreach( RenderablePtr renderable, renderables_ )
     {
-        if ( renderable->isVisible( ))
+        if( renderable->isVisible( ))
             renderable->render();
     }
 
-    painter->endNativePainting();
+    glPopAttrib();
 }
 
 void WallGraphicsScene::clear(const QColor& clearColor)

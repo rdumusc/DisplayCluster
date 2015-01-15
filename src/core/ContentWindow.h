@@ -69,6 +69,7 @@ class ContentWindow : public Coordinates
     Q_OBJECT
     Q_PROPERTY( WindowState state READ getState WRITE setState NOTIFY stateChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
+    Q_PROPERTY( qreal controlsOpacity READ getControlsOpacity WRITE setControlsOpacity NOTIFY controlsOpacityChanged )
 
 public:
     /** The possible states of a window. */
@@ -163,6 +164,12 @@ public:
     /** Get the label for the window */
     QString getLabel() const;
 
+    /** Get the opacity of the window control buttons. */
+    qreal getControlsOpacity() const;
+
+    /** Set the opacity of the window control buttons. */
+    void setControlsOpacity( qreal value );
+
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
@@ -180,6 +187,7 @@ signals:
     //@{
     void stateChanged();
     void labelChanged();
+    void controlsOpacityChanged();
     //@}
 
 private:
@@ -192,10 +200,12 @@ private:
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
+        ar & uuid_;
         ar & content_;
         ar & coordinates_;
         ar & zoomRect_;
         ar & windowState_;
+        ar & controlsOpacity_;
     }
 
     /** Serialize for saving to an xml file */
@@ -247,7 +257,7 @@ private:
     void createInteractionDelegate();
     void sendSizeChangedEvent();
 
-    const QUuid uuid_;
+    QUuid uuid_;
     ContentPtr content_;
 
     // coordinates in pixels, relative to the parent DisplayGroup
@@ -257,6 +267,7 @@ private:
     QRectF zoomRect_;
 
     ContentWindow::WindowState windowState_;
+    qreal controlsOpacity_;
 
     unsigned int eventReceiversCount_;
 

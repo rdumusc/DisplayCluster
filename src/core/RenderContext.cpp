@@ -40,11 +40,10 @@
 
 #include "configuration/WallConfiguration.h"
 #include "GLWindow.h"
+#include "WallWindow.h"
 #include "log.h"
 
 #include <stdexcept>
-
-#include <QtGui/QGraphicsView>
 
 #include <boost/foreach.hpp>
 
@@ -73,8 +72,6 @@ void RenderContext::setBackgroundColor( const QColor& color )
 
 void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
 {
-    scene_.setSceneRect( QRectF( QPointF( 0.0, 0.0 ), configuration.getTotalSize( )));
-
     for( int i = 0; i < configuration.getScreenCount(); ++i )
     {
         const QPoint screenIndex = configuration.getGlobalScreenIndex( i );
@@ -82,29 +79,22 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
 
         visibleWallArea_ = visibleWallArea_.unite( windowRect );
 
-        WindowPtr window( new QGraphicsView( ));
+        WallWindowPtr window( new WallWindow( &scene_, windowRect ));
+        windows_.push_back( window );
 
         // share OpenGL context from the first GLWindow
-        GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0];
+        QGLWidget* shareWidget = (i==0) ? 0 :
+                             static_cast<QGLWidget*>( windows_[0]->viewport( ));
         try
         {
-            glWindows_.push_back( new GLWindow( windowRect, shareWidget ));
+            // The window takes ownership of the QGLWidget
+            window->setViewport( new GLWindow( shareWidget ));
         }
         catch( const std::runtime_error& e )
         {
             put_flog( LOG_FATAL, "Error creating a GLWindow: '%s'", e.what( ));
             throw std::runtime_error( "Failed creating the GLWindows." );
         }
-
-        window->setViewport( glWindows_.back( )); // Takes ownership of the QWidget
-        window->setScene( &scene_ );
-        window->setGeometry( windowRect );
-        window->setSceneRect( windowRect );
-        window->setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
-        window->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-        window->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-        window->setCacheMode( QGraphicsView::CacheNone );
-        windows_.push_back( window );
 
         if( configuration.getFullscreen( ))
             window->showFullScreen();
@@ -164,18 +154,29 @@ bool RenderContext::isRegionVisible( const QRectF& region ) const
 void RenderContext::updateGLWindows()
 {
     activeGLWindowIndex_ = 0;
-    BOOST_FOREACH( GLWindow* glWindow, glWindows_ )
+
+    BOOST_FOREACH( WallWindowPtr window, windows_ )
     {
-        glWindow->repaint();
+        window->viewport()->repaint();
         ++activeGLWindowIndex_;
     }
 }
 
 void RenderContext::swapBuffers()
 {
-    BOOST_FOREACH( GLWindow* glWindow, glWindows_ )
+    BOOST_FOREACH( WallWindowPtr window, windows_ )
     {
-        glWindow->makeCurrent();
-        glWindow->swapBuffers();
+        static_cast<QGLWidget*>( window->viewport( ))->makeCurrent();
+        static_cast<QGLWidget*>( window->viewport( ))->swapBuffers();
     }
+}
+
+WallGraphicsScene& RenderContext::getScene()
+{
+    return scene_;
+}
+
+QDeclarativeEngine& RenderContext::getQmlEngine()
+{
+    return engine_;
 }
