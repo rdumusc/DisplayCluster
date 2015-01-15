@@ -23,7 +23,6 @@ set(TEST_LIBRARIES
 )
 
 set(PERF_TEST_SOURCES
-    dcStreamTests.cpp
     dcBenchmarkMPI.cpp
 )
 
