@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,30 +37,20 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FpsRenderer.h"
+#include "ContentWindowGraphicsItem.h"
+#include "ContentWindow.h"
 
-#include "RenderContext.h"
-
-#include <QtOpenGL/qgl.h>
-
-#define TEXT_POS_X 10
-#define TEXT_POS_Y 32
-#define TEXT_SIZE_PX 32
-
-FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
-    : renderContext_(renderContext)
+/**
+ * Register types for use in Qml
+ */
+struct QmlTypeRegistration
 {
-}
+    QmlTypeRegistration()
+    {
+        qmlRegisterType<ContentWindowGraphicsItem>("DisplayCluster", 1, 0, "ContentWindowItem");
+        qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports WindowState enum to QML");
+    }
+};
 
-void FpsRenderer::render()
-{
-    fpsCounter_.tick();
-
-    QFont textFont;
-    textFont.setPixelSize(TEXT_SIZE_PX);
-
-    renderContext_->renderTextInWindow( TEXT_POS_X, TEXT_POS_Y,
-                                        fpsCounter_.toString(), textFont,
-                                        QColor( Qt::blue ));
-}
-
+// Static instance to register types during library static initialisation phase
+static QmlTypeRegistration staticInstance;

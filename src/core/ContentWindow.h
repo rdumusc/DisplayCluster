@@ -43,6 +43,7 @@
 #include "types.h"
 
 #include "serializationHelpers.h"
+#include "Coordinates.h"
 #include "Content.h" // needed for serialization
 
 #include <QObject>
@@ -63,9 +64,11 @@ class ContentInteractionDelegate;
  *
  * Can be serialized and distributed to the Wall applications.
  */
-class ContentWindow : public QObject
+class ContentWindow : public Coordinates
 {
     Q_OBJECT
+    Q_PROPERTY( WindowState state READ getState WRITE setState NOTIFY stateChanged )
+    Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
 
 public:
     /** The possible states of a window. */
@@ -77,6 +80,7 @@ public:
         RESIZING,   // the window is being resized
         HIDDEN      // the window is hidden (invisible, not interacting)
     };
+    Q_ENUMS( WindowState )
 
     /**
      * Create a new window.
@@ -99,9 +103,6 @@ public:
     void setContent( ContentPtr content );
 
 
-    /** Get the coordiates in pixel units. */
-    const QRectF& getCoordinates() const;
-
     /** Set the coordinates in pixel units. */
     void setCoordinates( const QRectF& coordinates );
 
@@ -111,6 +112,7 @@ public:
     /** Set the zoom rectangle in normalized coordinates. */
     void setZoomRect( const QRectF& zoomRect );
 
+
     /** Get the current state. */
     ContentWindow::WindowState getState() const;
 
@@ -118,7 +120,7 @@ public:
     void setState( const ContentWindow::WindowState state );
 
     /** Toggle the state (selected / unselected). */
-    void toggleSelectedState();
+    Q_INVOKABLE void toggleSelectedState();
 
     /** Check if selected. */
     bool isSelected() const;
@@ -158,12 +160,12 @@ public:
     /** Restore and clear the backed-up coordinates. */
     void restoreCoordinates();
 
+    /** Get the label for the window */
+    QString getLabel() const;
+
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
-
-    /** Emitted just before the coordinates are going to change. */
-    void coordinatesAboutToChange();
 
     /**
      * Emitted whenever this object is modified.
@@ -171,8 +173,14 @@ signals:
      */
     void modified();
 
-    /** Notify registered EventReceivers that an Event occured. */
+    /** @internal Notify registered EventReceivers that an Event occured. */
     void notify( deflect::Event event );
+
+    /** @name QProperty notifiers */
+    //@{
+    void stateChanged();
+    void labelChanged();
+    //@}
 
 private:
     friend class boost::serialization::access;
@@ -225,6 +233,8 @@ private:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
+        // The InteractionDelegate is not serialized and must be recreated
+        createInteractionDelegate();
     }
 
     /** Loading from xml. */
@@ -232,8 +242,6 @@ private:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
-        // The InteractionDelegate is not serialized and must be recreated
-        createInteractionDelegate();
     }
 
     void createInteractionDelegate();
@@ -243,7 +251,6 @@ private:
     ContentPtr content_;
 
     // coordinates in pixels, relative to the parent DisplayGroup
-    QRectF coordinates_;
     QRectF coordinatesBackup_;
 
     // zooming

@@ -44,9 +44,11 @@
 #include <QtGui/QGraphicsView>
 #include <QtGui/QGesture>
 #include <QtGui/QGestureEvent>
+#include <QtDeclarative/QDeclarativeEngine>
 
 class PanGesture;
 class PinchGesture;
+class QGraphicsObject;
 
 /**
  * An interactive graphical view of a DisplayGroup's ContentWindows.
@@ -64,7 +66,7 @@ public:
     virtual ~DisplayGroupGraphicsView();
 
     /** Set the DisplayGroup model that this view should present. */
-    void setModel( DisplayGroupPtr displayGroup );
+    void setDataModel( DisplayGroupPtr displayGroup );
 
 signals:
     /** Emitted when a user taps the background. */
@@ -93,11 +95,16 @@ private:
     void tap( QTapGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
 
+    QGraphicsItem* getItemFor( ContentWindowPtr contentWindow );
+
     void grabGestures();
     QPointF getScenePosition( const QGesture* gesture ) const;
     bool isOnBackground( const QPointF& position ) const;
 
     DisplayGroupPtr displayGroup_;
+
+    QDeclarativeEngine engine_;
+    QGraphicsObject* displayGroupItem_;
 };
 
 #endif

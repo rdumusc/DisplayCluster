@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,30 +37,44 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FpsRenderer.h"
+#ifndef WALLGRAPHICSSCENE_H
+#define WALLGRAPHICSSCENE_H
 
-#include "RenderContext.h"
+#include "types.h"
 
-#include <QtOpenGL/qgl.h>
+#include <QGraphicsScene>
 
-#define TEXT_POS_X 10
-#define TEXT_POS_Y 32
-#define TEXT_SIZE_PX 32
-
-FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
-    : renderContext_(renderContext)
+/**
+ * The scene representing the whole wall area.
+ *
+ * Each wall process displays a portion of the scene in one or more windows.
+ */
+class WallGraphicsScene : public QGraphicsScene
 {
-}
+    Q_OBJECT
 
-void FpsRenderer::render()
-{
-    fpsCounter_.tick();
+public:
+    /** Constructor */
+    WallGraphicsScene( const QRectF &size, QObject* parent = 0 );
 
-    QFont textFont;
-    textFont.setPixelSize(TEXT_SIZE_PX);
+    /** Add an object to be rendered. */
+    void addRenderable( RenderablePtr renderable );
 
-    renderContext_->renderTextInWindow( TEXT_POS_X, TEXT_POS_Y,
-                                        fpsCounter_.toString(), textFont,
-                                        QColor( Qt::blue ));
-}
+    /** Set the background color */
+    void setBackgroundColor( const QColor& color );
 
+private:
+    void drawBackground( QPainter* painter, const QRectF &rect ) override;
+
+    QColor backgroundColor_;
+    QList<RenderablePtr> renderables_;
+
+    void clear( const QColor& clearColor );
+    void setOrthographicView( const QRectF& rect );
+
+public:
+    QPainter* painter_;
+    QRectF painterRect_;
+};
+
+#endif // WALLGRAPHICSSCENE_H

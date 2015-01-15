@@ -43,7 +43,7 @@
 
 #include "ContentWindowController.h"
 
-#include <QtGui/QGraphicsObject>
+#include <QtDeclarative/QDeclarativeItem>
 
 class QGestureEvent;
 class DoubleTapGesture;
@@ -54,34 +54,32 @@ class QSwipeGesture;
 class QTapAndHoldGesture;
 
 /**
- * Represent a ContentWindow in a QListView.
+ * Represent a ContentWindow in a QML View.
  */
-class ContentWindowGraphicsItem : public QGraphicsObject
+class ContentWindowGraphicsItem : public QDeclarativeItem
 {
     Q_OBJECT
 
 public:
     /** Constructor. */
-    explicit ContentWindowGraphicsItem( ContentWindowPtr contentWindow,
-                                        const DisplayGroup& displayGroup );
+    ContentWindowGraphicsItem();
 
     /** Destructor. */
     virtual ~ContentWindowGraphicsItem();
 
+    /** Init must be separate from the constructor for instanciation in QML. */
+    void init( ContentWindowPtr contentWindow,
+               const DisplayGroup& displayGroup );
+
     /** Get the associated ContentWindow. */
     ContentWindowPtr getContentWindow() const;
 
+    /** Get the window controller for exposing it in the Qml context. */
+    ContentWindowController* getWindowController();
+
 public slots:
-    /** QGraphicsRectItem paint event */
-    void paint( QPainter* painter, const QStyleOptionGraphicsItem* option,
-                QWidget* widget = 0 ) override;
-
-    /** Move this item to the front. */
-    void setZToFront();
-
-private slots:
-    /** Used to trigger prepareGeometryChange() when window dimensions change */
-    void prepareToChangeGeometry();
+    /** Close this window. */
+    void close();
 
 signals:
     /** Emitted when a user clicks the window to bring it to the front. */
@@ -91,9 +89,6 @@ signals:
     void close( ContentWindowPtr contentWindow );
 
 protected:
-    /** Get normalized window dimensions. */
-    QRectF boundingRect() const override;
-
     /** @name Re-implemented QGraphicsRectItem events */
     //@{
     bool sceneEvent( QEvent* event ) override;
@@ -113,28 +108,8 @@ private:
     void pinch( PinchGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
 
-    bool isMovie() const;
-
-    QSizeF getButtonDimensions() const;
-    QRectF getCloseRect() const;
-    QRectF getResizeRect() const;
-    QRectF getFullscreenRect() const;
-    QRectF getPauseRect() const;
-    QRectF getLoopRect() const;
-
-    void drawFrame_( QPainter* painter );
-    void drawCloseButton_( QPainter* painter );
-    void drawResizeIndicator_( QPainter* painter );
-    void drawFullscreenButton_( QPainter* painter );
-    void drawMovieControls_( QPainter* painter );
-    void drawTextLabel_( QPainter* painter );
-    void drawWindowInfo_( QPainter* painter );
-
     ContentWindowPtr contentWindow_;
-    ContentWindowController controller_;
-
-    // counter used to determine stacking order in the UI
-    static qreal zCounter_;
+    ContentWindowController* controller_;
 };
 
 #endif

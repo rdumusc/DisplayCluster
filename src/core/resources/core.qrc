@@ -8,11 +8,18 @@
         <file>marker.png</file>
         <file>browser-icon.png</file>
         <file>clearall-icon.png</file>
+        <file>masterui-close.svg</file>
+        <file>masterui-maximize.svg</file>
+        <file>masterui-resize.svg</file>
     </qresource>
     <qresource prefix="/">
         <file>selectboxit/jquery-ui.min.js</file>
         <file>selectboxit/jquery.min.js</file>
         <file>selectboxit/jquery.selectBoxIt.min.js</file>
         <file>selectboxit/selectboxit.css</file>
+    </qresource>
+    <qresource prefix="/qml">
+        <file>ContentWindow.qml</file>
+        <file>DisplayGroup.qml</file>
     </qresource>
 </RCC>

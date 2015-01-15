@@ -246,7 +246,7 @@ void MasterWindow::setupMasterWindowUI()
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    dggv_->setModel(displayGroup_);
+    dggv_->setDataModel(displayGroup_);
     mainWidget->addTab((QWidget *)dggv_, "Display group 0");
     // Forward background touch events
     connect(dggv_, SIGNAL(backgroundTap(QPointF)), this, SIGNAL(hideDock()));

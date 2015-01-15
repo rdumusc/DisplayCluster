@@ -45,7 +45,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentType.h
   ContentInteractionDelegate.h
   ContentWindow.h
-  ContentWindowController.h
   ContentWindowRenderer.h
   DisplayGroup.h
   DisplayGroupRenderer.h
@@ -133,6 +132,8 @@ list(APPEND DCCORE_PUBLIC_HEADERS
 list(APPEND DCCORE_MOC_HEADERS
   Content.h
   ContentWindow.h
+  ContentWindowController.h
+  Coordinates.h
   DisplayGroup.h
   DisplayGroupRenderer.h
   Factories.h
@@ -145,6 +146,7 @@ list(APPEND DCCORE_MOC_HEADERS
   PixelStreamWindowManager.h
   RenderController.h
   WallFromMasterChannel.h
+  WallGraphicsScene.h
   WallToMasterChannel.h
   WallToWallChannel.h
   WebbrowserCommandHandler.h
@@ -171,6 +173,7 @@ list(APPEND DCCORE_SOURCES
   ContentWindow.cpp
   ContentWindowController.cpp
   ContentWindowRenderer.cpp
+  Coordinates.cpp
   DisplayGroup.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
@@ -216,6 +219,7 @@ list(APPEND DCCORE_SOURCES
   Texture.cpp
   TextureContent.cpp
   WallFromMasterChannel.cpp
+  WallGraphicsScene.cpp
   WallToMasterChannel.cpp
   WallToWallChannel.cpp
   WebbrowserCommandHandler.cpp

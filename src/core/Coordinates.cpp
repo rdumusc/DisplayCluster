@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,30 +37,78 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FpsRenderer.h"
+#include "Coordinates.h"
 
-#include "RenderContext.h"
-
-#include <QtOpenGL/qgl.h>
-
-#define TEXT_POS_X 10
-#define TEXT_POS_Y 32
-#define TEXT_SIZE_PX 32
-
-FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
-    : renderContext_(renderContext)
+Coordinates::Coordinates()
 {
 }
 
-void FpsRenderer::render()
+Coordinates::~Coordinates()
 {
-    fpsCounter_.tick();
-
-    QFont textFont;
-    textFont.setPixelSize(TEXT_SIZE_PX);
-
-    renderContext_->renderTextInWindow( TEXT_POS_X, TEXT_POS_Y,
-                                        fpsCounter_.toString(), textFont,
-                                        QColor( Qt::blue ));
 }
 
+Coordinates::Coordinates( const QRectF& coordinates )
+    : coordinates_( coordinates )
+{
+}
+
+const QRectF& Coordinates::getCoordinates() const
+{
+    return coordinates_;
+}
+
+qreal Coordinates::x() const
+{
+    return coordinates_.x();
+}
+
+qreal Coordinates::y() const
+{
+    return coordinates_.y();
+}
+
+qreal Coordinates::width() const
+{
+    return coordinates_.width();
+}
+
+qreal Coordinates::height() const
+{
+    return coordinates_.height();
+}
+
+void Coordinates::setX( const qreal x_ )
+{
+    if( x_ == coordinates_.x( ))
+        return;
+
+    coordinates_.setX( x_ );
+    emit xChanged();
+}
+
+void Coordinates::setY( const qreal y_ )
+{
+    if( y_ == coordinates_.y( ))
+        return;
+
+    coordinates_.setY( y_ );
+    emit yChanged();
+}
+
+void Coordinates::setWidth( const qreal w )
+{
+    if( w == coordinates_.width( ))
+        return;
+
+    coordinates_.setWidth( w );
+    emit widthChanged();
+}
+
+void Coordinates::setHeight( const qreal h )
+{
+    if( h == coordinates_.height( ))
+        return;
+
+    coordinates_.setHeight( h );
+    emit heightChanged();
+}

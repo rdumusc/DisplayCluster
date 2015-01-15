@@ -44,66 +44,77 @@
 
 #include <stdexcept>
 
+#include <QtGui/QGraphicsView>
+
 #include <boost/foreach.hpp>
 
-RenderContext::RenderContext(const WallConfiguration& configuration)
-    : activeGLWindowIndex_(-1)
+#ifdef __APPLE__
+    #include <OpenGL/glu.h>
+
+    // glu functions deprecated in 10.9
+#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+    #include <GL/glu.h>
+#endif
+
+
+RenderContext::RenderContext( const WallConfiguration& configuration )
+    : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
+    , activeGLWindow_( 0 )
+    , activeGLWindowIndex_( -1 )
 {
-    setupOpenGLWindows(configuration);
+    setupOpenGLWindows( configuration );
 }
 
-RenderContext::~RenderContext()
+void RenderContext::setBackgroundColor( const QColor& color )
 {
-}
-
-void RenderContext::setBackgroundColor(const QColor& color)
-{
-    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
-    {
-        glWindow->setBackgroundColor(color);
-    }
+    scene_.setBackgroundColor( color );
 }
 
 void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
 {
-    for( int i=0; i<configuration.getScreenCount(); ++i )
+    scene_.setSceneRect( QRectF( QPointF( 0.0, 0.0 ), configuration.getTotalSize( )));
+
+    for( int i = 0; i < configuration.getScreenCount(); ++i )
     {
         const QPoint screenIndex = configuration.getGlobalScreenIndex( i );
         const QRect windowRect = configuration.getScreenRect( screenIndex );
 
-        // share OpenGL context from the first GLWindow
-        GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0].get();
+        visibleWallArea_ = visibleWallArea_.unite( windowRect );
 
-        GLWindowPtr glw;
+        WindowPtr window( new QGraphicsView( ));
+
+        // share OpenGL context from the first GLWindow
+        GLWindow* shareWidget = (i==0) ? 0 : glWindows_[0];
         try
         {
-            glw.reset( new GLWindow( windowRect, shareWidget ));
+            glWindows_.push_back( new GLWindow( windowRect, shareWidget ));
         }
-        catch ( const std::runtime_error& e )
+        catch( const std::runtime_error& e )
         {
             put_flog( LOG_FATAL, "Error creating a GLWindow: '%s'", e.what( ));
             throw std::runtime_error( "Failed creating the GLWindows." );
         }
-        glWindows_.push_back( glw );
+
+        window->setViewport( glWindows_.back( )); // Takes ownership of the QWidget
+        window->setScene( &scene_ );
+        window->setGeometry( windowRect );
+        window->setSceneRect( windowRect );
+        window->setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
+        window->setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+        window->setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+        window->setCacheMode( QGraphicsView::CacheNone );
+        windows_.push_back( window );
 
         if( configuration.getFullscreen( ))
-            glw->showFullScreen();
+            window->showFullScreen();
         else
         {
-            glw->setWindowFlags(Qt::FramelessWindowHint);
-            glw->show();
+            window->setWindowFlags( Qt::FramelessWindowHint );
+            window->show();
         }
     }
-}
-
-GLWindowPtr RenderContext::getGLWindow(const int index) const
-{
-    return glWindows_[index];
-}
-
-size_t RenderContext::getGLWindowCount() const
-{
-    return glWindows_.size();
 }
 
 int RenderContext::getActiveGLWindowIndex() const
@@ -111,50 +122,60 @@ int RenderContext::getActiveGLWindowIndex() const
     return activeGLWindowIndex_;
 }
 
-void RenderContext::renderText(const int x, const int y, const QString& str,
-                               const QFont& font)
+void RenderContext::renderTextInWindow( const int x, const int y,
+                                        const QString& str, const QFont& font,
+                                        const QColor& color )
 {
-    activeGLWindow_->renderText(x, y, str, font);
+    glPushAttrib( GL_ENABLE_BIT );
+    glDisable( GL_DEPTH_TEST );
+    scene_.painter_->setFont( font );
+    scene_.painter_->setPen( color );
+    scene_.painter_->drawText( x + scene_.painterRect_.x(),
+                               y + scene_.painterRect_.y(), str );
+    glPopAttrib();
 }
 
-void RenderContext::renderText(const double x, const double y, const double z,
-                               const QString& str, const QFont& font)
+void RenderContext::renderText( const double x, const double y, const double z,
+                                const QString& str, const QFont& font,
+                                const QColor& color )
 {
-    activeGLWindow_->renderText(x, y, z, str, font);
+    GLdouble model[4][4], proj[4][4];
+    GLint view[4];
+    glGetDoublev( GL_MODELVIEW_MATRIX, &model[0][0] );
+    glGetDoublev( GL_PROJECTION_MATRIX, &proj[0][0] );
+    glGetIntegerv( GL_VIEWPORT, &view[0] );
+    GLdouble win_x = 0.0, win_y = 0.0, win_z = 0.0;
+    gluProject( x, y, z, &model[0][0], &proj[0][0], &view[0],
+                &win_x, &win_y, &win_z );
+    win_y = scene_.painterRect_.height() - win_y;
+
+    renderTextInWindow( qRound( win_x ), qRound( win_y ), str, font, color );
 }
 
-void RenderContext::addRenderable(RenderablePtr renderable)
+void RenderContext::addRenderable( RenderablePtr renderable )
 {
-    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
-    {
-        glWindow->addRenderable(renderable);
-    }
+    scene_.addRenderable( renderable );
 }
 
-bool RenderContext::isRegionVisible(const QRectF& region) const
+bool RenderContext::isRegionVisible( const QRectF& region ) const
 {
-    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
-    {
-        if(glWindow->isRegionVisible(region))
-            return true;
-    }
-    return false;
+    return region.intersects( visibleWallArea_ );
 }
 
 void RenderContext::updateGLWindows()
 {
     activeGLWindowIndex_ = 0;
-    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
+    BOOST_FOREACH( GLWindow* glWindow, glWindows_ )
     {
         activeGLWindow_ = glWindow;
-        glWindow->updateGL();
+        glWindow->update();
         ++activeGLWindowIndex_;
     }
 }
 
 void RenderContext::swapBuffers()
 {
-    BOOST_FOREACH(GLWindowPtr glWindow, glWindows_)
+    BOOST_FOREACH( GLWindow* glWindow, glWindows_ )
     {
         glWindow->makeCurrent();
         glWindow->swapBuffers();

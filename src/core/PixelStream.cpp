@@ -114,7 +114,7 @@ void PixelStream::updateRenderers(const deflect::PixelStreamSegments& segments)
 
 void PixelStream::updateVisibleTextures(const QRectF& windowRect)
 {
-    for(size_t i=0; i<frontBuffer_.size(); i++)
+    for(size_t i=0; i<frontBuffer_.size(); ++i)
     {
         if (segmentRenderers_[i]->textureNeedsUpdate() && !frontBuffer_[i].parameters.compressed &&
                 isVisible(frontBuffer_[i], windowRect))
@@ -240,7 +240,8 @@ bool PixelStream::isDecodingInProgress(WallToWallChannel& wallToWallChannel)
     return globalThreadsRunning > 0;
 }
 
-bool PixelStream::isVisible(const QRect& segment, const QRectF& windowRect)
+QRectF PixelStream::getSceneCoordinates( const QRect& segment,
+                                         const QRectF& windowRect ) const
 {
     // coordinates of segment in global tiled display space
     const double segmentX = windowRect.x() + (double)segment.x() / (double)width_ * windowRect.width();
@@ -248,7 +249,12 @@ bool PixelStream::isVisible(const QRect& segment, const QRectF& windowRect)
     const double segmentW = (double)segment.width() / (double)width_ * windowRect.width();
     const double segmentH = (double)segment.height() / (double)height_ * windowRect.height();
 
-    return renderContext_->isRegionVisible(QRectF(segmentX, segmentY, segmentW, segmentH));
+    return QRectF( segmentX, segmentY, segmentW, segmentH );
+}
+
+bool PixelStream::isVisible( const QRect& segment, const QRectF& windowRect )
+{
+    return renderContext_->isRegionVisible( getSceneCoordinates( segment, windowRect ));
 }
 
 bool PixelStream::isVisible(const deflect::PixelStreamSegment& segment, const QRectF& windowRect)

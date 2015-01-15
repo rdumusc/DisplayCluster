@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,30 +37,48 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FpsRenderer.h"
+#ifndef COORDINATES_H
+#define COORDINATES_H
 
-#include "RenderContext.h"
+#include <QObject>
+#include <QRectF>
 
-#include <QtOpenGL/qgl.h>
-
-#define TEXT_POS_X 10
-#define TEXT_POS_Y 32
-#define TEXT_SIZE_PX 32
-
-FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
-    : renderContext_(renderContext)
+/**
+ * Exposes the coordinates of a rectangle as QProperties for QML binding.
+ */
+class Coordinates : public QObject
 {
-}
+    Q_OBJECT
+    Q_PROPERTY( qreal x READ x WRITE setX NOTIFY xChanged )
+    Q_PROPERTY( qreal y READ y WRITE setY NOTIFY yChanged )
+    Q_PROPERTY( qreal width READ width WRITE setWidth NOTIFY widthChanged )
+    Q_PROPERTY( qreal height READ height WRITE setHeight NOTIFY heightChanged )
 
-void FpsRenderer::render()
-{
-    fpsCounter_.tick();
+public:
+    Coordinates();
+    Coordinates( const QRectF& coordinates );
+    virtual ~Coordinates();
 
-    QFont textFont;
-    textFont.setPixelSize(TEXT_SIZE_PX);
+    const QRectF& getCoordinates() const;
 
-    renderContext_->renderTextInWindow( TEXT_POS_X, TEXT_POS_Y,
-                                        fpsCounter_.toString(), textFont,
-                                        QColor( Qt::blue ));
-}
+    qreal x() const;
+    qreal y() const;
+    qreal width() const;
+    qreal height() const;
 
+    void setX( const qreal x );
+    void setY( const qreal y );
+    void setWidth( const qreal w );
+    void setHeight( const qreal h );
+
+signals:
+    void xChanged();
+    void yChanged();
+    void widthChanged();
+    void heightChanged();
+
+protected:
+    QRectF coordinates_;
+};
+
+#endif // COORDINATES_H

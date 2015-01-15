@@ -61,10 +61,15 @@ ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
 
 void ContentWindowController::resize( QSizeF size, const WindowPoint fixedPoint )
 {
-    constrainSize( size );
+    QSizeF newSize( contentWindow_.getContent()->getDimensions( ));
+    if ( newSize.isEmpty( ))
+        newSize = size;
+    else
+        newSize.scale( size, Qt::KeepAspectRatio );
+    constrainSize( newSize );
 
     QRectF coordinates( contentWindow_.getCoordinates( ));
-    coordinates.setSize( size );
+    coordinates.setSize( newSize );
     if( fixedPoint == CENTER )
         coordinates.moveCenter( contentWindow_.getCoordinates().center( ));
     constrainPosition( coordinates );

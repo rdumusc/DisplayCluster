@@ -117,6 +117,7 @@ private:
 
     bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
 
+    QRectF getSceneCoordinates(const QRect& segment, const QRectF& windowRect) const;
     bool isVisible(const QRect& segment, const QRectF& windowRect);
     bool isVisible(const deflect::PixelStreamSegment& segment,
                    const QRectF& windowRect);

@@ -38,8 +38,6 @@
 
 #include "GLWindow.h"
 
-#include "Renderable.h"
-
 #include <stdexcept>
 
 #include <QtOpenGL>
@@ -54,10 +52,8 @@
     #include <GL/glu.h>
 #endif
 
-GLWindow::GLWindow( const QRect& windowRect, QGLWidget* shareWidget )
-  : QGLWidget( 0, shareWidget )
-  , backgroundColor_( Qt::black )
-  , coordinates_( windowRect )
+GLWindow::GLWindow(const QRect& windowRect, QGLWidget* shareWidget, QWidget* parent_ )
+  : QGLWidget( parent_, shareWidget )
 {
     setGeometry( windowRect );
     setCursor( Qt::BlankCursor );
@@ -66,75 +62,6 @@ GLWindow::GLWindow( const QRect& windowRect, QGLWidget* shareWidget )
         throw std::runtime_error( "failed to share OpenGL context" );
 
     setAutoBufferSwap( false );
-}
-
-GLWindow::~GLWindow()
-{
-}
-
-void GLWindow::addRenderable( RenderablePtr renderable )
-{
-    renderables_.append( renderable );
-}
-
-void GLWindow::setBackgroundColor( const QColor& color )
-{
-    backgroundColor_ = color;
-}
-
-void GLWindow::initializeGL()
-{
-    // enable depth testing; disable lighting
-    glEnable( GL_DEPTH_TEST );
-    glDisable( GL_LIGHTING );
-}
-
-void GLWindow::paintGL()
-{
-    clear( backgroundColor_ );
-    setOrthographicView();
-
-    foreach( RenderablePtr renderable, renderables_ )
-    {
-        if ( renderable->isVisible( ))
-            renderable->render();
-    }
-}
-
-void GLWindow::resizeGL( int w, int h )
-{
-    glViewport( 0, 0, w, h );
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-
-    update();
-}
-
-void GLWindow::clear(const QColor& clearColor)
-{
-    glClearColor( clearColor.redF(), clearColor.greenF(),
-                  clearColor.blueF(), clearColor.alpha( ));
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-}
-
-void GLWindow::setOrthographicView()
-{
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-
-    gluOrtho2D( coordinates_.left(), coordinates_.right(),
-                coordinates_.bottom(), coordinates_.top( ));
-    glPushMatrix();
-
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-}
-
-bool GLWindow::isRegionVisible( const QRectF& region ) const
-{
-    return coordinates_.intersects( region );
 }
 
 QRectF GLWindow::getProjectedPixelRect( const bool clampToViewportBorders )

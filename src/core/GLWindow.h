@@ -40,9 +40,6 @@
 #define GL_WINDOW_H
 
 #include <QGLWidget>
-#include <QList>
-
-#include "types.h"
 
 /**
  * An OpenGL window used by Wall applications to render contents.
@@ -57,24 +54,7 @@ public:
      *                    A new GLContext is allocated if not provided.
      * @throw std::runtime_error if the initialization failed.
      */
-    GLWindow( const QRect& windowRect, QGLWidget* shareWidget = 0 );
-
-    /** Destructor. */
-    ~GLWindow();
-
-    /** Add an object to be rendered. */
-    void addRenderable( RenderablePtr renderable );
-
-    /** Set the background color */
-    void setBackgroundColor( const QColor& color );
-
-    /**
-     * Is the given region visible in this window.
-     * @param region The region in normalized global screen space, i.e. top-left
-     *        of tiled display is (0,0) and bottom-right is (1,1)
-     * @return true if (partially) visible, false otherwise
-     */
-    bool isRegionVisible( const QRectF& region ) const;
+    GLWindow( const QRect& windowRect, QGLWidget* shareWidget = 0, QWidget* parent = 0 );
 
     /**
      * Get the region spanned by a unit rectangle {(0;0),(1;1)} in the current
@@ -86,22 +66,6 @@ public:
      * @deprecated
      */
     static QRectF getProjectedPixelRect( const bool clampToViewportBorders );
-
-protected:
-    /** @name Overloaded methods from QGLWidget */
-    //@{
-    void initializeGL() override;
-    void paintGL() override;
-    void resizeGL( int w, int h ) override;
-    //@}
-
-private:
-    QColor backgroundColor_;
-    QRectF coordinates_;
-    QList<RenderablePtr> renderables_;
-
-    void clear( const QColor& clearColor );
-    void setOrthographicView();
 };
 
 #endif

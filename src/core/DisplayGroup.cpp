@@ -150,11 +150,6 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
     }
 }
 
-const QRectF& DisplayGroup::getCoordinates() const
-{
-    return coordinates_;
-}
-
 void DisplayGroup::clear()
 {
     while( !contentWindows_.empty( ))

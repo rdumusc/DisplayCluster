@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,30 +37,85 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FpsRenderer.h"
+#include "WallGraphicsScene.h"
 
-#include "RenderContext.h"
+#include "Renderable.h"
 
-#include <QtOpenGL/qgl.h>
+#include <QtOpenGL>
 
-#define TEXT_POS_X 10
-#define TEXT_POS_Y 32
-#define TEXT_SIZE_PX 32
+#ifdef __APPLE__
+    #include <OpenGL/glu.h>
 
-FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
-    : renderContext_(renderContext)
+    // glu functions deprecated in 10.9
+#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else
+    #include <GL/glu.h>
+#endif
+
+WallGraphicsScene::WallGraphicsScene( const QRectF &size, QObject* parent_ )
+    : QGraphicsScene( size, parent_ )
+    , backgroundColor_( Qt::black )
+    , painter_( 0 )
 {
 }
 
-void FpsRenderer::render()
+void WallGraphicsScene::addRenderable( RenderablePtr renderable )
 {
-    fpsCounter_.tick();
-
-    QFont textFont;
-    textFont.setPixelSize(TEXT_SIZE_PX);
-
-    renderContext_->renderTextInWindow( TEXT_POS_X, TEXT_POS_Y,
-                                        fpsCounter_.toString(), textFont,
-                                        QColor( Qt::blue ));
+    renderables_.append( renderable );
 }
 
+void WallGraphicsScene::setBackgroundColor( const QColor& color )
+{
+    backgroundColor_ = color;
+    setBackgroundBrush( QBrush( color ));
+}
+
+void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
+{
+    const QPaintEngine::Type type = painter->paintEngine()->type();
+    if( type != QPaintEngine::OpenGL && type != QPaintEngine::OpenGL2 )
+    {
+        qWarning("OpenGLScene: drawBackground needs a QGLWidget to be set as "
+                 "viewport on the graphics view");
+        return;
+    }
+
+    painter->beginNativePainting();
+
+    painter_ = painter;
+    painterRect_ = rect;
+
+    glEnable( GL_DEPTH_TEST );
+    glDisable( GL_LIGHTING );
+
+    clear( backgroundColor_ );
+    setOrthographicView( rect );
+
+    foreach( RenderablePtr renderable, renderables_ )
+    {
+        if ( renderable->isVisible( ))
+            renderable->render();
+    }
+
+    painter->endNativePainting();
+}
+
+void WallGraphicsScene::clear(const QColor& clearColor)
+{
+    glClearColor( clearColor.redF(), clearColor.greenF(),
+                  clearColor.blueF(), clearColor.alpha( ));
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+}
+
+void WallGraphicsScene::setOrthographicView( const QRectF& rect )
+{
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+
+    gluOrtho2D( rect.left(), rect.right(), rect.bottom(), rect.top( ));
+    glPushMatrix();
+
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+}
