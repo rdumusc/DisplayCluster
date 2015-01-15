@@ -209,8 +209,8 @@ private:
         ar & boost::serialization::make_nvp( "centerY", zoomCenter.ry( ));
         ar & boost::serialization::make_nvp( "zoom", zoom );
         QRectF zoomRect;
-        zoomRect.moveCenter( zoomCenter );
         zoomRect.setSize( QSizeF( 1.0/zoom, 1.0/zoom ));
+        zoomRect.moveCenter( zoomCenter );
         setZoomRect( zoomRect );
         if( version < 1 )
         {
