@@ -107,8 +107,14 @@ public:
     void deserialize(T& object)
     {
         std::istringstream iss(std::istringstream::binary);
+#ifdef __APPLE__
+        // pubsetbuf() does nothing on OSX (and probably on Windows too).
+        // so an intermediate copy of the data is required.
+        std::string dataStr(buffer_.data(), buffer_.size());
+        iss.str(dataStr);
+#else
         iss.rdbuf()->pubsetbuf(buffer_.data(), size_);
-
+#endif
         boost::archive::binary_iarchive ia(iss);
         ia >> object;
     }

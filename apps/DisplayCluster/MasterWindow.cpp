@@ -263,7 +263,7 @@ void MasterWindow::setupMasterWindowUI()
 
     // add the list widget
     DisplayGroupListWidget* dglwp = new DisplayGroupListWidget(this);
-    dglwp->setModel(displayGroup_);
+    dglwp->setDataModel(displayGroup_);
     contentsLayout->addWidget(dglwp);
 }
 

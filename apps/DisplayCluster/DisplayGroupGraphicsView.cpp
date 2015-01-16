@@ -49,8 +49,8 @@
 #include "gestures/PinchGestureRecognizer.h"
 
 #include <boost/foreach.hpp>
-#include <QDeclarativeComponent>
-#include <QDeclarativeContext>
+#include <QtDeclarative/QDeclarativeComponent>
+#include <QtDeclarative/QDeclarativeContext>
 
 #define VIEW_MARGIN 0.05
 

@@ -89,7 +89,7 @@ void DisplayGroupGraphicsScene::addBackgroundRectangles()
 {
     addRect( sceneRect( )); // Background rectangle for the wall area
 
-    const QPen pen( QColor( Qt::black ));       // screen border
+    const QPen pen( (QColor( Qt::black )));       // screen border
     const QBrush brush( QColor( 0, 0, 0, 32 )); // screen fill color
 
     foreach( const QRectF& screen, screens_ )

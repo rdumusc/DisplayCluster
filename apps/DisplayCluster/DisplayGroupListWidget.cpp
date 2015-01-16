@@ -52,7 +52,7 @@ DisplayGroupListWidget::DisplayGroupListWidget( QWidget* parent_ )
              this, SLOT( moveListWidgetItemToFront( QListWidgetItem* )));
 }
 
-void DisplayGroupListWidget::setModel( DisplayGroupPtr displayGroup )
+void DisplayGroupListWidget::setDataModel( DisplayGroupPtr displayGroup )
 {
     if( displayGroup_ )
         displayGroup_->disconnect( this );
