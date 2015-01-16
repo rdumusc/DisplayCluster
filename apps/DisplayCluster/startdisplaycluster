@@ -60,6 +60,7 @@ if MPIRUN_CMD is None:
 # mpiexec has a different commandline syntax for MVAPICH, MPICH2, and OpenMPI
 IS_MVAPICH = distutils.spawn.find_executable('mpiname')
 IS_MPICH2 = distutils.spawn.find_executable('mpich2version')
+IS_MPICH3 = distutils.spawn.find_executable('mpichversion')
 if IS_MVAPICH:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     MPI_PER_NODE_HOST = None
@@ -70,6 +71,11 @@ elif IS_MPICH2:
     MPI_PER_NODE_HOST = '-host'
     EXPORT_DISPLAY = '-env DISPLAY '
     MPI_ARGS = '-genvlist LD_LIBRARY_PATH'
+elif IS_MPICH3:
+    MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
+    MPI_PER_NODE_HOST = None
+    EXPORT_DISPLAY = '-env DISPLAY '
+    MPI_ARGS = '-genvlist LD_LIBRARY_PATH -hosts'
 else:
     MPI_SPECIAL_FLAGS = ''
     MPI_PER_NODE_HOST = None
