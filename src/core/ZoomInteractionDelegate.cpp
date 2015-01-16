@@ -63,7 +63,8 @@ void ZoomInteractionDelegate::pinch( PinchGesture* gesture )
     if( zoomFactor == 0.0 )
         return;
 
-    scaleZoomRect( getNormalizedPoint( gesture->position( )), 1.0/zoomFactor );
+    const QPointF pos = gesture->position() - contentWindow_.getCoordinates().topLeft();
+    scaleZoomRect( getNormalizedPoint( pos ), 1.0/zoomFactor );
 }
 
 void ZoomInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
