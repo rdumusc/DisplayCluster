@@ -61,7 +61,6 @@
 
 RenderContext::RenderContext( const WallConfiguration& configuration )
     : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
-    , activeGLWindow_( 0 )
     , activeGLWindowIndex_( -1 )
 {
     setupOpenGLWindows( configuration );
@@ -167,7 +166,6 @@ void RenderContext::updateGLWindows()
     activeGLWindowIndex_ = 0;
     BOOST_FOREACH( GLWindow* glWindow, glWindows_ )
     {
-        activeGLWindow_ = glWindow;
         glWindow->update();
         ++activeGLWindowIndex_;
     }

@@ -68,7 +68,6 @@ void WallGraphicsScene::addRenderable( RenderablePtr renderable )
 void WallGraphicsScene::setBackgroundColor( const QColor& color )
 {
     backgroundColor_ = color;
-    setBackgroundBrush( QBrush( color ));
 }
 
 void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )

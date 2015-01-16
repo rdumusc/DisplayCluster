@@ -46,7 +46,7 @@
 
 namespace
 {
-const qreal MAX_SIZE = 2.0;
+const qreal MAX_SIZE = 5.0;
 const qreal MIN_SIZE = 0.05;
 const qreal MIN_VISIBLE_AREA_PX = 50.0;
 const QSizeF MIN_AREA( MIN_VISIBLE_AREA_PX, MIN_VISIBLE_AREA_PX );

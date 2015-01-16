@@ -97,7 +97,6 @@ private:
     QRect visibleWallArea_;
 
     std::vector< GLWindow* > glWindows_;
-    GLWindow* activeGLWindow_;
     int activeGLWindowIndex_;
 };
 
