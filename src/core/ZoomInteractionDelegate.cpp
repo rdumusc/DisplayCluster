@@ -94,7 +94,7 @@ void ZoomInteractionDelegate::moveZoomRect( const QPointF& sceneDelta ) const
 {
     const QPointF normalizedDelta = getNormalizedPoint( sceneDelta );
     QRectF zoomRect = contentWindow_.getZoomRect();
-    zoomRect.translate( normalizedDelta );
+    zoomRect.translate( -normalizedDelta );
 
     constrainZoomRectPosition( zoomRect );
     contentWindow_.setZoomRect( zoomRect );
