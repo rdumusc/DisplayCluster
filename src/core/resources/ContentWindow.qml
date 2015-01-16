@@ -45,7 +45,7 @@ Rectangle {
         Image {
             id: close
             source: "qrc:///img/masterui-close.svg"
-            width: 0.23 * parent.width
+            width: 0.4 * Math.min(parent.width, parent.height)
             height: width
             anchors.top: parent.top
             anchors.right: parent.right
@@ -62,7 +62,7 @@ Rectangle {
         Image {
             id: resize
             source: "qrc:///img/masterui-resize.svg"
-            width: 0.23 * parent.width
+            width: 0.4 * Math.min(parent.width, parent.height)
             height: width
             anchors.bottom: parent.bottom
             anchors.right: parent.right
@@ -91,7 +91,7 @@ Rectangle {
         Image {
             id: maximize
             source: "qrc:///img/masterui-maximize.svg"
-            width: 0.23 * parent.width
+            width: 0.4 * Math.min(parent.width, parent.height)
             height: width
             anchors.bottom: parent.bottom
             anchors.left: parent.left
