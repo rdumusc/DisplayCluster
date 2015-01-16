@@ -55,7 +55,7 @@ public:
     DisplayGroupListWidget( QWidget* parent = 0 );
 
     /** Set the DisplayGroup model that this view should present. */
-    void setModel( DisplayGroupPtr displayGroup );
+    void setDataModel( DisplayGroupPtr displayGroup );
 
 private slots:
     void addContentWindow( ContentWindowPtr contentWindow );
