@@ -40,8 +40,10 @@
 #define FACTORY_HPP
 
 #include <map>
-#include <boost/shared_ptr.hpp>
-#include <boost/signals2/signal.hpp>
+#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
+#  include <boost/shared_ptr.hpp>
+#  include <boost/signals2/signal.hpp>
+#endif
 #include <QString>
 #include <QMutex>
 
