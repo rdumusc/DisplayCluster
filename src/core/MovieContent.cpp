@@ -55,6 +55,11 @@ MovieContent::MovieContent( const QString& uri )
 {
 }
 
+MovieContent::MovieContent()
+    : controlState_( STATE_LOOP )
+{
+}
+
 CONTENT_TYPE MovieContent::getType()
 {
     return CONTENT_TYPE_MOVIE;

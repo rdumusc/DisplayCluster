@@ -67,6 +67,7 @@ FFMPEGMovie::FFMPEGMovie(const QString& uri)
     , skippedFrames_(false)
     // Public status
     , newFrameAvailable_(false)
+    , isAtEOF_(false)
 {
     FFMPEGMovie::initGlobalState();
 
@@ -101,7 +102,8 @@ bool FFMPEGMovie::open(const QString& uri)
 
     videoFrameConverter_ = new FFMPEGVideoFrameConverter(*videoCodecContext_, PIX_FMT_RGBA);
 
-    generateSeekingParameters();
+    if( !generateSeekingParameters( ))
+        return false;
 
     return true;
 }
@@ -227,6 +229,11 @@ boost::posix_time::time_duration FFMPEGMovie::getTimestamp() const
     return timePosition_;
 }
 
+bool FFMPEGMovie::isAtEOF() const
+{
+    return isAtEOF_;
+}
+
 bool FFMPEGMovie::jumpTo(const double timePosInSeconds)
 {
     newFrameAvailable_ = false;
@@ -249,6 +256,9 @@ bool FFMPEGMovie::jumpTo(const double timePosInSeconds)
 
 void FFMPEGMovie::update(const boost::posix_time::time_duration timestamp, const bool skipDecoding)
 {
+    if( isAtEOF( ))
+        return;
+
     newFrameAvailable_ = false;
 
     // If decoding is slower than frame rate, slow down decoding speed
@@ -278,26 +288,27 @@ void FFMPEGMovie::update(const boost::posix_time::time_duration timestamp, const
     bool readNewVideoFrame = false;
 
     // Catch up on missed frames
-    if (skippedFrames_)
+    if( skippedFrames_ )
     {
-        readNewVideoFrame = seekToNearestFullframe(index);
+        readNewVideoFrame = seekToNearestFullframe( index );
         skippedFrames_ = false;
     }
 
     // Read frames until we reach the correct timestamp
-    while(avFrame_->pkt_dts < getTimestampForFrameIndex(index))
+    while( avFrame_->pkt_dts < getTimestampForFrameIndex( index ))
     {
-        readNewVideoFrame = true;
-
         // Read one frame and return to start if EOF reached
-        if(!readVideoFrame() && loop_)
+        if( readVideoFrame( ))
+            readNewVideoFrame = true;
+        else
         {
-            rewind();
+            if( loop_ )
+                rewind();
             break;
         }
     }
 
-    if (readNewVideoFrame)
+    if( readNewVideoFrame )
         convertVideoFrame();
 }
 
@@ -379,7 +390,8 @@ bool FFMPEGMovie::readVideoFrame()
     }
 
     // False if file read error or EOF reached
-    return avReadStatus >= 0;
+    isAtEOF_ = (avReadStatus < 0);
+    return !isAtEOF_;
 }
 
 bool FFMPEGMovie::isVideoStream(const AVPacket& packet) const
@@ -415,7 +427,7 @@ bool FFMPEGMovie::decodeVideoFrame(AVPacket& packet)
     // make sure we got a full video frame and convert the frame from its native format to RGB
     if(!frameDecodingComplete_)
     {
-        put_flog(LOG_INFO, "Frame could not be decoded entierly (may be caused by seeking).");
+        put_flog(LOG_DEBUG, "Frame could not be decoded entierly (may be caused by seeking).");
         return false;
     }
 
@@ -431,14 +443,19 @@ bool FFMPEGMovie::convertVideoFrame()
     return true;
 }
 
-void FFMPEGMovie::generateSeekingParameters()
+bool FFMPEGMovie::generateSeekingParameters()
 {
-    // generate seeking parameters
     den2_ = videoStream_->time_base.den * videoStream_->r_frame_rate.den;
     num2_ = videoStream_->time_base.num * videoStream_->r_frame_rate.num;
 
-    numFrames_ = (videoStream_->duration > 0) ?
-                 av_rescale(videoStream_->duration, num2_, den2_) : 0;
+    if( !( den2_ > 0 && num2_ > 0 ))
+    {
+        put_flog( LOG_WARN, "cannot determine seeking paramters, file not supported." );
+        return false;
+    }
+
+    numFrames_ = ( videoStream_->duration > 0 ) ?
+                 av_rescale( videoStream_->duration, num2_, den2_ ) : 0;
 
     frameDurationInSeconds_ = (double)videoStream_->r_frame_rate.den /
                               (double)videoStream_->r_frame_rate.num;
@@ -450,4 +467,6 @@ void FFMPEGMovie::generateSeekingParameters()
              (float)videoStream_->time_base.num/(float)videoStream_->time_base.den);
     put_flog(LOG_DEBUG, "                    frameDurationInSeconds_ = %f",
              (float)frameDurationInSeconds_);
+
+    return true;
 }

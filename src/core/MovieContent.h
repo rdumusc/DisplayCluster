@@ -78,7 +78,7 @@ private:
     friend class boost::serialization::access;
 
     // Default constructor required for boost::serialization
-    MovieContent() {}
+    MovieContent();
 
     template< class Archive >
     void serialize( Archive & ar, const unsigned int version )

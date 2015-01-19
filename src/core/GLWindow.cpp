@@ -52,8 +52,8 @@
     #include <GL/glu.h>
 #endif
 
-GLWindow::GLWindow(const QRect& windowRect, QGLWidget* shareWidget, QWidget* parent_ )
-  : QGLWidget( parent_, shareWidget )
+GLWindow::GLWindow( const QRect& windowRect, QGLWidget* shareWidget, QWidget* parent_ )
+  : QGLWidget( QGLFormat( QGL::SampleBuffers ), parent_, shareWidget )
 {
     setGeometry( windowRect );
     setCursor( Qt::BlankCursor );

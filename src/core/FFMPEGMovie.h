@@ -122,6 +122,9 @@ public:
     /** Get the current timestamp. */
     boost::posix_time::time_duration getTimestamp() const;
 
+    /** True when the EOF was reached and no more frames can be decoded. */
+    bool isAtEOF() const;
+
     /**
      * Jump to a random position in the movie.
      * @param timePosInSeconds The desired position in seconds
@@ -154,6 +157,7 @@ private:
 
     // Public status
     bool newFrameAvailable_;
+    bool isAtEOF_;
 
     /** Init the global FFMPEG context. */
     static void initGlobalState();
@@ -176,7 +180,7 @@ private:
     bool convertVideoFrame();
     void rewind();
     bool isVideoStream(const AVPacket& packet) const;
-    void generateSeekingParameters();
+    bool generateSeekingParameters();
 };
 
 #endif // FFMPEGMOVIE_H

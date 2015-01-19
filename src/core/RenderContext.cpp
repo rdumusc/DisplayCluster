@@ -166,7 +166,7 @@ void RenderContext::updateGLWindows()
     activeGLWindowIndex_ = 0;
     BOOST_FOREACH( GLWindow* glWindow, glWindows_ )
     {
-        glWindow->update();
+        glWindow->repaint();
         ++activeGLWindowIndex_;
     }
 }
