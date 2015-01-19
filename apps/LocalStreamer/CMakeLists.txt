@@ -3,7 +3,6 @@
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 include_directories(${CMAKE_SOURCE_DIR}/src/core)
-include_directories(${CMAKE_SOURCE_DIR}/src/dcstream)
 include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
 
 set(LOCALSTREAMER_MOC_HEADERS

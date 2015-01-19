@@ -1,17 +1,21 @@
 # DisplayCluster
 
-DisplayCluster is a software environment for interactively driving large-scale tiled displays. 
+DisplayCluster is a software environment for interactively driving large-scale
+tiled displays.
 
 ## Documentation
 
-The DisplayCluster manual is included in the distribution in the doc/ directory, and covers installation and usage.
+The DisplayCluster manual is included in the distribution in the doc/ directory,
+and covers installation and usage.
 
 ## Features
 
 DisplayCluster provides the following functionality:
 * Interactively view media such as high-resolution imagery and video
-* Stream content from remote sources such as laptops / desktops or high-performance remote visualization machines
-* [Documentation](http://bluebrain.github.io/DisplayCluster-0.2/index.html)
+* Receive content from remote sources such as laptops / desktops or
+  high-performance remote visualization machines using the
+  [Deflect library](https://github.com/BlueBrain/Deflect.git)
+* [Documentation](http://bluebrain.github.io/DisplayCluster-0.4/index.html)
 
 ## Building from Source
 
@@ -34,6 +38,7 @@ Or using Buildyard:
 
 ## Original Project
 
-This version of DisplayCluster is a fork of the original project by the Texas Advanced Computing Center, Austin:
+This version of DisplayCluster is a fork of the original project by the Texas
+Advanced Computing Center, Austin:
 
 https://github.com/TACC/DisplayCluster

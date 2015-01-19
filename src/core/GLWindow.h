@@ -52,6 +52,7 @@ public:
      * @param windowRect The position and dimensions for the window in pixels.
      * @param shareWidget An optional widget to share an existing GLContext.
      *                    A new GLContext is allocated if not provided.
+     * @param parent      An optional parent for ownership
      * @throw std::runtime_error if the initialization failed.
      */
     GLWindow( const QRect& windowRect, QGLWidget* shareWidget = 0, QWidget* parent = 0 );

@@ -11,15 +11,14 @@ auxilary documentation.
 * src: Contains the main libraries of the project:
   * core: The core library.
   * dcWebservice: Accepts external commands through the FastCGI protocol.
-  * dcstream: Enables streaming pixel content from external applications.
 * apps: Applications delivered with the project.
-  * DesktopStreamer: A small utility based on dcstream that lets you stream your desktop.
   * DisplayCluster: The main application.
-  * LocalStreamer: Used by DisplayCluster to generate content from separate processes (sandboxing).
-  * SimpleStreamer: A simple example application which uses the dcstream library.
+  * LocalStreamer: Used by DisplayCluster to generate content from separate
+    processes (sandboxing).
 * tests: Unit tests
 * doc: Doxygen and other documentation.
-* examples: Example xml configuration files, installed under share/DisplayCluster.
+* examples: Example xml configuration files, installed under
+  share/DisplayCluster.
 * webservice: Configuration files and static content for the webservice.
 
 ## CMakeLists
