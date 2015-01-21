@@ -53,7 +53,8 @@
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 ContentWindow::ContentWindow()
-    : zoomRect_( 0.0, 0.0, 1.0, 1.0 )
+    : uuid_( QUuid::createUuid( ))
+    , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
     , windowState_( NONE )
     , controlsOpacity_( 0.0 )
     , eventReceiversCount_( 0 )

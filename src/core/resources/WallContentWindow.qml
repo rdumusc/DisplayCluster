@@ -3,10 +3,7 @@ import DisplayCluster 1.0
 
 Rectangle {
     id: rootObj
-
     color: "transparent"
-//    border.color: "black"
-//    border.width: 10
 
     x: contentwindow.x
     y: contentwindow.y
@@ -22,21 +19,6 @@ Rectangle {
     }
 
     states: [
-//        State {
-//            name: "selected"
-//            when: contentwindow.state == ContentWindow.SELECTED
-//            PropertyChanges { target: rootObj; border.color: "red" }
-//        },
-//        State {
-//            name: "moving"
-//            when: contentwindow.state == ContentWindow.MOVING
-//            PropertyChanges { target: rootObj; border.color: "green" }
-//        },
-//        State {
-//            name: "resizing"
-//            when: contentwindow.state == ContentWindow.RESIZING
-//            PropertyChanges { target: rootObj; border.color: "blue" }
-//        },
         State {
             name: "hidden"
             when: contentwindow.state == ContentWindow.HIDDEN

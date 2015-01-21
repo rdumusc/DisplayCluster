@@ -82,6 +82,7 @@ void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
     painter_ = painter;
     painterRect_ = rect;
 
+    painter->beginNativePainting();
     clear( backgroundColor_ );
     setOrthographicView( rect );
 
@@ -96,6 +97,7 @@ void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
     }
 
     glPopAttrib();
+    painter->endNativePainting();
 }
 
 void WallGraphicsScene::clear(const QColor& clearColor)

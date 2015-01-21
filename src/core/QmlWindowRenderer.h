@@ -57,7 +57,7 @@ class QmlWindowRenderer : public boost::noncopyable
 {
 public:
     QmlWindowRenderer( QDeclarativeEngine& engine,
-                       QGraphicsObject* displayGroupItem,
+                       QGraphicsObject& displayGroupItem,
                        ContentWindowPtr contentWindow );
 
     ~QmlWindowRenderer();

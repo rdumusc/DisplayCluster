@@ -36,7 +36,7 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentWindowGraphicsItem.h"
+#include "ContentWindowTouchArea.h"
 
 #include "ContentWindow.h"
 #include "Content.h"
@@ -62,7 +62,7 @@
 #define BUTTON_REL_WIDTH    0.23
 #define BUTTON_REL_HEIGHT   0.45
 
-ContentWindowGraphicsItem::ContentWindowGraphicsItem()
+ContentWindowTouchArea::ContentWindowTouchArea()
     : controller_( 0 )
 {
     setFlag( QGraphicsItem::ItemIsMovable, true );
@@ -78,34 +78,34 @@ ContentWindowGraphicsItem::ContentWindowGraphicsItem()
     grabGesture( Qt::TapGesture );
 }
 
-ContentWindowGraphicsItem::~ContentWindowGraphicsItem()
+ContentWindowTouchArea::~ContentWindowTouchArea()
 {
     delete controller_;
 }
 
-void ContentWindowGraphicsItem::init( ContentWindowPtr contentWindow,
+void ContentWindowTouchArea::init( ContentWindowPtr contentWindow,
                                       const DisplayGroup& displayGroup )
 {
     contentWindow_ = contentWindow;
     controller_ = new ContentWindowController( *contentWindow, displayGroup );
 }
 
-ContentWindowPtr ContentWindowGraphicsItem::getContentWindow() const
+ContentWindowPtr ContentWindowTouchArea::getContentWindow() const
 {
     return contentWindow_;
 }
 
-ContentWindowController* ContentWindowGraphicsItem::getWindowController()
+ContentWindowController* ContentWindowTouchArea::getWindowController()
 {
     return controller_;
 }
 
-void ContentWindowGraphicsItem::close()
+void ContentWindowTouchArea::close()
 {
     emit close( contentWindow_ );
 }
 
-bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
+bool ContentWindowTouchArea::sceneEvent( QEvent* event_ )
 {
     if( contentWindow_->isHidden( ))
         return false;
@@ -125,7 +125,7 @@ bool ContentWindowGraphicsItem::sceneEvent( QEvent* event_ )
     }
 }
 
-void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
+void ContentWindowTouchArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
 {
     if( contentWindow_->isSelected( ))
     {
@@ -144,7 +144,7 @@ void ContentWindowGraphicsItem::mouseMoveEvent( QGraphicsSceneMouseEvent* event_
     }
 }
 
-void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
+void ContentWindowTouchArea::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
 {
     emit moveToFront( contentWindow_ );
 
@@ -157,12 +157,12 @@ void ContentWindowGraphicsItem::mousePressEvent( QGraphicsSceneMouseEvent* event
     contentWindow_->setState( ContentWindow::MOVING );
 }
 
-void ContentWindowGraphicsItem::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* )
+void ContentWindowTouchArea::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* )
 {
     contentWindow_->toggleSelectedState();
 }
 
-void ContentWindowGraphicsItem::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
+void ContentWindowTouchArea::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
 {
     if( contentWindow_->isSelected( ))
     {
@@ -173,7 +173,7 @@ void ContentWindowGraphicsItem::mouseReleaseEvent( QGraphicsSceneMouseEvent* eve
     contentWindow_->setState( ContentWindow::NONE );
 }
 
-void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
+void ContentWindowTouchArea::wheelEvent( QGraphicsSceneWheelEvent* event_ )
 {
     if ( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
@@ -182,19 +182,19 @@ void ContentWindowGraphicsItem::wheelEvent( QGraphicsSceneWheelEvent* event_ )
                             (double)event_->delta() / STD_WHEEL_DELTA );
 }
 
-void ContentWindowGraphicsItem::keyPressEvent( QKeyEvent* event_ )
+void ContentWindowTouchArea::keyPressEvent( QKeyEvent* event_ )
 {
     if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().keyPressEvent( event_ );
 }
 
-void ContentWindowGraphicsItem::keyReleaseEvent( QKeyEvent* event_ )
+void ContentWindowTouchArea::keyReleaseEvent( QKeyEvent* event_ )
 {
     if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().keyReleaseEvent( event_ );
 }
 
-void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* event_ )
+void ContentWindowTouchArea::gestureEvent( QGestureEvent* event_ )
 {
     QGesture* gesture = 0;
 
@@ -228,13 +228,13 @@ void ContentWindowGraphicsItem::gestureEvent( QGestureEvent* event_ )
     }
 }
 
-void ContentWindowGraphicsItem::doubleTap( DoubleTapGesture* gesture )
+void ContentWindowTouchArea::doubleTap( DoubleTapGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
         controller_->toggleFullscreen();
 }
 
-void ContentWindowGraphicsItem::pan( PanGesture* gesture )
+void ContentWindowTouchArea::pan( PanGesture* gesture )
 {
     if( gesture->state() == Qt::GestureStarted )
         contentWindow_->setState( ContentWindow::MOVING );
@@ -247,7 +247,7 @@ void ContentWindowGraphicsItem::pan( PanGesture* gesture )
     controller_->moveTo( windowPos + gesture->delta( ));
 }
 
-void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
+void ContentWindowTouchArea::pinch( PinchGesture* gesture )
 {
     const double factor =
              ZoomInteractionDelegate::adaptZoomFactor( gesture->scaleFactor( ));
@@ -266,7 +266,7 @@ void ContentWindowGraphicsItem::pinch( PinchGesture* gesture )
     controller_->scale( gesture->position(), factor );
 }
 
-void ContentWindowGraphicsItem::tapAndHold( QTapAndHoldGesture* gesture )
+void ContentWindowTouchArea::tapAndHold( QTapAndHoldGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
         contentWindow_->toggleSelectedState();

@@ -210,6 +210,7 @@ list(APPEND DCCORE_SOURCES
   PixelStreamSegmentRenderer.cpp
   PixelStreamWindowManager.cpp
   QmlWindowRenderer.cpp
+  QmlTypeRegistration.cpp
   RenderContext.cpp
   RenderController.cpp
   SessionCommandHandler.cpp

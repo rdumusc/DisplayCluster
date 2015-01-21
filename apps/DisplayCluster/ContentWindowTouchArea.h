@@ -36,8 +36,8 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_GRAPHICS_ITEM_H
-#define CONTENT_WINDOW_GRAPHICS_ITEM_H
+#ifndef CONTENT_WINDOW_TOUCH_AREA_H
+#define CONTENT_WINDOW_TOUCH_AREA_H
 
 #include "types.h"
 
@@ -54,18 +54,18 @@ class QSwipeGesture;
 class QTapAndHoldGesture;
 
 /**
- * Represent a ContentWindow in a QML View.
+ * Handle ContentWindow interactions in a QML View.
  */
-class ContentWindowGraphicsItem : public QDeclarativeItem
+class ContentWindowTouchArea : public QDeclarativeItem
 {
     Q_OBJECT
 
 public:
     /** Constructor. */
-    ContentWindowGraphicsItem();
+    ContentWindowTouchArea();
 
     /** Destructor. */
-    virtual ~ContentWindowGraphicsItem();
+    virtual ~ContentWindowTouchArea();
 
     /** Init must be separate from the constructor for instanciation in QML. */
     void init( ContentWindowPtr contentWindow,

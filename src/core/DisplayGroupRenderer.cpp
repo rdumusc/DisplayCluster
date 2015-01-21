@@ -102,7 +102,7 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
             windowItems_[id]->update( window );
         else
             windowItems_[id].reset( new QmlWindowRenderer( engine,
-                                                           displayGroupItem_,
+                                                           *displayGroupItem_,
                                                            window ));
     }
 
@@ -175,7 +175,7 @@ void DisplayGroupRenderer::createDisplayGroupQmlItem()
 {
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
 
-    QDeclarativeComponent component( &engine, QUrl( "qrc:/qml/DisplayGroup.qml" ));
+    QDeclarativeComponent component( &engine, QUrl( "qrc:/qml/core/DisplayGroup.qml" ));
     displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
     renderContext_->getScene().addItem( displayGroupItem_ );
 }

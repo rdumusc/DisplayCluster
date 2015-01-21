@@ -39,8 +39,6 @@
 
 #include "WallWindow.h"
 
-#include <QtOpenGL>
-
 WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& windowRect )
     : QGraphicsView( scene_ )
 {

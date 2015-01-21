@@ -37,40 +37,20 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "QmlWindowRenderer.h"
+#include <QtDeclarative>
 
 #include "ContentWindow.h"
 
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeComponent>
-#include <QtDeclarative/QDeclarativeContext>
-
-#include <QtGui/QGraphicsScene>
-
-QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
-                                      QGraphicsObject& displayGroupItem,
-                                      ContentWindowPtr contentWindow )
-    : contentWindow_( contentWindow )
-    , windowContext_( new QDeclarativeContext( engine.rootContext( )))
+/**
+ * Register types for use in Qml
+ */
+struct QmlTypeRegistration
 {
-    windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
+    QmlTypeRegistration()
+    {
+        qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports WindowState enum to QML");
+    }
+};
 
-    QDeclarativeComponent component( &engine, QUrl( "qrc:/qml/core/WallContentWindow.qml" ));
-    item_ = qobject_cast<QGraphicsObject*>( component.create( windowContext_.get( )));
-    item_->setParentItem( &displayGroupItem );
-}
-
-QmlWindowRenderer::~QmlWindowRenderer()
-{
-    QGraphicsScene* scene = item_->scene();
-    scene->removeItem( item_ );
-    delete item_;
-}
-
-void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
-{
-    // Could be optimize by checking for changes before updating the context
-    windowContext_->setContextProperty( "contentwindow", contentWindow.get( ));
-    contentWindow_ = contentWindow;
-}
-
+// Static instance to register types during library static initialisation phase
+static QmlTypeRegistration staticInstance;

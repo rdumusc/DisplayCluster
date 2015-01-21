@@ -17,13 +17,16 @@ Rectangle {
         width: parent.width * 0.95 / 2
         height: parent.height * 0.95
         anchors.left: parent.left
-        anchors.leftMargin: parent.radius
+        anchors.leftMargin: parent.width * 0.05
         anchors.verticalCenter: parent.verticalCenter
-        Text {
-            text: "max/min"
-            color: "#a0000000"
-            font.pixelSize: 32
+        Image {
+            source: "qrc:///img/maximize.svg"
+            height: parent.height * 0.8
+            width: height
             anchors.centerIn: parent
+            // Force redraw the SVG
+            sourceSize.width: width
+            sourceSize.height: height
         }
         TouchArea {
             anchors.fill: parent
@@ -34,13 +37,16 @@ Rectangle {
         width: parent.width * 0.95 / 2
         height: parent.height * 0.95
         anchors.right: parent.right
-        anchors.rightMargin: parent.radius
+        anchors.rightMargin: parent.width * 0.05
         anchors.verticalCenter: parent.verticalCenter
-        Text {
-            text: "close"
-            color: "#a0000000"
-            font.pixelSize: 32
+        Image {
+            source: "qrc:///img/close.svg"
+            height: parent.height * 0.8
+            width: height
             anchors.centerIn: parent
+            // Force redraw the SVG
+            sourceSize.width: width
+            sourceSize.height: height
         }
         TouchArea {
             anchors.fill: parent
