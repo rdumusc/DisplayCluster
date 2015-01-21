@@ -122,12 +122,13 @@ int WallConfiguration::getScreenCount() const
     return screenCountForCurrentProcess_;
 }
 
-const QPoint& WallConfiguration::getScreenPosition(int screenIndex) const
-{
-    return screenPosition_.at(screenIndex);
-}
-
 const QPoint& WallConfiguration::getGlobalScreenIndex(int screenIndex) const
 {
     return screenGlobalIndex_.at(screenIndex);
+}
+
+QRect WallConfiguration::getScreenRect(int screenIndex) const
+{
+    return QRect( screenPosition_.at(screenIndex),
+                  QSize(getScreenWidth(), getScreenHeight( )));
 }

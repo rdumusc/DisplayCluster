@@ -48,6 +48,7 @@ WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& windowRect )
     setCacheMode( QGraphicsView::CacheNone );
     setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
     setAttribute( Qt::WA_TranslucentBackground );
+    setStyleSheet( "border: 0px" );
 
     setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
     setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );

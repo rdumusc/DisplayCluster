@@ -74,8 +74,7 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
 {
     for( int i = 0; i < configuration.getScreenCount(); ++i )
     {
-        const QPoint screenIndex = configuration.getGlobalScreenIndex( i );
-        const QRect windowRect = configuration.getScreenRect( screenIndex );
+        const QRect& windowRect = configuration.getScreenRect( i );
 
         visibleWallArea_ = visibleWallArea_.unite( windowRect );
 
