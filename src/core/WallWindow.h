@@ -50,9 +50,12 @@ public:
     /**
      * Constructor.
      * @param scene The scene to display.
-     * @param windowRect The position and dimensions for the window in pixels.
+     * @param sceneRect The portion of the scene to display in pixels.
+     * @param windowPos An optional position overrride for the window in pixels.
+     *        The sceneRect position is used if not provided.
      */
-    WallWindow( QGraphicsScene* scene, const QRect& windowRect );
+    WallWindow( QGraphicsScene* scene, const QRect& sceneRect,
+                const QPoint& windowPos = QPoint( ));
 };
 
 #endif // WALLWINDOW_H
