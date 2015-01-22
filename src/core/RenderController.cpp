@@ -55,7 +55,7 @@
 
 RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr factories)
     : renderContext_(renderContext)
-    , displayGroupRenderer_(new DisplayGroupRenderer(factories))
+    , displayGroupRenderer_(new DisplayGroupRenderer(renderContext, factories))
     , markerRenderer_(new MarkerRenderer)
     , fpsRenderer_(new FpsRenderer(renderContext))
     , syncQuit_(false)

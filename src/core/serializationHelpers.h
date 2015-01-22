@@ -42,6 +42,7 @@
 #include <QColor>
 #include <QString>
 #include <QRectF>
+#include <QUuid>
 
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/split_free.hpp>
@@ -81,7 +82,7 @@ template< class Archive >
 void save( Archive& ar, const QString& s, const unsigned int )
 {
     std::string stdStr = s.toStdString();
-    ar << boost::serialization::make_nvp( "value", stdStr );
+    ar << make_nvp( "value", stdStr );
 }
 
 template< class Archive >
@@ -95,7 +96,23 @@ void load( Archive& ar, QString& s, const unsigned int )
 template< class Archive >
 void serialize( Archive& ar, QString& s, const unsigned int version )
 {
-    boost::serialization::split_free( ar, s, version );
+    split_free( ar, s, version );
+}
+
+template< class Archive >
+void serialize( Archive& ar, QUuid& uuid, const unsigned int /*version*/ )
+{
+    ar & make_nvp("data1", uuid.data1);
+    ar & make_nvp("data2", uuid.data2);
+    ar & make_nvp("data3", uuid.data3);
+    ar & make_nvp("data40", uuid.data4[0]);
+    ar & make_nvp("data41", uuid.data4[1]);
+    ar & make_nvp("data42", uuid.data4[2]);
+    ar & make_nvp("data43", uuid.data4[3]);
+    ar & make_nvp("data44", uuid.data4[4]);
+    ar & make_nvp("data45", uuid.data4[5]);
+    ar & make_nvp("data46", uuid.data4[6]);
+    ar & make_nvp("data47", uuid.data4[7]);
 }
 
 template< class Archive >

@@ -37,8 +37,8 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentWindowGraphicsItem.h"
-#include "ContentWindow.h"
+#include "ContentWindowTouchArea.h"
+#include "TouchArea.h"
 
 /**
  * Register types for use in Qml
@@ -47,8 +47,8 @@ struct QmlTypeRegistration
 {
     QmlTypeRegistration()
     {
-        qmlRegisterType<ContentWindowGraphicsItem>("DisplayCluster", 1, 0, "ContentWindowItem");
-        qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports WindowState enum to QML");
+        qmlRegisterType<ContentWindowTouchArea>("DisplayCluster", 1, 0, "ContentWindowTouchArea");
+        qmlRegisterType<TouchArea>("DisplayCluster", 1, 0, "TouchArea");
     }
 };
 

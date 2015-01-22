@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import "qrc:/qml/core/."
 
 Rectangle {
     id: rootObj
@@ -26,10 +27,22 @@ Rectangle {
         target: contentwindow; property: "height"; value: height
     }
 
-    ContentWindowItem {
-        objectName: "contentWindowItem"
-        id: contentWindowItem
+    ContentWindowTouchArea {
+        objectName: "ContentWindowTouchArea"
+        id: contentWindowTouchArea
         anchors.fill: parent
+
+        onMoveToFront: controlsFadeAnimation.restart()
+
+        WindowControls {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 30
+            onClose: contentWindowTouchArea.close()
+            onToggleFullscreen: controller.toggleFullscreen()
+            opacity: 0.1
+            visible: contentwindow.controlsOpacity > 0 && contentwindow.label != "Dock"
+        }
 
         Text {
             id: contentLabel
@@ -44,7 +57,7 @@ Rectangle {
 
         Image {
             id: close
-            source: "qrc:///img/masterui-close.svg"
+            source: "qrc:///img/master/close.svg"
             width: 0.4 * Math.min(parent.width, parent.height)
             height: width
             anchors.top: parent.top
@@ -55,13 +68,13 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 preventStealing: true
-                onClicked: contentWindowItem.close()
+                onClicked: contentWindowTouchArea.close()
             }
         }
 
         Image {
             id: resize
-            source: "qrc:///img/masterui-resize.svg"
+            source: "qrc:///img/master/resize.svg"
             width: 0.4 * Math.min(parent.width, parent.height)
             height: width
             anchors.bottom: parent.bottom
@@ -90,7 +103,7 @@ Rectangle {
 
         Image {
             id: maximize
-            source: "qrc:///img/masterui-maximize.svg"
+            source: "qrc:///img/master/maximize.svg"
             width: 0.4 * Math.min(parent.width, parent.height)
             height: width
             anchors.bottom: parent.bottom
@@ -129,4 +142,13 @@ Rectangle {
         }
     ]
 
+    NumberAnimation {
+        id: controlsFadeAnimation
+        target: contentwindow
+        property: "controlsOpacity"
+        from: 1
+        to: 0
+        duration: 2000
+        easing.type: Easing.InExpo
+    }
 }

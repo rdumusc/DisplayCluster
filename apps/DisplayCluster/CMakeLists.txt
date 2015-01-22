@@ -9,11 +9,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 
 set(DISPLAYCLUSTER_MOC_HEADERS
   BackgroundWidget.h
-  ContentWindowGraphicsItem.h
+  ContentWindowTouchArea.h
   DisplayGroupGraphicsView.h
   DisplayGroupListWidget.h
   MasterApplication.h
   MasterWindow.h
+  TouchArea.h
   WallApplication.h
   WebbrowserWidget.h
 )
@@ -22,7 +23,7 @@ set(DISPLAYCLUSTER_SOURCES
   main.cpp
   BackgroundWidget.cpp
   CommandLineParameters.cpp
-  ContentWindowGraphicsItem.cpp
+  ContentWindowTouchArea.cpp
   ContentWindowListWidgetItem.cpp
   DisplayGroupGraphicsScene.cpp
   DisplayGroupGraphicsView.cpp
@@ -30,15 +31,19 @@ set(DISPLAYCLUSTER_SOURCES
   MasterApplication.cpp
   MasterWindow.cpp
   QmlTypeRegistration.cpp
+  TouchArea.cpp
   WallApplication.cpp
   WebbrowserWidget.cpp
 )
 
 set(DISPLAYCLUSTER_LINK_LIBRARIES dccore dcwebservice)
 
+set(DISPLAYCLUSTER_RESOURCES resources/displaycluster.qrc)
+
+qt4_add_resources(QRC_SOURCES ${DISPLAYCLUSTER_RESOURCES})
 qt4_wrap_cpp(DISPLAYCLUSTER_MOC_OUTFILES ${DISPLAYCLUSTER_MOC_HEADERS})
 
-add_executable(displaycluster ${DISPLAYCLUSTER_MOC_OUTFILES} ${DISPLAYCLUSTER_SOURCES})
+add_executable(displaycluster ${DISPLAYCLUSTER_MOC_OUTFILES} ${DISPLAYCLUSTER_SOURCES} ${QRC_SOURCES})
 target_link_libraries(displaycluster ${DISPLAYCLUSTER_LINK_LIBRARIES})
 
 install(TARGETS displaycluster RUNTIME DESTINATION bin COMPONENT core)

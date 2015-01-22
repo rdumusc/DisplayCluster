@@ -39,23 +39,22 @@
 #ifndef GL_WINDOW_H
 #define GL_WINDOW_H
 
-#include <QGLWidget>
+#include <QtOpenGL/QGLWidget>
 
 /**
- * An OpenGL window used by Wall applications to render contents.
+ * An OpenGL widget used by WallWindows to render contents with OpenGL.
  */
 class GLWindow : public QGLWidget
 {
 public:
     /**
      * Create a new window.
-     * @param windowRect The position and dimensions for the window in pixels.
      * @param shareWidget An optional widget to share an existing GLContext.
      *                    A new GLContext is allocated if not provided.
      * @param parent      An optional parent for ownership
      * @throw std::runtime_error if the initialization failed.
      */
-    GLWindow( const QRect& windowRect, QGLWidget* shareWidget = 0, QWidget* parent = 0 );
+    GLWindow( QGLWidget* shareWidget = 0, QWidget* parent = 0 );
 
     /**
      * Get the region spanned by a unit rectangle {(0;0),(1;1)} in the current

@@ -68,7 +68,7 @@ public:
     /** Synchronize the objects */
     void synchronizeObjects(const SyncFunction& versionCheckFunc);
 
-    /**  Do we need to stop rendering. */
+    /** Do we need to stop rendering. */
     bool quitRendering() const;
 
 public slots:

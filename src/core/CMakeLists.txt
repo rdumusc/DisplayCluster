@@ -83,6 +83,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamInteractionDelegate.h
   PixelStreamSegmentRenderer.h
   PixelStreamWindowManager.h
+  QmlWindowRenderer.h
   RenderContext.h
   RenderController.h
   SessionCommandHandler.h
@@ -147,6 +148,7 @@ list(APPEND DCCORE_MOC_HEADERS
   RenderController.h
   WallFromMasterChannel.h
   WallGraphicsScene.h
+  WallWindow.h
   WallToMasterChannel.h
   WallToWallChannel.h
   WebbrowserCommandHandler.h
@@ -207,6 +209,8 @@ list(APPEND DCCORE_SOURCES
   PixelStreamInteractionDelegate.cpp
   PixelStreamSegmentRenderer.cpp
   PixelStreamWindowManager.cpp
+  QmlWindowRenderer.cpp
+  QmlTypeRegistration.cpp
   RenderContext.cpp
   RenderController.cpp
   SessionCommandHandler.cpp
@@ -222,6 +226,7 @@ list(APPEND DCCORE_SOURCES
   WallGraphicsScene.cpp
   WallToMasterChannel.cpp
   WallToWallChannel.cpp
+  WallWindow.cpp
   WebbrowserCommandHandler.cpp
   ZoomInteractionDelegate.cpp
   configuration/Configuration.cpp

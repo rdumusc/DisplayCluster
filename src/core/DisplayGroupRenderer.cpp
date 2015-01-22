@@ -42,6 +42,12 @@
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
 #include "Factories.h"
+#include "RenderContext.h"
+
+#include <boost/foreach.hpp>
+
+#include <QtDeclarative/QDeclarativeContext>
+#include <QtDeclarative/QDeclarativeComponent>
 
 namespace
 {
@@ -49,9 +55,12 @@ const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
 }
 
-DisplayGroupRenderer::DisplayGroupRenderer( FactoriesPtr factories )
-    : factories_( factories )
+DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext,
+                                            FactoriesPtr factories )
+    : renderContext_( renderContext )
+    , factories_( factories )
     , windowRenderer_( factories )
+    , displayGroupItem_( 0 )
 {
 }
 
@@ -71,12 +80,49 @@ ContentWindowRenderer& DisplayGroupRenderer::getWindowRenderer()
 
 void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
+    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+
+    // Update the scene with the new information
+    engine.rootContext()->setContextProperty( "displaygroup", displayGroup.get( ));
+
+    if( !displayGroupItem_ )
+        createDisplayGroupQmlItem();
+
+    ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
+
+    // Update windows, creating new ones if needed
+    QSet<QUuid> updatedWindows;
+    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
+    {
+        const QUuid& id = window->getID();
+
+        updatedWindows.insert( id );
+
+        if( windowItems_.contains( id ))
+            windowItems_[id]->update( window );
+        else
+            windowItems_[id].reset( new QmlWindowRenderer( engine,
+                                                           *displayGroupItem_,
+                                                           window ));
+    }
+
+    // Remove old windows
+    QmlWindows::iterator it = windowItems_.begin();
+    while( it != windowItems_.end( ))
+    {
+        if( updatedWindows.contains( it.key( )))
+            ++it;
+        else
+            it = windowItems_.erase( it );
+    }
+
+    // Store the new DisplayGroup
     displayGroup_ = displayGroup;
 }
 
 void DisplayGroupRenderer::renderBackground( ContentPtr content )
 {
-    if ( !content )
+    if( !content )
         return;
 
     // Scale fullscreen, keep aspect ratio
@@ -123,4 +169,13 @@ void DisplayGroupRenderer::render( const ContentWindowPtrs& contentWindows )
 
         glPopMatrix();
     }
+}
+
+void DisplayGroupRenderer::createDisplayGroupQmlItem()
+{
+    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+
+    QDeclarativeComponent component( &engine, QUrl( "qrc:/qml/core/DisplayGroup.qml" ));
+    displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
+    renderContext_->getScene().addItem( displayGroupItem_ );
 }

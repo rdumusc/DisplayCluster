@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,78 +37,42 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "GLWindow.h"
+#include "TouchArea.h"
 
-#include <stdexcept>
+#include <QtCore/QEvent>
+#include <QtGui/QTapGesture>
+#include <QtGui/QGestureEvent>
 
-#include <QtOpenGL>
-
-#ifdef __APPLE__
-    #include <OpenGL/glu.h>
-
-    // glu functions deprecated in 10.9
-#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-    #include <GL/glu.h>
-#endif
-
-GLWindow::GLWindow( QGLWidget* shareWidget, QWidget* parent_ )
-  : QGLWidget( QGLFormat( QGL::SampleBuffers ), parent_, shareWidget )
+TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
+    : QDeclarativeItem( parentItem_ )
 {
-    setCursor( Qt::BlankCursor );
-
-    if( shareWidget && !isSharing( ))
-        throw std::runtime_error( "failed to share OpenGL context" );
-
-    setAutoBufferSwap( false );
+    grabGesture( Qt::TapGesture );
 }
 
-QRectF GLWindow::getProjectedPixelRect( const bool clampToViewportBorders )
+bool TouchArea::sceneEvent( QEvent* event_ )
 {
-    // get four corners in object space (recall we're in normalized 0->1 dimensions)
-    const double corners[4][3] =
+    switch( event_->type( ))
     {
-        {0.,0.,0.},
-        {1.,0.,0.},
-        {1.,1.,0.},
-        {0.,1.,0.}
-    };
-
-    // get four corners in screen space
-    GLdouble modelview[16];
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-
-    GLdouble projection[16];
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-
-    GLint viewport[4];
-    glGetIntegerv( GL_VIEWPORT, viewport );
-
-    GLdouble xWin[4][3];
-
-    for(size_t i=0; i<4; i++)
-    {
-        gluProject( corners[i][0], corners[i][1], corners[i][2],
-                    modelview, projection, viewport,
-                    &xWin[i][0], &xWin[i][1], &xWin[i][2] );
-
-        const GLdouble viewportWidth = (GLdouble)viewport[2];
-        const GLdouble viewportHeight = (GLdouble)viewport[3];
-
-        // The GL coordinates system origin is at the bottom-left corner with
-        // the y-axis pointing upwards. For the QRect, we want the origin at
-        // the top of the viewport with the y-axis pointing downwards.
-        xWin[i][1] = viewportHeight - xWin[i][1];
-
-        if( clampToViewportBorders )
-        {
-            xWin[i][0] = std::min( std::max( xWin[i][0], 0. ), viewportWidth );
-            xWin[i][1] = std::min( std::max( xWin[i][1], 0. ), viewportHeight );
-        }
+    case QEvent::Gesture:
+        gestureEvent( static_cast< QGestureEvent* >( event_ ));
+        return true;
+    default:
+        return QGraphicsObject::sceneEvent( event_ );
     }
+}
 
-    const QPointF topleft( xWin[0][0], xWin[0][1] );
-    const QPointF bottomright( xWin[2][0], xWin[2][1] );
-    return QRectF( topleft, bottomright );
+void TouchArea::gestureEvent( QGestureEvent* event_ )
+{
+    QGesture* gesture = 0;
+
+    if(( gesture = event_->gesture( Qt::TapGesture )))
+    {
+        event_->accept( Qt::TapGesture );
+        if( gesture->state() == Qt::GestureFinished )
+        {
+            QTapGesture* tapGesture = static_cast<QTapGesture*>( gesture );
+            emit tap( tapGesture->position( ));
+        }
+        return;
+    }
 }

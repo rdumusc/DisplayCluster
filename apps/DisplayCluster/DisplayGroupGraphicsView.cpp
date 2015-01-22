@@ -40,7 +40,7 @@
 
 #include "DisplayGroup.h"
 #include "DisplayGroupGraphicsScene.h"
-#include "ContentWindowGraphicsItem.h"
+#include "ContentWindowTouchArea.h"
 #include "ContentWindow.h"
 
 #include "gestures/PanGesture.h"
@@ -103,7 +103,7 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
              this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
 
     engine_.rootContext()->setContextProperty( "displaygroup", displayGroup_.get( ));
-    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/DisplayGroup.qml" ));
+    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/core/DisplayGroup.qml" ));
     displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
     scene()->addItem( displayGroupItem_ );
 }
@@ -230,12 +230,12 @@ QPointF DisplayGroupGraphicsView::getScenePosition( const QGesture* gesture ) co
 bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
 {
     const QGraphicsItem* item = scene()->itemAt( position );
-    return dynamic_cast< const ContentWindowGraphicsItem* >( item ) == 0;
+    return dynamic_cast< const ContentWindowTouchArea* >( item ) == 0;
 }
 
 void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow )
 {
-    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/ContentWindow.qml" ));
+    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/master/ContentWindow.qml" ));
 
     // New Context, ownership retained by the windowItem (set as parent QObject)
     QDeclarativeContext* windowContext = new QDeclarativeContext( engine_.rootContext( ));
@@ -243,7 +243,7 @@ void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow 
     QObject* windowItem = component.create( windowContext );
     windowContext->setParent( windowItem );
 
-    ContentWindowGraphicsItem* cwgi = windowItem->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
+    ContentWindowTouchArea* cwgi = windowItem->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
     cwgi->init( contentWindow, *displayGroup_ );
     windowContext->setContextProperty( "controller", cwgi->getWindowController( ));
 
@@ -268,7 +268,7 @@ QGraphicsItem* DisplayGroupGraphicsView::getItemFor( ContentWindowPtr contentWin
         if( !obj )
             continue;
 
-        ContentWindowGraphicsItem* cwgi = obj->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
+        ContentWindowTouchArea* cwgi = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
         if( cwgi && cwgi->getContentWindow() == contentWindow )
             return item;
     }
@@ -303,7 +303,7 @@ void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr conten
         if( !obj )
             continue;
 
-        ContentWindowGraphicsItem* cwgi = obj->findChild<ContentWindowGraphicsItem*>("contentWindowItem");
+        ContentWindowTouchArea* cwgi = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
         if( cwgi )
             item->stackBefore( itemToRaise );
     }

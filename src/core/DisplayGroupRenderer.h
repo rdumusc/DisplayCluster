@@ -44,8 +44,14 @@
 
 #include "Renderable.h"
 #include "ContentWindowRenderer.h"
+#include "QmlWindowRenderer.h"
 
-#include <QObject>
+#include <QtCore/QObject>
+#include <QtCore/QMap>
+#include <QtCore/QUuid>
+
+class QGraphicsObject;
+class QDeclarativeItem;
 
 /**
  * Renders a DisplayGroup.
@@ -56,7 +62,8 @@ class DisplayGroupRenderer : public QObject, public Renderable
 
 public:
     /** Constructor */
-    DisplayGroupRenderer( FactoriesPtr factories );
+    DisplayGroupRenderer( RenderContextPtr renderContext,
+                          FactoriesPtr factories );
 
     /**
      * Render the associated DisplayGroup.
@@ -75,12 +82,20 @@ public slots:
     void setDisplayGroup( DisplayGroupPtr displayGroup );
 
 private:
+    RenderContextPtr renderContext_;
     FactoriesPtr factories_;
     DisplayGroupPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
+    QGraphicsObject* displayGroupItem_;
+
+    typedef boost::shared_ptr<QmlWindowRenderer> QmlWindowPtr;
+    typedef QMap<QUuid,QmlWindowPtr> QmlWindows;
+    QmlWindows windowItems_;
 
     void renderBackground( ContentPtr content );
     void render( const ContentWindowPtrs& contentWindows );
+
+    void createDisplayGroupQmlItem();
 };
 
 #endif // DISPLAYGROUPRENDERER_H

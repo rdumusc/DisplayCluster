@@ -56,6 +56,7 @@ ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
     , windowState_( NONE )
+    , controlsOpacity_( 0.0 )
     , eventReceiversCount_( 0 )
 {
 }
@@ -64,6 +65,7 @@ ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
     , windowState_( NONE )
+    , controlsOpacity_( 0.0 )
     , eventReceiversCount_( 0 )
 {
     assert( content );
@@ -212,6 +214,21 @@ void ContentWindow::restoreCoordinates()
 QString ContentWindow::getLabel() const
 {
     return content_->getURI().section( "/", -1, -1 );
+}
+
+qreal ContentWindow::getControlsOpacity() const
+{
+    return controlsOpacity_;
+}
+
+void ContentWindow::setControlsOpacity( const qreal value )
+{
+    if( value == controlsOpacity_ )
+        return;
+
+    controlsOpacity_ = value;
+    emit controlsOpacityChanged();
+    emit modified();
 }
 
 void ContentWindow::createInteractionDelegate()

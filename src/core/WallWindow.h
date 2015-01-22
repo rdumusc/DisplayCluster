@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,80 +37,22 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_GRAPHICS_ITEM_H
-#define CONTENT_WINDOW_GRAPHICS_ITEM_H
+#ifndef WALLWINDOW_H
+#define WALLWINDOW_H
 
-#include "types.h"
+#include <QtGui/QGraphicsView>
 
-#include "ContentWindowController.h"
-
-#include <QtDeclarative/QDeclarativeItem>
-
-class QGestureEvent;
-class DoubleTapGesture;
-class PanGesture;
-class PinchGesture;
-class QTapGesture;
-class QSwipeGesture;
-class QTapAndHoldGesture;
-
-/**
- * Represent a ContentWindow in a QML View.
- */
-class ContentWindowGraphicsItem : public QDeclarativeItem
+class WallWindow : public QGraphicsView
 {
     Q_OBJECT
 
 public:
-    /** Constructor. */
-    ContentWindowGraphicsItem();
-
-    /** Destructor. */
-    virtual ~ContentWindowGraphicsItem();
-
-    /** Init must be separate from the constructor for instanciation in QML. */
-    void init( ContentWindowPtr contentWindow,
-               const DisplayGroup& displayGroup );
-
-    /** Get the associated ContentWindow. */
-    ContentWindowPtr getContentWindow() const;
-
-    /** Get the window controller for exposing it in the Qml context. */
-    ContentWindowController* getWindowController();
-
-public slots:
-    /** Close this window. */
-    void close();
-
-signals:
-    /** Emitted when a user clicks the window to bring it to the front. */
-    void moveToFront( ContentWindowPtr contentWindow );
-
-    /** Emitted when the user clicks the close button. */
-    void close( ContentWindowPtr contentWindow );
-
-protected:
-    /** @name Re-implemented QGraphicsRectItem events */
-    //@{
-    bool sceneEvent( QEvent* event ) override;
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
-    void keyPressEvent( QKeyEvent* event ) override;
-    void keyReleaseEvent( QKeyEvent* event ) override;
-    //@}
-
-private:
-    void gestureEvent( QGestureEvent* event );
-    void doubleTap( DoubleTapGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
-    void tapAndHold( QTapAndHoldGesture* gesture );
-
-    ContentWindowPtr contentWindow_;
-    ContentWindowController* controller_;
+    /**
+     * Constructor.
+     * @param scene The scene to display.
+     * @param windowRect The position and dimensions for the window in pixels.
+     */
+    WallWindow( QGraphicsScene* scene, const QRect& windowRect );
 };
 
-#endif
+#endif // WALLWINDOW_H
