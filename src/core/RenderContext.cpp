@@ -74,11 +74,13 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
 {
     for( int i = 0; i < configuration.getScreenCount(); ++i )
     {
-        const QRect& windowRect = configuration.getScreenRect( i );
+        const QPoint screenIndex = configuration.getGlobalScreenIndex( i );
+        const QRect screenRect = configuration.getScreenRect( screenIndex );
+        const QPoint windowPos = configuration.getWindowPos( i );
 
-        visibleWallArea_ = visibleWallArea_.unite( windowRect );
+        visibleWallArea_ = visibleWallArea_.unite( screenRect );
 
-        WallWindowPtr window( new WallWindow( &scene_, windowRect ));
+        WallWindowPtr window( new WallWindow( &scene_, screenRect, windowPos ));
         windows_.push_back( window );
 
         // share OpenGL context from the first GLWindow

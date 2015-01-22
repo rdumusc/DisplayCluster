@@ -77,10 +77,10 @@ public:
      * @param screenIndex index in the range [0,getScreenCount()-1]
      * @return index starting at {0,0} from the top-left
      */
-    const QPoint& getGlobalScreenIndex(int screenIndex) const;
+    const QPoint& getGlobalScreenIndex( int screenIndex ) const;
 
-    /** Get the coordinates and dimensions of a screen in pixel units. */
-    QRect getScreenRect(int screenIndex) const;
+    /** Get the coordinates of a screen in pixel units. */
+    const QPoint& getWindowPos( int screenIndex ) const;
 
 private:
     QString host_;

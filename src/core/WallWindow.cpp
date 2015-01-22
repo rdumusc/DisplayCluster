@@ -39,11 +39,16 @@
 
 #include "WallWindow.h"
 
-WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& windowRect )
+WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
+                        const QPoint& windowPos )
     : QGraphicsView( scene_ )
 {
-    setGeometry( windowRect );
-    setSceneRect( windowRect );
+    QRect windowGeometry( sceneRect_ );
+    if( !windowPos.isNull( ))
+        windowGeometry.moveTopLeft( windowPos );
+
+    setGeometry( windowGeometry );
+    setSceneRect( sceneRect_ );
 
     setCacheMode( QGraphicsView::CacheNone );
     setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
