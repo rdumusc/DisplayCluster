@@ -41,8 +41,6 @@
 
 #include "RenderContext.h"
 
-#include <QtOpenGL/qgl.h>
-
 #define TEXT_POS_X 10
 #define TEXT_POS_Y 32
 #define TEXT_SIZE_PX 32

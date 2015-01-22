@@ -91,34 +91,31 @@ bool StateSerializationHelper::load( const QString& filename )
     State state;
 
     // For backward compatibility, try to load the file as a legacy state file first
-    if( state.legacyLoadXML( filename ))
+    if( !state.legacyLoadXML( filename ))
     {
-        displayGroup_->setContentWindows( state.getContentWindows( ));
-        return true;
+        // De-serialize state file
+        std::ifstream ifs( filename.toStdString( ));
+        if ( !ifs.good( ))
+            return false;
+        try
+        {
+            boost::archive::xml_iarchive ia( ifs );
+            ia >> BOOST_SERIALIZATION_NVP( state );
+        }
+        catch( const boost::archive::archive_exception& e )
+        {
+            put_flog( LOG_ERROR, "Could not restore session/state %s: %s",
+                      filename.toStdString().c_str(), e.what( ));
+            return false;
+        }
+        catch( const std::exception& e )
+        {
+            put_flog( LOG_ERROR, "Could not restore state, wrong file format %s: %s",
+                      filename.toStdString().c_str(), e.what( ));
+            return false;
+        }
+        ifs.close();
     }
-
-    // De-serialize state file
-    std::ifstream ifs( filename.toStdString( ));
-    if ( !ifs.good( ))
-        return false;
-    try
-    {
-        boost::archive::xml_iarchive ia( ifs );
-        ia >> BOOST_SERIALIZATION_NVP( state );
-    }
-    catch( const boost::archive::archive_exception& e )
-    {
-        put_flog( LOG_ERROR, "Could not restore session/state %s: %s",
-                  filename.toStdString().c_str(), e.what( ));
-        return false;
-    }
-    catch( const std::exception& e )
-    {
-        put_flog( LOG_ERROR, "Could not restore state, wrong file format %s: %s",
-                  filename.toStdString().c_str(), e.what( ));
-        return false;
-    }
-    ifs.close();
 
     ContentWindowPtrs contentWindows = state.getContentWindows();
     if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )

@@ -97,6 +97,8 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
 
 MasterApplication::~MasterApplication()
 {
+    networkListener_.reset();
+
     masterToWallChannel_->sendQuit();
 
     mpiSendThread_.quit();
