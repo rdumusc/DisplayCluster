@@ -39,26 +39,26 @@
 
 #include "FpsRenderer.h"
 
-#include "RenderContext.h"
-
 #define TEXT_POS_X 10
 #define TEXT_POS_Y 32
 #define TEXT_SIZE_PX 32
 
-FpsRenderer::FpsRenderer(RenderContextPtr renderContext)
-    : renderContext_(renderContext)
+FpsRenderer::FpsRenderer()
 {
 }
 
-void FpsRenderer::render()
+void FpsRenderer::draw( QPainter* painter, const QRectF& rect )
 {
     fpsCounter_.tick();
 
+    const QPoint offset = rect.topLeft( ).toPoint();
+
     QFont textFont;
-    textFont.setPixelSize(TEXT_SIZE_PX);
+    textFont.setPixelSize( TEXT_SIZE_PX );
 
-    renderContext_->renderTextInWindow( TEXT_POS_X, TEXT_POS_Y,
-                                        fpsCounter_.toString(), textFont,
-                                        QColor( Qt::blue ));
+    painter->setFont( textFont );
+    painter->setPen( QColor( Qt::blue ));
+
+    painter->drawText( QPoint( TEXT_POS_X, TEXT_POS_Y ) + offset,
+                       fpsCounter_.toString( ));
 }
-

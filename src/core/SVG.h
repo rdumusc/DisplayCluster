@@ -71,7 +71,7 @@ public:
 
     bool isValid() const;
 
-    void getDimensions(int &width, int &height) const override;
+    QSize getSize() const;
     void render(const QRectF& texCoords) override;
 
 private:
@@ -86,8 +86,7 @@ private:
     std::map<int, SVGTextureData> textureData_;
 
     // SVG default dimensions
-    int width_;
-    int height_;
+    QSize size_;
 
     GLQuad quad_;
 

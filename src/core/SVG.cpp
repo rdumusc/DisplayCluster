@@ -47,8 +47,6 @@
 
 SVG::SVG(const QString uri)
     : uri_(uri)
-    , width_(0)
-    , height_(0)
 {
     QFile file(uri);
 
@@ -70,10 +68,9 @@ SVG::~SVG()
     // no need to delete textures, that's handled in FBO destructor
 }
 
-void SVG::getDimensions(int &width, int &height) const
+QSize SVG::getSize() const
 {
-    width = width_;
-    height = height_;
+    return svgRenderer_.defaultSize();
 }
 
 bool SVG::isValid() const
@@ -92,12 +89,9 @@ bool SVG::setImageData(const QByteArray& imageData)
     // save logical coordinates
     svgExtents_ = svgRenderer_.viewBoxF();
 
-    // save image dimensions
-    width_ = svgRenderer_.defaultSize().width();
-    height_ = svgRenderer_.defaultSize().height();
-
     // reset rendered texture information to force regenerating the texture
-    for (std::map<int, SVGTextureData>::iterator it = textureData_.begin(); it != textureData_.end(); ++it)
+    for( std::map<int, SVGTextureData>::iterator it = textureData_.begin();
+         it != textureData_.end(); ++it )
     {
         it->second.region = QRectF();
     }

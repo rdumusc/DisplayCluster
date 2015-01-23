@@ -63,8 +63,6 @@ class PixelStream : public QObject, public FactoryObject
 public:
     PixelStream(const QString& uri);
 
-    void getDimensions(int &width, int &height) const override;
-
     void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
     void render(const QRectF& texCoords) override;
 

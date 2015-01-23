@@ -40,6 +40,7 @@
 
 #include "configuration/WallConfiguration.h"
 #include "GLWindow.h"
+#include "TestPattern.h"
 #include "WallWindow.h"
 #include "log.h"
 
@@ -70,17 +71,18 @@ void RenderContext::setBackgroundColor( const QColor& color )
     scene_.setBackgroundColor( color );
 }
 
-void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
+void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
 {
-    for( int i = 0; i < configuration.getScreenCount(); ++i )
+    for( int i = 0; i < config.getScreenCount(); ++i )
     {
-        const QPoint screenIndex = configuration.getGlobalScreenIndex( i );
-        const QRect screenRect = configuration.getScreenRect( screenIndex );
-        const QPoint windowPos = configuration.getWindowPos( i );
+        const QPoint screenIndex = config.getGlobalScreenIndex( i );
+        const QRect screenRect = config.getScreenRect( screenIndex );
+        const QPoint windowPos = config.getWindowPos( i );
 
         visibleWallArea_ = visibleWallArea_.unite( screenRect );
 
         WallWindowPtr window( new WallWindow( &scene_, screenRect, windowPos ));
+        window->setTestPattern( TestPatternPtr( new TestPattern( config, i )));
         windows_.push_back( window );
 
         // share OpenGL context from the first GLWindow
@@ -97,7 +99,7 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& configuration )
             throw std::runtime_error( "Failed creating the GLWindows." );
         }
 
-        if( configuration.getFullscreen( ))
+        if( config.getFullscreen( ))
             window->showFullScreen();
         else
         {
@@ -180,4 +182,20 @@ WallGraphicsScene& RenderContext::getScene()
 QDeclarativeEngine& RenderContext::getQmlEngine()
 {
     return engine_;
+}
+
+void RenderContext::displayFps( bool value )
+{
+    BOOST_FOREACH( WallWindowPtr window, windows_ )
+    {
+        window->setShowFps( value );
+    }
+}
+
+void RenderContext::displayTestPattern( const bool value )
+{
+    BOOST_FOREACH( WallWindowPtr window, windows_ )
+    {
+        window->getTestPattern()->setVisible( value );
+    }
 }

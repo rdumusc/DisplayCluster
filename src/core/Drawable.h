@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,26 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FPSRENDERER_H
-#define FPSRENDERER_H
+#ifndef DRAWABLE_H
+#define DRAWABLE_H
 
-#include "Drawable.h"
-#include "FpsCounter.h"
+#include <QtCore/QRectF>
+#include <QtGui/QPainter>
 
-/**
- * Displays rendering performance using an FpsCounter
- */
-class FpsRenderer : public Drawable
+/** An abstract drawable object. */
+class Drawable
 {
 public:
     /** Constructor. */
-    FpsRenderer();
+    Drawable() : visible_( true ) {}
+
+    /** Virtual destructor. */
+    virtual ~Drawable() {}
 
     /** Render the object. */
-    void draw( QPainter* painter, const QRectF& rect ) override;
+    virtual void draw( QPainter* painter, const QRectF& rect ) = 0;
+
+    /** Check if the object is visible. */
+    bool isVisible() const { return visible_; }
+
+    /** Change the visibility of this object. */
+    void setVisible( const bool visible ) { visible_ = visible; }
 
 private:
-    FpsCounter fpsCounter_;
+    bool visible_;
 };
 
-#endif // FPSRENDERER_H
+#endif // DRAWABLE_H
+

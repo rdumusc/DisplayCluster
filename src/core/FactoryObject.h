@@ -58,13 +58,6 @@ public:
     virtual ~FactoryObject();
 
     /**
-     * Get the dimensions of the full resolution texture.
-     * @param width Returned width
-     * @param height Returned height
-     */
-    virtual void getDimensions(int &width, int &height) const = 0;
-
-    /**
      * Render the FactoryObject
      * @param textCoord The region of the texture to render
      */

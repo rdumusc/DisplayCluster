@@ -44,8 +44,6 @@
 
 #include "DisplayGroupRenderer.h"
 #include "MarkerRenderer.h"
-#include "TestPattern.h"
-#include "FpsRenderer.h"
 
 #include "DisplayGroup.h"
 #include "Options.h"
@@ -57,14 +55,12 @@ RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr 
     : renderContext_(renderContext)
     , displayGroupRenderer_(new DisplayGroupRenderer(renderContext, factories))
     , markerRenderer_(new MarkerRenderer)
-    , fpsRenderer_(new FpsRenderer(renderContext))
     , syncQuit_(false)
     , syncDisplayGroup_(boost::make_shared<DisplayGroup>(QSize()))
     , syncOptions_(boost::make_shared<Options>())
 {
     renderContext_->addRenderable(displayGroupRenderer_);
     renderContext_->addRenderable(markerRenderer_);
-    renderContext_->addRenderable(fpsRenderer_);
 
     syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
                                                displayGroupRenderer_.get(), _1));
@@ -74,15 +70,6 @@ RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr 
 
     syncOptions_.setCallback(boost::bind(&RenderController::setRenderOptions,
                                          this, _1));
-}
-
-void RenderController::setupTestPattern(const int rank,
-                                        const WallConfiguration& config)
-{
-    RenderablePtr testPattern( new TestPattern( renderContext_, config, rank, 0 ));
-    testPattern->setVisible( false );
-    testPatterns_.append( testPattern );
-    renderContext_->addRenderable( testPattern );
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const
@@ -126,11 +113,10 @@ void RenderController::updateOptions(OptionsPtr options)
 void RenderController::setRenderOptions(OptionsPtr options)
 {
     renderContext_->setBackgroundColor(options->getBackgroundColor());
+    renderContext_->displayTestPattern(options->getShowTestPattern());
+    renderContext_->displayFps(options->getShowStatistics());
 
     markerRenderer_->setVisible(options->getShowTouchPoints());
-    fpsRenderer_->setVisible(options->getShowStatistics());
-    foreach (RenderablePtr testPattern, testPatterns_)
-        testPattern->setVisible(options->getShowTestPattern());
 
     ContentWindowRenderer& winRenderer = displayGroupRenderer_->getWindowRenderer();
     winRenderer.setShowWindowBorders(options->getShowWindowBorders());

@@ -288,16 +288,12 @@ void DynamicTexture::loadImage()
     }
 }
 
-void DynamicTexture::getDimensions(int &width, int &height) const
+const QSize& DynamicTexture::getSize() const
 {
-    // if we don't have a width and height, and the load image thread is running, wait for it to finish
-    if(imageSize_.isEmpty() && loadImageThreadStarted_)
-    {
+    if( imageSize_.isEmpty() && loadImageThreadStarted_ )
         loadImageThread_.waitForFinished();
-    }
 
-    width = imageSize_.width();
-    height = imageSize_.height();
+    return imageSize_;
 }
 
 void DynamicTexture::render(const QRectF& texCoords)

@@ -82,12 +82,8 @@ public:
     /** The standard suffix for pyramid image folders */
     static const QString pyramidFolderSuffix;
 
-    /**
-     * Get the dimensions of the full resolution texture.
-     * @param width Returned width
-     * @param height Returned height
-     */
-    void getDimensions(int &width, int &height) const;
+    /** Get the size of the full resolution texture */
+    const QSize& getSize() const;
 
     /**
      * Render the dynamic texture.

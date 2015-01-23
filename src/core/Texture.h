@@ -49,7 +49,6 @@ public:
     Texture(const QString uri);
     ~Texture();
 
-    void getDimensions(int &width, int &height) const override;
     void render(const QRectF& texCoords) override;
 
 private:

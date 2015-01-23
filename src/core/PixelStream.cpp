@@ -61,12 +61,6 @@ PixelStream::PixelStream(const QString &uri)
 {
 }
 
-void PixelStream::getDimensions(int &width, int &height) const
-{
-    width = width_;
-    height = height_;
-}
-
 void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel)
 {
     sync(wallToWallChannel);

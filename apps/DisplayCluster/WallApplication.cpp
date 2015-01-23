@@ -68,7 +68,6 @@ WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldCh
         throw std::runtime_error("WallApplication: initialization failed.");
 
     initRenderContext();
-    renderController_->setupTestPattern(worldChannel->getRank(), *config_);
     initMPIConnection(worldChannel);
     startRendering();
 }

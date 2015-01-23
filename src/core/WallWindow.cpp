@@ -39,6 +39,8 @@
 
 #include "WallWindow.h"
 
+#include "TestPattern.h"
+
 WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
                         const QPoint& windowPos )
     : QGraphicsView( scene_ )
@@ -57,4 +59,30 @@ WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
 
     setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
     setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+}
+
+void WallWindow::setTestPattern( TestPatternPtr testPattern )
+{
+    testPattern_ = testPattern;
+}
+
+TestPatternPtr WallWindow::getTestPattern()
+{
+    return testPattern_;
+}
+
+void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
+{
+    if( testPattern_ && testPattern_->isVisible( ))
+        testPattern_->draw( painter, rect_ );
+
+    if( fpsRenderer_.isVisible( ))
+        fpsRenderer_.draw( painter, rect_ );
+
+    QGraphicsView::drawForeground( painter, rect_ );
+}
+
+void WallWindow::setShowFps( const bool value )
+{
+    fpsRenderer_.setVisible( value );
 }

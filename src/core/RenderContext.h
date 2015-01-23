@@ -49,8 +49,6 @@
 
 #include <QtDeclarative/QDeclarativeEngine>
 
-class WallConfiguration;
-
 /**
  * A render context composed of multiple GL windows.
  */
@@ -97,8 +95,14 @@ public:
     /** Get the QML engine. */
     QDeclarativeEngine& getQmlEngine();
 
+    /** Display or hide the test pattern. */
+    void displayTestPattern( bool value );
+
+    /** Display or hide the fps counter. */
+    void displayFps( bool value );
+
 private:
-    void setupOpenGLWindows( const WallConfiguration& configuration );
+    void setupOpenGLWindows( const WallConfiguration& config );
 
     WallGraphicsScene scene_;
     WallWindowPtrs windows_;

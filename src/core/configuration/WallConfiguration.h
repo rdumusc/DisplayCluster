@@ -82,10 +82,14 @@ public:
     /** Get the coordinates of a screen in pixel units. */
     const QPoint& getWindowPos( int screenIndex ) const;
 
+    /** Get the index of the process. */
+    int getProcessIndex() const;
+
 private:
     QString host_;
     QString display_;
 
+    const int processIndex_;
     int screenCountForCurrentProcess_;
     std::vector<QPoint> screenPosition_;
     std::vector<QPoint> screenGlobalIndex_;

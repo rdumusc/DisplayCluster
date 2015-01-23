@@ -41,40 +41,33 @@
 #define TESTPATTERN_H
 
 #include "types.h"
-#include "Renderable.h"
 
-#include <QList>
-#include <QString>
+#include "Drawable.h"
 
-class WallConfiguration;
+#include <QtCore/QList>
+#include <QtCore/QString>
 
 /**
  * Render a test pattern to help setup and debug the display configuration.
  */
-class TestPattern : public Renderable
+class TestPattern : public Drawable
 {
 public:
     /**
      * Constructor
-     * @param renderContext The current render context (used for rendering text)
      * @param configuration The configuration to get information from
-     * @param rank The rank of the process
      * @param tileIndex The tile index of the display
      */
-    TestPattern(RenderContextPtr renderContext,
-                const WallConfiguration& configuration,
-                const int rank,
-                const int tileIndex);
+    TestPattern( const WallConfiguration& configuration, const int tileIndex );
 
     /** Render the test pattern. */
-    void render() override;
+    void draw( QPainter* painter, const QRectF& rect ) final;
 
 private:
     QList<QString> labels_;
-    RenderContextPtr renderContext_;
 
-    void renderCrossPattern();
-    void renderLabels();
+    void renderCrossPattern( QPainter* painter, const QRectF& rect );
+    void renderLabels( QPainter* painter, const QRectF& rect );
 };
 
 #endif // TESTPATTERN_H

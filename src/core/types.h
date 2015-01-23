@@ -56,12 +56,15 @@ class FactoryObject;
 class GLWindow;
 class MarkerRenderer;
 class Markers;
+class MasterConfiguration;
 class MPIChannel;
 class Options;
 class PixelStreamWindowManager;
 class Renderable;
 class RenderContext;
+class TestPattern;
 class WallWindow;
+class WallConfiguration;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;
@@ -78,6 +81,7 @@ typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
 typedef boost::shared_ptr< Options > OptionsPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< RenderContext > RenderContextPtr;
+typedef boost::shared_ptr< TestPattern > TestPatternPtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
