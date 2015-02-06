@@ -40,6 +40,7 @@
 
 FactoryObject::FactoryObject()
     : renderContext_(0)
+    , frameIndex_( 0 )
 {
 }
 

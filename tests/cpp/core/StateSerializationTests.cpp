@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromLegacyFile )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
-    bool success = false;
+    bool success;
     BOOST_CHECK_NO_THROW( success = helper.load( LEGACY_URI ));
     BOOST_CHECK( success );
 
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
-    bool success = false;
+    bool success;
     BOOST_CHECK_NO_THROW( success = helper.load( STATE_V0_BROKEN_URI ));
     BOOST_CHECK( !success );
 }
@@ -218,8 +218,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
-    bool success = false;
-
+    bool success;
     BOOST_REQUIRE_NO_THROW( success = helper.load( STATE_V0_URI ));
     BOOST_REQUIRE( success );
     BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
