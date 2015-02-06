@@ -47,6 +47,8 @@ Coordinates::~Coordinates()
 {
 }
 
+// false-positive on qt signals
+// cppcheck-suppress uninitMemberVar
 Coordinates::Coordinates( const QRectF& coordinates )
     : coordinates_( coordinates )
 {
