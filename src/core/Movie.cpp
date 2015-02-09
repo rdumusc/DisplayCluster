@@ -54,12 +54,6 @@ Movie::~Movie()
     delete ffmpegMovie_;
 }
 
-void Movie::getDimensions(int &width, int &height) const
-{
-    width = ffmpegMovie_->getWidth();
-    height = ffmpegMovie_->getHeight();
-}
-
 void Movie::preRenderUpdate(WallToWallChannel& wallToWallChannel)
 {
     if(paused_)

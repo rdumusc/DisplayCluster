@@ -44,6 +44,7 @@
 
 WallConfiguration::WallConfiguration(const QString &filename, const int processIndex)
     : Configuration(filename)
+    , processIndex_( processIndex )
     , screenCountForCurrentProcess_(0)
 {
     loadWallSettings(processIndex);
@@ -130,4 +131,9 @@ const QPoint& WallConfiguration::getGlobalScreenIndex( int screenIndex ) const
 const QPoint& WallConfiguration::getWindowPos( int screenIndex ) const
 {
     return screenPosition_.at( screenIndex );
+}
+
+int WallConfiguration::getProcessIndex() const
+{
+    return processIndex_;
 }

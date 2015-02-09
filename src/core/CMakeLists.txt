@@ -48,6 +48,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentWindowRenderer.h
   DisplayGroup.h
   DisplayGroupRenderer.h
+  Drawable.h
   DynamicTexture.h
   DynamicTextureContent.h
   ElapsedTimer.h
@@ -84,6 +85,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamSegmentRenderer.h
   PixelStreamWindowManager.h
   QmlWindowRenderer.h
+  Renderable.h
   RenderContext.h
   RenderController.h
   SessionCommandHandler.h

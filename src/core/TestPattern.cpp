@@ -49,16 +49,13 @@
 #define LINE_WIDTH  10
 #define TEXT_POS_X  50
 
-TestPattern::TestPattern(RenderContextPtr renderContext,
-                         const WallConfiguration& configuration,
-                         const int rank,
-                         const int tileIndex)
-    : renderContext_(renderContext)
+TestPattern::TestPattern( const WallConfiguration& configuration,
+                          const int tileIndex )
 {
-    const QPoint globalScreenIndex = configuration.getGlobalScreenIndex(tileIndex);
+    const QPoint globalScreenIndex = configuration.getGlobalScreenIndex( tileIndex );
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
 
-    labels_.push_back(QString("Rank: %1").arg(rank));
+    labels_.push_back(QString("Rank: %1").arg(configuration.getProcessIndex()));
     labels_.push_back(QString("Host: %1").arg(configuration.getHost()));
     labels_.push_back(QString("Display: %1").arg(configuration.getDisplay()));
     labels_.push_back(QString("Tile coordinates: (%1,%2)").arg(globalScreenIndex.x()).arg(globalScreenIndex.y()));
@@ -66,50 +63,44 @@ TestPattern::TestPattern(RenderContextPtr renderContext,
     labels_.push_back(QString("Fullscreen mode: %1").arg(fullsceenMode));
 }
 
-void TestPattern::render()
+void TestPattern::draw( QPainter* painter, const QRectF& rect )
 {
-    glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
-    glPushMatrix();
-
-    renderCrossPattern();
-
-    // screen information in front of cross pattern
-    glTranslatef(0., 0., 0.1);
-
-    renderLabels();
-
-    glPopMatrix();
-    glPopAttrib();
+    renderCrossPattern( painter, rect );
+    renderLabels( painter, rect );
 }
 
-void TestPattern::renderCrossPattern()
+void TestPattern::renderCrossPattern( QPainter* painter, const QRectF& rect )
 {
-    glLineWidth(LINE_WIDTH);
+    const qreal height = rect.height();
+    const qreal width = rect.width();
+    const QPointF offset( rect.topLeft( ));
 
-    glBegin(GL_LINES);
+    QPen pen;
+    pen.setWidth( LINE_WIDTH );
 
-    for(double y_coord=-1.; y_coord<=2.; y_coord+=0.1)
+    for( qreal y = -1.0 * height; y <= 2.0 * height; y += 0.1 * height )
     {
-        QColor color = QColor::fromHsvF((y_coord + 1.)/3., 1., 1.);
-        glColor3f(color.redF(), color.greenF(), color.blueF());
-
-        glVertex2d(0., y_coord);
-        glVertex2d(1., y_coord+1.);
-
-        glVertex2d(0., y_coord);
-        glVertex2d(1., y_coord-1.);
+        const qreal hue = (y + height) / (3.0 * height);
+        pen.setColor( QColor::fromHsvF( hue, 1.0, 1.0 ));
+        painter->setPen( pen );
+        painter->drawLine( offset + QPointF( 0.0, y ),
+                           offset + QPointF( width, y + height ));
+        painter->drawLine( offset + QPointF( 0.0, y ),
+                           offset + QPointF( width, y - height ));
     }
-
-    glEnd();
 }
 
-void TestPattern::renderLabels()
+void TestPattern::renderLabels( QPainter* painter, const QRectF& rect )
 {
+    const QPoint offset = rect.topLeft( ).toPoint();
+
     QFont textFont;
     textFont.setPixelSize( FONT_SIZE );
+    painter->setFont( textFont );
+    painter->setPen( QColor( Qt::white ));
 
     unsigned int pos = 0;
     foreach( QString label, labels_ )
-        renderContext_->renderTextInWindow( TEXT_POS_X, ++pos * FONT_SIZE, label,
-                                            textFont, QColor( Qt::white ));
+        painter->drawText( QPoint( TEXT_POS_X, ++pos * FONT_SIZE ) + offset,
+                           label );
 }

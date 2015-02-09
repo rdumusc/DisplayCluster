@@ -60,11 +60,11 @@ bool SVGContent::readMetadata()
     if(!file.exists() || !file.isReadable())
         return false;
 
-    SVG svg(getURI());
-    if (!svg.isValid())
+    const SVG svg( getURI( ));
+    if( !svg.isValid( ))
         return false;
 
-    svg.getDimensions( size_.rwidth(), size_.rheight( ));
+    size_ = svg.getSize();
     return true;
 }
 

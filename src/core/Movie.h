@@ -55,7 +55,6 @@ public:
     Movie(QString uri);
     ~Movie();
 
-    void getDimensions(int &width, int &height) const override;
     void render(const QRectF& texCoords) override;
 
     void setVisible(const bool isVisible);

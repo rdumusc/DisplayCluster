@@ -48,7 +48,6 @@
 #include <QThread>
 #include <boost/scoped_ptr.hpp>
 
-class WallConfiguration;
 class RenderContext;
 class WallFromMasterChannel;
 class WallToMasterChannel;

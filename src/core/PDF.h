@@ -59,7 +59,7 @@ public:
 
     bool isValid() const;
 
-    void getDimensions(int &width, int &height) const override;
+    QSize getSize() const;
     void render(const QRectF& texCoords) override;
 
     void setPage(const int pageNumber);

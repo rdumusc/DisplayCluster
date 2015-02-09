@@ -144,10 +144,9 @@ QImage PDF::renderToImage() const
     return pdfPage_->renderToImage();
 }
 
-void PDF::getDimensions(int &width, int &height) const
+QSize PDF::getSize() const
 {
-    width = pdfPage_ ? pdfPage_->pageSize().width() : 0;
-    height = pdfPage_ ? pdfPage_->pageSize().height() : 0;
+    return pdfPage_ ? pdfPage_->pageSize() : QSize();
 }
 
 void PDF::render(const QRectF& texCoords)

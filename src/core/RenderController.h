@@ -46,8 +46,6 @@
 
 #include <QObject>
 
-class WallConfiguration;
-
 /**
  * Setup the scene and control the rendering options during runtime.
  */
@@ -58,9 +56,6 @@ class RenderController : public QObject
 public:
     /** Constructor */
     RenderController(RenderContextPtr renderContext, FactoriesPtr factories);
-
-    /** Setup the test pattern */
-    void setupTestPattern(const int rank, const WallConfiguration& config);
 
     /** Get the DisplayGroup */
     DisplayGroupPtr getDisplayGroup() const;
@@ -82,8 +77,6 @@ private:
 
     DisplayGroupRendererPtr displayGroupRenderer_;
     MarkerRendererPtr markerRenderer_;
-    QList<RenderablePtr> testPatterns_;
-    RenderablePtr fpsRenderer_;
 
     SwapSyncObject<bool> syncQuit_;
     SwapSyncObject<DisplayGroupPtr> syncDisplayGroup_;

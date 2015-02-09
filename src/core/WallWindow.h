@@ -40,6 +40,10 @@
 #ifndef WALLWINDOW_H
 #define WALLWINDOW_H
 
+#include "types.h"
+
+#include "FpsRenderer.h"
+
 #include <QtGui/QGraphicsView>
 
 class WallWindow : public QGraphicsView
@@ -56,6 +60,22 @@ public:
      */
     WallWindow( QGraphicsScene* scene, const QRect& sceneRect,
                 const QPoint& windowPos = QPoint( ));
+
+    /** Set the test pattern. */
+    void setTestPattern( TestPatternPtr testPattern );
+
+    /** Get the test pattern */
+    TestPatternPtr getTestPattern();
+
+    /** Show or hide the fps counter. */
+    void setShowFps( bool value );
+
+    /** Reimplemented from QGraphicsView to draw the test pattern */
+    void drawForeground( QPainter* painter, const QRectF& rect ) override;
+
+private:
+    TestPatternPtr testPattern_;
+    FpsRenderer fpsRenderer_;
 };
 
 #endif // WALLWINDOW_H

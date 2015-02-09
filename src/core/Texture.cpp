@@ -57,12 +57,6 @@ Texture::~Texture()
 {
 }
 
-void Texture::getDimensions(int &width, int &height) const
-{
-    width = imageSize_.width();
-    height = imageSize_.height();
-}
-
 bool Texture::generateTexture()
 {
     const QImage image(uri_);
