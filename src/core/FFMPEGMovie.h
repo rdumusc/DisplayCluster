@@ -142,9 +142,8 @@ private:
     FFMPEGVideoFrameConverter * videoFrameConverter_; // Convert decoded frames to RGBA format
 
     // used for seeking
-    int64_t den2_;
-    int64_t num2_;
     int64_t numFrames_;
+    double frameDuration_;
     double frameDurationInSeconds_;
 
     boost::posix_time::time_duration timePosition_;
