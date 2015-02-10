@@ -146,7 +146,8 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromLegacyFile )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
-    bool success;
+    bool success = false;
+    // cppcheck-suppress redundantAssignment
     BOOST_CHECK_NO_THROW( success = helper.load( LEGACY_URI ));
     BOOST_CHECK( success );
 
@@ -158,7 +159,8 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
 
-    bool success;
+    bool success = false;
+    // cppcheck-suppress redundantAssignment
     BOOST_CHECK_NO_THROW( success = helper.load( STATE_V0_BROKEN_URI ));
     BOOST_CHECK( !success );
 }
