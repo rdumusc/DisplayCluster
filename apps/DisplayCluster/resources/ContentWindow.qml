@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
 
 Rectangle {
@@ -35,13 +36,27 @@ Rectangle {
         onMoveToFront: controlsFadeAnimation.restart()
 
         WindowControls {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 30
-            onClose: contentWindowTouchArea.close()
-            onToggleFullscreen: controller.toggleFullscreen()
             opacity: 0.1
             visible: contentwindow.controlsOpacity > 0 && contentwindow.label != "Dock"
+
+            function buttonTapped(buttonId) {
+                if(buttonId == "close")
+                    contentWindowTouchArea.close();
+                else if(buttonId == "toggleFullscreen")
+                    controller.toggleFullscreen();
+            }
+
+            function addTouchToButtons() {
+                for(var i = 0; i < buttons.length ; i++) {
+                    var newObject = Qt.createQmlObject('import QtQuick 1.0; import DisplayClusterApp 1.0; TouchArea {anchors.fill: parent}', buttons[i]);
+                    newObject.tap.connect(buttons[i].sendTap);
+                    buttons[i].tapped.connect(buttonTapped);
+                }
+            }
+
+            Component.onCompleted: {
+                addTouchToButtons();
+            }
         }
 
         Text {

@@ -11,9 +11,6 @@ Rectangle {
     height: contentwindow.height
 
     WindowControls {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 30
         visible: contentwindow.label != "Dock"
         opacity: contentwindow.controlsOpacity
     }
