@@ -445,6 +445,23 @@ bool FFMPEGMovie::convertVideoFrame()
 bool FFMPEGMovie::generateSeekingParameters()
 {
     numFrames_ = videoStream_->nb_frames;
+    if( numFrames_ == 0 )
+    {
+        const int den = videoStream_->avg_frame_rate.den * videoStream_->time_base.den;
+        const int num = videoStream_->avg_frame_rate.num * videoStream_->time_base.num;
+        if( den <= 0 || num <= 0 )
+        {
+            put_flog( LOG_WARN, "cannot determine seeking paramters, file not supported." );
+            return false;
+        }
+        numFrames_ = av_rescale( videoStream_->duration, num, den );
+        if( numFrames_ == 0 )
+        {
+            put_flog( LOG_WARN, "cannot determine number of frames, file not supported." );
+            return false;
+        }
+    }
+
     frameDuration_ = (double)videoStream_->duration / (double)numFrames_;
 
     const double timeBase = (double)videoStream_->time_base.num/
