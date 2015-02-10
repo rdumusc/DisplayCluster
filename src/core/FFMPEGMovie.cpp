@@ -56,9 +56,8 @@ FFMPEGMovie::FFMPEGMovie(const QString& uri)
     , videoStream_(0)
     , videoFrameConverter_(0)
     // Seeking parameters
-    , den2_(0)
-    , num2_(0)
     , numFrames_(0)
+    , frameDuration_(0)
     , frameDurationInSeconds_(0)
     // Internal
     , loop_(false)
@@ -336,7 +335,7 @@ int64_t FFMPEGMovie::getTimestampForFrameIndex(const int64_t frameIndex) const
                  frameIndex, numFrames_);
     }
 
-    int64_t timestamp = av_rescale(frameIndex, den2_, num2_);
+    int64_t timestamp = frameIndex * frameDuration_;
 
     if (videoStream_->start_time != (int64_t)AV_NOPTS_VALUE)
         timestamp += videoStream_->start_time;
@@ -427,7 +426,7 @@ bool FFMPEGMovie::decodeVideoFrame(AVPacket& packet)
     // make sure we got a full video frame and convert the frame from its native format to RGB
     if(!frameDecodingComplete_)
     {
-        put_flog(LOG_DEBUG, "Frame could not be decoded entierly (may be caused by seeking).");
+        put_flog(LOG_DEBUG, "Frame could not be decoded entirely (may be caused by seeking).");
         return false;
     }
 
@@ -445,28 +444,36 @@ bool FFMPEGMovie::convertVideoFrame()
 
 bool FFMPEGMovie::generateSeekingParameters()
 {
-    den2_ = videoStream_->time_base.den * videoStream_->r_frame_rate.den;
-    num2_ = videoStream_->time_base.num * videoStream_->r_frame_rate.num;
-
-    if( !( den2_ > 0 && num2_ > 0 ))
+    numFrames_ = videoStream_->nb_frames;
+    if( numFrames_ == 0 )
     {
-        put_flog( LOG_WARN, "cannot determine seeking paramters, file not supported." );
-        return false;
+        const int den = videoStream_->avg_frame_rate.den * videoStream_->time_base.den;
+        const int num = videoStream_->avg_frame_rate.num * videoStream_->time_base.num;
+        if( den <= 0 || num <= 0 )
+        {
+            put_flog( LOG_WARN, "cannot determine seeking paramters, file not supported." );
+            return false;
+        }
+        numFrames_ = av_rescale( videoStream_->duration, num, den );
+        if( numFrames_ == 0 )
+        {
+            put_flog( LOG_WARN, "cannot determine number of frames, file not supported." );
+            return false;
+        }
     }
 
-    numFrames_ = ( videoStream_->duration > 0 ) ?
-                 av_rescale( videoStream_->duration, num2_, den2_ ) : 0;
+    frameDuration_ = (double)videoStream_->duration / (double)numFrames_;
 
-    frameDurationInSeconds_ = (double)videoStream_->r_frame_rate.den /
-                              (double)videoStream_->r_frame_rate.num;
+    const double timeBase = (double)videoStream_->time_base.num/
+                            (double)videoStream_->time_base.den;
+    frameDurationInSeconds_ = frameDuration_ * timeBase;
 
-    put_flog(LOG_DEBUG, "seeking parameters: start_time = %i, duration_ = %i, numFrames_ = %i",
-             videoStream_->start_time, videoStream_->duration, numFrames_);
-    put_flog(LOG_DEBUG, "                    frame_rate = %f, time_base = %f",
-             (float)videoStream_->r_frame_rate.num/(float)videoStream_->r_frame_rate.den,
-             (float)videoStream_->time_base.num/(float)videoStream_->time_base.den);
-    put_flog(LOG_DEBUG, "                    frameDurationInSeconds_ = %f",
-             (float)frameDurationInSeconds_);
+    put_flog( LOG_DEBUG, "seeking parameters: start_time = %i, duration_ = %i, numFrames_ = %i",
+              videoStream_->start_time, videoStream_->duration, numFrames_ );
+    put_flog( LOG_DEBUG, "                    frame_rate = %f, time_base = %f",
+              1./frameDurationInSeconds_, timeBase );
+    put_flog( LOG_DEBUG, "                    frameDurationInSeconds_ = %f",
+              frameDurationInSeconds_ );
 
     return true;
 }
