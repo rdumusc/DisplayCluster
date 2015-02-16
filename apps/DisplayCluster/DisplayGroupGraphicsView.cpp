@@ -243,17 +243,9 @@ void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow 
     QObject* windowItem = component.create( windowContext );
     windowContext->setParent( windowItem );
 
-    ContentWindowTouchArea* cwgi = windowItem->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
-    cwgi->init( contentWindow, *displayGroup_ );
-    windowContext->setContextProperty( "controller", cwgi->getWindowController( ));
-
-    connect( cwgi, SIGNAL( moveToFront( ContentWindowPtr )),
-             displayGroup_.get(),
-             SLOT( moveContentWindowToFront( ContentWindowPtr )));
-
-    connect( cwgi, SIGNAL( close( ContentWindowPtr )),
-             displayGroup_.get(),
-             SLOT( removeContentWindow( ContentWindowPtr )));
+    ContentWindowTouchArea* touchArea = windowItem->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
+    touchArea->init( contentWindow, *displayGroup_ );
+    windowContext->setContextProperty( "controller", touchArea->getWindowController( ));
 
     qobject_cast<QGraphicsObject*>( windowItem )->setParentItem( displayGroupItem_ );
 }
@@ -268,8 +260,8 @@ QGraphicsItem* DisplayGroupGraphicsView::getItemFor( ContentWindowPtr contentWin
         if( !obj )
             continue;
 
-        ContentWindowTouchArea* cwgi = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
-        if( cwgi && cwgi->getContentWindow() == contentWindow )
+        ContentWindowTouchArea* touchArea = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
+        if( touchArea && touchArea->getContentWindow() == contentWindow )
             return item;
     }
     return 0;
@@ -303,8 +295,8 @@ void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr conten
         if( !obj )
             continue;
 
-        ContentWindowTouchArea* cwgi = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
-        if( cwgi )
+        ContentWindowTouchArea* touchArea = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
+        if( touchArea )
             item->stackBefore( itemToRaise );
     }
 }

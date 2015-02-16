@@ -2,13 +2,6 @@ import QtQuick 1.1
 
 Item {
     property alias image: image.source
-    property string buttonId
-
-    signal tapped(string buttonId)
-
-    function sendTap() {
-        tapped(buttonId)
-    }
 
     width: height
     height: parent.height

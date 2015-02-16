@@ -110,7 +110,13 @@ public slots:
     void setBackgroundContent( ContentPtr content );
 
     /** Remove a content window. */
+    void removeContentWindow( const QUuid id );
+
+    /** Remove a content window. */
     void removeContentWindow( ContentWindowPtr contentWindow );
+
+    /** Remove a content window. */
+    void moveContentWindowToFront( const QUuid id );
 
     /** Move a content window to the front. */
     void moveContentWindowToFront( ContentWindowPtr contentWindow );

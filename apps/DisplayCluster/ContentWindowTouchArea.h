@@ -77,16 +77,9 @@ public:
     /** Get the window controller for exposing it in the Qml context. */
     ContentWindowController* getWindowController();
 
-public slots:
-    /** Close this window. */
-    void close();
-
 signals:
-    /** Emitted when a user clicks the window to bring it to the front. */
-    void moveToFront( ContentWindowPtr contentWindow );
-
-    /** Emitted when the user clicks the close button. */
-    void close( ContentWindowPtr contentWindow );
+    /** Emitted whenever the user interacts with the touch area. */
+    void activated();
 
 protected:
     /** @name Re-implemented QGraphicsRectItem events */

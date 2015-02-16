@@ -22,11 +22,11 @@ Rectangle {
 
         ControlButton {
             image: "qrc:///img/maximize.svg"
-            buttonId: "toggleFullscreen"
+            objectName: "toggleFullscreenButton"
         }
         ControlButton {
             image: "qrc:///img/close.svg"
-            buttonId: "close"
+            objectName: "closeButton"
         }
     }
 }
