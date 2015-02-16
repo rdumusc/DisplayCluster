@@ -65,8 +65,9 @@ public:
 
 private:
     QList<QString> labels_;
+    const QSize wallSize_;
 
-    void renderCrossPattern( QPainter* painter, const QRectF& rect );
+    void renderCrossPattern( QPainter* painter );
     void renderLabels( QPainter* painter, const QRectF& rect );
 };
 
