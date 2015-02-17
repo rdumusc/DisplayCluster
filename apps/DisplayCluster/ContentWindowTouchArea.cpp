@@ -90,11 +90,6 @@ void ContentWindowTouchArea::init( ContentWindowPtr contentWindow,
     controller_ = new ContentWindowController( *contentWindow, displayGroup );
 }
 
-ContentWindowPtr ContentWindowTouchArea::getContentWindow() const
-{
-    return contentWindow_;
-}
-
 ContentWindowController* ContentWindowTouchArea::getWindowController()
 {
     return controller_;

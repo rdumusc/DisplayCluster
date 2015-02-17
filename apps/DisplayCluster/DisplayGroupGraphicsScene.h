@@ -54,9 +54,6 @@ public:
     DisplayGroupGraphicsScene( const Configuration& config,
                                QObject* parent = 0 );
 
-    /** Clear the scene and restore the background. */
-    void clearAndRestoreBackground();
-
 protected:
     /** @name Re-implemented QGraphicsScene events */
     //@{

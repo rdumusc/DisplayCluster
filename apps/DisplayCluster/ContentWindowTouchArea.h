@@ -71,9 +71,6 @@ public:
     void init( ContentWindowPtr contentWindow,
                const DisplayGroup& displayGroup );
 
-    /** Get the associated ContentWindow. */
-    ContentWindowPtr getContentWindow() const;
-
     /** Get the window controller for exposing it in the Qml context. */
     ContentWindowController* getWindowController();
 

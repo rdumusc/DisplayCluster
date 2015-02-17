@@ -55,12 +55,6 @@ DisplayGroupGraphicsScene::DisplayGroupGraphicsScene( const Configuration& confi
     addBackgroundRectangles();
 }
 
-void DisplayGroupGraphicsScene::clearAndRestoreBackground()
-{
-    clear();
-    addBackgroundRectangles();
-}
-
 bool DisplayGroupGraphicsScene::event( QEvent *evt )
 {
     switch( evt->type( ))

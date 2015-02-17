@@ -54,6 +54,13 @@
 
 #define VIEW_MARGIN 0.05
 
+namespace
+{
+const QString TOUCH_AREA_OBJECT_NAME( "ContentWindowTouchArea" );
+const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/ContentWindow.qml" );
+const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
+}
+
 DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
                                                     QWidget* parent_ )
     : QGraphicsView( parent_ )
@@ -78,8 +85,7 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
     if( displayGroup_ )
     {
         displayGroup_->disconnect( this );
-        static_cast< DisplayGroupGraphicsScene* >( scene( ))->clearAndRestoreBackground();
-        grabGestures();
+        clearScene();
     }
 
     displayGroup_ = displayGroup;
@@ -89,21 +95,22 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
     BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
-        addContentWindow( contentWindow );
+        add( contentWindow );
     }
 
     connect( displayGroup_.get(),
              SIGNAL( contentWindowAdded( ContentWindowPtr )),
-             this, SLOT( addContentWindow( ContentWindowPtr )));
+             this, SLOT( add( ContentWindowPtr )));
     connect( displayGroup_.get(),
              SIGNAL( contentWindowRemoved( ContentWindowPtr )),
-             this, SLOT( removeContentWindow( ContentWindowPtr )));
+             this, SLOT( remove( ContentWindowPtr )));
     connect( displayGroup_.get(),
              SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
-             this, SLOT( moveContentWindowToFront( ContentWindowPtr )));
+             this, SLOT( moveToFront( ContentWindowPtr )));
 
-    engine_.rootContext()->setContextProperty( "displaygroup", displayGroup_.get( ));
-    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/core/DisplayGroup.qml" ));
+    engine_.rootContext()->setContextProperty( "displaygroup",
+                                               displayGroup_.get( ));
+    QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
     displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
     scene()->addItem( displayGroupItem_ );
 }
@@ -172,7 +179,7 @@ void DisplayGroupGraphicsView::tap( QTapGesture* gesture )
     if( gesture->state() != Qt::GestureFinished )
         return;
 
-    const QPointF scenePosition = getScenePosition( gesture );
+    const QPointF scenePosition = getScenePos( gesture );
 
     if( isOnBackground( scenePosition ))
         emit backgroundTap( scenePosition );
@@ -183,10 +190,19 @@ void DisplayGroupGraphicsView::tapAndHold( QTapAndHoldGesture* gesture )
     if( gesture->state() != Qt::GestureFinished )
         return;
 
-    const QPointF scenePosition = getScenePosition( gesture );
+    const QPointF scenePosition = getScenePos( gesture );
 
     if( isOnBackground( scenePosition ))
         emit backgroundTapAndHold( scenePosition );
+}
+
+void DisplayGroupGraphicsView::clearScene()
+{
+    foreach( QGraphicsItem* itemToRemove, uuidToWindowMap_ )
+        scene()->removeItem( itemToRemove );
+
+    uuidToWindowMap_.clear();
+    grabGestures();
 }
 
 void DisplayGroupGraphicsView::resizeEvent( QResizeEvent* resizeEvt )
@@ -206,7 +222,7 @@ void DisplayGroupGraphicsView::resizeEvent( QResizeEvent* resizeEvt )
     QGraphicsView::resizeEvent( resizeEvt );
 }
 
-QPointF DisplayGroupGraphicsView::getScenePosition( const QGesture* gesture ) const
+QPointF DisplayGroupGraphicsView::getScenePos( const QGesture* gesture ) const
 {
     // QGesture::hotSpot() gives the position (in pixels) in "global screen
     // coordinates", i.e. on the display where the Rank0 Qt MainWindow lives.
@@ -233,45 +249,39 @@ bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
     return dynamic_cast< const ContentWindowTouchArea* >( item ) == 0;
 }
 
-void DisplayGroupGraphicsView::addContentWindow( ContentWindowPtr contentWindow )
+void DisplayGroupGraphicsView::add( ContentWindowPtr contentWindow )
 {
-    QDeclarativeComponent component( &engine_, QUrl( "qrc:/qml/master/ContentWindow.qml" ));
+    QDeclarativeComponent component( &engine_, QML_CONTENTWINDOW_URL );
 
     // New Context, ownership retained by the windowItem (set as parent QObject)
-    QDeclarativeContext* windowContext = new QDeclarativeContext( engine_.rootContext( ));
+    QDeclarativeContext* rootContext = engine_.rootContext();
+    QDeclarativeContext* windowContext = new QDeclarativeContext( rootContext );
     windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
     QObject* windowItem = component.create( windowContext );
     windowContext->setParent( windowItem );
 
-    ContentWindowTouchArea* touchArea = windowItem->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
+
+    ContentWindowTouchArea* touchArea =
+       windowItem->findChild<ContentWindowTouchArea*>( TOUCH_AREA_OBJECT_NAME );
     touchArea->init( contentWindow, *displayGroup_ );
-    windowContext->setContextProperty( "controller", touchArea->getWindowController( ));
 
-    qobject_cast<QGraphicsObject*>( windowItem )->setParentItem( displayGroupItem_ );
+    ContentWindowController* controller = touchArea->getWindowController();
+    windowContext->setContextProperty( "controller", controller );
+
+    // Store a reference to the window and add it to the scene
+    const QUuid& id = contentWindow->getID();
+    uuidToWindowMap_[ id ] = qobject_cast<QGraphicsItem*>( windowItem );
+    uuidToWindowMap_[ id ]->setParentItem( displayGroupItem_ );
 }
 
-QGraphicsItem* DisplayGroupGraphicsView::getItemFor( ContentWindowPtr contentWindow )
+void DisplayGroupGraphicsView::remove( ContentWindowPtr contentWindow )
 {
-    QList<QGraphicsItem*> windows = displayGroupItem_->childItems();
-
-    foreach( QGraphicsItem* item, windows )
-    {
-        QGraphicsObject* obj = item->toGraphicsObject();
-        if( !obj )
-            continue;
-
-        ContentWindowTouchArea* touchArea = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
-        if( touchArea && touchArea->getContentWindow() == contentWindow )
-            return item;
-    }
-    return 0;
-}
-
-void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWindow )
-{
-    QGraphicsItem* itemToRemove = getItemFor( contentWindow );
-    if( !itemToRemove )
+    const QUuid& id = contentWindow->getID();
+    if( !uuidToWindowMap_.contains( id ))
         return;
+
+    QGraphicsItem* itemToRemove = uuidToWindowMap_[id];
+    uuidToWindowMap_.remove( contentWindow->getID( ));
 
     scene()->removeItem( itemToRemove );
 
@@ -282,11 +292,13 @@ void DisplayGroupGraphicsView::removeContentWindow( ContentWindowPtr contentWind
     grabGestures();
 }
 
-void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr contentWindow )
+void DisplayGroupGraphicsView::moveToFront( ContentWindowPtr contentWindow )
 {
-    QGraphicsItem* itemToRaise = getItemFor( contentWindow );
-    if( !itemToRaise )
+    const QUuid& id = contentWindow->getID();
+    if( !uuidToWindowMap_.contains( id ))
         return;
+
+    QGraphicsItem* itemToRaise = uuidToWindowMap_[id];
 
     QList<QGraphicsItem*> windows = displayGroupItem_->childItems();
     foreach( QGraphicsItem* item, windows )
@@ -295,8 +307,7 @@ void DisplayGroupGraphicsView::moveContentWindowToFront( ContentWindowPtr conten
         if( !obj )
             continue;
 
-        ContentWindowTouchArea* touchArea = obj->findChild<ContentWindowTouchArea*>("ContentWindowTouchArea");
-        if( touchArea )
+        if( obj->findChild<ContentWindowTouchArea*>( TOUCH_AREA_OBJECT_NAME ))
             item->stackBefore( itemToRaise );
     }
 }
