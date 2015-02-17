@@ -69,24 +69,11 @@ public:
 
     /** Init must be separate from the constructor for instanciation in QML. */
     void init( ContentWindowPtr contentWindow,
-               const DisplayGroup& displayGroup );
-
-    /** Get the associated ContentWindow. */
-    ContentWindowPtr getContentWindow() const;
-
-    /** Get the window controller for exposing it in the Qml context. */
-    ContentWindowController* getWindowController();
-
-public slots:
-    /** Close this window. */
-    void close();
+               ContentWindowController* controller );
 
 signals:
-    /** Emitted when a user clicks the window to bring it to the front. */
-    void moveToFront( ContentWindowPtr contentWindow );
-
-    /** Emitted when the user clicks the close button. */
-    void close( ContentWindowPtr contentWindow );
+    /** Emitted whenever the user interacts with the touch area. */
+    void activated();
 
 protected:
     /** @name Re-implemented QGraphicsRectItem events */

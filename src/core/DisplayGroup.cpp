@@ -74,6 +74,11 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
+void DisplayGroup::removeContentWindow( const QUuid id )
+{
+    removeContentWindow( getContentWindow( id ));
+}
+
 void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
 {
     ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
@@ -91,8 +96,16 @@ void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
+void DisplayGroup::moveContentWindowToFront( const QUuid id )
+{
+    moveContentWindowToFront( getContentWindow( id ));
+}
+
 void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
 {
+    if( contentWindow == contentWindows_.back( ))
+        return;
+
     ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
                                            contentWindows_.end(),
                                            contentWindow );

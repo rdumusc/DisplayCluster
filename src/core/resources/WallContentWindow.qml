@@ -2,7 +2,7 @@ import QtQuick 1.1
 import DisplayCluster 1.0
 
 Rectangle {
-    id: rootObj
+    id: windowRect
     color: "transparent"
 
     x: contentwindow.x
@@ -11,9 +11,6 @@ Rectangle {
     height: contentwindow.height
 
     WindowControls {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 30
         visible: contentwindow.label != "Dock"
         opacity: contentwindow.controlsOpacity
     }
@@ -22,7 +19,7 @@ Rectangle {
         State {
             name: "hidden"
             when: contentwindow.state == ContentWindow.HIDDEN
-            PropertyChanges { target: rootObj; visible: false }
+            PropertyChanges { target: windowRect; visible: false }
         }
     ]
 }

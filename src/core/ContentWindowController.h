@@ -69,7 +69,8 @@ class ContentWindowController : public QObject
 
 public:
     ContentWindowController( ContentWindow& contentWindow,
-                             const DisplayGroup& displayGroup );
+                             const DisplayGroup& displayGroup,
+                             QObject* parent = 0 );
 
     /** Resize the window. */
     Q_INVOKABLE void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );

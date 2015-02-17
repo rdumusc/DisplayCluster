@@ -21,5 +21,6 @@
         <file>DisplayGroup.qml</file>
         <file>WindowControls.qml</file>
         <file>WallContentWindow.qml</file>
+        <file>ControlButton.qml</file>
     </qresource>
 </RCC>

@@ -43,14 +43,14 @@
 /**
  * Register types for use in Qml
  */
-struct QmlTypeRegistration
+struct QmlAppTypeRegistration
 {
-    QmlTypeRegistration()
+    QmlAppTypeRegistration()
     {
-        qmlRegisterType<ContentWindowTouchArea>("DisplayCluster", 1, 0, "ContentWindowTouchArea");
-        qmlRegisterType<TouchArea>("DisplayCluster", 1, 0, "TouchArea");
+        qmlRegisterType<ContentWindowTouchArea>("DisplayClusterApp", 1, 0, "ContentWindowTouchArea");
+        qmlRegisterType<TouchArea>("DisplayClusterApp", 1, 0, "TouchArea");
     }
 };
 
 // Static instance to register types during library static initialisation phase
-static QmlTypeRegistration staticInstance;
+static QmlAppTypeRegistration staticInstance;

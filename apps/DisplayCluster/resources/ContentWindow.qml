@@ -1,10 +1,10 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
 
 Rectangle {
-    id: rootObj
-
+    id: windowRect
     color: "#80000000"
     border.color: "black"
     border.width: 10
@@ -27,21 +27,36 @@ Rectangle {
         target: contentwindow; property: "height"; value: height
     }
 
+    function closeWindow() {
+        displaygroup.removeContentWindow(contentwindow.id);
+    }
+
     ContentWindowTouchArea {
         objectName: "ContentWindowTouchArea"
-        id: contentWindowTouchArea
         anchors.fill: parent
 
-        onMoveToFront: controlsFadeAnimation.restart()
+        onActivated: {
+            displaygroup.moveContentWindowToFront(contentwindow.id);
+            controlsFadeAnimation.restart();
+        }
 
         WindowControls {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 30
-            onClose: contentWindowTouchArea.close()
-            onToggleFullscreen: controller.toggleFullscreen()
             opacity: 0.1
             visible: contentwindow.controlsOpacity > 0 && contentwindow.label != "Dock"
+
+            function addTouchToButtons() {
+                for(var i = 0; i < buttons.length ; i++) {
+                    var newObject = Qt.createQmlObject('import QtQuick 1.0; import DisplayClusterApp 1.0; TouchArea {anchors.fill: parent}', buttons[i]);
+                    if(buttons[i].objectName == "closeButton")
+                        newObject.tap.connect(windowRect.closeWindow);
+                    else if(buttons[i].objectName == "toggleFullscreenButton")
+                        newObject.tap.connect(controller.toggleFullscreen);
+                }
+            }
+
+            Component.onCompleted: {
+                addTouchToButtons();
+            }
         }
 
         Text {
@@ -68,7 +83,7 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 preventStealing: true
-                onClicked: contentWindowTouchArea.close()
+                onClicked: windowRect.closeWindow()
             }
         }
 
@@ -123,22 +138,22 @@ Rectangle {
         State {
             name: "selected"
             when: contentwindow.state == ContentWindow.SELECTED
-            PropertyChanges { target: rootObj; border.color: "red" }
+            PropertyChanges { target: windowRect; border.color: "red" }
         },
         State {
             name: "moving"
             when: contentwindow.state == ContentWindow.MOVING
-            PropertyChanges { target: rootObj; border.color: "green" }
+            PropertyChanges { target: windowRect; border.color: "green" }
         },
         State {
             name: "resizing"
             when: contentwindow.state == ContentWindow.RESIZING
-            PropertyChanges { target: rootObj; border.color: "blue" }
+            PropertyChanges { target: windowRect; border.color: "blue" }
         },
         State {
             name: "hidden"
             when: contentwindow.state == ContentWindow.HIDDEN
-            PropertyChanges { target: rootObj; visible: false }
+            PropertyChanges { target: windowRect; visible: false }
         }
     ]
 

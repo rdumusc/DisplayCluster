@@ -51,6 +51,7 @@
 
 TestPattern::TestPattern( const WallConfiguration& configuration,
                           const int tileIndex )
+    : wallSize_( configuration.getTotalSize( ))
 {
     const QPoint globalScreenIndex = configuration.getGlobalScreenIndex( tileIndex );
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
@@ -65,15 +66,14 @@ TestPattern::TestPattern( const WallConfiguration& configuration,
 
 void TestPattern::draw( QPainter* painter, const QRectF& rect )
 {
-    renderCrossPattern( painter, rect );
+    renderCrossPattern( painter );
     renderLabels( painter, rect );
 }
 
-void TestPattern::renderCrossPattern( QPainter* painter, const QRectF& rect )
+void TestPattern::renderCrossPattern( QPainter* painter )
 {
-    const qreal height = rect.height();
-    const qreal width = rect.width();
-    const QPointF offset( rect.topLeft( ));
+    const qreal height = wallSize_.height();
+    const qreal width = wallSize_.width();
 
     QPen pen;
     pen.setWidth( LINE_WIDTH );
@@ -83,10 +83,8 @@ void TestPattern::renderCrossPattern( QPainter* painter, const QRectF& rect )
         const qreal hue = (y + height) / (3.0 * height);
         pen.setColor( QColor::fromHsvF( hue, 1.0, 1.0 ));
         painter->setPen( pen );
-        painter->drawLine( offset + QPointF( 0.0, y ),
-                           offset + QPointF( width, y + height ));
-        painter->drawLine( offset + QPointF( 0.0, y ),
-                           offset + QPointF( width, y - height ));
+        painter->drawLine( QPointF( 0.0, y ), QPointF( width, y + height ));
+        painter->drawLine( QPointF( 0.0, y ), QPointF( width, y - height ));
     }
 }
 

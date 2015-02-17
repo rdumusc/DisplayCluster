@@ -59,8 +59,12 @@ struct MetaTypeRegistration
         qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
         qRegisterMetaType< MPIMessageType >( "MPIMessageType" );
         qRegisterMetaType< std::string >( "std::string" );
+        qRegisterMetaType< QUuid >( "QUuid" );
+        qRegisterMetaTypeStreamOperators< QUuid >( "QUuid" );
     }
 };
 
 // Static instance to register types during library static initialisation phase
 static MetaTypeRegistration staticInstance;
+
+Q_DECLARE_METATYPE(QUuid)

@@ -41,6 +41,7 @@
 
 #include "types.h"
 
+#include <QtCore/QUuid>
 #include <QtGui/QGraphicsView>
 #include <QtGui/QGesture>
 #include <QtGui/QGestureEvent>
@@ -83,28 +84,27 @@ protected:
     //@}
 
 private slots:
-    void addContentWindow( ContentWindowPtr contentWindow );
-    void removeContentWindow( ContentWindowPtr contentWindow );
-    void moveContentWindowToFront( ContentWindowPtr contentWindow );
+    void add( ContentWindowPtr contentWindow );
+    void remove( ContentWindowPtr contentWindow );
+    void moveToFront( ContentWindowPtr contentWindow );
 
 private:
     void gestureEvent( QGestureEvent* event );
-    void swipe( QSwipeGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
     void tap( QTapGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
 
-    QGraphicsItem* getItemFor( ContentWindowPtr contentWindow );
-
+    void clearScene();
     void grabGestures();
-    QPointF getScenePosition( const QGesture* gesture ) const;
+    QPointF getScenePos( const QGesture* gesture ) const;
     bool isOnBackground( const QPointF& position ) const;
 
     DisplayGroupPtr displayGroup_;
 
     QDeclarativeEngine engine_;
     QGraphicsObject* displayGroupItem_;
+
+    typedef QMap<QUuid, QGraphicsItem*> UuidToWindowMap;
+    UuidToWindowMap uuidToWindowMap_;
 };
 
 #endif

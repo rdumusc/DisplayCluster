@@ -67,6 +67,7 @@ class ContentInteractionDelegate;
 class ContentWindow : public Coordinates
 {
     Q_OBJECT
+    Q_PROPERTY( QUuid id READ getID )
     Q_PROPERTY( WindowState state READ getState WRITE setState NOTIFY stateChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
     Q_PROPERTY( qreal controlsOpacity READ getControlsOpacity WRITE setControlsOpacity NOTIFY controlsOpacityChanged )

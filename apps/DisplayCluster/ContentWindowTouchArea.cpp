@@ -84,25 +84,10 @@ ContentWindowTouchArea::~ContentWindowTouchArea()
 }
 
 void ContentWindowTouchArea::init( ContentWindowPtr contentWindow,
-                                      const DisplayGroup& displayGroup )
+                                   ContentWindowController* controller )
 {
     contentWindow_ = contentWindow;
-    controller_ = new ContentWindowController( *contentWindow, displayGroup );
-}
-
-ContentWindowPtr ContentWindowTouchArea::getContentWindow() const
-{
-    return contentWindow_;
-}
-
-ContentWindowController* ContentWindowTouchArea::getWindowController()
-{
-    return controller_;
-}
-
-void ContentWindowTouchArea::close()
-{
-    emit close( contentWindow_ );
+    controller_ = controller;
 }
 
 bool ContentWindowTouchArea::sceneEvent( QEvent* event_ )
@@ -113,7 +98,7 @@ bool ContentWindowTouchArea::sceneEvent( QEvent* event_ )
     switch( event_->type( ))
     {
     case QEvent::Gesture:
-        emit moveToFront( contentWindow_ );
+        emit activated();
         gestureEvent( static_cast< QGestureEvent* >( event_ ));
         return true;
     case QEvent::KeyPress:
@@ -146,7 +131,7 @@ void ContentWindowTouchArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
 
 void ContentWindowTouchArea::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
 {
-    emit moveToFront( contentWindow_ );
+    emit activated();
 
     if( contentWindow_->isSelected( ))
     {

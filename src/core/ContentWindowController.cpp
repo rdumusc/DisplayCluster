@@ -53,8 +53,10 @@ const QSizeF MIN_AREA( MIN_VISIBLE_AREA_PX, MIN_VISIBLE_AREA_PX );
 }
 
 ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
-                                                  const DisplayGroup& displayGroup )
-    : contentWindow_( contentWindow )
+                                                  const DisplayGroup& displayGroup,
+                                                  QObject* parent_ )
+    : QObject( parent_ )
+    , contentWindow_( contentWindow )
     , displayGroup_( displayGroup )
 {
 }
