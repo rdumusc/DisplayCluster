@@ -90,9 +90,6 @@ private slots:
 
 private:
     void gestureEvent( QGestureEvent* event );
-    void swipe( QSwipeGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
     void tap( QTapGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
 

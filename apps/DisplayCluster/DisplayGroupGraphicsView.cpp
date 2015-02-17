@@ -134,22 +134,7 @@ void DisplayGroupGraphicsView::gestureEvent( QGestureEvent* evt )
 {
     QGesture* gesture = 0;
 
-    if( ( gesture = evt->gesture( Qt::SwipeGesture )))
-    {
-        evt->accept( Qt::SwipeGesture );
-        swipe( static_cast< QSwipeGesture* >( gesture ));
-    }
-    else if( ( gesture = evt->gesture( PanGestureRecognizer::type( ))))
-    {
-        evt->accept( PanGestureRecognizer::type( ));
-        pan( static_cast< PanGesture* >( gesture ));
-    }
-    else if( ( gesture = evt->gesture( PinchGestureRecognizer::type( ))))
-    {
-        evt->accept( PinchGestureRecognizer::type( ));
-        pinch( static_cast< PinchGesture* >( gesture ));
-    }
-    else if( ( gesture = evt->gesture( Qt::TapGesture )))
+    if( ( gesture = evt->gesture( Qt::TapGesture )))
     {
         evt->accept( Qt::TapGesture );
         tap( static_cast< QTapGesture* >( gesture ));
@@ -159,19 +144,6 @@ void DisplayGroupGraphicsView::gestureEvent( QGestureEvent* evt )
         evt->accept( Qt::TapAndHoldGesture );
         tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
     }
-}
-
-void DisplayGroupGraphicsView::swipe( QSwipeGesture* )
-{
-    std::cout << "SWIPE VIEW" << std::endl;
-}
-
-void DisplayGroupGraphicsView::pan( PanGesture* )
-{
-}
-
-void DisplayGroupGraphicsView::pinch( PinchGesture* )
-{
 }
 
 void DisplayGroupGraphicsView::tap( QTapGesture* gesture )
@@ -251,22 +223,22 @@ bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
 
 void DisplayGroupGraphicsView::add( ContentWindowPtr contentWindow )
 {
-    QDeclarativeComponent component( &engine_, QML_CONTENTWINDOW_URL );
-
-    // New Context, ownership retained by the windowItem (set as parent QObject)
+    // New Context for the window, ownership retained by the windowItem
     QDeclarativeContext* rootContext = engine_.rootContext();
     QDeclarativeContext* windowContext = new QDeclarativeContext( rootContext );
+    ContentWindowController* controller =
+            new ContentWindowController( *contentWindow, *displayGroup_,
+                                         windowContext );
+    windowContext->setContextProperty( "controller", controller );
     windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
+
+    QDeclarativeComponent component( &engine_, QML_CONTENTWINDOW_URL );
     QObject* windowItem = component.create( windowContext );
     windowContext->setParent( windowItem );
 
-
     ContentWindowTouchArea* touchArea =
        windowItem->findChild<ContentWindowTouchArea*>( TOUCH_AREA_OBJECT_NAME );
-    touchArea->init( contentWindow, *displayGroup_ );
-
-    ContentWindowController* controller = touchArea->getWindowController();
-    windowContext->setContextProperty( "controller", controller );
+    touchArea->init( contentWindow, controller );
 
     // Store a reference to the window and add it to the scene
     const QUuid& id = contentWindow->getID();

@@ -69,10 +69,7 @@ public:
 
     /** Init must be separate from the constructor for instanciation in QML. */
     void init( ContentWindowPtr contentWindow,
-               const DisplayGroup& displayGroup );
-
-    /** Get the window controller for exposing it in the Qml context. */
-    ContentWindowController* getWindowController();
+               ContentWindowController* controller );
 
 signals:
     /** Emitted whenever the user interacts with the touch area. */

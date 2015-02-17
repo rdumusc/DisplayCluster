@@ -84,15 +84,10 @@ ContentWindowTouchArea::~ContentWindowTouchArea()
 }
 
 void ContentWindowTouchArea::init( ContentWindowPtr contentWindow,
-                                   const DisplayGroup& displayGroup )
+                                   ContentWindowController* controller )
 {
     contentWindow_ = contentWindow;
-    controller_ = new ContentWindowController( *contentWindow, displayGroup );
-}
-
-ContentWindowController* ContentWindowTouchArea::getWindowController()
-{
-    return controller_;
+    controller_ = controller;
 }
 
 bool ContentWindowTouchArea::sceneEvent( QEvent* event_ )

@@ -44,19 +44,13 @@ Rectangle {
             opacity: 0.1
             visible: contentwindow.controlsOpacity > 0 && contentwindow.label != "Dock"
 
-            // controller is not set yet at Component.onCompleted, so
-            // signals cannot be connected directly
-            function toggleFullscreen() {
-                controller.toggleFullscreen();
-            }
-
             function addTouchToButtons() {
                 for(var i = 0; i < buttons.length ; i++) {
                     var newObject = Qt.createQmlObject('import QtQuick 1.0; import DisplayClusterApp 1.0; TouchArea {anchors.fill: parent}', buttons[i]);
                     if(buttons[i].objectName == "closeButton")
                         newObject.tap.connect(windowRect.closeWindow);
                     else if(buttons[i].objectName == "toggleFullscreenButton")
-                        newObject.tap.connect(toggleFullscreen);
+                        newObject.tap.connect(controller.toggleFullscreen);
                 }
             }
 
