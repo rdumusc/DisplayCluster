@@ -69,10 +69,26 @@ class ContentWindow : public Coordinates
     Q_OBJECT
     Q_PROPERTY( QUuid id READ getID )
     Q_PROPERTY( WindowState state READ getState WRITE setState NOTIFY stateChanged )
+    Q_PROPERTY( WindowBorder border READ getBorder WRITE setBorder NOTIFY borderChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
     Q_PROPERTY( qreal controlsOpacity READ getControlsOpacity WRITE setControlsOpacity NOTIFY controlsOpacityChanged )
 
 public:
+    /** The current active window border used for resizing */
+    enum WindowBorder
+    {
+        TOP_LEFT,
+        TOP,
+        TOP_RIGHT,
+        RIGHT,
+        BOTTOM_RIGHT,
+        BOTTOM,
+        BOTTOM_LEFT,
+        LEFT,
+        NOBORDER
+    };
+    Q_ENUMS( WindowBorder )
+
     /** The possible states of a window. */
     enum WindowState
     {
@@ -114,9 +130,14 @@ public:
     /** Set the zoom rectangle in normalized coordinates. */
     void setZoomRect( const QRectF& zoomRect );
 
+    /** @return the current active resize border. */
+    ContentWindow::WindowBorder getBorder() const;
 
     /** Get the current state. */
     ContentWindow::WindowState getState() const;
+
+    /** Set the current active resize border. */
+    void setBorder( const ContentWindow::WindowBorder border );
 
     /** Set the current state. */
     void setState( const ContentWindow::WindowState state );
@@ -186,6 +207,7 @@ signals:
 
     /** @name QProperty notifiers */
     //@{
+    void borderChanged();
     void stateChanged();
     void labelChanged();
     void controlsOpacityChanged();
@@ -205,6 +227,7 @@ private:
         ar & content_;
         ar & coordinates_;
         ar & zoomRect_;
+        ar & windowBorder_;
         ar & windowState_;
         ar & controlsOpacity_;
     }
@@ -267,6 +290,7 @@ private:
     // zooming
     QRectF zoomRect_;
 
+    ContentWindow::WindowBorder windowBorder_;
     ContentWindow::WindowState windowState_;
     qreal controlsOpacity_;
 

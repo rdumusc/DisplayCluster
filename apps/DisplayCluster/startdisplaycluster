@@ -85,7 +85,7 @@ else:
 # Form the application parameters list
 DC_PARAMS = '--config ' + DC_CONFIG_FILE
 if args.session:
-    DC_PARAMS += '--session ' + args.session
+    DC_PARAMS += ' --session ' + args.session
 
 if args.vglrun:
     VGLRUN_BIN = 'vglrun '

@@ -55,6 +55,7 @@ IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
+    , windowBorder_( NOBORDER )
     , windowState_( NONE )
     , controlsOpacity_( 0.0 )
     , eventReceiversCount_( 0 )
@@ -64,6 +65,7 @@ ContentWindow::ContentWindow()
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( 0.0, 0.0, 1.0, 1.0 )
+    , windowBorder_( NOBORDER )
     , windowState_( NONE )
     , controlsOpacity_( 0.0 )
     , eventReceiversCount_( 0 )
@@ -126,9 +128,23 @@ void ContentWindow::setZoomRect( const QRectF& zoomRect )
     emit modified();
 }
 
+ContentWindow::WindowBorder ContentWindow::getBorder() const
+{
+    return windowBorder_;
+}
+
 ContentWindow::WindowState ContentWindow::getState() const
 {
     return windowState_;
+}
+
+void ContentWindow::setBorder( const ContentWindow::WindowBorder border )
+{
+    if( windowBorder_ == border )
+        return;
+    windowBorder_ = border;
+    emit borderChanged();
+    emit modified();
 }
 
 void ContentWindow::setState( const ContentWindow::WindowState state )

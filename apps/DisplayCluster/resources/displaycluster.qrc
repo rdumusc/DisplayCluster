@@ -2,6 +2,8 @@
     <qresource prefix="/"/>
     <qresource prefix="/qml/master">
         <file>ContentWindow.qml</file>
+        <file>TouchWindowBorders.qml</file>
+        <file>TouchBorderRectangle.qml</file>
     </qresource>
     <qresource prefix="/img/master">
         <file>close.svg</file>

@@ -48,7 +48,7 @@ struct QmlTypeRegistration
 {
     QmlTypeRegistration()
     {
-        qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports WindowState enum to QML");
+        qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports enums to QML");
     }
 };
 

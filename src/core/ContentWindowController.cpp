@@ -78,6 +78,51 @@ void ContentWindowController::resize( QSizeF size, const WindowPoint fixedPoint 
     contentWindow_.setCoordinates( coordinates );
 }
 
+void ContentWindowController::resizeRelative( const QPointF delta )
+{
+    QRectF coordinates( contentWindow_.getCoordinates( ));
+    switch( contentWindow_.getBorder( ))
+    {
+    case ContentWindow::TOP:
+        coordinates.adjust( 0, delta.y(), 0, 0 );
+        break;
+    case ContentWindow::RIGHT:
+        coordinates.adjust( 0, 0, delta.x(), 0 );
+        break;
+    case ContentWindow::BOTTOM:
+        coordinates.adjust( 0, 0, 0, delta.y( ));
+        break;
+    case ContentWindow::LEFT:
+        coordinates.adjust( delta.x(), 0, 0, 0 );
+        break;
+    case ContentWindow::TOP_LEFT:
+        resize( coordinates.bottomRight(),
+                coordinates.size() - QSizeF( delta.x(), delta.y( )));
+        return;
+    case ContentWindow::BOTTOM_LEFT:
+        resize( coordinates.topRight(),
+                coordinates.size() - QSizeF( delta.x(), -delta.y( )));
+        return;
+    case ContentWindow::TOP_RIGHT:
+        resize( coordinates.bottomLeft(),
+                coordinates.size() - QSizeF( -delta.x(), delta.y( )));
+        return;
+    case ContentWindow::BOTTOM_RIGHT:
+        resize( coordinates.topLeft(),
+                coordinates.size() + QSizeF( delta.x(), delta.y( )));
+        return;
+    case ContentWindow::NOBORDER:
+    default:
+        return;
+    }
+    QSizeF newSize( coordinates.size( ));
+    constrainSize( newSize );
+    coordinates.setSize( newSize );
+
+    constrainPosition( coordinates );
+    contentWindow_.setCoordinates( coordinates );
+}
+
 void ContentWindowController::resize( const QPointF& center, QSizeF size )
 {
     constrainSize( size );

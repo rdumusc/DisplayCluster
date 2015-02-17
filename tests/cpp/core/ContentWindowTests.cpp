@@ -82,6 +82,7 @@ BOOST_AUTO_TEST_CASE( testInitialSize )
     BOOST_CHECK_EQUAL( coords.y(), 0.0 );
     BOOST_CHECK_EQUAL( coords.width(), WIDTH );
     BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
+    BOOST_CHECK_EQUAL( window.getBorder(), ContentWindow::NOBORDER );
 }
 
 BOOST_AUTO_TEST_CASE( testValidID )

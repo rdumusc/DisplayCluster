@@ -184,3 +184,32 @@ BOOST_AUTO_TEST_CASE( testFromFullscreenBackToNormalized )
     BOOST_CHECK_EQUAL( coords.width(), target.width( ));
     BOOST_CHECK_EQUAL( coords.height(), target.height( ));
 }
+
+BOOST_AUTO_TEST_CASE( testResizeRelative )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow window( content );
+
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
+
+    const QRectF originalCoords = window.getCoordinates();
+
+    controller.resizeRelative( QPointF( 5, 5 ));
+    BOOST_CHECK( window.getCoordinates() == originalCoords );
+
+    window.setBorder( ContentWindow::TOP );
+    controller.resizeRelative( QPointF( 5, 5 ));
+    BOOST_CHECK_EQUAL( window.getCoordinates().top() - 5, originalCoords.top());
+
+    window.setBorder( ContentWindow::BOTTOM );
+    controller.resizeRelative( QPointF( 2, 2 ));
+    BOOST_CHECK_EQUAL( window.getCoordinates().bottom() - 2,
+                       originalCoords.bottom( ));
+
+    window.setBorder( ContentWindow::TOP_RIGHT );
+    controller.resizeRelative( QPointF( 1, 2 ));
+    BOOST_CHECK( window.getCoordinates().topRight() - QPointF( 1, 7 ) ==
+                 originalCoords.topRight( ));
+}

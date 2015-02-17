@@ -57,6 +57,7 @@ struct MetaTypeRegistration
         qRegisterMetaType< DisplayGroupPtr >( "DisplayGroupPtr" );
         qRegisterMetaType< ContentWindowPtr >( "ContentWindowPtr" );
         qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
+        qRegisterMetaType< ContentWindow::WindowBorder >( "ContentWindow::WindowBorder" );
         qRegisterMetaType< MPIMessageType >( "MPIMessageType" );
         qRegisterMetaType< std::string >( "std::string" );
         qRegisterMetaType< QUuid >( "QUuid" );

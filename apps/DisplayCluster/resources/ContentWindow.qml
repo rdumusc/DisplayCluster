@@ -15,20 +15,28 @@ Rectangle {
     height: contentwindow.height
 
     Binding {
-        target: contentwindow; property: "x"; value: x
+        target: contentwindow
+        property: "x"
+        value: x
     }
     Binding {
-        target: contentwindow; property: "y"; value: y
+        target: contentwindow
+        property: "y"
+        value: y
     }
     Binding {
-        target: contentwindow; property: "width"; value: width
+        target: contentwindow
+        property: "width"
+        value: width
     }
     Binding {
-        target: contentwindow; property: "height"; value: height
+        target: contentwindow
+        property: "height"
+        value: height
     }
 
     function closeWindow() {
-        displaygroup.removeContentWindow(contentwindow.id);
+        displaygroup.removeContentWindow(contentwindow.id)
     }
 
     ContentWindowTouchArea {
@@ -36,26 +44,39 @@ Rectangle {
         anchors.fill: parent
 
         onActivated: {
-            displaygroup.moveContentWindowToFront(contentwindow.id);
-            controlsFadeAnimation.restart();
+            displaygroup.moveContentWindowToFront(contentwindow.id)
+            controlsFadeAnimation.restart()
         }
 
         WindowControls {
-            opacity: 0.1
-            visible: contentwindow.controlsOpacity > 0 && contentwindow.label != "Dock"
+            id: windowcontrols
 
             function addTouchToButtons() {
-                for(var i = 0; i < buttons.length ; i++) {
-                    var newObject = Qt.createQmlObject('import QtQuick 1.0; import DisplayClusterApp 1.0; TouchArea {anchors.fill: parent}', buttons[i]);
-                    if(buttons[i].objectName == "closeButton")
-                        newObject.tap.connect(windowRect.closeWindow);
-                    else if(buttons[i].objectName == "toggleFullscreenButton")
-                        newObject.tap.connect(controller.toggleFullscreen);
+                for (var i = 0; i < buttons.length; i++) {
+                    var newObject = Qt.createQmlObject(
+                                'import QtQuick 1.0; import DisplayClusterApp 1.0; TouchArea {anchors.fill: parent}',
+                                buttons[i])
+                    if (buttons[i].objectName === "closeButton")
+                        newObject.tap.connect(windowRect.closeWindow)
+                    else if (buttons[i].objectName === "toggleFullscreenButton")
+                        newObject.tap.connect(controller.toggleFullscreen)
                 }
             }
 
             Component.onCompleted: {
-                addTouchToButtons();
+                addTouchToButtons()
+            }
+        }
+
+        TouchWindowBorders {
+            onBorderPanned: {
+                controlsFadeAnimation.stop()
+                controller.resizeRelative(delta, windowBorder)
+                contentwindow.border = windowBorder
+            }
+            onBorderPanFinished: {
+                controlsFadeAnimation.restart()
+                contentwindow.border = ContentWindow.NOBORDER
             }
         }
 
@@ -103,14 +124,16 @@ Rectangle {
                 property variant startMousePos
                 property variant startSize
                 onPressed: {
-                    startMousePos = Qt.point(mouse.x, mouse.y);
-                    startSize = Qt.size(contentwindow.width, contentwindow.height)
+                    startMousePos = Qt.point(mouse.x, mouse.y)
+                    startSize = Qt.size(contentwindow.width,
+                                        contentwindow.height)
                     contentwindow.state = ContentWindow.RESIZING
                 }
                 onPositionChanged: {
-                    var newSize = Qt.size(mouse.x - startMousePos.x + startSize.width,
-                                          mouse.y - startMousePos.y + startSize.height)
-                    controller.resize(newSize);
+                    var newSize = Qt.size(
+                                mouse.x - startMousePos.x + startSize.width,
+                                mouse.y - startMousePos.y + startSize.height)
+                    controller.resize(newSize)
                 }
                 onReleased: contentwindow.state = ContentWindow.NONE
             }
@@ -137,23 +160,35 @@ Rectangle {
     states: [
         State {
             name: "selected"
-            when: contentwindow.state == ContentWindow.SELECTED
-            PropertyChanges { target: windowRect; border.color: "red" }
+            when: contentwindow.state === ContentWindow.SELECTED
+            PropertyChanges {
+                target: windowRect
+                border.color: "red"
+            }
         },
         State {
             name: "moving"
-            when: contentwindow.state == ContentWindow.MOVING
-            PropertyChanges { target: windowRect; border.color: "green" }
+            when: contentwindow.state === ContentWindow.MOVING
+            PropertyChanges {
+                target: windowRect
+                border.color: "green"
+            }
         },
         State {
             name: "resizing"
-            when: contentwindow.state == ContentWindow.RESIZING
-            PropertyChanges { target: windowRect; border.color: "blue" }
+            when: contentwindow.state === ContentWindow.RESIZING
+            PropertyChanges {
+                target: windowRect
+                border.color: "blue"
+            }
         },
         State {
             name: "hidden"
-            when: contentwindow.state == ContentWindow.HIDDEN
-            PropertyChanges { target: windowRect; visible: false }
+            when: contentwindow.state === ContentWindow.HIDDEN
+            PropertyChanges {
+                target: windowRect
+                visible: false
+            }
         }
     ]
 
