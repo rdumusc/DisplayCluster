@@ -92,6 +92,13 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
     if( !displayGroup_ )
         return;
 
+    engine_.rootContext()->setContextProperty( "displaygroup",
+                                               displayGroup_.get( ));
+
+    QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
+    displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
+    scene()->addItem( displayGroupItem_ );
+
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
     BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
@@ -107,12 +114,6 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
     connect( displayGroup_.get(),
              SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveToFront( ContentWindowPtr )));
-
-    engine_.rootContext()->setContextProperty( "displaygroup",
-                                               displayGroup_.get( ));
-    QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
-    displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
-    scene()->addItem( displayGroupItem_ );
 }
 
 void DisplayGroupGraphicsView::grabGestures()
