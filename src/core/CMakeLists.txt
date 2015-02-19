@@ -75,7 +75,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   MasterFromWallChannel.h
   MasterToWallChannel.h
   Movie.h
-  MovieContent.h
   MPIChannel.h
   MPIContext.h
   Options.h
@@ -134,6 +133,8 @@ list(APPEND DCCORE_PUBLIC_HEADERS
 
 list(APPEND DCCORE_MOC_HEADERS
   Content.h
+  ContentAction.h
+  ContentActionsModel.h
   ContentWindow.h
   ContentWindowController.h
   Coordinates.h
@@ -144,6 +145,7 @@ list(APPEND DCCORE_MOC_HEADERS
   MarkerRenderer.h
   MasterFromWallChannel.h
   MasterToWallChannel.h
+  MovieContent.h
   Options.h
   PixelStream.h
   PixelStreamWindowManager.h
@@ -170,6 +172,8 @@ list(APPEND DCCORE_MOC_HEADERS
 list(APPEND DCCORE_SOURCES
   ${COMMON_SOURCES}
   Content.cpp
+  ContentAction.cpp
+  ContentActionsModel.cpp
   ContentFactory.cpp
   ContentLoader.cpp
   ContentType.cpp

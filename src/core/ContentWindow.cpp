@@ -84,6 +84,11 @@ const QUuid& ContentWindow::getID() const
     return uuid_;
 }
 
+Content* ContentWindow::getContentPtr() const
+{
+    return content_.get();
+}
+
 ContentPtr ContentWindow::getContent() const
 {
     return content_;

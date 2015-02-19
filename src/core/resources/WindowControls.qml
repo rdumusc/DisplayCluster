@@ -2,9 +2,11 @@ import QtQuick 1.1
 import DisplayCluster 1.0
 
 Rectangle {
-    property alias buttons: buttons.children
-    width: 250
-    height: 100
+    property alias listview: buttons
+
+    id: rootObj
+    width: buttons.width + radius
+    height: buttons.height
     color: "#80000000"
     border.color: "#a0000000"
     border.width: 3
@@ -16,20 +18,19 @@ Rectangle {
              && contentwindow.border === ContentWindow.NOBORDER
     opacity: contentwindow.controlsOpacity
 
-    Flow {
+    ListView {
         id: buttons
-        anchors.centerIn: parent
-        anchors.margins: 4
-        spacing: 15
-        height: parent.height
-
-        ControlButton {
-            image: "qrc:///img/maximize.svg"
-            objectName: "toggleFullscreenButton"
+        width: (count + 2) * height + Math.max(count - 1, 0) * spacing
+        height: 100
+        anchors.horizontalCenter: parent.horizontalCenter
+        orientation: ListView.Horizontal
+        spacing: 10
+        delegate: WindowControlsDelegate {
         }
-        ControlButton {
-            image: "qrc:///img/close.svg"
-            objectName: "closeButton"
+        header: FullscreenControlButton {
         }
+        footer: CloseControlButton {
+        }
+        model: contentwindow.content.actions
     }
 }

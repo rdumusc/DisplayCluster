@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,64 +37,101 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIE_CONTENT_H
-#define MOVIE_CONTENT_H
+#include "ContentAction.h"
 
-#include "Content.h"
-#include <boost/serialization/base_object.hpp>
-
-enum ControlState
+// false-positive on qt signals for Q_PROPERY notifiers
+// cppcheck-suppress uninitMemberVar
+ContentAction::ContentAction( const QUuid& actionId )
+    : uuid_( actionId )
+    , checkable_( false )
+    , checked_( false )
+    , enabled_( true )
 {
-    STATE_PAUSED = 1 << 0,
-    STATE_LOOP   = 1 << 1
-};
+}
 
-class MovieContent : public Content
+const QString& ContentAction::getIcon() const
 {
-    Q_OBJECT
+    return icon_;
+}
 
-public:
-    /** Create a MovieContent from the given uri. */
-    explicit MovieContent( const QString& uri );
+const QString& ContentAction::getIconChecked() const
+{
+    return iconChecked_;
+}
 
-    /** Get the content type **/
-    CONTENT_TYPE getType() override;
+bool ContentAction::isCheckable() const
+{
+    return checkable_;
+}
 
-    /**
-     * Read movie informations from the source URI.
-     * @return true on success, false if the URI is invalid or an error occured.
-    **/
-    bool readMetadata() override;
+bool ContentAction::isChecked() const
+{
+    return checked_;
+}
 
-    static const QStringList& getSupportedExtensions();
+bool ContentAction::isEnabled() const
+{
+    return enabled_;
+}
 
-    void preRenderUpdate(Factories&, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
-    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
+void ContentAction::setIcon( const QString icon )
+{
+    if( icon == icon_ )
+        return;
 
-private slots:
-    void play();
-    void pause();
+    icon_ = icon;
+    emit iconChanged();
+}
 
-private:
-    void createActions() override;
+void ContentAction::setIconChecked( const QString icon )
+{
+    if( icon == iconChecked_ )
+        return;
 
-    friend class boost::serialization::access;
+    iconChecked_ = icon;
+    emit iconCheckedChanged();
+}
 
-    // Default constructor required for boost::serialization
-    MovieContent();
+void ContentAction::setCheckable( const bool value )
+{
+    if( checkable_ == value )
+        return;
 
-    template< class Archive >
-    void serialize( Archive & ar, const unsigned int version )
-    {
-        // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-        if ( version >= 2 )
-            ar & boost::serialization::make_nvp( "controlState", controlState_ );
-    }
+    checkable_ = value;
+    emit checkableChanged();
+}
 
-    ControlState controlState_;
-};
+void ContentAction::setEnabled( const bool value )
 
-BOOST_CLASS_VERSION( MovieContent, 2 )
+{
+    if( enabled_ == value )
+        return;
 
-#endif
+    enabled_ = value;
+    emit enabledChanged();
+}
+
+void ContentAction::setChecked( const bool value )
+{
+    if( !checkable_ || checked_ == value )
+        return;
+
+    checked_ = value;
+    emit checkedChanged();
+
+    if( checked_ )
+        emit checked();
+    else
+        emit unchecked();
+}
+
+void ContentAction::trigger()
+{
+    if( !enabled_ )
+        return;
+
+    if( checkable_ )
+        setChecked( !checked_ );
+
+    emit triggered( uuid_, checked_ );
+}

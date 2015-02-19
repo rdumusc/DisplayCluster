@@ -54,7 +54,6 @@
 // https://bugreports.qt.nokia.com/browse/QTBUG-22829: When Qt moc runs on CGAL
 // files, do not process <boost/type_traits/has_operator.hpp>
 #  include <boost/serialization/shared_ptr.hpp>
-#  include <boost/serialization/split_member.hpp>
 #endif
 
 class ContentInteractionDelegate;
@@ -72,6 +71,7 @@ class ContentWindow : public Coordinates
     Q_PROPERTY( WindowBorder border READ getBorder WRITE setBorder NOTIFY borderChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
     Q_PROPERTY( qreal controlsOpacity READ getControlsOpacity WRITE setControlsOpacity NOTIFY controlsOpacityChanged )
+    Q_PROPERTY( Content* content READ getContentPtr CONSTANT )
 
 public:
     /** The current active window border used for resizing */
@@ -113,6 +113,8 @@ public:
     /** @return the unique identifier for this window. */
     const QUuid& getID() const;
 
+    /** Get the content from QML. */
+    Content* getContentPtr() const;
 
     /** Get the content. */
     ContentPtr getContent() const;
@@ -262,7 +264,7 @@ private:
         ar & boost::serialization::make_nvp( "windowState", windowState_ );
     }
 
-    /** Saving to xml. */
+    /** Loading from xml. */
     void serialize_for_xml( boost::archive::xml_iarchive& ar,
                             const unsigned int version )
     {
@@ -271,7 +273,7 @@ private:
         createInteractionDelegate();
     }
 
-    /** Loading from xml. */
+    /** Saving to xml. */
     void serialize_for_xml( boost::archive::xml_oarchive& ar,
                             const unsigned int version )
     {
