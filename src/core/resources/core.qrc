@@ -10,6 +10,8 @@
         <file>clearall-icon.png</file>
         <file>close.svg</file>
         <file>maximize.svg</file>
+        <file>pause.svg</file>
+        <file>play.svg</file>
     </qresource>
     <qresource prefix="/">
         <file>selectboxit/jquery-ui.min.js</file>
@@ -24,5 +26,8 @@
         <file>ControlButton.qml</file>
         <file>WindowBorders.qml</file>
         <file>BorderRectangle.qml</file>
+        <file>CloseControlButton.qml</file>
+        <file>FullscreenControlButton.qml</file>
+        <file>WindowControlsDelegate.qml</file>
     </qresource>
 </RCC>

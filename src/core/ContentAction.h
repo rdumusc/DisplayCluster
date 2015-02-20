@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,64 +37,92 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIE_CONTENT_H
-#define MOVIE_CONTENT_H
+#ifndef CONTENTACTION_H
+#define CONTENTACTION_H
 
-#include "Content.h"
-#include <boost/serialization/base_object.hpp>
+#include <QtCore/QObject>
+#include <QtCore/QUuid>
 
-enum ControlState
-{
-    STATE_PAUSED = 1 << 0,
-    STATE_LOOP   = 1 << 1
-};
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
 
-class MovieContent : public Content
+/**
+ * A content-specific action for use in QML by ContentActionsModel.
+ */
+class ContentAction : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY( QString icon READ getIcon NOTIFY iconChanged )
+    Q_PROPERTY( QString iconChecked READ getIconChecked NOTIFY iconCheckedChanged )
+    Q_PROPERTY( bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged )
+    Q_PROPERTY( bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged )
+    Q_PROPERTY( bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged )
+
 public:
-    /** Create a MovieContent from the given uri. */
-    explicit MovieContent( const QString& uri );
+    /** Constructor. */
+    explicit ContentAction( const QUuid& actionId = QUuid::createUuid( ));
 
-    /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    /** @name QProperty getters */
+    //@{
+    const QString& getIcon() const;
+    const QString& getIconChecked() const;
+    bool isCheckable() const;
+    bool isChecked() const;
+    bool isEnabled() const;
+    //@}
 
-    /**
-     * Read movie informations from the source URI.
-     * @return true on success, false if the URI is invalid or an error occured.
-    **/
-    bool readMetadata() override;
+public slots:
+    /** Trigger the action. */
+    void trigger();
 
-    static const QStringList& getSupportedExtensions();
+    /** @name QProperty setters */
+    //@{
+    void setIcon( QString icon );
+    void setIconChecked( QString icon );
+    void setChecked( bool value );
+    void setCheckable( bool value );
+    void setEnabled( bool value );
+    //@}
 
-    void preRenderUpdate(Factories&, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
-    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
+signals:
+    /** The action has been checked. */
+    void checked();
 
-private slots:
-    void play();
-    void pause();
+    /** The action has been unchecked. */
+    void unchecked();
+
+    /** The action has been triggered. */
+    void triggered( QUuid actionId, bool checked );
+
+    /** @name QProperty notifiers */
+    //@{
+    void iconChanged();
+    void iconCheckedChanged();
+    void checkedChanged();
+    void checkableChanged();
+    void enabledChanged();
+    //@}
 
 private:
-    void createActions() override;
-
     friend class boost::serialization::access;
 
-    // Default constructor required for boost::serialization
-    MovieContent();
-
     template< class Archive >
-    void serialize( Archive & ar, const unsigned int version )
+    void serialize( Archive & ar, const unsigned int )
     {
-        // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-        if ( version >= 2 )
-            ar & boost::serialization::make_nvp( "controlState", controlState_ );
+        ar & boost::serialization::make_nvp( "icon", icon_ );
+        ar & boost::serialization::make_nvp( "iconChecked", iconChecked_ );
+        ar & boost::serialization::make_nvp( "checkable", checkable_ );
+        ar & boost::serialization::make_nvp( "checked", checked_ );
+        ar & boost::serialization::make_nvp( "enabled", enabled_ );
     }
 
-    ControlState controlState_;
+    QUuid uuid_;
+    QString icon_;
+    QString iconChecked_;
+    bool checkable_;
+    bool checked_;
+    bool enabled_;
 };
 
-BOOST_CLASS_VERSION( MovieContent, 2 )
-
-#endif
+#endif // CONTENTACTION_H

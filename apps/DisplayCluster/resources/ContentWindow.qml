@@ -51,20 +51,38 @@ Rectangle {
         WindowControls {
             id: windowcontrols
 
-            function addTouchToButtons() {
-                for (var i = 0; i < buttons.length; i++) {
-                    var newObject = Qt.createQmlObject(
-                                'import QtQuick 1.0; import DisplayClusterApp 1.0; TouchArea {anchors.fill: parent}',
-                                buttons[i])
-                    if (buttons[i].objectName === "closeButton")
-                        newObject.tap.connect(windowRect.closeWindow)
-                    else if (buttons[i].objectName === "toggleFullscreenButton")
-                        newObject.tap.connect(controller.toggleFullscreen)
+            listview.delegate: buttonDelegate
+            listview.header: fullscreenButton
+            listview.footer: closeButton
+
+            Component {
+                id: buttonDelegate
+                WindowControlsDelegate {
+                    TouchArea {
+                        anchors.fill: parent
+                        onTap: action.trigger()
+                    }
                 }
             }
 
-            Component.onCompleted: {
-                addTouchToButtons()
+            Component {
+                id: fullscreenButton
+                FullscreenControlButton {
+                    TouchArea {
+                        anchors.fill: parent
+                        onTap: controller.toggleFullscreen()
+                    }
+                }
+            }
+
+            Component {
+                id: closeButton
+                CloseControlButton {
+                    TouchArea {
+                        anchors.fill: parent
+                        onTap: windowRect.closeWindow()
+                    }
+                }
             }
         }
 

@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,64 +37,44 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIE_CONTENT_H
-#define MOVIE_CONTENT_H
+#ifndef CONTENTACTIONSMODEL_H
+#define CONTENTACTIONSMODEL_H
 
-#include "Content.h"
-#include <boost/serialization/base_object.hpp>
+#include "ContentAction.h"
 
-enum ControlState
-{
-    STATE_PAUSED = 1 << 0,
-    STATE_LOOP   = 1 << 1
-};
+#include <QtCore/QAbstractListModel>
 
-class MovieContent : public Content
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
+#include <boost/serialization/vector.hpp>
+
+/**
+ * Exposes the actions of a Content for viewing in a QML ListView.
+ */
+class ContentActionsModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_DISABLE_COPY( ContentActionsModel )
 
 public:
-    /** Create a MovieContent from the given uri. */
-    explicit MovieContent( const QString& uri );
+    ContentActionsModel();
 
-    /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    QVariant data( const QModelIndex &index, int role ) const override;
+    int rowCount( const QModelIndex& parent = QModelIndex( )) const override;
 
-    /**
-     * Read movie informations from the source URI.
-     * @return true on success, false if the URI is invalid or an error occured.
-    **/
-    bool readMetadata() override;
-
-    static const QStringList& getSupportedExtensions();
-
-    void preRenderUpdate(Factories&, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
-    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
-
-private slots:
-    void play();
-    void pause();
+    /** Add an action and retains ownership by setting itself as the parent. */
+    void add( ContentAction* action );
 
 private:
-    void createActions() override;
-
     friend class boost::serialization::access;
 
-    // Default constructor required for boost::serialization
-    MovieContent();
-
     template< class Archive >
-    void serialize( Archive & ar, const unsigned int version )
+    void serialize( Archive & ar, const unsigned int )
     {
-        // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-        if ( version >= 2 )
-            ar & boost::serialization::make_nvp( "controlState", controlState_ );
+        ar & boost::serialization::make_nvp( "actions", actions_ );
     }
 
-    ControlState controlState_;
+    std::vector<ContentAction*> actions_;
 };
 
-BOOST_CLASS_VERSION( MovieContent, 2 )
-
-#endif
+#endif // CONTENTACTIONSMODEL_H

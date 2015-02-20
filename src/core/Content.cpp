@@ -38,6 +38,8 @@
 
 #include "Content.h"
 
+IMPLEMENT_SERIALIZE_FOR_XML( Content )
+
 Content::Content( const QString& uri )
     : uri_( uri )
 {
@@ -68,4 +70,9 @@ float Content::getAspectRatio() const
     if ( size_.height() == 0 )
         return 0.f;
     return (float)size_.width() / (float)size_.height();
+}
+
+ContentActionsModel* Content::getActions()
+{
+    return &actions_;
 }

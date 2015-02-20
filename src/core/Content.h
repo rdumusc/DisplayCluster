@@ -41,7 +41,9 @@
 
 #include "types.h"
 #include "ContentType.h"
+#include "ContentActionsModel.h"
 
+#include "serializationHelpers.h"
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -66,6 +68,7 @@ class WallToWallChannel;
 class Content : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY( ContentActionsModel* actions READ getActions CONSTANT )
 
 public:
     /** Constructor **/
@@ -99,6 +102,9 @@ public:
     /** Re-implement this method to update or synchronize after rendering. */
     virtual void postRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
 
+    /** Get the actions from QML. */
+    ContentActionsModel* getActions();
+
 signals:
     /** Emitted by any Content subclass when its state has been modified */
     void modified();
@@ -109,25 +115,57 @@ protected:
     // Default constructor required for boost::serialization
     Content() {}
 
+    /** Serialize for sending to Wall applications. */
     template< class Archive >
-    void serialize( Archive & ar, const unsigned int version )
+    void serialize( Archive & ar, const unsigned int /*version*/ )
+    {
+        ar & uri_;
+        ar & size_.rwidth();
+        ar & size_.rheight();
+        ar & actions_;
+    }
+
+    /** Serialize for saving to an xml file */
+    template< class Archive >
+    void serialize_members_xml( Archive & ar, const unsigned int version )
     {
         ar & boost::serialization::make_nvp( "uri", uri_ );
         ar & boost::serialization::make_nvp( "width", size_.rwidth( ));
         ar & boost::serialization::make_nvp( "height", size_.rheight( ));
 
-        if ( version < 2 )
+        if( version < 2 )
         {
             bool blockAdvance = false;
             ar & boost::serialization::make_nvp( "block_advance", blockAdvance );
         }
     }
 
+    /** Loading from xml. */
+    void serialize_for_xml( boost::archive::xml_iarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
+        createActions();
+    }
+
+    /** Saving to xml. */
+    void serialize_for_xml( boost::archive::xml_oarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
+    }
+
+    /** Called by the base class on deserialization from xml. */
+    virtual void createActions() {}
+
     QString uri_;
     QSize size_;
+    ContentActionsModel actions_;
 };
 
 BOOST_CLASS_VERSION( Content, 2 )
+
+DECLARE_SERIALIZE_FOR_XML( Content )
 
 BOOST_SERIALIZATION_ASSUME_ABSTRACT( Content )
 

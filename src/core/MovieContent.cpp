@@ -38,21 +38,27 @@
 
 #include "MovieContent.h"
 
-#include "Movie.h"
-#include "FFMPEGMovie.h"
 #include "ContentWindow.h"
-#include "RenderContext.h"
 #include "Factories.h"
+#include "FFMPEGMovie.h"
+#include "Movie.h"
+#include "RenderContext.h"
 #include "WallToWallChannel.h"
 
-#include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
-BOOST_CLASS_EXPORT_GUID(MovieContent, "MovieContent")
+BOOST_CLASS_EXPORT_GUID( MovieContent, "MovieContent" )
+
+namespace
+{
+const QString ICON_PAUSE( "qrc:///img/pause.svg" );
+const QString ICON_PLAY( "qrc:///img/play.svg" );
+}
 
 MovieContent::MovieContent( const QString& uri )
     : Content( uri )
     , controlState_( STATE_LOOP )
 {
+    createActions();
 }
 
 MovieContent::MovieContent()
@@ -68,14 +74,14 @@ CONTENT_TYPE MovieContent::getType()
 bool MovieContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    if (!file.exists() || !file.isReadable())
+    if( !file.exists() || !file.isReadable( ))
         return false;
 
-    const FFMPEGMovie movie(getURI());
-    if (!movie.isValid())
+    const FFMPEGMovie movie( getURI( ));
+    if( !movie.isValid( ))
         return false;
 
-    size_ = QSize( movie.getWidth(), movie.getHeight());
+    size_ = QSize( movie.getWidth(), movie.getHeight( ));
     return true;
 }
 
@@ -83,9 +89,10 @@ const QStringList& MovieContent::getSupportedExtensions()
 {
     static QStringList extensions;
 
-    if (extensions.empty())
+    if( extensions.empty( ))
     {
-        extensions << "mov" << "avi" << "mp4" << "mkv" << "mpg" << "mpeg" << "flv" << "wmv";
+        extensions << "mov" << "avi" << "mp4" << "mkv" << "mpg" << "mpeg"
+                   << "flv" << "wmv";
     }
 
     return extensions;
@@ -121,12 +128,23 @@ void MovieContent::postRenderUpdate(Factories& factories, ContentWindowPtr windo
     movie->postRenderUpdate( wallToWallChannel );
 }
 
-ControlState MovieContent::getControlState() const
+void MovieContent::play()
 {
-    return controlState_;
+    controlState_ = (ControlState)(controlState_ & ~STATE_PAUSED);
 }
 
-void MovieContent::setControlState( const ControlState state )
+void MovieContent::pause()
 {
-    controlState_ = state;
+    controlState_ = (ControlState)(controlState_ | STATE_PAUSED);
+}
+
+void MovieContent::createActions()
+{
+    ContentAction* playPauseAction = new ContentAction();
+    playPauseAction->setCheckable( true );
+    playPauseAction->setIcon( ICON_PAUSE );
+    playPauseAction->setIconChecked( ICON_PLAY );
+    connect( playPauseAction, SIGNAL( checked( )), this, SLOT( pause( )));
+    connect( playPauseAction, SIGNAL( unchecked( )), this, SLOT( play( )));
+    actions_.add( playPauseAction );
 }
