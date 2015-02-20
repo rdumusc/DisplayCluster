@@ -14,27 +14,6 @@ Rectangle {
     width: contentwindow.width
     height: contentwindow.height
 
-    Binding {
-        target: contentwindow
-        property: "x"
-        value: x
-    }
-    Binding {
-        target: contentwindow
-        property: "y"
-        value: y
-    }
-    Binding {
-        target: contentwindow
-        property: "width"
-        value: width
-    }
-    Binding {
-        target: contentwindow
-        property: "height"
-        value: height
-    }
-
     function closeWindow() {
         displaygroup.removeContentWindow(contentwindow.id)
     }
@@ -42,146 +21,110 @@ Rectangle {
     ContentWindowTouchArea {
         objectName: "ContentWindowTouchArea"
         anchors.fill: parent
-
         onActivated: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
             controlsFadeAnimation.restart()
         }
+    }
 
-        WindowControls {
-            id: windowcontrols
+    WindowBorders {
+        borderDelegate: touchBorderDelegate
 
-            listview.delegate: buttonDelegate
-            listview.header: fullscreenButton
-            listview.footer: closeButton
-
-            Component {
-                id: buttonDelegate
-                WindowControlsDelegate {
-                    TouchArea {
-                        anchors.fill: parent
-                        onTap: action.trigger()
-                    }
-                }
-            }
-
-            Component {
-                id: fullscreenButton
-                FullscreenControlButton {
-                    TouchArea {
-                        anchors.fill: parent
-                        onTap: controller.toggleFullscreen()
-                    }
-                }
-            }
-
-            Component {
-                id: closeButton
-                CloseControlButton {
-                    TouchArea {
-                        anchors.fill: parent
-                        onTap: windowRect.closeWindow()
-                    }
-                }
-            }
-        }
-
-        WindowBorders {
-            borderDelegate: BorderRectangle {
+        Component {
+            id: touchBorderDelegate
+            BorderRectangle {
                 TouchArea {
                     anchors.fill: parent
-                    onPan: borderPanned(delta, parent.border)
-                    onPanFinished: borderPanFinished()
+                    onPan: {
+                        controlsFadeAnimation.stop()
+                        contentwindow.border = parent.border
+                        controller.resizeRelative(delta)
+                    }
+                    onPanFinished: {
+                        controlsFadeAnimation.restart()
+                        contentwindow.border = ContentWindow.NOBORDER
+                    }
                 }
             }
-
-            function borderPanned(delta, windowBorder) {
-                controlsFadeAnimation.stop()
-                controller.resizeRelative(delta, windowBorder)
-                contentwindow.border = windowBorder
-            }
-
-            function borderPanFinished() {
-                controlsFadeAnimation.restart()
-                contentwindow.border = ContentWindow.NOBORDER
-            }
         }
+    }
 
-        Text {
-            id: contentLabel
-            text: contentwindow.label
-            font.pixelSize: 48
-            width: Math.min(paintedWidth, parent.width)
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.topMargin: 10
-            anchors.leftMargin: 10
-        }
+    WindowControls {
+        listview.delegate: buttonDelegate
+        listview.header: fullscreenButton
+        listview.footer: closeButton
 
-        Image {
-            id: close
-            source: "qrc:///img/master/close.svg"
-            width: 0.4 * Math.min(parent.width, parent.height)
-            height: width
-            anchors.top: parent.top
-            anchors.right: parent.right
-            // Force redraw the SVG
-            sourceSize.width: width
-            sourceSize.height: height
-            MouseArea {
-                anchors.fill: parent
-                preventStealing: true
-                onClicked: windowRect.closeWindow()
-            }
-        }
-
-        Image {
-            id: resize
-            source: "qrc:///img/master/resize.svg"
-            width: 0.4 * Math.min(parent.width, parent.height)
-            height: width
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            // Force redraw the SVG
-            sourceSize.width: width
-            sourceSize.height: height
-            MouseArea {
-                anchors.fill: parent
-                preventStealing: true
-                property variant startMousePos
-                property variant startSize
-                onPressed: {
-                    startMousePos = Qt.point(mouse.x, mouse.y)
-                    startSize = Qt.size(contentwindow.width,
-                                        contentwindow.height)
-                    contentwindow.state = ContentWindow.RESIZING
+        Component {
+            id: buttonDelegate
+            WindowControlsDelegate {
+                TouchArea {
+                    anchors.fill: parent
+                    onTap: action.trigger()
                 }
-                onPositionChanged: {
-                    var newSize = Qt.size(
-                                mouse.x - startMousePos.x + startSize.width,
-                                mouse.y - startMousePos.y + startSize.height)
-                    controller.resize(newSize)
+            }
+        }
+        Component {
+            id: fullscreenButton
+            FullscreenControlButton {
+                TouchArea {
+                    anchors.fill: parent
+                    onTap: controller.toggleFullscreen()
                 }
-                onReleased: contentwindow.state = ContentWindow.NONE
             }
         }
+        Component {
+            id: closeButton
+            CloseControlButton {
+                TouchArea {
+                    anchors.fill: parent
+                    onTap: closeWindow()
+                }
+            }
+        }
+    }
 
-        Image {
-            id: maximize
-            source: "qrc:///img/master/maximize.svg"
-            width: 0.4 * Math.min(parent.width, parent.height)
-            height: width
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            // Force redraw the SVG
-            sourceSize.width: width
-            sourceSize.height: height
-            MouseArea {
-                anchors.fill: parent
-                preventStealing: true
-                onClicked: controller.toggleFullscreen()
-            }
+    Text {
+        text: contentwindow.label
+        font.pixelSize: 48
+        width: Math.min(paintedWidth, parent.width)
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.topMargin: 10
+        anchors.leftMargin: 10
+    }
+
+    ContentWindowButton {
+        source: "qrc:///img/master/close.svg"
+        anchors.top: parent.top
+        anchors.right: parent.right
+        mousearea.onClicked: closeWindow()
+    }
+
+    ContentWindowButton {
+        source: "qrc:///img/master/maximize.svg"
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        mousearea.onClicked: controller.toggleFullscreen()
+    }
+
+    ContentWindowButton {
+        source: "qrc:///img/master/resize.svg"
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        property variant startMousePos
+        property variant startSize
+        mousearea.onPressed: {
+            startMousePos = Qt.point(mouse.x, mouse.y)
+            startSize = Qt.size(contentwindow.width, contentwindow.height)
+            contentwindow.state = ContentWindow.RESIZING
         }
+        mousearea.onPositionChanged: {
+            var newSize = Qt.size(mouse.x - startMousePos.x + startSize.width,
+                                  mouse.y - startMousePos.y + startSize.height)
+            controller.resize(newSize)
+        }
+        mousearea.onReleased: contentwindow.state = ContentWindow.NONE
     }
 
     states: [
