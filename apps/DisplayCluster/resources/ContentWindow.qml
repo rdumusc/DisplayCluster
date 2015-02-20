@@ -86,13 +86,22 @@ Rectangle {
             }
         }
 
-        TouchWindowBorders {
-            onBorderPanned: {
+        WindowBorders {
+            borderDelegate: BorderRectangle {
+                TouchArea {
+                    anchors.fill: parent
+                    onPan: borderPanned(delta, parent.border)
+                    onPanFinished: borderPanFinished()
+                }
+            }
+
+            function borderPanned(delta, windowBorder) {
                 controlsFadeAnimation.stop()
                 controller.resizeRelative(delta, windowBorder)
                 contentwindow.border = windowBorder
             }
-            onBorderPanFinished: {
+
+            function borderPanFinished() {
                 controlsFadeAnimation.restart()
                 contentwindow.border = ContentWindow.NOBORDER
             }

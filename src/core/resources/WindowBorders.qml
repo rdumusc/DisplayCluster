@@ -6,33 +6,16 @@ Rectangle {
     color: "transparent"
 
     property real baseOpacity: 0.4
+    property alias borderDelegate: repeater.delegate
 
     visible: contentwindow.label !== "Dock"
              && contentwindow.state !== ContentWindow.SELECTED
     opacity: contentwindow.controlsOpacity * baseOpacity
 
-    BorderRectangle {
-        border: ContentWindow.TOP_LEFT
-    }
-    BorderRectangle {
-        border: ContentWindow.TOP
-    }
-    BorderRectangle {
-        border: ContentWindow.TOP_RIGHT
-    }
-    BorderRectangle {
-        border: ContentWindow.RIGHT
-    }
-    BorderRectangle {
-        border: ContentWindow.BOTTOM_RIGHT
-    }
-    BorderRectangle {
-        border: ContentWindow.BOTTOM
-    }
-    BorderRectangle {
-        border: ContentWindow.BOTTOM_LEFT
-    }
-    BorderRectangle {
-        border: ContentWindow.LEFT
+    Repeater {
+        id: repeater
+        model: [ContentWindow.TOP_LEFT, ContentWindow.TOP, ContentWindow.TOP_RIGHT, ContentWindow.RIGHT, ContentWindow.BOTTOM_RIGHT, ContentWindow.BOTTOM, ContentWindow.BOTTOM_LEFT, ContentWindow.LEFT]
+        delegate: BorderRectangle {
+        }
     }
 }

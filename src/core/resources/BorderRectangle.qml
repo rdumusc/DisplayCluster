@@ -4,7 +4,7 @@ import DisplayCluster 1.0
 Rectangle {
     id: borderRect
     property int borderSize: 100
-    property int border
+    property int border: modelData
     state: "inactive"
 
     anchors.top: parent.top
