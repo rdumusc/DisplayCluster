@@ -7,6 +7,7 @@ project(DisplayCluster)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake
                               ${CMAKE_SOURCE_DIR}/CMake/common)
 include(GitExternal)
+include(SubProject)
 
 # Versioning
 set(VERSION_MAJOR 0)

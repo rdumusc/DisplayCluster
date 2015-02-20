@@ -1,0 +1,2 @@
+# -*- mode: cmake -*-
+git_subproject(Deflect https://github.com/BlueBrain/Deflect.git a5c4c1f)
