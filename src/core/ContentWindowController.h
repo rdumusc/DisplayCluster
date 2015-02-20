@@ -73,7 +73,11 @@ public:
                              QObject* parent = 0 );
 
     /** Resize the window. */
-    Q_INVOKABLE void resize( QSizeF size, const WindowPoint fixedPoint = TOP_LEFT );
+    Q_INVOKABLE void resize( QSizeF size,
+                             const WindowPoint fixedPoint = TOP_LEFT );
+
+    /** Resize the window relative to the current active window border */
+    Q_INVOKABLE void resizeRelative( const QPointF delta );
 
     /**
      * Resize the window around a given center point.

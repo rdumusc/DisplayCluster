@@ -22,5 +22,7 @@
         <file>WindowControls.qml</file>
         <file>WallContentWindow.qml</file>
         <file>ControlButton.qml</file>
+        <file>WindowBorders.qml</file>
+        <file>BorderRectangle.qml</file>
     </qresource>
 </RCC>

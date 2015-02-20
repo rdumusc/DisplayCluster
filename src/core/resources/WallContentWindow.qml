@@ -11,15 +11,19 @@ Rectangle {
     height: contentwindow.height
 
     WindowControls {
-        visible: contentwindow.label != "Dock"
-        opacity: contentwindow.controlsOpacity
+    }
+
+    WindowBorders {
     }
 
     states: [
         State {
             name: "hidden"
-            when: contentwindow.state == ContentWindow.HIDDEN
-            PropertyChanges { target: windowRect; visible: false }
+            when: contentwindow.state === ContentWindow.HIDDEN
+            PropertyChanges {
+                target: windowRect
+                visible: false
+            }
         }
     ]
 }

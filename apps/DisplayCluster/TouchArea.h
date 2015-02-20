@@ -57,6 +57,8 @@ public:
 
 signals:
     void tap( QPointF position );
+    void pan( QPointF delta );
+    void panFinished();
 
 protected:
     /** @name Re-implemented QGraphicsRectItem events */

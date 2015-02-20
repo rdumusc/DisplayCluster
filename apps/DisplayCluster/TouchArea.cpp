@@ -39,6 +39,9 @@
 
 #include "TouchArea.h"
 
+#include "gestures/PanGesture.h"
+#include "gestures/PanGestureRecognizer.h"
+
 #include <QtCore/QEvent>
 #include <QtGui/QTapGesture>
 #include <QtGui/QGestureEvent>
@@ -47,6 +50,7 @@ TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
 {
     grabGesture( Qt::TapGesture );
+    grabGesture( PanGestureRecognizer::type( ));
 }
 
 bool TouchArea::sceneEvent( QEvent* event_ )
@@ -73,6 +77,19 @@ void TouchArea::gestureEvent( QGestureEvent* event_ )
             QTapGesture* tapGesture = static_cast<QTapGesture*>( gesture );
             emit tap( tapGesture->position( ));
         }
+        return;
+    }
+    if(( gesture = event_->gesture( PanGestureRecognizer::type( ))))
+    {
+        event_->accept( PanGestureRecognizer::type( ));
+        PanGesture* panGesture = static_cast<PanGesture*>( gesture );
+        if( panGesture->state() == Qt::GestureCanceled ||
+            panGesture->state() == Qt::GestureFinished )
+        {
+            emit panFinished();
+            return;
+        }
+        emit pan( panGesture->delta( ));
         return;
     }
 }

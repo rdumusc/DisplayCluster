@@ -11,7 +11,10 @@ Rectangle {
     radius: 20
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: 30
+    anchors.bottomMargin: 120
+    visible: contentwindow.label !== "Dock"
+             && contentwindow.border === ContentWindow.NOBORDER
+    opacity: contentwindow.controlsOpacity
 
     Flow {
         id: buttons

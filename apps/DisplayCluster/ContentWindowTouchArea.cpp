@@ -226,7 +226,9 @@ void ContentWindowTouchArea::pan( PanGesture* gesture )
 
     else if( gesture->state() == Qt::GestureCanceled ||
              gesture->state() == Qt::GestureFinished )
+    {
         contentWindow_->setState( ContentWindow::NONE );
+    }
 
     const QPointF& windowPos = contentWindow_->getCoordinates().topLeft();
     controller_->moveTo( windowPos + gesture->delta( ));
