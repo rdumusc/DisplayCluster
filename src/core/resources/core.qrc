@@ -29,5 +29,6 @@
         <file>CloseControlButton.qml</file>
         <file>FullscreenControlButton.qml</file>
         <file>WindowControlsDelegate.qml</file>
+        <file>style.js</file>
     </qresource>
 </RCC>

@@ -1,9 +1,10 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import "style.js" as Style
 
 Rectangle {
     id: borderRect
-    property int borderSize: 100
+    property int borderSize: Style.borderWidth
     property int border: modelData
     state: "inactive"
 
@@ -35,7 +36,7 @@ Rectangle {
             when: contentwindow.border === border
             PropertyChanges {
                 target: borderRect
-                color: "red"
+                color: Style.activeBorderColor
             }
         },
         State {
@@ -43,7 +44,7 @@ Rectangle {
             when: contentwindow.border === ContentWindow.NOBORDER
             PropertyChanges {
                 target: borderRect
-                color: "#80000000"
+                color: Style.inactiveBorderColor
             }
         }
     ]
