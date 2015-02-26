@@ -3,6 +3,7 @@
     <qresource prefix="/qml/master">
         <file>ContentWindow.qml</file>
         <file>ContentWindowButton.qml</file>
+        <file>MasterDisplayGroup.qml</file>
     </qresource>
     <qresource prefix="/img/master">
         <file>close.svg</file>

@@ -44,12 +44,14 @@
 
 #include <QtCore/QEvent>
 #include <QtGui/QTapGesture>
+#include <QtGui/QTapAndHoldGesture>
 #include <QtGui/QGestureEvent>
 
 TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
 {
     grabGesture( Qt::TapGesture );
+    grabGesture( Qt::TapAndHoldGesture );
     grabGesture( PanGestureRecognizer::type( ));
 }
 
@@ -69,6 +71,17 @@ void TouchArea::gestureEvent( QGestureEvent* event_ )
 {
     QGesture* gesture = 0;
 
+    if(( gesture = event_->gesture( Qt::TapAndHoldGesture )))
+    {
+        event_->accept( Qt::TapAndHoldGesture );
+        if( gesture->state() == Qt::GestureFinished )
+        {
+            QTapAndHoldGesture* tapAndHoldGesture =
+                    static_cast<QTapAndHoldGesture*>( gesture );
+            emit tapAndHold( tapAndHoldGesture->position( ));
+        }
+        return;
+    }
     if(( gesture = event_->gesture( Qt::TapGesture )))
     {
         event_->accept( Qt::TapGesture );

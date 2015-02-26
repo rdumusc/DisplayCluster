@@ -57,6 +57,7 @@ public:
 
 signals:
     void tap( QPointF position );
+    void tapAndHold( QPointF position );
     void pan( QPointF delta );
     void panFinished();
 
