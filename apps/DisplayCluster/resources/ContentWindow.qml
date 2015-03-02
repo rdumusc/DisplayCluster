@@ -22,6 +22,7 @@ Rectangle {
     ContentWindowTouchArea {
         objectName: "ContentWindowTouchArea"
         anchors.fill: parent
+        focus: true // to receive key events
         onActivated: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
             controlsFadeAnimation.restart()
