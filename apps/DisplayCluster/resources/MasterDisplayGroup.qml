@@ -7,10 +7,10 @@ DisplayGroup {
     TouchArea {
         anchors.fill: parent
         onTap: {
-            dggv.onBackgroundTap(position)
+            dggv.notifyBackgroundTap(position)
         }
         onTapAndHold: {
-            dggv.onBackgroundTapAndHold(position)
+            dggv.notifyBackgroundTapAndHold(position)
         }
     }
 }

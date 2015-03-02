@@ -68,7 +68,8 @@ protected:
     //@}
 
 private:
-    void gestureEvent( QGestureEvent* event );
+    bool gestureEvent( QGestureEvent* event );
+    bool blockTapGesture_;
 };
 
 #endif // TOUCHAREA_H

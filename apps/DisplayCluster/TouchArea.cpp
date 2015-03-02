@@ -49,6 +49,7 @@
 
 TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
+    , blockTapGesture_( false )
 {
     grabGesture( Qt::TapGesture );
     grabGesture( Qt::TapAndHoldGesture );
@@ -60,14 +61,13 @@ bool TouchArea::sceneEvent( QEvent* event_ )
     switch( event_->type( ))
     {
     case QEvent::Gesture:
-        gestureEvent( static_cast< QGestureEvent* >( event_ ));
-        return true;
+        return gestureEvent( static_cast< QGestureEvent* >( event_ ));
     default:
         return QGraphicsObject::sceneEvent( event_ );
     }
 }
 
-void TouchArea::gestureEvent( QGestureEvent* event_ )
+bool TouchArea::gestureEvent( QGestureEvent* event_ )
 {
     QGesture* gesture = 0;
 
@@ -76,21 +76,31 @@ void TouchArea::gestureEvent( QGestureEvent* event_ )
         event_->accept( Qt::TapAndHoldGesture );
         if( gesture->state() == Qt::GestureFinished )
         {
+            blockTapGesture_ = true;
             QTapAndHoldGesture* tapAndHoldGesture =
                     static_cast<QTapAndHoldGesture*>( gesture );
             emit tapAndHold( tapAndHoldGesture->position( ));
         }
-        return;
+        return true;
     }
     if(( gesture = event_->gesture( Qt::TapGesture )))
     {
+        // Qt does not allow canceling Tap gestures after a TapAndHold has been
+        // accepted, so blockTapGesture_ is here to prevent the Tap at the end
+        // of the following sequence:
+        // *Tap begin* ----- *TapAndHold begin* - *TapAndHold end* -- *Tap end*
+        if( gesture->state() == Qt::GestureStarted )
+            blockTapGesture_ = false;
+        else if( blockTapGesture_ )
+            return false;
+
         event_->accept( Qt::TapGesture );
         if( gesture->state() == Qt::GestureFinished )
         {
             QTapGesture* tapGesture = static_cast<QTapGesture*>( gesture );
             emit tap( tapGesture->position( ));
         }
-        return;
+        return true;
     }
     if(( gesture = event_->gesture( PanGestureRecognizer::type( ))))
     {
@@ -100,9 +110,10 @@ void TouchArea::gestureEvent( QGestureEvent* event_ )
             panGesture->state() == Qt::GestureFinished )
         {
             emit panFinished();
-            return;
+            return true;
         }
         emit pan( panGesture->delta( ));
-        return;
+        return true;
     }
+    return false;
 }

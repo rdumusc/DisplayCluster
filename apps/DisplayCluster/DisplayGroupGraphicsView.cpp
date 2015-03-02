@@ -78,14 +78,14 @@ DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
 {
 }
 
-void DisplayGroupGraphicsView::onBackgroundTap( QPointF pos_ )
+void DisplayGroupGraphicsView::notifyBackgroundTap( QPointF globalPos )
 {
-    emit backgroundTap( getScenePos( pos_ ));
+    emit backgroundTap( getScenePos( globalPos ));
 }
 
-void DisplayGroupGraphicsView::onBackgroundTapAndHold( QPointF pos_ )
+void DisplayGroupGraphicsView::notifyBackgroundTapAndHold( QPointF globalPos )
 {
-    emit backgroundTapAndHold( getScenePos( pos_ ));
+    emit backgroundTapAndHold( getScenePos( globalPos ));
 }
 
 void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )

@@ -83,8 +83,11 @@ protected:
     //@}
 
 public slots:
-    void onBackgroundTap( QPointF pos );
-    void onBackgroundTapAndHold( QPointF pos );
+    /** @name Re-map gesture events from global coordinates. */
+    //@{
+    void notifyBackgroundTap( QPointF globalPos );
+    void notifyBackgroundTapAndHold( QPointF globalPos );
+    //@}
 
 private slots:
     void add( ContentWindowPtr contentWindow );
