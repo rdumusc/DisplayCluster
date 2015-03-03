@@ -58,7 +58,7 @@ namespace
 {
 const QString TOUCH_AREA_OBJECT_NAME( "ContentWindowTouchArea" );
 const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/ContentWindow.qml" );
-const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
+const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
 }
 
 DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
@@ -72,12 +72,20 @@ DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
     setInteractive( true );
     setDragMode( QGraphicsView::RubberBandDrag );
     setAcceptDrops( true );
-
-    grabGestures();
 }
 
 DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
 {
+}
+
+void DisplayGroupGraphicsView::notifyBackgroundTap( QPointF globalPos )
+{
+    emit backgroundTap( getScenePos( globalPos ));
+}
+
+void DisplayGroupGraphicsView::notifyBackgroundTapAndHold( QPointF globalPos )
+{
+    emit backgroundTapAndHold( getScenePos( globalPos ));
 }
 
 void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
@@ -94,6 +102,7 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
 
     engine_.rootContext()->setContextProperty( "displaygroup",
                                                displayGroup_.get( ));
+    engine_.rootContext()->setContextProperty( "dggv", this );
 
     QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
     displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
@@ -116,66 +125,12 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
              this, SLOT( moveToFront( ContentWindowPtr )));
 }
 
-void DisplayGroupGraphicsView::grabGestures()
-{
-    viewport()->grabGesture( Qt::TapGesture );
-    viewport()->grabGesture( Qt::TapAndHoldGesture );
-    viewport()->grabGesture( Qt::SwipeGesture );
-}
-
-bool DisplayGroupGraphicsView::viewportEvent( QEvent* evt )
-{
-    if( evt->type() == QEvent::Gesture )
-        gestureEvent( static_cast< QGestureEvent* >( evt ));
-
-    return QGraphicsView::viewportEvent( evt );
-}
-
-void DisplayGroupGraphicsView::gestureEvent( QGestureEvent* evt )
-{
-    QGesture* gesture = 0;
-
-    if( ( gesture = evt->gesture( Qt::TapGesture )))
-    {
-        evt->accept( Qt::TapGesture );
-        tap( static_cast< QTapGesture* >( gesture ));
-    }
-    else if( ( gesture = evt->gesture( Qt::TapAndHoldGesture )))
-    {
-        evt->accept( Qt::TapAndHoldGesture );
-        tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
-    }
-}
-
-void DisplayGroupGraphicsView::tap( QTapGesture* gesture )
-{
-    if( gesture->state() != Qt::GestureFinished )
-        return;
-
-    const QPointF scenePosition = getScenePos( gesture );
-
-    if( isOnBackground( scenePosition ))
-        emit backgroundTap( scenePosition );
-}
-
-void DisplayGroupGraphicsView::tapAndHold( QTapAndHoldGesture* gesture )
-{
-    if( gesture->state() != Qt::GestureFinished )
-        return;
-
-    const QPointF scenePosition = getScenePos( gesture );
-
-    if( isOnBackground( scenePosition ))
-        emit backgroundTapAndHold( scenePosition );
-}
-
 void DisplayGroupGraphicsView::clearScene()
 {
     foreach( QGraphicsItem* itemToRemove, uuidToWindowMap_ )
         scene()->removeItem( itemToRemove );
 
     uuidToWindowMap_.clear();
-    grabGestures();
 }
 
 void DisplayGroupGraphicsView::resizeEvent( QResizeEvent* resizeEvt )
@@ -195,7 +150,7 @@ void DisplayGroupGraphicsView::resizeEvent( QResizeEvent* resizeEvt )
     QGraphicsView::resizeEvent( resizeEvt );
 }
 
-QPointF DisplayGroupGraphicsView::getScenePos( const QGesture* gesture ) const
+QPointF DisplayGroupGraphicsView::getScenePos( const QPointF& pos_ ) const
 {
     // QGesture::hotSpot() gives the position (in pixels) in "global screen
     // coordinates", i.e. on the display where the Rank0 Qt MainWindow lives.
@@ -213,13 +168,7 @@ QPointF DisplayGroupGraphicsView::getScenePos( const QGesture* gesture ) const
 
     // Note that the necessary rounding here is likely to cause imprecisions if
     // the view is small...
-    return mapToScene( mapFromGlobal( gesture->hotSpot().toPoint( )));
-}
-
-bool DisplayGroupGraphicsView::isOnBackground( const QPointF& position ) const
-{
-    const QGraphicsItem* item = scene()->itemAt( position );
-    return dynamic_cast< const ContentWindowTouchArea* >( item ) == 0;
+    return mapToScene( mapFromGlobal( pos_.toPoint( )));
 }
 
 void DisplayGroupGraphicsView::add( ContentWindowPtr contentWindow )
@@ -257,12 +206,6 @@ void DisplayGroupGraphicsView::remove( ContentWindowPtr contentWindow )
     uuidToWindowMap_.remove( contentWindow->getID( ));
 
     scene()->removeItem( itemToRemove );
-
-    // Qt WAR: when all items with grabbed gestures are removed, the viewport
-    // also looses any registered gestures, which harms our dock to open...
-    // <qt-source>/qgraphicsscene.cpp::ungrabGesture called in removeItemHelper()
-    // Always call grabGestures() to prevent this situation from occuring.
-    grabGestures();
 }
 
 void DisplayGroupGraphicsView::moveToFront( ContentWindowPtr contentWindow )

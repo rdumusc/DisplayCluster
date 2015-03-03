@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import "style.js" as Style
 
 Rectangle {
     property alias listview: buttons
@@ -7,13 +8,13 @@ Rectangle {
     id: rootObj
     width: buttons.width + radius
     height: buttons.height
-    color: "#80000000"
-    border.color: "#a0000000"
-    border.width: 3
-    radius: 20
+    color: Style.controlsColor
+    border.color: Style.controlsBorderColor
+    border.width: Style.controlsBorderWidth
+    radius: Style.controlsRadius
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
-    anchors.bottomMargin: 120
+    anchors.bottomMargin: Style.controlsBottomMargin
     visible: contentwindow.label !== "Dock"
              && contentwindow.border === ContentWindow.NOBORDER
     opacity: contentwindow.controlsOpacity
@@ -21,10 +22,10 @@ Rectangle {
     ListView {
         id: buttons
         width: (count + 2) * height + Math.max(count - 1, 0) * spacing
-        height: 100
+        height: Style.buttonsHeight
         anchors.horizontalCenter: parent.horizontalCenter
         orientation: ListView.Horizontal
-        spacing: 10
+        spacing: Style.buttonsSpacing
         delegate: WindowControlsDelegate {
         }
         header: FullscreenControlButton {

@@ -55,6 +55,7 @@
 WallGraphicsScene::WallGraphicsScene( const QRectF &size, QObject* parent_ )
     : QGraphicsScene( size, parent_ )
     , backgroundColor_( Qt::black )
+    , displayTestPattern_( false )
     , painter_( 0 )
 {
 }
@@ -67,6 +68,11 @@ void WallGraphicsScene::addRenderable( RenderablePtr renderable )
 void WallGraphicsScene::setBackgroundColor( const QColor& color )
 {
     backgroundColor_ = color;
+}
+
+void WallGraphicsScene::displayTestPattern( const bool value )
+{
+    displayTestPattern_ = value;
 }
 
 void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
@@ -84,19 +90,24 @@ void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
 
     painter->beginNativePainting();
     clear( backgroundColor_ );
-    setOrthographicView( rect );
 
-    glPushAttrib( GL_ENABLE_BIT );
-    glEnable( GL_DEPTH_TEST );
-    glDisable( GL_LIGHTING );
-
-    foreach( RenderablePtr renderable, renderables_ )
+    if( !displayTestPattern_ )
     {
-        if( renderable->isVisible( ))
-            renderable->render();
+        setOrthographicView( rect );
+
+        glPushAttrib( GL_ENABLE_BIT );
+        glEnable( GL_DEPTH_TEST );
+        glDisable( GL_LIGHTING );
+
+        foreach( RenderablePtr renderable, renderables_ )
+        {
+            if( renderable->isVisible( ))
+                renderable->render();
+        }
+
+        glPopAttrib();
     }
 
-    glPopAttrib();
     painter->endNativePainting();
 }
 

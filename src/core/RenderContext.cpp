@@ -198,4 +198,5 @@ void RenderContext::displayTestPattern( const bool value )
     {
         window->getTestPattern()->setVisible( value );
     }
+    scene_.displayTestPattern( value );
 }

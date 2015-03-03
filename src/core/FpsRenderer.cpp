@@ -45,6 +45,7 @@
 
 FpsRenderer::FpsRenderer()
 {
+    setVisible( false );
 }
 
 void FpsRenderer::draw( QPainter* painter, const QRectF& rect )

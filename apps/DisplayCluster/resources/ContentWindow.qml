@@ -2,6 +2,7 @@ import QtQuick 1.1
 import DisplayCluster 1.0
 import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
+import "qrc:/qml/core/style.js" as Style
 
 Rectangle {
     id: windowRect
@@ -21,6 +22,7 @@ Rectangle {
     ContentWindowTouchArea {
         objectName: "ContentWindowTouchArea"
         anchors.fill: parent
+        focus: true // to receive key events
         onActivated: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
             controlsFadeAnimation.restart()
@@ -59,7 +61,10 @@ Rectangle {
             WindowControlsDelegate {
                 TouchArea {
                     anchors.fill: parent
-                    onTap: action.trigger()
+                    onTap: {
+                        controlsFadeAnimation.restart()
+                        action.trigger()
+                    }
                 }
             }
         }
@@ -68,7 +73,10 @@ Rectangle {
             FullscreenControlButton {
                 TouchArea {
                     anchors.fill: parent
-                    onTap: controller.toggleFullscreen()
+                    onTap: {
+                        controlsFadeAnimation.restart()
+                        controller.toggleFullscreen()
+                    }
                 }
             }
         }
@@ -168,7 +176,7 @@ Rectangle {
         property: "controlsOpacity"
         from: 1
         to: 0
-        duration: 2000
+        duration: Style.controlsFadeOutTime
         easing.type: Easing.InExpo
     }
 }

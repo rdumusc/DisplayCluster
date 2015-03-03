@@ -63,6 +63,8 @@ public:
     /** Set the background color */
     void setBackgroundColor( const QColor& color );
 
+    void displayTestPattern( const bool value );
+
 private:
     void drawBackground( QPainter* painter, const QRectF &rect ) override;
 
@@ -71,6 +73,7 @@ private:
 
     QColor backgroundColor_;
     QList<RenderablePtr> renderables_;
+    bool displayTestPattern_;
 
     // For text rendering with Qt functionss
     friend class RenderContext;

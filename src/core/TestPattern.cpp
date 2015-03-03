@@ -53,6 +53,7 @@ TestPattern::TestPattern( const WallConfiguration& configuration,
                           const int tileIndex )
     : wallSize_( configuration.getTotalSize( ))
 {
+    setVisible( false );
     const QPoint globalScreenIndex = configuration.getGlobalScreenIndex( tileIndex );
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
 

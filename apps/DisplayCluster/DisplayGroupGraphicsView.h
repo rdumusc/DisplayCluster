@@ -79,8 +79,14 @@ signals:
 protected:
     /** @name Re-implemented QGraphicsView events */
     //@{
-    bool viewportEvent( QEvent* event ) override;
     void resizeEvent( QResizeEvent* event ) override;
+    //@}
+
+public slots:
+    /** @name Re-map gesture events from global coordinates. */
+    //@{
+    void notifyBackgroundTap( QPointF globalPos );
+    void notifyBackgroundTapAndHold( QPointF globalPos );
     //@}
 
 private slots:
@@ -89,14 +95,8 @@ private slots:
     void moveToFront( ContentWindowPtr contentWindow );
 
 private:
-    void gestureEvent( QGestureEvent* event );
-    void tap( QTapGesture* gesture );
-    void tapAndHold( QTapAndHoldGesture* gesture );
-
     void clearScene();
-    void grabGestures();
-    QPointF getScenePos( const QGesture* gesture ) const;
-    bool isOnBackground( const QPointF& position ) const;
+    QPointF getScenePos( const QPointF& pos ) const;
 
     DisplayGroupPtr displayGroup_;
 

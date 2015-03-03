@@ -74,7 +74,10 @@ TestPatternPtr WallWindow::getTestPattern()
 void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
 {
     if( testPattern_ && testPattern_->isVisible( ))
+    {
         testPattern_->draw( painter, rect_ );
+        return;
+    }
 
     if( fpsRenderer_.isVisible( ))
         fpsRenderer_.draw( painter, rect_ );

@@ -1,11 +1,12 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import "style.js" as Style
 
 Rectangle {
     anchors.fill: parent
     color: "transparent"
 
-    property real baseOpacity: 0.4
+    property real baseOpacity: Style.borderOpacity
     property alias borderDelegate: repeater.delegate
 
     visible: contentwindow.label !== "Dock"

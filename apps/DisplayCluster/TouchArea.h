@@ -57,6 +57,7 @@ public:
 
 signals:
     void tap( QPointF position );
+    void tapAndHold( QPointF position );
     void pan( QPointF delta );
     void panFinished();
 
@@ -67,7 +68,8 @@ protected:
     //@}
 
 private:
-    void gestureEvent( QGestureEvent* event );
+    bool gestureEvent( QGestureEvent* event );
+    bool blockTapGesture_;
 };
 
 #endif // TOUCHAREA_H
