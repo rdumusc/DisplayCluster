@@ -5,9 +5,8 @@ Image {
 
     width: 0.4 * Math.min(parent.width, parent.height)
     height: width
-    // Force redraw the SVG
-    sourceSize.width: width
-    sourceSize.height: height
+    sourceSize.width: 512
+    sourceSize.height: 512
     MouseArea {
         id: mousearea
         anchors.fill: parent

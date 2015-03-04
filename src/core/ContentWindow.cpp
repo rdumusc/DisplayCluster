@@ -110,12 +110,13 @@ void ContentWindow::setContent( ContentPtr content )
 
 void ContentWindow::setCoordinates( const QRectF& coordinates )
 {
-    coordinates_ = coordinates;
+    if( coordinates == coordinates_ )
+        return;
 
-    emit xChanged();
-    emit yChanged();
-    emit widthChanged();
-    emit heightChanged();
+    setX( coordinates.x( ));
+    setY( coordinates.y( ));
+    setWidth( coordinates.width( ));
+    setHeight( coordinates.height( ));
 
     emit modified();
 
