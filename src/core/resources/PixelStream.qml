@@ -6,9 +6,23 @@ Item {
 
     property alias statistics: statistics.text
 
+    Repeater {
+        // context object pixelstream is set later
+        model: (pixelstream !== null) ? pixelstream.segments : undefined
+        Rectangle {
+            visible: options.showStreamingSegments
+            width: model.modelData.coord.width
+            height: model.modelData.coord.height
+            x: model.modelData.coord.x
+            y: model.modelData.coord.y
+            border.color: Style.segmentBorderColor
+            color: "transparent"
+        }
+    }
+
     Text {
         id: statistics
-        text: (pixelstream !== null) ? pixelstream.statistics : "N/A" // context object pixelstream is set later
+        text: pixelstream !== null ? pixelstream.statistics : "N/A"
         visible: options.showStatistics
 
         anchors.bottom: parent.bottom

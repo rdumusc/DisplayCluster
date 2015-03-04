@@ -38,18 +38,16 @@
 
 #include "PixelStreamSegmentRenderer.h"
 
+#include <deflect/PixelStreamSegmentParameters.h>
+
 PixelStreamSegmentRenderer::PixelStreamSegmentRenderer()
-    : x_(0)
-    , y_(0)
-    , width_(0)
-    , height_(0)
-    , textureNeedsUpdate_(true)
+    : textureNeedsUpdate_( true )
 {
 }
 
-QRect PixelStreamSegmentRenderer::getRect() const
+const QRect& PixelStreamSegmentRenderer::getRect() const
 {
-    return QRect(x_, y_, width_, height_);
+    return rect_;
 }
 
 void PixelStreamSegmentRenderer::updateTexture(const QImage& image)
@@ -68,13 +66,12 @@ void PixelStreamSegmentRenderer::setTextureNeedsUpdate()
     textureNeedsUpdate_ = true;
 }
 
-void PixelStreamSegmentRenderer::setParameters(const unsigned int x, const unsigned int y,
-                                               const unsigned int width, const unsigned int height)
+void PixelStreamSegmentRenderer::setParameters( const deflect::PixelStreamSegmentParameters& param )
 {
-    x_ = x;
-    y_ = y;
-    width_ = width;
-    height_ = height;
+    rect_.setX( param.x );
+    rect_.setY( param.y );
+    rect_.setWidth( param.width );
+    rect_.setHeight( param.height );
 }
 
 bool PixelStreamSegmentRenderer::render()
@@ -85,10 +82,10 @@ bool PixelStreamSegmentRenderer::render()
     // OpenGL transformation
     glPushMatrix();
 
-    glTranslatef(x_, y_, 0.);
+    glTranslatef(rect_.x(), rect_.y(), 0.);
     // The following draw calls assume normalized coordinates, so we must
     // pre-multiply by this segment's dimensions
-    glScalef(width_, height_, 0.);
+    glScalef(rect_.width(), rect_.height(), 0.);
 
     drawUnitTexturedQuad();
 

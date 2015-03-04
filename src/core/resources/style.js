@@ -21,3 +21,5 @@ var buttonsDisabledOpacity = 20;
 var statisticsBorderMargin = 10;
 var statisticsFontSize = 24;
 var statisticsFontColor = "red";
+
+var segmentBorderColor = "lightgreen";

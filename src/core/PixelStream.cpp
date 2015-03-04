@@ -53,12 +53,19 @@
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 
-PixelStream::PixelStream(const QString &uri)
-    : uri_(uri)
-    , width_(0)
-    , height_ (0)
-    , buffersSwapped_(false)
+// false-positive on qt signals for Q_PROPERY notifiers
+// cppcheck-suppress uninitMemberVar
+PixelStream::PixelStream( const QString& uri )
+    : uri_( uri )
+    , width_( 0 )
+    , height_ ( 0 )
+    , buffersSwapped_( false )
 {
+}
+
+PixelStream::~PixelStream()
+{
+    qDeleteAll( segmentsList_ );
 }
 
 void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel)
@@ -72,11 +79,12 @@ void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& w
         return;
 
     // After swapping the buffers, wait until decoding has finished to update the renderers.
-    if ( buffersSwapped_ )
+    if( buffersSwapped_ )
     {
         adjustSegmentRendererCount(frontBuffer_.size());
         updateRenderers(frontBuffer_);
         recomputeDimensions(frontBuffer_);
+        refreshSegmentsList(frontBuffer_);
         buffersSwapped_ = false;
     }
 
@@ -100,8 +108,7 @@ void PixelStream::updateRenderers(const deflect::PixelStreamSegments& segments)
     for(size_t i=0; i<segments.size(); i++)
     {
         // The parameters always need to be up to date to determine visibility when rendering.
-        segmentRenderers_[i]->setParameters(segments[i].parameters.x, segments[i].parameters.y,
-                                            segments[i].parameters.width, segments[i].parameters.height);
+        segmentRenderers_[i]->setParameters( segments[i].parameters );
         segmentRenderers_[i]->setTextureNeedsUpdate();
     }
 }
@@ -204,6 +211,35 @@ void PixelStream::adjustSegmentRendererCount(const size_t count)
     }
 }
 
+void PixelStream::refreshSegmentsList( const deflect::PixelStreamSegments& segments )
+{
+    // Update existing segments
+    const size_t maxIndex = std::min( (size_t)segmentsList_.size(),
+                                      segments.size( ));
+    for( size_t i = 0; i < maxIndex; ++i )
+    {
+        Segment* segment = qobject_cast<Segment*>( segmentsList_[i] );
+        segment->update( segments[i].parameters );
+    }
+
+    const bool sizeChange = segments.size() != (size_t)segmentsList_.size();
+
+    // Insert new objects in the vector if it is smaller
+    for( size_t i = segmentsList_.size(); i < segments.size(); ++i )
+        segmentsList_.push_back( new Segment( segments[i].parameters ));
+
+    // Or remove objects it if it is bigger
+    const size_t removeCount = segmentsList_.size() - segments.size();
+    for( size_t i = 0; i < removeCount; ++i )
+    {
+        delete segmentsList_.back();
+        segmentsList_.pop_back();
+    }
+
+    if( sizeChange )
+        emit segmentsChanged();
+}
+
 void PixelStream::setNewFrame(const deflect::PixelStreamFramePtr frame)
 {
     syncPixelStreamFrame_.update(frame);
@@ -212,6 +248,11 @@ void PixelStream::setNewFrame(const deflect::PixelStreamFramePtr frame)
 QString PixelStream::getStatistics() const
 {
     return fpsCounter_.toString();
+}
+
+QList<QObject*> PixelStream::getSegments() const
+{
+    return segmentsList_;
 }
 
 void PixelStream::sync(WallToWallChannel& wallToWallChannel)

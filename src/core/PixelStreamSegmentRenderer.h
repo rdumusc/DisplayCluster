@@ -39,6 +39,7 @@
 #ifndef PIXEL_STREAM_SEGMENT_RENDERER_H
 #define PIXEL_STREAM_SEGMENT_RENDERER_H
 
+#include "types.h"
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 
@@ -56,7 +57,7 @@ public:
     PixelStreamSegmentRenderer();
 
     /** Get the position and dimensions of this segment */
-    QRect getRect() const;
+    const QRect& getRect() const;
 
     /**
      * Update the texture.
@@ -72,15 +73,8 @@ public:
     /** Mark the texture as being outdated */
     void setTextureNeedsUpdate();
 
-    /**
-     * Set the paramters for this segment.
-     * @param x Position of the segement in pixels. (0,0) == top-left of the stream.
-     * @param y Position of the segement in pixels. (0,0) == top-left of the stream.
-     * @param width Width of the segment in pixels.
-     * @param height Height of the segment in pixels.
-     */
-    void setParameters(const unsigned int x, const unsigned int y,
-                       const unsigned int width, const unsigned int height);
+    /** Set the position and size paramters. (0,0) == top-left of the stream. */
+    void setParameters( const deflect::PixelStreamSegmentParameters& param );
 
     /**
      * Render the current texture.
@@ -93,9 +87,7 @@ public:
 private:
     GLTexture2D texture_;
     GLQuad quad_;
-
-    unsigned int x_, y_;
-    unsigned int width_, height_;
+    QRect rect_;
 
     bool textureNeedsUpdate_;
 
