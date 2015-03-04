@@ -39,7 +39,6 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#include "config.h"
 #include "types.h"
 #include "serializationHelpers.h"
 
@@ -51,11 +50,14 @@
 /**
  * Stores global display Options which can change during runtime.
  *
- * Can be serialized and distributed to the Wall applications.
+ * Can be serialized and distributed to the Wall applications, and also set as
+ * a Qml context object.
  */
 class Options : public QObject, public boost::enable_shared_from_this<Options>
 {
     Q_OBJECT
+    Q_PROPERTY( bool showStatistics READ getShowStatistics CONSTANT )
+    Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
 
 public:
     /** Constructor */
@@ -76,24 +78,24 @@ public:
 public slots:
     /** @name Public setters. @see updated() */
     //@{
-    void setShowWindowBorders(bool set);
-    void setShowTouchPoints(bool set);
-    void setShowTestPattern(bool set);
-    void setShowZoomContext(bool set);
-    void setShowStreamingSegments(bool set);
-    void setShowStatistics(bool set);
-    void setBackgroundColor(QColor color);
+    void setShowWindowBorders( bool set );
+    void setShowTouchPoints( bool set );
+    void setShowTestPattern( bool set );
+    void setShowZoomContext( bool set );
+    void setShowStreamingSegments( bool set );
+    void setShowStatistics( bool set );
+    void setBackgroundColor( QColor color );
     //@}
 
 signals:
     /** Emitted when a value is changed by one of the setters. */
-    void updated(OptionsPtr);
+    void updated( OptionsPtr );
 
 private:
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
         ar & showWindowBorders_;
         ar & showTouchPoints_;

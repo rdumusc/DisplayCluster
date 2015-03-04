@@ -44,9 +44,6 @@
 
 #include <boost/noncopyable.hpp>
 
-class FpsCounter;
-class RenderContext;
-
 /**
  * Render a single PixelStream Segment
  *
@@ -55,13 +52,8 @@ class RenderContext;
 class PixelStreamSegmentRenderer : public boost::noncopyable
 {
 public:
-    /** Construct a renderer.
-     * @param renderContext A reference to the rendering context
-     */
-    PixelStreamSegmentRenderer(RenderContext* renderContext);
-
-    /** Destruct a renderer. */
-    ~PixelStreamSegmentRenderer();
+    /** Constructor. */
+    PixelStreamSegmentRenderer();
 
     /** Get the position and dimensions of this segment */
     QRect getRect() const;
@@ -94,34 +86,20 @@ public:
      * Render the current texture.
      *
      * Assume that the GL matrices have been set to the normalized dimensions of the stream.
-     * @param showSegmentBorders Show the segment boders
-     * @param showSegmentStatistics Show the statistics for this segment
      * @return true on successful render; false if no texture available.
      */
-    bool render( bool showSegmentBorders, bool showSegmentStatistics );
+    bool render();
 
 private:
-    /** A reference to the render context. */
-    RenderContext* renderContext_;
-
     GLTexture2D texture_;
     GLQuad quad_;
 
-    // Segment position
     unsigned int x_, y_;
-    // Segment dimensions
     unsigned int width_, height_;
 
-    // Statistics
-    FpsCounter* segmentStatistics;
-
-    // Status
     bool textureNeedsUpdate_;
 
-    // Rendering
     void drawUnitTexturedQuad();
-    void drawSegmentBorders();
-    void drawStatistics();
 };
 
 #endif

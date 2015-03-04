@@ -114,36 +114,6 @@ int RenderContext::getActiveGLWindowIndex() const
     return activeGLWindowIndex_;
 }
 
-void RenderContext::renderTextInWindow( const int x, const int y,
-                                        const QString& str, const QFont& font,
-                                        const QColor& color )
-{
-    glPushAttrib( GL_ENABLE_BIT );
-    glDisable( GL_DEPTH_TEST );
-    scene_.painter_->setFont( font );
-    scene_.painter_->setPen( color );
-    scene_.painter_->drawText( x + scene_.painterRect_.x(),
-                               y + scene_.painterRect_.y(), str );
-    glPopAttrib();
-}
-
-void RenderContext::renderText( const double x, const double y, const double z,
-                                const QString& str, const QFont& font,
-                                const QColor& color )
-{
-    GLdouble model[4][4], proj[4][4];
-    GLint view[4];
-    glGetDoublev( GL_MODELVIEW_MATRIX, &model[0][0] );
-    glGetDoublev( GL_PROJECTION_MATRIX, &proj[0][0] );
-    glGetIntegerv( GL_VIEWPORT, &view[0] );
-    GLdouble win_x = 0.0, win_y = 0.0, win_z = 0.0;
-    gluProject( x, y, z, &model[0][0], &proj[0][0], &view[0],
-                &win_x, &win_y, &win_z );
-    win_y = scene_.painterRect_.height() - win_y;
-
-    renderTextInWindow( qRound( win_x ), qRound( win_y ), str, font, color );
-}
-
 void RenderContext::addRenderable( RenderablePtr renderable )
 {
     scene_.addRenderable( renderable );
@@ -184,7 +154,7 @@ QDeclarativeEngine& RenderContext::getQmlEngine()
     return engine_;
 }
 
-void RenderContext::displayFps( bool value )
+void RenderContext::displayFps( const bool value )
 {
     BOOST_FOREACH( WallWindowPtr window, windows_ )
     {

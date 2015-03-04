@@ -38,25 +38,13 @@
 
 #include "PixelStreamSegmentRenderer.h"
 
-#include "FpsCounter.h"
-#include "RenderContext.h"
-
-#define TEXT_SIZE_PX 24
-
-PixelStreamSegmentRenderer::PixelStreamSegmentRenderer(RenderContext* renderContext)
-    : renderContext_(renderContext)
-    , x_(0)
+PixelStreamSegmentRenderer::PixelStreamSegmentRenderer()
+    : x_(0)
     , y_(0)
     , width_(0)
     , height_(0)
-    , segmentStatistics(new FpsCounter())
     , textureNeedsUpdate_(true)
 {
-}
-
-PixelStreamSegmentRenderer::~PixelStreamSegmentRenderer()
-{
-    delete segmentStatistics;
 }
 
 QRect PixelStreamSegmentRenderer::getRect() const
@@ -66,7 +54,6 @@ QRect PixelStreamSegmentRenderer::getRect() const
 
 void PixelStreamSegmentRenderer::updateTexture(const QImage& image)
 {
-    segmentStatistics->tick();
     texture_.update(image, GL_RGBA);
     textureNeedsUpdate_ = false;
 }
@@ -90,37 +77,20 @@ void PixelStreamSegmentRenderer::setParameters(const unsigned int x, const unsig
     height_ = height;
 }
 
-bool PixelStreamSegmentRenderer::render(bool showSegmentBorders, bool showSegmentStatistics)
+bool PixelStreamSegmentRenderer::render()
 {
     if(!texture_.isValid())
         return false;
 
     // OpenGL transformation
     glPushMatrix();
-    glTranslatef(x_, y_, 0.);
 
-    // The following draw calls assume normalized coordinates, so we must pre-multiply by this segment's dimensions
+    glTranslatef(x_, y_, 0.);
+    // The following draw calls assume normalized coordinates, so we must
+    // pre-multiply by this segment's dimensions
     glScalef(width_, height_, 0.);
 
     drawUnitTexturedQuad();
-
-    if(showSegmentBorders || showSegmentStatistics)
-    {
-        glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT | GL_DEPTH_BUFFER_BIT);
-        glLineWidth(2);
-
-        glPushMatrix();
-        glTranslatef(0.,0.,0.05);
-
-        if(showSegmentBorders)
-            drawSegmentBorders();
-
-        if(showSegmentStatistics)
-            drawStatistics();
-
-        glPopMatrix();
-        glPopAttrib();
-    }
 
     glPopMatrix();
 
@@ -137,23 +107,4 @@ void PixelStreamSegmentRenderer::drawUnitTexturedQuad()
     quad_.render();
 
     glPopAttrib();
-}
-
-void PixelStreamSegmentRenderer::drawSegmentBorders()
-{
-    glColor4f(1.,1.,1.,1.);
-
-    quad_.setEnableTexture(false);
-    quad_.setRenderMode(GL_LINE_LOOP);
-    quad_.render();
-
-    glEnd();
-}
-
-void PixelStreamSegmentRenderer::drawStatistics()
-{
-    QFont font;
-    font.setPixelSize( TEXT_SIZE_PX );
-    renderContext_->renderText( 0.1, 0.95, 0.0, segmentStatistics->toString(),
-                                font, QColor( Qt::red ));
 }

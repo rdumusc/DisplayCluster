@@ -43,6 +43,7 @@
 #include "RenderContext.h"
 #include "log.h"
 #include "PixelStreamSegmentRenderer.h"
+#include "FpsCounter.h"
 
 #include <deflect/PixelStreamFrame.h>
 #include <deflect/PixelStreamSegmentDecoder.h>
@@ -50,14 +51,13 @@
 
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 PixelStream::PixelStream(const QString &uri)
     : uri_(uri)
     , width_(0)
     , height_ (0)
     , buffersSwapped_(false)
-    , showSegmentBorders_(false)
-    , showSegmentStatistics_(false)
 {
 }
 
@@ -108,6 +108,7 @@ void PixelStream::updateRenderers(const deflect::PixelStreamSegments& segments)
 
 void PixelStream::updateVisibleTextures(const QRectF& windowRect)
 {
+    bool textureWasUpdated = false;
     for(size_t i=0; i<frontBuffer_.size(); ++i)
     {
         if (segmentRenderers_[i]->textureNeedsUpdate() && !frontBuffer_[i].parameters.compressed &&
@@ -119,7 +120,15 @@ void PixelStream::updateVisibleTextures(const QRectF& windowRect)
                                         QImage::Format_RGB32);
 
             segmentRenderers_[i]->updateTexture(textureWrapper);
+
+            textureWasUpdated = true;
         }
+    }
+
+    if( textureWasUpdated )
+    {
+        fpsCounter_.tick();
+        emit statisticsChanged();
     }
 }
 
@@ -169,7 +178,7 @@ void PixelStream::render(const QRectF&)
     BOOST_FOREACH(PixelStreamSegmentRendererPtr renderer, segmentRenderers_)
     {
         if (isVisible(renderer->getRect(), contentWindowRect_))
-            renderer->render(showSegmentBorders_, showSegmentStatistics_);
+            renderer->render();
     }
 
     glPopMatrix();
@@ -179,7 +188,7 @@ void PixelStream::adjustFrameDecodersCount(const size_t count)
 {
     // We need to insert NEW objects in the vector if it is smaller
     for (size_t i=frameDecoders_.size(); i<count; ++i)
-        frameDecoders_.push_back( PixelStreamSegmentDecoderPtr(new deflect::PixelStreamSegmentDecoder()) );
+        frameDecoders_.push_back( boost::make_shared<deflect::PixelStreamSegmentDecoder>( ));
     // Or resize it if it is bigger
     frameDecoders_.resize( count );
 }
@@ -191,7 +200,7 @@ void PixelStream::adjustSegmentRendererCount(const size_t count)
     {
         segmentRenderers_.clear();
         for (size_t i=0; i<count; ++i)
-            segmentRenderers_.push_back( PixelStreamSegmentRendererPtr(new PixelStreamSegmentRenderer(renderContext_)) );
+            segmentRenderers_.push_back( boost::make_shared<PixelStreamSegmentRenderer>( ));
     }
 }
 
@@ -200,11 +209,9 @@ void PixelStream::setNewFrame(const deflect::PixelStreamFramePtr frame)
     syncPixelStreamFrame_.update(frame);
 }
 
-void PixelStream::setRenderingOptions(const bool showSegmentBorders,
-                                      const bool showSegmentStatistics)
+QString PixelStream::getStatistics() const
 {
-    showSegmentBorders_ = showSegmentBorders;
-    showSegmentStatistics_ = showSegmentStatistics;
+    return fpsCounter_.toString();
 }
 
 void PixelStream::sync(WallToWallChannel& wallToWallChannel)

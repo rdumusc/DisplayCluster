@@ -43,16 +43,20 @@
 #include "ContentWindow.h"
 #include "Factories.h"
 #include "RenderContext.h"
+#include "Options.h"
 
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 #include <QtDeclarative/QDeclarativeContext>
 #include <QtDeclarative/QDeclarativeComponent>
+#include <QtDeclarative/QDeclarativeItem>
 
 namespace
 {
 const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
+const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext,
@@ -62,6 +66,7 @@ DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext,
     , windowRenderer_( factories )
     , displayGroupItem_( 0 )
 {
+    setRenderingOptions( boost::make_shared<Options>( ));
 }
 
 void DisplayGroupRenderer::render()
@@ -73,9 +78,14 @@ void DisplayGroupRenderer::render()
     render( displayGroup_->getContentWindows( ));
 }
 
-ContentWindowRenderer& DisplayGroupRenderer::getWindowRenderer()
+void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
-    return windowRenderer_;
+    windowRenderer_.setShowWindowBorders( options->getShowWindowBorders( ));
+    windowRenderer_.setShowZoomContext( options->getShowZoomContext( ));
+
+    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    engine.rootContext()->setContextProperty( "options", options.get( ));
+    options_ = options;
 }
 
 void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
@@ -101,9 +111,7 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         if( windowItems_.contains( id ))
             windowItems_[id]->update( window );
         else
-            windowItems_[id].reset( new QmlWindowRenderer( engine,
-                                                           *displayGroupItem_,
-                                                           window ));
+            createWindowQmlItem( window );
     }
 
     // Remove old windows
@@ -175,7 +183,20 @@ void DisplayGroupRenderer::createDisplayGroupQmlItem()
 {
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
 
-    QDeclarativeComponent component( &engine, QUrl( "qrc:/qml/core/DisplayGroup.qml" ));
-    displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
+    QDeclarativeComponent component( &engine, QML_DISPLAYGROUP_URL );
+    displayGroupItem_ = qobject_cast<QDeclarativeItem*>( component.create( ));
     renderContext_->getScene().addItem( displayGroupItem_ );
+}
+
+void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
+{
+    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+
+    const QUuid& id = window->getID();
+    windowItems_[id].reset( new QmlWindowRenderer( engine, *displayGroupItem_,
+                                                   window ));
+
+    // Currently only needed to link the PixelStream with Qml for rendering fps
+    ContentPtr content = window->getContent();
+    windowItems_[id]->associateWith( *factories_->getFactoryObject( content ));
 }

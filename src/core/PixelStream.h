@@ -40,6 +40,7 @@
 #define PIXEL_STREAM_H
 
 #include "FactoryObject.h"
+#include "FpsCounter.h"
 #include "SwapSyncObject.h"
 #include "types.h"
 
@@ -49,6 +50,7 @@
 #include <QRectF>
 #include <QString>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <vector>
 
 class PixelStreamSegmentRenderer;
@@ -59,6 +61,7 @@ typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRenderer
 class PixelStream : public QObject, public FactoryObject
 {
     Q_OBJECT
+    Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
 public:
     PixelStream(const QString& uri);
@@ -68,11 +71,13 @@ public:
 
     void setNewFrame(const deflect::PixelStreamFramePtr frame);
 
-    void setRenderingOptions(const bool showSegmentBorders,
-                             const bool showSegmentStatistics);
+    QString getStatistics() const;
 
 signals:
     void requestFrame(const QString uri);
+
+    /** Notify that the fps statistics have changed. */
+    void statisticsChanged();
 
 private:
     void sync(WallToWallChannel& wallToWallChannel);
@@ -101,8 +106,7 @@ private:
     // The coordinates of the ContentWindow of this PixelStream
     QRectF contentWindowRect_;
 
-    bool showSegmentBorders_;
-    bool showSegmentStatistics_;
+    FpsCounter fpsCounter_;
 
     void updateRenderers(const deflect::PixelStreamSegments& segments);
     void updateVisibleTextures(const QRectF& windowRect);
