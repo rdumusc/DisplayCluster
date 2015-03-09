@@ -40,37 +40,70 @@
 #include "QmlWindowRenderer.h"
 
 #include "ContentWindow.h"
+#include "PixelStream.h"
 
-#include <QtDeclarative/QDeclarativeEngine>
 #include <QtDeclarative/QDeclarativeComponent>
-#include <QtDeclarative/QDeclarativeContext>
 
 #include <QtGui/QGraphicsScene>
 
+namespace
+{
+const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
+const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
+}
+
 QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
-                                      QGraphicsObject& displayGroupItem,
+                                      QDeclarativeItem& displayGroupItem,
                                       ContentWindowPtr contentWindow )
     : contentWindow_( contentWindow )
     , windowContext_( new QDeclarativeContext( engine.rootContext( )))
+    , windowItem_( 0 )
+    , contentItem_( 0 )
 {
     windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
 
-    QDeclarativeComponent component( &engine, QUrl( "qrc:/qml/core/WallContentWindow.qml" ));
-    item_ = qobject_cast<QGraphicsObject*>( component.create( windowContext_.get( )));
-    item_->setParentItem( &displayGroupItem );
+    windowItem_ = createQmlItem( QML_WINDOW_URL );
+    windowItem_->setParentItem( &displayGroupItem );
+
+    createContentItem();
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
 {
-    QGraphicsScene* scene = item_->scene();
-    scene->removeItem( item_ );
-    delete item_;
+    QGraphicsScene* scene = windowItem_->scene();
+    scene->removeItem( windowItem_ );
+    delete windowItem_;
 }
 
 void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
 {
-    // Could be optimize by checking for changes before updating the context
+    // Could be optimized by checking for changes before updating the context
     windowContext_->setContextProperty( "contentwindow", contentWindow.get( ));
     contentWindow_ = contentWindow;
 }
 
+void QmlWindowRenderer::associateWith( FactoryObject& object )
+{
+    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
+    {
+        PixelStream* stream = static_cast<PixelStream*>( &object );
+        windowContext_->setContextProperty( "pixelstream", stream );
+    }
+}
+
+void QmlWindowRenderer::createContentItem()
+{
+    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
+    {
+        windowContext_->setContextProperty( "pixelstream", NULL );
+        contentItem_ = createQmlItem( QML_PIXELSTREAM_URL );
+        contentItem_->setParentItem( windowItem_ );
+    }
+}
+
+QDeclarativeItem* QmlWindowRenderer::createQmlItem( const QUrl& url )
+{
+    QDeclarativeComponent component( windowContext_->engine(), url );
+    QObject* qmlObject = component.create( windowContext_.get( ));
+    return qobject_cast<QDeclarativeItem*>( qmlObject );
+}

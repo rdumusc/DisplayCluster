@@ -40,6 +40,7 @@
 #define PIXEL_STREAM_H
 
 #include "FactoryObject.h"
+#include "FpsCounter.h"
 #include "SwapSyncObject.h"
 #include "types.h"
 
@@ -49,6 +50,7 @@
 #include <QRectF>
 #include <QString>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <vector>
 
 class PixelStreamSegmentRenderer;
@@ -56,23 +58,72 @@ class WallToWallChannel;
 typedef boost::shared_ptr<deflect::PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
 typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRendererPtr;
 
+/**
+ * Qml Wrapper for a PixelStream segment parameters.
+ */
+class Segment : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY( QRect coord READ getCoord NOTIFY coordChanged )
+
+public:
+    // false-positive on qt signals for Q_PROPERY notifiers
+    // cppcheck-suppress uninitMemberVar
+    Segment( const deflect::PixelStreamSegmentParameters& params )
+        : rect_( params.x, params.y, params.width, params.height )
+    {}
+
+    const QRect& getCoord() const
+    {
+        return rect_;
+    }
+
+    void update( const deflect::PixelStreamSegmentParameters& params )
+    {
+        if( rect_.x() == (int)params.x &&
+            rect_.y() == (int)params.y &&
+            rect_.width() == (int)params.width &&
+            rect_.height() == (int)params.height
+            )
+            return;
+
+        rect_.setRect( params.x, params.y, params.width, params.height );
+        emit coordChanged();
+    }
+
+signals:
+    void coordChanged();
+
+private:
+    QRect rect_;
+};
+
+/**
+ * Decompress, upload and render the segments of a PixelStream.
+ */
 class PixelStream : public QObject, public FactoryObject
 {
     Q_OBJECT
+    Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
+    Q_PROPERTY( QList<QObject*> segments READ getSegments NOTIFY segmentsChanged )
 
 public:
     PixelStream(const QString& uri);
+    ~PixelStream();
 
     void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
     void render(const QRectF& texCoords) override;
 
     void setNewFrame(const deflect::PixelStreamFramePtr frame);
 
-    void setRenderingOptions(const bool showSegmentBorders,
-                             const bool showSegmentStatistics);
+    QString getStatistics() const;
+    QList<QObject*> getSegments() const;
 
 signals:
     void requestFrame(const QString uri);
+
+    void statisticsChanged();
+    void segmentsChanged();
 
 private:
     void sync(WallToWallChannel& wallToWallChannel);
@@ -101,8 +152,9 @@ private:
     // The coordinates of the ContentWindow of this PixelStream
     QRectF contentWindowRect_;
 
-    bool showSegmentBorders_;
-    bool showSegmentStatistics_;
+    FpsCounter fpsCounter_;
+
+    QList<QObject*> segmentsList_;
 
     void updateRenderers(const deflect::PixelStreamSegments& segments);
     void updateVisibleTextures(const QRectF& windowRect);
@@ -112,6 +164,7 @@ private:
 
     void adjustFrameDecodersCount(const size_t count);
     void adjustSegmentRendererCount(const size_t count);
+    void refreshSegmentsList(const deflect::PixelStreamSegments& segments);
 
     bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
 

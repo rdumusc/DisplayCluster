@@ -55,8 +55,6 @@ ContentWindowRenderer::ContentWindowRenderer( FactoriesPtr factories )
     : factories_( factories )
     , showWindowBorders_( true )
     , showZoomContext_( false )
-    , showSegmentBorders_( false )
-    , showSegmentStatistics_( false )
 {
     quad_.setEnableTexture( false );
 }
@@ -95,13 +93,6 @@ void ContentWindowRenderer::setShowZoomContext( const bool show )
     showZoomContext_ = show;
 }
 
-void ContentWindowRenderer::setPixelStreamOptions( const bool showSegmentBorders,
-                                                   const bool showSegmentStatistics )
-{
-    showSegmentBorders_ = showSegmentBorders;
-    showSegmentStatistics_ = showSegmentStatistics;
-}
-
 void ContentWindowRenderer::renderWindowBorder()
 {
     const float horizontalBorder = WINDOW_BORDER_WIDTH_PIXELS;
@@ -137,11 +128,6 @@ void ContentWindowRenderer::renderContent()
     glScalef( winCoord.width(), winCoord.height(), 1.f );
 
     FactoryObjectPtr object = factories_->getFactoryObject( window_->getContent( ));
-
-    PixelStream* pixelStream = dynamic_cast< PixelStream* >( object.get( ));
-    if( pixelStream )
-        pixelStream->setRenderingOptions( showSegmentBorders_,
-                                          showSegmentStatistics_);
 
     object->render( texCoord );
 

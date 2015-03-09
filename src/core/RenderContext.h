@@ -68,15 +68,6 @@ public:
     /** Get the index of the active window during rendering. @deprecated */
     int getActiveGLWindowIndex() const;
 
-    /** Render text in window coordinates. */
-    void renderTextInWindow( const int x, const int y, const QString & str,
-                             const QFont& font, const QColor& color );
-
-    /** Render text in scene coordinates. */
-    void renderText( const double x, const double y, const double z,
-                     const QString & str, const QFont& font,
-                     const QColor& color );
-
     /** Add an object to be rendered. */
     void addRenderable( RenderablePtr renderable );
 

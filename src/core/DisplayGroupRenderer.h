@@ -50,7 +50,6 @@
 #include <QtCore/QMap>
 #include <QtCore/QUuid>
 
-class QGraphicsObject;
 class QDeclarativeItem;
 
 /**
@@ -71,8 +70,8 @@ public:
      */
     void render() override;
 
-    /** Get the window renderer. */
-    ContentWindowRenderer& getWindowRenderer();
+    /** Set different options used for rendering. */
+    void setRenderingOptions( OptionsPtr options );
 
 public slots:
     /**
@@ -86,16 +85,19 @@ private:
     FactoriesPtr factories_;
     DisplayGroupPtr displayGroup_;
     ContentWindowRenderer windowRenderer_;
-    QGraphicsObject* displayGroupItem_;
+    QDeclarativeItem* displayGroupItem_;
 
     typedef boost::shared_ptr<QmlWindowRenderer> QmlWindowPtr;
     typedef QMap<QUuid,QmlWindowPtr> QmlWindows;
     QmlWindows windowItems_;
 
+    OptionsPtr options_;
+
     void renderBackground( ContentPtr content );
     void render( const ContentWindowPtrs& contentWindows );
 
     void createDisplayGroupQmlItem();
+    void createWindowQmlItem( ContentWindowPtr window );
 };
 
 #endif // DISPLAYGROUPRENDERER_H

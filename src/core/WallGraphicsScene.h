@@ -63,6 +63,7 @@ public:
     /** Set the background color */
     void setBackgroundColor( const QColor& color );
 
+    /** Display the test pattern. When visible, other Renderables are hidden. */
     void displayTestPattern( const bool value );
 
 private:
@@ -74,11 +75,6 @@ private:
     QColor backgroundColor_;
     QList<RenderablePtr> renderables_;
     bool displayTestPattern_;
-
-    // For text rendering with Qt functionss
-    friend class RenderContext;
-    QPainter* painter_;
-    QRectF painterRect_;
 };
 
 #endif // WALLGRAPHICSSCENE_H

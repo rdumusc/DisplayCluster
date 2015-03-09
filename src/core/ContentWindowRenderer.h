@@ -76,10 +76,6 @@ public:
     /** Display the zoom context. */
     void setShowZoomContext( const bool show );
 
-    /** Set PixelStream rendering options. */
-    void setPixelStreamOptions( const bool showSegmentBorders,
-                                const bool showSegmentStatistics );
-
 private:
     FactoriesPtr factories_;
     ContentWindowPtr window_;
@@ -87,9 +83,6 @@ private:
 
     bool showWindowBorders_;
     bool showZoomContext_;
-
-    bool showSegmentBorders_;
-    bool showSegmentStatistics_;
 
     void renderWindowBorder();
     void renderContent();

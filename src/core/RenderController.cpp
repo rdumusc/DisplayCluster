@@ -118,10 +118,6 @@ void RenderController::setRenderOptions(OptionsPtr options)
 
     markerRenderer_->setVisible(options->getShowTouchPoints());
 
-    ContentWindowRenderer& winRenderer = displayGroupRenderer_->getWindowRenderer();
-    winRenderer.setShowWindowBorders(options->getShowWindowBorders());
-    winRenderer.setShowZoomContext(options->getShowZoomContext());
-    winRenderer.setPixelStreamOptions(options->getShowStreamingSegments(),
-                                      options->getShowStatistics());
+    displayGroupRenderer_->setRenderingOptions( options );
 }
 

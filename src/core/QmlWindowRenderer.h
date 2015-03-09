@@ -47,8 +47,9 @@
 
 #include <QtGui/QGraphicsObject>
 
-class QDeclarativeEngine;
-class QDeclarativeContext;
+#include <QtDeclarative/QDeclarativeEngine>
+#include <QtDeclarative/QDeclarativeContext>
+#include <QtDeclarative/QDeclarativeItem>
 
 /**
  * Provide a Qml representation of a ContentWindow on the Wall.
@@ -57,17 +58,24 @@ class QmlWindowRenderer : public boost::noncopyable
 {
 public:
     QmlWindowRenderer( QDeclarativeEngine& engine,
-                       QGraphicsObject& displayGroupItem,
+                       QDeclarativeItem& displayGroupItem,
                        ContentWindowPtr contentWindow );
-
     ~QmlWindowRenderer();
 
+    /** Update the qml object with a new data model. */
     void update( ContentWindowPtr contentWindow );
+
+    /** Associate the renderer with its corresponding FactoryObject. */
+    void associateWith( FactoryObject& pixelStream );
 
 private:
     ContentWindowPtr contentWindow_;
     boost::scoped_ptr<QDeclarativeContext> windowContext_;
-    QGraphicsObject* item_;
+    QDeclarativeItem* windowItem_;
+    QDeclarativeItem* contentItem_;
+
+    void createContentItem();
+    QDeclarativeItem* createQmlItem( const QUrl& url );
 };
 
 #endif // QMLWINDOWRENDERER_H

@@ -17,3 +17,9 @@ var buttonsHeight = 100;
 var buttonsSpacing = 10;
 var buttonsEnabledOpacity = 100;
 var buttonsDisabledOpacity = 20;
+
+var statisticsBorderMargin = 10;
+var statisticsFontSize = 24;
+var statisticsFontColor = "red";
+
+var segmentBorderColor = "lightgreen";

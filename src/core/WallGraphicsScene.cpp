@@ -56,7 +56,6 @@ WallGraphicsScene::WallGraphicsScene( const QRectF &size, QObject* parent_ )
     : QGraphicsScene( size, parent_ )
     , backgroundColor_( Qt::black )
     , displayTestPattern_( false )
-    , painter_( 0 )
 {
 }
 
@@ -84,9 +83,6 @@ void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
                  "viewport on the graphics view");
         return;
     }
-
-    painter_ = painter;
-    painterRect_ = rect;
 
     painter->beginNativePainting();
     clear( backgroundColor_ );

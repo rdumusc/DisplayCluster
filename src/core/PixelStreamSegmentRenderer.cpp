@@ -38,35 +38,20 @@
 
 #include "PixelStreamSegmentRenderer.h"
 
-#include "FpsCounter.h"
-#include "RenderContext.h"
+#include <deflect/PixelStreamSegmentParameters.h>
 
-#define TEXT_SIZE_PX 24
-
-PixelStreamSegmentRenderer::PixelStreamSegmentRenderer(RenderContext* renderContext)
-    : renderContext_(renderContext)
-    , x_(0)
-    , y_(0)
-    , width_(0)
-    , height_(0)
-    , segmentStatistics(new FpsCounter())
-    , textureNeedsUpdate_(true)
+PixelStreamSegmentRenderer::PixelStreamSegmentRenderer()
+    : textureNeedsUpdate_( true )
 {
 }
 
-PixelStreamSegmentRenderer::~PixelStreamSegmentRenderer()
+const QRect& PixelStreamSegmentRenderer::getRect() const
 {
-    delete segmentStatistics;
-}
-
-QRect PixelStreamSegmentRenderer::getRect() const
-{
-    return QRect(x_, y_, width_, height_);
+    return rect_;
 }
 
 void PixelStreamSegmentRenderer::updateTexture(const QImage& image)
 {
-    segmentStatistics->tick();
     texture_.update(image, GL_RGBA);
     textureNeedsUpdate_ = false;
 }
@@ -81,46 +66,28 @@ void PixelStreamSegmentRenderer::setTextureNeedsUpdate()
     textureNeedsUpdate_ = true;
 }
 
-void PixelStreamSegmentRenderer::setParameters(const unsigned int x, const unsigned int y,
-                                               const unsigned int width, const unsigned int height)
+void PixelStreamSegmentRenderer::setParameters( const deflect::PixelStreamSegmentParameters& param )
 {
-    x_ = x;
-    y_ = y;
-    width_ = width;
-    height_ = height;
+    rect_.setX( param.x );
+    rect_.setY( param.y );
+    rect_.setWidth( param.width );
+    rect_.setHeight( param.height );
 }
 
-bool PixelStreamSegmentRenderer::render(bool showSegmentBorders, bool showSegmentStatistics)
+bool PixelStreamSegmentRenderer::render()
 {
     if(!texture_.isValid())
         return false;
 
     // OpenGL transformation
     glPushMatrix();
-    glTranslatef(x_, y_, 0.);
 
-    // The following draw calls assume normalized coordinates, so we must pre-multiply by this segment's dimensions
-    glScalef(width_, height_, 0.);
+    glTranslatef(rect_.x(), rect_.y(), 0.);
+    // The following draw calls assume normalized coordinates, so we must
+    // pre-multiply by this segment's dimensions
+    glScalef(rect_.width(), rect_.height(), 0.);
 
     drawUnitTexturedQuad();
-
-    if(showSegmentBorders || showSegmentStatistics)
-    {
-        glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT | GL_DEPTH_BUFFER_BIT);
-        glLineWidth(2);
-
-        glPushMatrix();
-        glTranslatef(0.,0.,0.05);
-
-        if(showSegmentBorders)
-            drawSegmentBorders();
-
-        if(showSegmentStatistics)
-            drawStatistics();
-
-        glPopMatrix();
-        glPopAttrib();
-    }
 
     glPopMatrix();
 
@@ -137,23 +104,4 @@ void PixelStreamSegmentRenderer::drawUnitTexturedQuad()
     quad_.render();
 
     glPopAttrib();
-}
-
-void PixelStreamSegmentRenderer::drawSegmentBorders()
-{
-    glColor4f(1.,1.,1.,1.);
-
-    quad_.setEnableTexture(false);
-    quad_.setRenderMode(GL_LINE_LOOP);
-    quad_.render();
-
-    glEnd();
-}
-
-void PixelStreamSegmentRenderer::drawStatistics()
-{
-    QFont font;
-    font.setPixelSize( TEXT_SIZE_PX );
-    renderContext_->renderText( 0.1, 0.95, 0.0, segmentStatistics->toString(),
-                                font, QColor( Qt::red ));
 }

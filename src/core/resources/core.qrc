@@ -30,5 +30,6 @@
         <file>FullscreenControlButton.qml</file>
         <file>WindowControlsDelegate.qml</file>
         <file>style.js</file>
+        <file>PixelStream.qml</file>
     </qresource>
 </RCC>
