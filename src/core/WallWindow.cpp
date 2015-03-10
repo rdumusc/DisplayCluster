@@ -40,10 +40,12 @@
 #include "WallWindow.h"
 
 #include "TestPattern.h"
+#include "GLUtils.h"
 
 WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
                         const QPoint& windowPos )
     : QGraphicsView( scene_ )
+    , blockUpdates_( false )
 {
     QRect windowGeometry( sceneRect_ );
     if( !windowPos.isNull( ))
@@ -54,9 +56,10 @@ WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
 
     setCacheMode( QGraphicsView::CacheNone );
     setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
-    setAttribute( Qt::WA_TranslucentBackground );
-    setStyleSheet( "border: 0px" );
+    setAttribute( Qt::WA_OpaquePaintEvent );
+    setAttribute( Qt::WA_NoSystemBackground );
 
+    setStyleSheet( "border: 0px" );
     setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
     setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
 }
@@ -69,6 +72,21 @@ void WallWindow::setTestPattern( TestPatternPtr testPattern )
 TestPatternPtr WallWindow::getTestPattern()
 {
     return testPattern_;
+}
+
+void WallWindow::setShowFps( const bool value )
+{
+    fpsRenderer_.setVisible( value );
+}
+
+void WallWindow::setBlockDrawCalls( const bool enable )
+{
+    blockUpdates_ = enable;
+}
+
+void WallWindow::disableVSync()
+{
+    GLUtils::setEnableVSync( this, false );
 }
 
 void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
@@ -85,7 +103,10 @@ void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
     QGraphicsView::drawForeground( painter, rect_ );
 }
 
-void WallWindow::setShowFps( const bool value )
+void WallWindow::paintEvent( QPaintEvent* event_ )
 {
-    fpsRenderer_.setVisible( value );
+    if( blockUpdates_ )
+        return;
+
+    QGraphicsView::paintEvent( event_ );
 }

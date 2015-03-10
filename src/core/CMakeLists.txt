@@ -62,6 +62,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   FpsRenderer.h
   GLQuad.h
   GLTexture2D.h
+  GLUtils.h
   GLWindow.h
   gestures/DoubleTapGestureRecognizer.h
   gestures/PanGesture.h
@@ -197,6 +198,7 @@ list(APPEND DCCORE_SOURCES
   FpsRenderer.cpp
   GLQuad.cpp
   GLTexture2D.cpp
+  GLUtils.cpp
   GLWindow.cpp
   log.cpp
   Marker.cpp

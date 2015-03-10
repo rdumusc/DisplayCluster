@@ -61,6 +61,9 @@ GLWindow::GLWindow( QGLWidget* shareWidget, QWidget* parent_ )
         throw std::runtime_error( "failed to share OpenGL context" );
 
     setAutoBufferSwap( false );
+
+    setAttribute( Qt::WA_OpaquePaintEvent );
+    setAttribute( Qt::WA_NoSystemBackground );
 }
 
 QRectF GLWindow::getProjectedPixelRect( const bool clampToViewportBorders )

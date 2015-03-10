@@ -37,34 +37,23 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DRAWABLE_H
-#define DRAWABLE_H
+#ifndef GLUTILS_H
+#define GLUTILS_H
 
-#include <QtCore/QRectF>
-#include <QtGui/QPainter>
+class QWidget;
 
-/** An abstract drawable object that can be rendered using a QPainter. */
-class Drawable
+/**
+ * OpenGL utility functions.
+ */
+class GLUtils
 {
 public:
-    /** Constructor. */
-    Drawable() : visible_( true ) {}
-
-    /** Virtual destructor. */
-    virtual ~Drawable() {}
-
-    /** Render the object. */
-    virtual void draw( QPainter* painter, const QRectF& rect ) = 0;
-
-    /** Check if the object is visible. */
-    bool isVisible() const { return visible_; }
-
-    /** Change the visibility of this object. */
-    void setVisible( const bool visible ) { visible_ = visible; }
-
-private:
-    bool visible_;
+    /**
+     * Enable or disable VSync on a given window.
+     * @param window A QWidget which must already be initialized.
+     * @return true on success.
+     */
+    static bool setEnableVSync( const QWidget* window, bool enabled );
 };
 
-#endif // DRAWABLE_H
-
+#endif // GLUTILS_H
