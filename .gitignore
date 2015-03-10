@@ -2,6 +2,8 @@ build/
 python/
 CMakeLists.txt.user*
 CMake/common/
+Deflect/
+TUIO/
 Makefile
 .DS_Store
 *~
