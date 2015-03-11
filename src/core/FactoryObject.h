@@ -40,7 +40,9 @@
 #define FACTORY_OBJECT_H
 
 #include <stdint.h>
-class QRectF;
+
+#include <QtCore/QRectF>
+
 class RenderContext;
 
 /**
@@ -62,6 +64,9 @@ public:
      * @param textCoord The region of the texture to render
      */
     virtual void render(const QRectF& textCoord) = 0;
+
+    /** Render the preview ( whole object at low resolution.) */
+    virtual void renderPreview();
 
     /**
      * Set the render context.

@@ -113,7 +113,7 @@ void GLTexture2D::update(const void* data, const GLenum format)
                     format, GL_UNSIGNED_BYTE, data);
 }
 
-QSize GLTexture2D::getSize() const
+const QSize& GLTexture2D::getSize() const
 {
     return size_;
 }

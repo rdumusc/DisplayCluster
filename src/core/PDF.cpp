@@ -53,15 +53,19 @@
 #include "GLWindow.h"
 #include "log.h"
 
-#define INVALID_PAGE_NUMBER -1
-
-PDF::PDF(const QString& uri)
-    : uri_(uri)
-    , pdfDoc_(0)
-    , pdfPage_(0)
-    , pageNumber_(INVALID_PAGE_NUMBER)
+namespace
 {
-    openDocument(uri_);
+const int INVALID_PAGE_NUMBER = -1;
+const qreal PDF_RES = 72.0;
+const QSize PREVIEW_SIZE( 512, 512 );
+}
+
+PDF::PDF( const QString& uri )
+    : pdfDoc_( 0 )
+    , pdfPage_( 0 )
+    , pageNumber_( INVALID_PAGE_NUMBER )
+{
+    openDocument( uri );
 }
 
 PDF::~PDF()
@@ -71,63 +75,30 @@ PDF::~PDF()
 
 bool PDF::isValid() const
 {
-    return (pdfDoc_ != 0);
+    return ( pdfDoc_ != 0 );
 }
 
-void PDF::closePage()
+QSize PDF::getSize() const
 {
-    if (pdfPage_)
-    {
-        delete pdfPage_;
-        pdfPage_ = 0;
-        pageNumber_ = INVALID_PAGE_NUMBER;
-        textureRect_ = QRect();
-    }
+    return pdfPage_ ? pdfPage_->pageSize() : QSize();
 }
 
-void PDF::closeDocument()
+int PDF::getPage() const
 {
-    if (pdfDoc_)
-    {
-        closePage();
-        delete pdfDoc_;
-        pdfDoc_ = 0;
-    }
+    return pageNumber_;
 }
 
-void PDF::openDocument(const QString& filename)
+void PDF::setPage( const int pageNumber )
 {
-    closeDocument();
-
-    pdfDoc_ = Poppler::Document::load(filename);
-    if (!pdfDoc_ || pdfDoc_->isLocked())
-    {
-        put_flog(LOG_DEBUG, "Could not open document %s", filename.toLocal8Bit().constData());
-        closeDocument();
-        return;
-    }
-
-    pdfDoc_->setRenderHint(Poppler::Document::TextAntialiasing);
-
-    setPage(0);
-}
-
-bool PDF::isValid(const int pageNumber) const
-{
-    return pageNumber >=0 && pageNumber < pdfDoc_->numPages();
-}
-
-void PDF::setPage(const int pageNumber)
-{
-    if (pageNumber == pageNumber_ || !isValid(pageNumber))
+    if( pageNumber == pageNumber_ || !isValid( pageNumber ))
         return;
 
     closePage();
 
-    pdfPage_ = pdfDoc_->page(pageNumber); // Document starts at page 0
-    if (!pdfPage_)
+    pdfPage_ = pdfDoc_->page( pageNumber ); // Document starts at page 0
+    if( !pdfPage_ )
     {
-        put_flog(LOG_DEBUG, "Could not open page %d", pageNumber);
+        put_flog( LOG_DEBUG, "Could not open page %d", pageNumber );
         return;
     }
 
@@ -139,58 +110,54 @@ int PDF::getPageCount() const
     return pdfDoc_->numPages();
 }
 
-QImage PDF::renderToImage() const
+QImage PDF::renderToImage( const QSize& imageSize, const QRectF& region ) const
 {
-    return pdfPage_->renderToImage();
+    const QSize pageSize( pdfPage_->pageSize( ));
+
+    const qreal zoomX = 1.0 / region.width();
+    const qreal zoomY = 1.0 / region.height();
+
+    const QPoint topLeft( region.x() * imageSize.width(),
+                          region.y() * imageSize.height( ));
+
+    const qreal resX = PDF_RES * imageSize.width() / pageSize.width();
+    const qreal resY = PDF_RES * imageSize.height() / pageSize.height();
+
+    return pdfPage_->renderToImage( resX * zoomX, resY * zoomY,
+                                    topLeft.x() * zoomX, topLeft.y() * zoomY,
+                                    imageSize.width(), imageSize.height( ));
 }
 
-QSize PDF::getSize() const
+const QSize& PDF::getTextureSize() const
 {
-    return pdfPage_ ? pdfPage_->pageSize() : QSize();
+    return texture_.getSize();
 }
 
-void PDF::render(const QRectF& texCoords)
+const QRectF& PDF::getTextureRegion() const
 {
-    if (!pdfPage_)
-        return;
+    return textureRect_;
+}
 
-    // get on-screen and full rectangle corresponding to the window
-    const QRectF screenRect = GLWindow::getProjectedPixelRect(true);
-    const QRectF fullRect = GLWindow::getProjectedPixelRect(false);
+void PDF::updateTexture( const QSize& textureSize, const QRectF& pdfRegion )
+{
+    const QImage image = renderToImage( textureSize, pdfRegion );
 
-    // if we're not visible or we don't have a valid SVG, we're done...
-    if(screenRect.isEmpty())
+    if( image.isNull( ))
     {
-        // TODO clear existing FBO for this OpenGL window
+        put_flog( LOG_DEBUG, "Could not render pdf to image" );
         return;
     }
 
-    // generate texture corresponding to the visible part of these texture coordinates
-    generateTexture(screenRect, fullRect, texCoords);
-
-    if(!texture_.isValid())
-        return;
-
-    // figure out what visible region is for screenRect, a subregion of [0, 0, 1, 1]
-    const float xp = (screenRect.x() - fullRect.x()) / fullRect.width();
-    const float yp = (screenRect.y() - fullRect.y()) / fullRect.height();
-    const float wp = screenRect.width() / fullRect.width();
-    const float hp = screenRect.height() / fullRect.height();
-
-    // Render the entire texture on a (scaled) unit textured quad
-    glPushMatrix();
-
-    glTranslatef(xp, yp, 0);
-    glScalef(wp, hp, 1.f);
-
-    drawUnitTexturedQuad();
-
-    glPopMatrix();
+    texture_.update( image, GL_BGRA );
+    textureRect_ = pdfRegion;
 }
 
-void PDF::drawUnitTexturedQuad()
+void PDF::render( const QRectF& )
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
+    if( !texture_.isValid( ))
+        return;
+
+    glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
 
     texture_.bind();
     quad_.render();
@@ -198,38 +165,67 @@ void PDF::drawUnitTexturedQuad()
     glPopAttrib();
 }
 
-void PDF::generateTexture(const QRectF& screenRect, const QRectF& fullRect, const QRectF& texCoords)
+void PDF::renderPreview()
 {
-    // figure out the coordinates of the topLeft corner of the texture in the PDF page
-    const double tXp = texCoords.x()/texCoords.width()*fullRect.width()  + (screenRect.x() - fullRect.x());
-    const double tYp = texCoords.y()/texCoords.height()*fullRect.height() + (screenRect.y() - fullRect.y());
-
-    // Compute the actual texture dimensions
-    const QRect textureRect(tXp, tYp, screenRect.width(), screenRect.height());
-
-    // TODO The instance of this class is shared between GLWindows, so the
-    // texture is constantly regenerated because the size changes...
-    if(textureRect == textureRect_)
-        return; // no need to regenerate texture
-
-    // Adjust the quality to match the actual displayed size
-    // Multiply resolution by the zoom factor (1/t[W,H])
-    const double resFactorX = fullRect.width() / pdfPage_->pageSize().width() / texCoords.width();
-    const double resFactorY = fullRect.height() / pdfPage_->pageSize().height() / texCoords.height();
-
-    // Generate a QImage of the rendered page
-    QImage image = pdfPage_->renderToImage(72.0*resFactorX , 72.0*resFactorY,
-                                            textureRect.x(), textureRect.y(),
-                                            textureRect.width(), textureRect.height()
-                                            );
-
-    if (image.isNull())
+    if( !texturePreview_.isValid( ))
     {
-        put_flog(LOG_DEBUG, "Could not render pdf to image");
+        const QImage image = renderToImage( PREVIEW_SIZE );
+        if( image.isNull( ))
+        {
+            put_flog( LOG_DEBUG, "Could not render pdf to image" );
+            return;
+        }
+        texturePreview_.update( image, GL_BGRA );
+    }
+
+    glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
+
+    texturePreview_.bind();
+    quad_.render();
+
+    glPopAttrib();
+}
+
+void PDF::openDocument( const QString& filename )
+{
+    closeDocument();
+
+    pdfDoc_ = Poppler::Document::load( filename );
+    if ( !pdfDoc_ || pdfDoc_->isLocked( ))
+    {
+        put_flog( LOG_DEBUG, "Could not open document %s",
+                  filename.toLocal8Bit().constData( ));
+        closeDocument();
         return;
     }
 
-    texture_.update(image, GL_BGRA);
-    textureRect_ = textureRect; // keep rendered texture information so we know when to rerender
+    pdfDoc_->setRenderHint( Poppler::Document::TextAntialiasing );
+
+    setPage( 0 );
 }
 
+void PDF::closeDocument()
+{
+    if( pdfDoc_ )
+    {
+        closePage();
+        delete pdfDoc_;
+        pdfDoc_ = 0;
+    }
+}
+
+void PDF::closePage()
+{
+    if( pdfPage_ )
+    {
+        delete pdfPage_;
+        pdfPage_ = 0;
+        pageNumber_ = INVALID_PAGE_NUMBER;
+        textureRect_ = QRectF();
+    }
+}
+
+bool PDF::isValid( const int pageNumber ) const
+{
+    return pageNumber >=0 && pageNumber < pdfDoc_->numPages();
+}

@@ -157,7 +157,7 @@ void ContentWindowRenderer::renderContextView( FactoryObjectPtr object,
 
     // render the factory object (full view)
     glTranslatef( 0.f, 0.f, CONTEXT_VIEW_DELTA_Z );
-    object->render( unitRect );
+    object->renderPreview();
 
     glTranslatef( 0.f, 0.f, CONTEXT_VIEW_DELTA_Z );
     drawQuadBorder( texCoord, CONTEXT_VIEW_BORDER_WIDTH );

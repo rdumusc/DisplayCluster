@@ -42,23 +42,23 @@
 #include "PDF.h"
 #include "log.h"
 
-PDFThumbnailGenerator::PDFThumbnailGenerator(const QSize &size)
-    : ThumbnailGenerator(size)
+PDFThumbnailGenerator::PDFThumbnailGenerator( const QSize& size )
+    : ThumbnailGenerator( size )
 {
 }
 
-QImage PDFThumbnailGenerator::generate(const QString &filename) const
+QImage PDFThumbnailGenerator::generate( const QString& filename ) const
 {
-    PDF pdf(filename);
-    QImage image = pdf.renderToImage();
+    const PDF pdf( filename );
+    QImage image = pdf.renderToImage( size_ );
 
-    if (image.isNull())
+    if( image.isNull( ))
     {
-        put_flog(LOG_ERROR, "could not pdf file: %s", filename.toLatin1().constData());
-        return createErrorImage("pdf");
+        put_flog( LOG_ERROR, "could not pdf file: %s",
+                  filename.toLatin1().constData( ));
+        return createErrorImage( "pdf" );
     }
 
-    image = image.scaled(size_, aspectRatioMode_);
-    addMetadataToImage(image, filename);
+    addMetadataToImage( image, filename );
     return image;
 }

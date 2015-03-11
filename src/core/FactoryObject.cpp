@@ -38,10 +38,20 @@
 
 #include "FactoryObject.h"
 
+namespace
+{
+const QRectF UNIT_RECT( 0.0, 0.0, 1.0, 1.0 );
+}
+
 FactoryObject::FactoryObject()
     : renderContext_(0)
     , frameIndex_( 0 )
 {
+}
+
+void FactoryObject::renderPreview()
+{
+    render( UNIT_RECT );
 }
 
 FactoryObject::~FactoryObject()
