@@ -50,7 +50,6 @@
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
-
     // glu functions deprecated in 10.9
 #   pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -58,12 +57,12 @@
     #include <GL/glu.h>
 #endif
 
-
 RenderContext::RenderContext( const WallConfiguration& configuration )
     : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
     , activeGLWindowIndex_( -1 )
 {
     setupOpenGLWindows( configuration );
+    setupVSync();
 }
 
 void RenderContext::setBackgroundColor( const QColor& color )
@@ -109,6 +108,17 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
     }
 }
 
+void RenderContext::setupVSync()
+{
+    BOOST_FOREACH( WallWindowPtr window, windows_ )
+    {
+        QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
+        glContext->makeCurrent();
+        if( window != windows_.front( ))
+            window->disableVSync();
+    }
+}
+
 int RenderContext::getActiveGLWindowIndex() const
 {
     return activeGLWindowIndex_;
@@ -130,17 +140,21 @@ void RenderContext::updateGLWindows()
 
     BOOST_FOREACH( WallWindowPtr window, windows_ )
     {
+        window->setBlockDrawCalls( false );
         window->viewport()->repaint();
+        window->setBlockDrawCalls( true );
         ++activeGLWindowIndex_;
     }
+    glFinish();
 }
 
 void RenderContext::swapBuffers()
 {
     BOOST_FOREACH( WallWindowPtr window, windows_ )
     {
-        static_cast<QGLWidget*>( window->viewport( ))->makeCurrent();
-        static_cast<QGLWidget*>( window->viewport( ))->swapBuffers();
+        QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
+        glContext->makeCurrent();
+        glContext->swapBuffers();
     }
 }
 

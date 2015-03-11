@@ -70,12 +70,22 @@ public:
     /** Show or hide the fps counter. */
     void setShowFps( bool value );
 
+    /** Block all the update() and repaint() calls. */
+    void setBlockDrawCalls( bool enable );
+
+    /** Disable VSync on this window for the next swapBuffer() call. */
+    void disableVSync();
+
+private:
     /** Reimplemented from QGraphicsView to draw the test pattern */
     void drawForeground( QPainter* painter, const QRectF& rect ) override;
 
-private:
+    /** Reimplemented from QGraphicsView to block unsolicited draw calls. */
+    void paintEvent( QPaintEvent* event ) override;
+
     TestPatternPtr testPattern_;
     FpsRenderer fpsRenderer_;
+    bool blockUpdates_;
 };
 
 #endif // WALLWINDOW_H

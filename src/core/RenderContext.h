@@ -94,6 +94,7 @@ public:
 
 private:
     void setupOpenGLWindows( const WallConfiguration& config );
+    void setupVSync();
 
     WallGraphicsScene scene_;
     WallWindowPtrs windows_;

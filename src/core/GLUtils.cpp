@@ -37,34 +37,67 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DRAWABLE_H
-#define DRAWABLE_H
+#include "GLUtils.h"
 
-#include <QtCore/QRectF>
-#include <QtGui/QPainter>
+#include "log.h"
 
-/** An abstract drawable object that can be rendered using a QPainter. */
-class Drawable
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+
+#include <QtCore/QtGlobal>
+#if defined( Q_OS_WIN )
+#include <GL/wglext.h>
+#elif defined( Q_OS_LINUX )
+#include <QtGui/QApplication>
+#include <QtGui/QDesktopWidget>
+#include <GL/glx.h>
+#include <GL/glxext.h>
+#endif
+
+/** A function to set the swap interaval on an OpenGL window. */
+typedef boost::function< int ( int ) > GLSwapIntervalFunction;
+
+GLSwapIntervalFunction getSwapIntervalFunc( const QWidget* window )
 {
-public:
-    /** Constructor. */
-    Drawable() : visible_( true ) {}
+#ifndef Q_OS_LINUX
+    Q_UNUSED( window );
+#endif
 
-    /** Virtual destructor. */
-    virtual ~Drawable() {}
+    bool condition = false;
+    void* func = 0;
 
-    /** Render the object. */
-    virtual void draw( QPainter* painter, const QRectF& rect ) = 0;
+#if defined( Q_OS_WIN )
+    const std::string ext(((PFNWGLGETEXTENSIONSSTRINGEXTPROC)
+                           wglGetProcAddress( "wglGetExtensionsStringEXT" ))());
+    condition = ext.find( "WGL_EXT_swap_control" ) != std::string::npos;
+    func = (void*)wglGetProcAddress( "wglSwapIntervalEXT" );
+#elif defined( Q_OS_LINUX )
+    Display* display = glXGetCurrentDisplay();
+    const int screen = qApp->desktop()->screenNumber( window );
+    const std::string ext( glXQueryExtensionsString( display, screen ));
+    condition = ext.find( "GLX_SGI_swap_control" ) != std::string::npos;
+    func = (void*)glXGetProcAddress( (const GLubyte*)"glXSwapIntervalSGI" );
+#endif
 
-    /** Check if the object is visible. */
-    bool isVisible() const { return visible_; }
+    if( condition && func != 0 )
+    {
+#if defined( Q_OS_WIN )
+        return boost::bind( (PFNWGLSWAPINTERVALEXTPROC)func, _1 );
+#elif defined( Q_OS_LINUX )
+        return boost::bind( (PFNGLXSWAPINTERVALSGIPROC)func, _1 );
+#endif
+    }
 
-    /** Change the visibility of this object. */
-    void setVisible( const bool visible ) { visible_ = visible; }
+    put_log( LOG_WARN, "disabling vsync not available" );
+    return GLSwapIntervalFunction();
+}
 
-private:
-    bool visible_;
-};
+bool GLUtils::setEnableVSync( const QWidget* window, const bool enabled )
+{
+    GLSwapIntervalFunction setSwapInterval = getSwapIntervalFunc( window );
+    if( setSwapInterval.empty( ))
+        return false;
 
-#endif // DRAWABLE_H
-
+    setSwapInterval( enabled ? 1 : 0 );
+    return true;
+}
