@@ -87,21 +87,10 @@ bool PixelStreamSegmentRenderer::render()
     // pre-multiply by this segment's dimensions
     glScalef(rect_.width(), rect_.height(), 0.);
 
-    drawUnitTexturedQuad();
+    quad_.setTexture( texture_.getTextureId( ));
+    quad_.render();
 
     glPopMatrix();
 
     return true;
-}
-
-void PixelStreamSegmentRenderer::drawUnitTexturedQuad()
-{
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
-
-    texture_.bind();
-    quad_.setEnableTexture(true);
-    quad_.setRenderMode(GL_QUADS);
-    quad_.render();
-
-    glPopAttrib();
 }

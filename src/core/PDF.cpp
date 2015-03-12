@@ -157,12 +157,8 @@ void PDF::render( const QRectF& )
     if( !texture_.isValid( ))
         return;
 
-    glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
-
-    texture_.bind();
+    quad_.setTexture( texture_.getTextureId( ));
     quad_.render();
-
-    glPopAttrib();
 }
 
 void PDF::renderPreview()
@@ -178,12 +174,8 @@ void PDF::renderPreview()
         texturePreview_.update( image, GL_BGRA );
     }
 
-    glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
-
-    texturePreview_.bind();
+    quad_.setTexture( texturePreview_.getTextureId( ));
     quad_.render();
-
-    glPopAttrib();
 }
 
 void PDF::openDocument( const QString& filename )

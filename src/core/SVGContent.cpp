@@ -39,8 +39,12 @@
 #include "SVGContent.h"
 
 #include "SVG.h"
+#include "Factories.h"
+#include "ContentWindow.h"
+
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
+
 #include <QFileInfo>
 
 BOOST_CLASS_EXPORT_GUID(SVGContent, "SVGContent")
@@ -78,4 +82,20 @@ const QStringList& SVGContent::getSupportedExtensions()
     }
 
     return extensions;
+}
+
+void SVGContent::preRenderUpdate( Factories& factories, ContentWindowPtr window,
+                                  WallToWallChannel& )
+{
+    if( window->isResizing( ))
+        return;
+
+    SVGPtr svg = factories.getSVGFactory().getObject( getURI( ));
+
+    const QSize& windowSize = window->getCoordinates().size().toSize();
+    if( svg->getTextureSize() != windowSize ||
+        svg->getTextureRegion() != window->getZoomRect( ) )
+    {
+        svg->updateTexture( windowSize, window->getZoomRect( ));
+    }
 }

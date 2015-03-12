@@ -74,12 +74,7 @@ void Texture::render(const QRectF& texCoords)
     if(!texture_.isValid() && !generateTexture())
         return;
 
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
-
-    texture_.bind();
-
-    quad_.setTexCoords(texCoords);
+    quad_.setTexCoords( texCoords );
+    quad_.setTexture( texture_.getTextureId( ));
     quad_.render();
-
-    glPopAttrib();
 }

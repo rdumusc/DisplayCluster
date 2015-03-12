@@ -74,6 +74,9 @@ private:
         // serialize base class information (with NVP for xml archives)
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
     }
+
+    void preRenderUpdate( Factories& factories, ContentWindowPtr window,
+                          WallToWallChannel& wallToWallChannel ) override;
 };
 
 #endif
