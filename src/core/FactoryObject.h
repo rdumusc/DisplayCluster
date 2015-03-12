@@ -39,9 +39,9 @@
 #ifndef FACTORY_OBJECT_H
 #define FACTORY_OBJECT_H
 
-#include <stdint.h>
+#include "types.h"
 
-#include <QtCore/QRectF>
+#include <stdint.h>
 
 class RenderContext;
 

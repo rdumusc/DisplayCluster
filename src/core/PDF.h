@@ -68,7 +68,7 @@ public:
     int getPageCount() const;
 
     QImage renderToImage( const QSize& imageSize,
-                          const QRectF& region = QRectF( 0, 0, 1, 1 )) const;
+                          const QRectF& region = UNIT_RECTF ) const;
 
     const QSize& getTextureSize() const;
     const QRectF& getTextureRegion() const;

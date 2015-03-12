@@ -140,8 +140,6 @@ void ContentWindowRenderer::renderContent()
 void ContentWindowRenderer::renderContextView( FactoryObjectPtr object,
                                                const QRectF& texCoord )
 {
-    const QRectF unitRect( 0.0, 0.0, 1.0, 1.0 );
-
     glPushAttrib( GL_CURRENT_BIT | GL_ENABLE_BIT | GL_LINE_BIT );
     glPushMatrix();
 
@@ -153,7 +151,7 @@ void ContentWindowRenderer::renderContextView( FactoryObjectPtr object,
 
     // render border rectangle
     glColor4f( 1.f, 1.f, 1.f, 1.f );
-    drawQuadBorder( unitRect, CONTEXT_VIEW_BORDER_WIDTH );
+    drawQuadBorder( UNIT_RECTF, CONTEXT_VIEW_BORDER_WIDTH );
 
     // render the factory object (full view)
     glTranslatef( 0.f, 0.f, CONTEXT_VIEW_DELTA_Z );

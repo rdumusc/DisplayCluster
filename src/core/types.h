@@ -43,6 +43,7 @@
 #include <deflect/types.h>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <QtCore/QRectF>
 
 class Configuration;
 class Content;
@@ -87,5 +88,7 @@ typedef boost::shared_ptr< TestPattern > TestPatternPtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
+
+static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 
 #endif
