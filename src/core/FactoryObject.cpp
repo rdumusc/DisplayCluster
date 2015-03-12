@@ -44,6 +44,11 @@ FactoryObject::FactoryObject()
 {
 }
 
+void FactoryObject::renderPreview()
+{
+    render( UNIT_RECTF );
+}
+
 FactoryObject::~FactoryObject()
 {
 }

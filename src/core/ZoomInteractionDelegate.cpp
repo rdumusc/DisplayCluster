@@ -122,7 +122,7 @@ void ZoomInteractionDelegate::scaleZoomRect( const QPointF& center,
 
     // constrain min zoom
     if( zoomRect.width() > MIN_ZOOM || zoomRect.height() > MIN_ZOOM )
-        zoomRect.setRect( 0.0, 0.0, 1.0, 1.0 );
+        zoomRect = UNIT_RECTF;
     else
         constrainZoomRectPosition( zoomRect );
     contentWindow_.setZoomRect( zoomRect );

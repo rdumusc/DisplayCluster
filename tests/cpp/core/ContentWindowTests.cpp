@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE( testZoom )
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    BOOST_REQUIRE( window.getZoomRect() == QRectF( 0.0, 0.0, 1.0, 1.0 ));
+    BOOST_REQUIRE( window.getZoomRect() == UNIT_RECTF );
 
     window.setZoomRect( QRectF( 0.2, 0.2, 0.7, 0.7 ));
     BOOST_CHECK( window.getZoomRect() == QRectF( 0.2, 0.2, 0.7, 0.7 ));

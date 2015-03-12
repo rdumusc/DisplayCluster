@@ -54,7 +54,6 @@
 
 namespace
 {
-const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
 }

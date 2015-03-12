@@ -70,7 +70,7 @@ public:
     void update(const void* data, const GLenum format = GL_RGBA);
 
     /** Get the texture size. */
-    QSize getSize() const;
+    const QSize& getSize() const;
 
     /** Bind the texture. */
     void bind();

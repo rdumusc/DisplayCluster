@@ -46,7 +46,8 @@
 
 #include <QString>
 
-namespace Poppler {
+namespace Poppler
+{
     class Document;
     class Page;
 }
@@ -54,37 +55,41 @@ namespace Poppler {
 class PDF : public FactoryObject
 {
 public:
-    PDF(const QString& uri);
+    PDF( const QString& uri );
     ~PDF();
 
     bool isValid() const;
 
     QSize getSize() const;
-    void render(const QRectF& texCoords) override;
 
-    void setPage(const int pageNumber);
+    int getPage() const;
+    void setPage( const int pageNumber );
+
     int getPageCount() const;
 
-    QImage renderToImage() const;
+    QImage renderToImage( const QSize& imageSize,
+                          const QRectF& region = UNIT_RECTF ) const;
+
+    const QSize& getTextureSize() const;
+    const QRectF& getTextureRegion() const;
+    void updateTexture( const QSize& textureSize, const QRectF& pdfRegion );
+    void render( const QRectF& texCoords ) override;
+    void renderPreview() override;
 
 private:
-    QString uri_;
-
     Poppler::Document* pdfDoc_;
     Poppler::Page* pdfPage_;
     int pageNumber_;
 
     GLTexture2D texture_;
+    GLTexture2D texturePreview_;
     GLQuad quad_;
-    QRect textureRect_;
+    QRectF textureRect_;
 
-    void openDocument(const QString& filename);
+    void openDocument( const QString& filename );
     void closeDocument();
     void closePage();
-    bool isValid(const int pageNumber) const;
-
-    void drawUnitTexturedQuad();
-    void generateTexture(const QRectF& screenRect, const QRectF& fullRect, const QRectF& texCoords);
+    bool isValid( const int pageNumber ) const;
 };
 
 #endif // PDF_H

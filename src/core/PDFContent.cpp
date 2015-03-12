@@ -40,6 +40,7 @@
 #include "PDFContent.h"
 #include "PDF.h"
 #include "Factories.h"
+#include "ContentWindow.h"
 
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
@@ -102,7 +103,21 @@ void PDFContent::previousPage()
     }
 }
 
-void PDFContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&)
+void PDFContent::preRenderUpdate( Factories& factories, ContentWindowPtr window,
+                                  WallToWallChannel& )
 {
-    factories.getPDFFactory().getObject(getURI())->setPage(pageNumber_);
+    if( window->isResizing( ))
+        return;
+
+    PDFPtr pdf = factories.getPDFFactory().getObject( getURI( ));
+
+    const bool pageHasChanged = (pdf->getPage() != pageNumber_);
+    pdf->setPage( pageNumber_ );
+
+    const QSize& windowSize = window->getCoordinates().size().toSize();
+    if( pageHasChanged || pdf->getTextureSize() != windowSize ||
+        pdf->getTextureRegion() != window->getZoomRect( ) )
+    {
+        pdf->updateTexture( windowSize, window->getZoomRect( ));
+    }
 }

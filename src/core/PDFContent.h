@@ -93,7 +93,8 @@ private:
     int pageNumber_;
     int pageCount_;
 
-    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& mpiChannel) override;
+    void preRenderUpdate( Factories& factories, ContentWindowPtr window,
+                          WallToWallChannel& wallToWallChannel ) override;
 };
 
 #endif // PDFCONTENT_H

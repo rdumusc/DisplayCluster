@@ -43,6 +43,7 @@
 #include <deflect/types.h>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <QtCore/QRectF>
 
 class Configuration;
 class Content;
@@ -59,6 +60,7 @@ class Markers;
 class MasterConfiguration;
 class MPIChannel;
 class Options;
+class PDF;
 class PixelStreamWindowManager;
 class Renderable;
 class RenderContext;
@@ -79,11 +81,14 @@ typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
 typedef boost::shared_ptr< Markers > MarkersPtr;
 typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
 typedef boost::shared_ptr< Options > OptionsPtr;
+typedef boost::shared_ptr< PDF > PDFPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< RenderContext > RenderContextPtr;
 typedef boost::shared_ptr< TestPattern > TestPatternPtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
+
+static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 
 #endif

@@ -39,6 +39,7 @@ endif()
 
 list(APPEND DCCORE_PUBLIC_HEADERS
   ${COMMON_INCLUDES}
+  types.h
   Content.h
   ContentFactory.h
   ContentLoader.h
