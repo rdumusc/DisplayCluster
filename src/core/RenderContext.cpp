@@ -155,6 +155,7 @@ void RenderContext::swapBuffers()
         QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
         glContext->makeCurrent();
         glContext->swapBuffers();
+        glFlush();
     }
 }
 
