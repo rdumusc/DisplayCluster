@@ -78,7 +78,7 @@ public:
     const QString& getURI() const;
 
     /** Get the content type **/
-    virtual CONTENT_TYPE getType() = 0;
+    virtual CONTENT_TYPE getType() const = 0;
 
     /**
      * Read content metadata from the data source.
@@ -95,12 +95,6 @@ public:
 
     /** Get the aspect ratio. */
     float getAspectRatio() const;
-
-    /** Re-implement this method to update or synchronize before rendering. */
-    virtual void preRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
-
-    /** Re-implement this method to update or synchronize after rendering. */
-    virtual void postRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
 
     /** Get the actions from QML. */
     ContentActionsModel* getActions();

@@ -42,21 +42,21 @@
 #include <boost/serialization/export.hpp>
 #include <QImageReader>
 
-BOOST_CLASS_EXPORT_GUID(TextureContent, "TextureContent")
+BOOST_CLASS_EXPORT_GUID( TextureContent, "TextureContent" )
 
-TextureContent::TextureContent(const QString& uri)
-    : Content(uri)
+TextureContent::TextureContent( const QString& uri )
+    : Content( uri )
 {}
 
-CONTENT_TYPE TextureContent::getType()
+CONTENT_TYPE TextureContent::getType() const
 {
     return CONTENT_TYPE_TEXTURE;
 }
 
 bool TextureContent::readMetadata()
 {
-    const QImageReader imageReader(uri_);
-    if(!imageReader.canRead())
+    const QImageReader imageReader( uri_ );
+    if( !imageReader.canRead( ))
         return false;
 
     size_ = imageReader.size();
@@ -67,12 +67,12 @@ const QStringList& TextureContent::getSupportedExtensions()
 {
     static QStringList extensions;
 
-    if (extensions.empty())
+    if( extensions.empty( ))
     {
-        const QList<QByteArray>& imageFormats = QImageReader::supportedImageFormats();
+        const QList<QByteArray>& imageFormats =
+                QImageReader::supportedImageFormats();
         foreach( const QByteArray entry, imageFormats )
             extensions << entry;
     }
-
     return extensions;
 }

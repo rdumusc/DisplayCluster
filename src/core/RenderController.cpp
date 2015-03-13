@@ -40,8 +40,6 @@
 #include "RenderController.h"
 
 #include "RenderContext.h"
-#include "GLWindow.h"
-
 #include "DisplayGroupRenderer.h"
 #include "MarkerRenderer.h"
 
@@ -51,15 +49,14 @@
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 
-RenderController::RenderController(RenderContextPtr renderContext, FactoriesPtr factories)
-    : renderContext_(renderContext)
-    , displayGroupRenderer_(new DisplayGroupRenderer(renderContext, factories))
-    , markerRenderer_(new MarkerRenderer)
-    , syncQuit_(false)
-    , syncDisplayGroup_(boost::make_shared<DisplayGroup>(QSize()))
-    , syncOptions_(boost::make_shared<Options>())
+RenderController::RenderController( RenderContextPtr renderContext )
+    : renderContext_( renderContext )
+    , displayGroupRenderer_( new DisplayGroupRenderer( renderContext ))
+    , markerRenderer_( new MarkerRenderer )
+    , syncQuit_( false )
+    , syncDisplayGroup_( boost::make_shared<DisplayGroup>( QSize( )))
+    , syncOptions_( boost::make_shared<Options>( ))
 {
-    renderContext_->addRenderable(displayGroupRenderer_);
     renderContext_->addRenderable(markerRenderer_);
 
     syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
@@ -90,33 +87,52 @@ bool RenderController::quitRendering() const
     return syncQuit_.get();
 }
 
+void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
+{
+    displayGroupRenderer_->preRenderUpdate( wallChannel );
+}
+
+void RenderController::postRenderUpdate( WallToWallChannel& wallChannel )
+{
+    displayGroupRenderer_->postRenderUpdate( wallChannel );
+}
+
 void RenderController::updateQuit()
 {
-    syncQuit_.update(true);
+    syncQuit_.update( true );
 }
 
-void RenderController::updateDisplayGroup(DisplayGroupPtr displayGroup)
+void RenderController::updateDisplayGroup( DisplayGroupPtr displayGroup )
 {
-    syncDisplayGroup_.update(displayGroup);
+    syncDisplayGroup_.update( displayGroup );
 }
 
-void RenderController::updateMarkers(MarkersPtr markers)
+void RenderController::updateOptions( OptionsPtr options )
 {
-    syncMarkers_.update(markers);
+    syncOptions_.update( options );
 }
 
-void RenderController::updateOptions(OptionsPtr options)
+void RenderController::updateMarkers( MarkersPtr markers )
 {
-    syncOptions_.update(options);
+    syncMarkers_.update( markers );
 }
 
-void RenderController::setRenderOptions(OptionsPtr options)
+void RenderController::updatePixelStream( deflect::PixelStreamFramePtr /*frame*/ )
 {
-    renderContext_->setBackgroundColor(options->getBackgroundColor());
-    renderContext_->displayTestPattern(options->getShowTestPattern());
-    renderContext_->displayFps(options->getShowStatistics());
+    // TODO //
+//    typedef boost::shared_ptr<PixelStream> PixelStreamPtr;
+//    PixelStreamPtr pixelStream = pixelStreamFactory_.getObject(frame->uri);
+//    pixelStream->setNewFrame(frame);
+//    pixelStream->setFrameIndex(frameIndex_);
+}
 
-    markerRenderer_->setVisible(options->getShowTouchPoints());
+void RenderController::setRenderOptions( OptionsPtr options )
+{
+    renderContext_->setBackgroundColor( options->getBackgroundColor( ));
+    renderContext_->displayTestPattern( options->getShowTestPattern( ));
+    renderContext_->displayFps( options->getShowStatistics( ));
+
+    markerRenderer_->setVisible( options->getShowTouchPoints( ));
 
     displayGroupRenderer_->setRenderingOptions( options );
 }

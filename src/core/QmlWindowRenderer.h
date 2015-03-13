@@ -40,7 +40,7 @@
 #ifndef QMLWINDOWRENDERER_H
 #define QMLWINDOWRENDERER_H
 
-#include <types.h>
+#include "types.h"
 
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -65,16 +65,17 @@ public:
     /** Update the qml object with a new data model. */
     void update( ContentWindowPtr contentWindow );
 
-    /** Associate the renderer with its corresponding FactoryObject. */
-    void associateWith( FactoryObject& pixelStream );
+    void preRenderUpdate( WallToWallChannel& wallChannel,
+                          const QRect& visibleWallArea );
+    void postRenderUpdate( WallToWallChannel& wallChannel );
 
 private:
     ContentWindowPtr contentWindow_;
     boost::scoped_ptr<QDeclarativeContext> windowContext_;
     QDeclarativeItem* windowItem_;
-    QDeclarativeItem* contentItem_;
+    FactoryObjectPtr factoryObject_;
 
-    void createContentItem();
+    void setupPixelStreamItem();
     QDeclarativeItem* createQmlItem( const QUrl& url );
 };
 

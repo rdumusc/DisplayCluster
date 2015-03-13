@@ -47,23 +47,17 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 class FFMPEGMovie;
-class WallToWallChannel;
 
 class Movie : public FactoryObject
 {
 public:
-    Movie(QString uri);
+    Movie( const QString& uri );
     ~Movie();
 
-    void render(const QRectF& texCoords) override;
+    void setVisible( const bool isVisible );
 
-    void setVisible(const bool isVisible);
-
-    void setPause(const bool pause);
-    void setLoop(const bool loop);
-
-    void preRenderUpdate(WallToWallChannel& wallToWallChannel);
-    void postRenderUpdate(WallToWallChannel& wallToWallChannel);
+    void setPause( const bool pause );
+    void setLoop( const bool loop );
 
 private:
     FFMPEGMovie* ffmpegMovie_;
@@ -74,13 +68,20 @@ private:
     ElapsedTimer elapsedTimer_;
 
     bool paused_;
+    bool suspended_;
 
     bool isVisible_;
     bool skippedLastFrame_;
     boost::posix_time::time_duration timestamp_;
 
+    void render() override;
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
+    void preRenderSync( WallToWallChannel& wallToWallChannel ) override;
+    void postRenderSync( WallToWallChannel& wallToWallChannel ) override;
+
     bool generateTexture();
-    void synchronizeTimestamp(WallToWallChannel& wallToWallChannel);
+    void synchronizeTimestamp( WallToWallChannel& wallToWallChannel );
 };
 
 #endif

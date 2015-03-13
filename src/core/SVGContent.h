@@ -49,10 +49,10 @@ public:
      * Constructor.
      * @param uri The uri of the svg document
      */
-    explicit SVGContent(const QString& uri);
+    explicit SVGContent( const QString& uri );
 
     /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    CONTENT_TYPE getType() const override;
 
     /**
      * Read SVG metadata.
@@ -69,14 +69,11 @@ private:
     SVGContent() {}
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
         // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
     }
-
-    void preRenderUpdate( Factories& factories, ContentWindowPtr window,
-                          WallToWallChannel& wallToWallChannel ) override;
 };
 
 #endif

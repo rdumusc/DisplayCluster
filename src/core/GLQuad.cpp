@@ -39,16 +39,18 @@
 
 #include "GLQuad.h"
 
+#include "types.h"
+
 #include <QtOpenGL/qgl.h>
 
 GLQuad::GLQuad()
-    : texCoords_(0.f, 0.f, 1.f, 1.f)
-    , renderMode_(GL_QUADS)
-    , textureId_(0)
+    : texCoords_( UNIT_RECTF )
+    , renderMode_( GL_QUADS )
+    , textureId_( 0 )
 {
 }
 
-void GLQuad::setTexCoords(const QRectF& texCoords)
+void GLQuad::setTexCoords( const QRectF& texCoords )
 {
     texCoords_ = texCoords;
 }
@@ -58,9 +60,9 @@ void GLQuad::setTexture( const GLuint textureId )
     textureId_ = textureId;
 }
 
-void GLQuad::setRenderMode(const GLenum mode)
+void GLQuad::setRenderMode( const GLenum mode )
 {
-    if (mode == GL_QUADS || mode == GL_LINE_LOOP)
+    if( mode == GL_QUADS || mode == GL_LINE_LOOP )
         renderMode_ = mode;
 }
 

@@ -55,7 +55,7 @@ public:
     explicit PDFContent(const QString& uri);
 
     /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    CONTENT_TYPE getType() const override;
 
     /**
      * Reaad PDF informations from the source URI.
@@ -70,6 +70,9 @@ public:
 
     /** Rank0 : go to previous page **/
     void previousPage();
+
+    /** Get the current page number. */
+    int getPage() const;
 
 signals:
     /** Emitted when the page number is changed **/
@@ -89,12 +92,8 @@ private:
         ar & boost::serialization::make_nvp("pageNumber", pageNumber_);
     }
 
-    // These informations are needed on Rank0
     int pageNumber_;
     int pageCount_;
-
-    void preRenderUpdate( Factories& factories, ContentWindowPtr window,
-                          WallToWallChannel& wallToWallChannel ) override;
 };
 
 #endif // PDFCONTENT_H

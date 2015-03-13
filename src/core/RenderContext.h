@@ -62,14 +62,14 @@ public:
      */
     RenderContext( const WallConfiguration& configuration );
 
+    /** Get the area of the wall which is visible in this context. */
+    const QRect& getVisibleWallArea() const;
+
     /** Set the background color of all windows. */
     void setBackgroundColor( const QColor& color );
 
     /** Add an object to be rendered. */
     void addRenderable( RenderablePtr renderable );
-
-    /** Check if a region is visible. */
-    bool isRegionVisible( const QRectF& region ) const;
 
     /** Render GL objects on all windows. */
     void updateGLWindows();

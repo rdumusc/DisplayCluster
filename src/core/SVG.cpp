@@ -39,6 +39,7 @@
 #include "SVG.h"
 
 #include "log.h"
+#include "ContentWindow.h"
 
 namespace
 {
@@ -106,7 +107,7 @@ void SVG::updateTexture( const QSize& textureSize, const QRectF& svgRegion )
     assert( textureData_.fbo );
 }
 
-void SVG::render( const QRectF& )
+void SVG::render()
 {
     if( !textureData_.fbo )
         return;
@@ -206,4 +207,20 @@ void SVG::restoreGLState()
     glMatrixMode( GL_MODELVIEW );
     glPopMatrix();
     glPopAttrib();
+}
+
+void SVG::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
+{
+    if( window->isResizing( ))
+        return;
+
+    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
+        return;
+
+    const QSize& windowSize = window->getCoordinates().size().toSize();
+    if( getTextureSize() != windowSize ||
+        getTextureRegion() != window->getZoomRect( ))
+    {
+        updateTexture( windowSize, window->getZoomRect( ));
+    }
 }

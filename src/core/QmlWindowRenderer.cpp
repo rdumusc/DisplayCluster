@@ -41,6 +41,7 @@
 
 #include "ContentWindow.h"
 #include "PixelStream.h"
+#include "ContentItem.h"
 
 #include <QtDeclarative/QDeclarativeComponent>
 
@@ -48,6 +49,7 @@
 
 namespace
 {
+const QString CONTENT_ITEM_OBJECT_NAME( "ContentItem" );
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 }
@@ -58,14 +60,19 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
     : contentWindow_( contentWindow )
     , windowContext_( new QDeclarativeContext( engine.rootContext( )))
     , windowItem_( 0 )
-    , contentItem_( 0 )
+    , factoryObject_( FactoryObject::create( *(contentWindow->getContent( ))))
 {
     windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
 
     windowItem_ = createQmlItem( QML_WINDOW_URL );
     windowItem_->setParentItem( &displayGroupItem );
 
-    createContentItem();
+    ContentItem* contentItem =
+       windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
+    contentItem->setFactoryObject( factoryObject_.get( ));
+
+    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
+        setupPixelStreamItem();
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
@@ -82,23 +89,24 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
     contentWindow_ = contentWindow;
 }
 
-void QmlWindowRenderer::associateWith( FactoryObject& object )
+void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
+                                         const QRect& visibleWallArea )
 {
-    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
-    {
-        PixelStream* stream = static_cast<PixelStream*>( &object );
-        windowContext_->setContextProperty( "pixelstream", stream );
-    }
+    factoryObject_->preRenderUpdate( contentWindow_, visibleWallArea );
+    factoryObject_->preRenderSync( wallChannel );
 }
 
-void QmlWindowRenderer::createContentItem()
+void QmlWindowRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
 {
-    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
-    {
-        windowContext_->setContextProperty( "pixelstream", NULL );
-        contentItem_ = createQmlItem( QML_PIXELSTREAM_URL );
-        contentItem_->setParentItem( windowItem_ );
-    }
+    factoryObject_->postRenderSync( wallChannel );
+}
+
+void QmlWindowRenderer::setupPixelStreamItem()
+{
+    PixelStream* stream = static_cast<PixelStream*>( factoryObject_.get( ));
+    windowContext_->setContextProperty( "pixelstream", stream );
+    QDeclarativeItem* pixelStreamItem = createQmlItem( QML_PIXELSTREAM_URL );
+    pixelStreamItem->setParentItem( windowItem_ );
 }
 
 QDeclarativeItem* QmlWindowRenderer::createQmlItem( const QUrl& url )

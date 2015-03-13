@@ -46,10 +46,7 @@
 class Texture : public FactoryObject
 {
 public:
-    Texture(const QString uri);
-    ~Texture();
-
-    void render(const QRectF& texCoords) override;
+    Texture( const QString& uri );
 
 private:
     QString uri_;
@@ -57,6 +54,10 @@ private:
 
     GLTexture2D texture_;
     GLQuad quad_;
+
+    void render() override;
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
 
     bool generateTexture();
 };

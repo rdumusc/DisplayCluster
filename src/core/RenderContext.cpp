@@ -64,6 +64,11 @@ RenderContext::RenderContext( const WallConfiguration& configuration )
     setupVSync();
 }
 
+const QRect& RenderContext::getVisibleWallArea() const
+{
+    return visibleWallArea_;
+}
+
 void RenderContext::setBackgroundColor( const QColor& color )
 {
     scene_.setBackgroundColor( color );
@@ -121,11 +126,6 @@ void RenderContext::setupVSync()
 void RenderContext::addRenderable( RenderablePtr renderable )
 {
     scene_.addRenderable( renderable );
-}
-
-bool RenderContext::isRegionVisible( const QRectF& region ) const
-{
-    return region.intersects( visibleWallArea_ );
 }
 
 void RenderContext::updateGLWindows()

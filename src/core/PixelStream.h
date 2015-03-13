@@ -111,9 +111,6 @@ public:
     PixelStream(const QString& uri);
     ~PixelStream();
 
-    void preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel);
-    void render(const QRectF& texCoords) override;
-
     void setNewFrame(const deflect::PixelStreamFramePtr frame);
 
     QString getStatistics() const;
@@ -126,8 +123,6 @@ signals:
     void segmentsChanged();
 
 private:
-    void sync(WallToWallChannel& wallToWallChannel);
-
     SwapSyncObject<deflect::PixelStreamFramePtr> syncPixelStreamFrame_;
 
     // pixel stream identifier
@@ -149,29 +144,33 @@ private:
     // For each segment, object for image decoding, rendering and storing parameters
     std::vector<PixelStreamSegmentRendererPtr> segmentRenderers_;
 
-    // The coordinates of the ContentWindow of this PixelStream
     QRectF contentWindowRect_;
+    QRectF wallArea_;
 
     FpsCounter fpsCounter_;
 
     QList<QObject*> segmentsList_;
 
-    void updateRenderers(const deflect::PixelStreamSegments& segments);
-    void updateVisibleTextures(const QRectF& windowRect);
+    void render() override;
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
+    void preRenderSync( WallToWallChannel& wallToWallChannel ) override;
+    bool isDecodingInProgress( WallToWallChannel& wallToWallChannel );
+
+    void updateRenderers( const deflect::PixelStreamSegments& segments );
+    void updateVisibleTextures();
     void swapBuffers();
-    void recomputeDimensions(const deflect::PixelStreamSegments& segments);
-    void decodeVisibleTextures(const QRectF& windowRect);
+    void recomputeDimensions( const deflect::PixelStreamSegments& segments );
+    void decodeVisibleTextures();
 
-    void adjustFrameDecodersCount(const size_t count);
-    void adjustSegmentRendererCount(const size_t count);
-    void refreshSegmentsList(const deflect::PixelStreamSegments& segments);
+    void adjustFrameDecodersCount( const size_t count );
+    void adjustSegmentRendererCount( const size_t count );
+    void refreshSegmentsList( const deflect::PixelStreamSegments& segments );
 
-    bool isDecodingInProgress(WallToWallChannel& wallToWallChannel);
 
-    QRectF getSceneCoordinates(const QRect& segment, const QRectF& windowRect) const;
-    bool isVisible(const QRect& segment, const QRectF& windowRect);
-    bool isVisible(const deflect::PixelStreamSegment& segment,
-                   const QRectF& windowRect);
+    QRectF getSceneCoordinates( const QRect& segment ) const;
+    bool isVisible( const QRect& segment );
+    bool isVisible( const deflect::PixelStreamSegment& segment );
 };
 
 

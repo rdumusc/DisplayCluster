@@ -50,7 +50,6 @@
 #include "configuration/WallConfiguration.h"
 
 #include "RenderContext.h"
-#include "Factories.h"
 
 #include <stdexcept>
 
@@ -79,9 +78,6 @@ WallApplication::~WallApplication()
 
     mpiSendThread_.quit();
     mpiSendThread_.wait();
-
-    // Must be done before destructing the GLWindows to release GL objects
-    factories_->clear();
 }
 
 bool WallApplication::createConfig(const QString& filename, const int rank)
@@ -112,21 +108,7 @@ void WallApplication::initRenderContext()
         throw std::runtime_error("WallApplication: initialization failed.");
     }
 
-    factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
-    renderController_.reset(new RenderController(renderContext_, factories_));
-}
-
-void WallApplication::onNewObject(FactoryObject& object)
-{
-    object.setRenderContext(renderContext_.get());
-
-    PixelStream* pixelStream = dynamic_cast< PixelStream* >(&object);
-    // only one process needs to request new frames
-    if(pixelStream && wallChannel_->getRank() == 0)
-    {
-        connect(pixelStream, SIGNAL(requestFrame(const QString)),
-                toMasterChannel_.get(), SLOT(sendRequestFrame(const QString)));
-    }
+    renderController_.reset( new RenderController( renderContext_ ));
 }
 
 void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
@@ -150,7 +132,7 @@ void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
             renderController_.get(), SLOT(updateMarkers(MarkersPtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(received(deflect::PixelStreamFramePtr)),
-            factories_.get(), SLOT(updatePixelStream(deflect::PixelStreamFramePtr)));
+            renderController_.get(), SLOT(updatePixelStream(deflect::PixelStreamFramePtr)));
 
     connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
             toMasterChannel_.get(), SLOT(sendQuit()));
@@ -191,7 +173,7 @@ void WallApplication::preRenderUpdate()
 {
     syncObjects();
     wallChannel_->synchronizeClock();
-    factories_->preRenderUpdate(*renderController_->getDisplayGroup(), *wallChannel_);
+    renderController_->preRenderUpdate( *wallChannel_ );
 }
 
 void WallApplication::syncObjects()
@@ -204,5 +186,5 @@ void WallApplication::syncObjects()
 
 void WallApplication::postRenderUpdate()
 {
-    factories_->postRenderUpdate(*renderController_->getDisplayGroup(), *wallChannel_);
+    renderController_->postRenderUpdate( *wallChannel_ );
 }

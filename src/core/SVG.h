@@ -72,7 +72,7 @@ public:
     QSize getTextureSize() const;
     const QRectF& getTextureRegion() const;
     void updateTexture( const QSize& textureSize, const QRectF& svgRegion );
-    void render( const QRectF& texCoords ) override;
+    void render() override;
     void renderPreview() override;
 
 private:
@@ -83,7 +83,9 @@ private:
     FBOPtr previewFbo_;
     GLQuad quad_;
 
-    void renderTexturedQuad( const GLuint textureId );
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
+
     void generatePreviewTexture();
     bool setImageData( const QByteArray& imageData );
     void renderToTexture( const QRectF& svgRegion, FBOPtr targetFbo );

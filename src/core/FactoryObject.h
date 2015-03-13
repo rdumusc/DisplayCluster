@@ -41,10 +41,6 @@
 
 #include "types.h"
 
-#include <stdint.h>
-
-class RenderContext;
-
 /**
  * An interface for objects that store Content data on Wall processes.
  *
@@ -59,44 +55,30 @@ public:
     /** Destructor */
     virtual ~FactoryObject();
 
-    /**
-     * Render the FactoryObject
-     * @param textCoord The region of the texture to render
-     */
-    virtual void render(const QRectF& textCoord) = 0;
+    /** Render the FactoryObject */
+    virtual void render() = 0;
 
     /** Render the preview ( whole object at low resolution.) */
     virtual void renderPreview();
 
-    /**
-     * Set the render context.
-     * @param renderContext The render context
-     */
-    void setRenderContext(RenderContext* renderContext);
+    /** Update internal state before rendering. */
+    virtual void preRenderUpdate( ContentWindowPtr window,
+                                  const QRect& visibleWallArea ) = 0;
 
-    /** Get the render context. */
-    RenderContext* getRenderContext() const;
+    /** Optional synchronize step before rendering. */
+    virtual void preRenderSync( WallToWallChannel& wallToWallChannel )
+    {
+        Q_UNUSED( wallToWallChannel )
+    }
 
-    /**
-     * Get the current frame index for this Object.
-     * Used by the Factory to check if the object is still being used/referenced
-     * by a ContentWindow.
-     */
-    uint64_t getFrameIndex() const;
+    /** Optional synchronize step after rendering. */
+    virtual void postRenderSync( WallToWallChannel& wallToWallChannel )
+    {
+        Q_UNUSED( wallToWallChannel )
+    }
 
-    /**
-     * Must be called everytime a derived object is rendered.
-     * Failing that, it will be garbage collected by the factory.
-     */
-    void setFrameIndex(const uint64_t frameIndex);
-
-protected:
-    /** A reference to the render context. */
-    RenderContext* renderContext_;
-
-private:
-    /** Frame index when object was last rendered. */
-    uint64_t frameIndex_;
+    /** Create an object corresponding to the given content. */
+    static FactoryObjectPtr create( const Content& content );
 };
 
 #endif

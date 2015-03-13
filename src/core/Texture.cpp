@@ -37,44 +37,50 @@
 /*********************************************************************/
 
 #include "Texture.h"
+
 #include "log.h"
+#include "ContentWindow.h"
 
-#include <QImageReader>
+#include <QtGui/QImageReader>
 
-Texture::Texture(const QString uri)
+Texture::Texture( const QString& uri )
     : uri_( uri )
 {
-    const QImageReader imageReader(uri_);
-    if(!imageReader.canRead())
+    const QImageReader imageReader( uri_ );
+    if( !imageReader.canRead( ))
     {
-        put_flog(LOG_ERROR, "error loading %s", uri_.toLocal8Bit().constData());
+        put_flog( LOG_ERROR, "error loading %s",
+                  uri_.toLocal8Bit().constData( ));
         return;
     }
     imageSize_ = imageReader.size();
 }
 
-Texture::~Texture()
-{
-}
-
 bool Texture::generateTexture()
 {
-    const QImage image(uri_);
-    if(image.isNull())
+    const QImage image( uri_ );
+    if( image.isNull( ))
     {
-        put_flog(LOG_ERROR, "error loading %s", uri_.toLocal8Bit().constData());
+        put_flog( LOG_ERROR, "error loading %s",
+                  uri_.toLocal8Bit().constData( ));
         return false;
     }
-
-    return texture_.init(image, GL_BGRA, true);
+    return texture_.init( image, GL_BGRA, true );
 }
 
-void Texture::render(const QRectF& texCoords)
+void Texture::render()
 {
-    if(!texture_.isValid() && !generateTexture())
+    if( !texture_.isValid( ))
         return;
 
-    quad_.setTexCoords( texCoords );
-    quad_.setTexture( texture_.getTextureId( ));
     quad_.render();
+}
+
+void Texture::preRenderUpdate( ContentWindowPtr window, const QRect& )
+{
+    if( !texture_.isValid( ))
+        generateTexture();
+
+    quad_.setTexCoords( window->getZoomRect( ));
+    quad_.setTexture( texture_.getTextureId( ));
 }

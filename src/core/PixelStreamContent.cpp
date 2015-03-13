@@ -37,18 +37,17 @@
 /*********************************************************************/
 
 #include "PixelStreamContent.h"
-#include "ContentWindow.h"
+
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
-#include "Factories.h"
 
-BOOST_CLASS_EXPORT_GUID(PixelStreamContent, "PixelStreamContent")
+BOOST_CLASS_EXPORT_GUID( PixelStreamContent, "PixelStreamContent" )
 
-PixelStreamContent::PixelStreamContent(const QString& uri)
-    : Content(uri)
+PixelStreamContent::PixelStreamContent( const QString& uri )
+    : Content( uri )
 {}
 
-CONTENT_TYPE PixelStreamContent::getType()
+CONTENT_TYPE PixelStreamContent::getType() const
 {
     return CONTENT_TYPE_PIXEL_STREAM;
 }
@@ -56,10 +55,4 @@ CONTENT_TYPE PixelStreamContent::getType()
 bool PixelStreamContent::readMetadata()
 {
     return true;
-}
-
-void PixelStreamContent::preRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel)
-{
-    const QRectF& windowRect = window->getCoordinates();
-    factories.getPixelStreamFactory().getObject(getURI())->preRenderUpdate(windowRect, wallToWallChannel);
 }

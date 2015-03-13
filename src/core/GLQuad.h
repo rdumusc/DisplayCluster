@@ -41,6 +41,7 @@
 #define GLQUAD_H
 
 #include "Renderable.h"
+
 #include <QtCore/QRectF>
 #include <QtOpenGL/qgl.h>
 
@@ -57,13 +58,13 @@ public:
     void render() override;
 
     /** Set the texture coordinates. */
-    void setTexCoords(const QRectF& texCoords);
+    void setTexCoords( const QRectF& texCoords );
 
     /** Set the texture to use for rendering. (0 = no texturing) */
     void setTexture( const GLuint textureId );
 
     /** Set the render mode [GL_QUADS|GL_LINE_LOOP] (default: GL_QUADS) */
-    void setRenderMode(const GLenum mode);
+    void setRenderMode( const GLenum mode );
 
 private:
     QRectF texCoords_;

@@ -42,8 +42,6 @@
 
 #include "types.h"
 
-#include "Renderable.h"
-#include "ContentWindowRenderer.h"
 #include "QmlWindowRenderer.h"
 
 #include <QtCore/QObject>
@@ -55,23 +53,19 @@ class QDeclarativeItem;
 /**
  * Renders a DisplayGroup.
  */
-class DisplayGroupRenderer : public QObject, public Renderable
+class DisplayGroupRenderer : public QObject
 {
     Q_OBJECT
 
 public:
     /** Constructor */
-    DisplayGroupRenderer( RenderContextPtr renderContext,
-                          FactoriesPtr factories );
-
-    /**
-     * Render the associated DisplayGroup.
-     * @see setDisplayGroup()
-     */
-    void render() override;
+    DisplayGroupRenderer( RenderContextPtr renderContext );
 
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
+
+    void preRenderUpdate( WallToWallChannel& wallChannel );
+    void postRenderUpdate( WallToWallChannel& wallChannel );
 
 public slots:
     /**
@@ -82,9 +76,7 @@ public slots:
 
 private:
     RenderContextPtr renderContext_;
-    FactoriesPtr factories_;
     DisplayGroupPtr displayGroup_;
-    ContentWindowRenderer windowRenderer_;
     QDeclarativeItem* displayGroupItem_;
 
     typedef boost::shared_ptr<QmlWindowRenderer> QmlWindowPtr;
@@ -92,9 +84,6 @@ private:
     QmlWindows windowItems_;
 
     OptionsPtr options_;
-
-    void renderBackground( ContentPtr content );
-    void render( const ContentWindowPtrs& contentWindows );
 
     void createDisplayGroupQmlItem();
     void createWindowQmlItem( ContentWindowPtr window );

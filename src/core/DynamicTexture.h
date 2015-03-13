@@ -60,18 +60,23 @@
  * (2) Direct reading from a large image
  * @see generateImagePyramid()
  */
-class DynamicTexture : public boost::enable_shared_from_this<DynamicTexture>, public FactoryObject
+class DynamicTexture : public boost::enable_shared_from_this<DynamicTexture>,
+        public FactoryObject
 {
 public:
     /**
      * Constructor
      * @param uri The uri of an image or of a Pyramid metadata file
-     * @param parent Internal use: child objects need to keep a weak pointer to their parent
-     * @param parentCoordinates Internal use: texture coordinates in the parent texture
+     * @param parent Internal use: child objects need to keep a weak pointer to
+     *        their parent
+     * @param parentCoordinates Internal use: texture coordinates in the parent
+     *        texture
      * @param childIndex Internal use: index of the child object
      */
-    DynamicTexture(const QString& uri = "", DynamicTexturePtr parent = DynamicTexturePtr(),
-                   const QRectF& parentCoordinates = QRectF(), const int childIndex = 0);
+    DynamicTexture( const QString& uri = "",
+                    DynamicTexturePtr parent = DynamicTexturePtr(),
+                    const QRectF& parentCoordinates = QRectF(),
+                    const int childIndex = 0 );
 
     /** Destructor */
     ~DynamicTexture();
@@ -85,38 +90,35 @@ public:
     /** Get the size of the full resolution texture */
     const QSize& getSize() const;
 
-    /**
-     * Render the dynamic texture.
-     * @param texCoords The area of the full scale texture to render
-     */
-    void render(const QRectF& texCoords) override;
+    /** Render the dynamic texture. */
+    void render() override;
 
-    /**
-     * Pre render step.
-     */
-    void preRenderUpdate();
+    /** Pre render step. */
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
 
-    /**
-     * Post render step.
-     */
-    void postRenderUpdate();
+    /** Post render step. */
+    void postRenderSync( WallToWallChannel& wallToWallChannel ) override;
 
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
-     * @param baseFolder The folder in which the metadata and pyramid images will be created.
+     * @param baseFolder The folder in which the metadata and pyramid images
+     *        will be created.
      */
-    bool generateImagePyramid(const QString& baseFolder);
+    bool generateImagePyramid( const QString& baseFolder );
 
     /**
      * Load the image for this part of the texture
-     * @throw boost::bad_weak_ptr exception if a parent object is deleted during thread execution
+     * @throw boost::bad_weak_ptr exception if a parent object is deleted during
+     *        thread execution
      * @internal asynchronous loading thread needs access to this method
      */
     void loadImage();
 
     /**
      * Decrement the global count of loading threads.
-     * @throw boost::bad_weak_ptr exception if a parent object is deleted during thread execution
+     * @throw boost::bad_weak_ptr exception if a parent object is deleted during
+     *        thread execution
      * @internal asynchronous loading thread needs access to this method
      */
     void decrementGlobalThreadCount();
@@ -134,6 +136,8 @@ private:
 
     QImage fullscaleImage_;
 
+    QRectF zoomRect_;
+
     /* for children only: */
 
     boost::weak_ptr<DynamicTexture> parent_;
@@ -144,8 +148,8 @@ private:
     std::vector<int> treePath_; // To construct the image name for each object
     int depth_; // The depth of the object in the image pyramid
 
-    mutable QFuture<void> loadImageThread_; // Future for asychronous image loading
-    bool loadImageThreadStarted_; // True if the texture loading has been started
+    mutable QFuture<void> loadImageThread_;
+    bool loadImageThreadStarted_;
 
     QSize imageSize_; // full scale image dimensions
     QImage scaledImage_; // for texture upload to GPU
@@ -159,10 +163,14 @@ private:
     bool isResolutionSufficientForCurrentGLView();
     bool canHaveChildren();
 
-    /**
-     * Recursively clear children of this object which have not been rendered recently.
-     */
+    /** Recursively clear children which have not been rendered recently. */
     void clearOldChildren(); // @All
+
+    /**
+     * Render the dynamic texture.
+     * @param texCoords The area of the full scale texture to render
+     */
+    void render( const QRectF& texCoords );
 
     /**
      * Render the dynamic texture.
@@ -170,7 +178,7 @@ private:
      * texture when the high-res one is not loaded yet.
      * @param texCoords The area of the full scale texture to render
      */
-    void render_(const QRectF& texCoords); // @All
+    void drawTexture( const QRectF& texCoords ); // @All
 
     /** Is this object the root element. */
     bool isRoot() const;  // @All
@@ -178,35 +186,41 @@ private:
     /**
      * Get the root object,
      * @return A valid DynamicTexturePtr to the root element
-     * @throw boost::bad_weak_ptr exception if the root object is deleted during thread execution
+     * @throw boost::bad_weak_ptr exception if the root object is deleted during
+     *        thread execution
      */
     DynamicTexturePtr getRoot(); // @Child only
 
-    bool readFullImageMetadata(const QString& uri);
+    bool readFullImageMetadata( const QString& uri );
 
-    bool readPyramidMetadataFromFile(const QString& uri); // @Root only
-    bool makePyramidFolder(const QString& pyramidFolder); // @Root only
-    bool writeMetadataFile(const QString& pyramidFolder, const QString& filename) const; // @Root only
-    bool writePyramidMetadataFiles(const QString& pyramidFolder) const; // @Root only
+    bool readPyramidMetadataFromFile( const QString& uri ); // @Root only
+    bool makePyramidFolder( const QString& pyramidFolder ); // @Root only
+    bool writeMetadataFile( const QString& pyramidFolder,
+                            const QString& filename ) const; // @Root only
+    // @Root only
+    bool writePyramidMetadataFiles( const QString& pyramidFolder ) const;
     QString getPyramidImageFilename() const; // @All
 
-    QRectF getImageRegionInParentImage(const QRectF& imageRegion) const;
+    QRectF getImageRegionInParentImage( const QRectF& imageRegion ) const;
 
-    void loadImageAsync(); // Trigger the loading of the image in a separate thread // @All
+    void loadImageAsync(); // @All
     bool loadFullResImage(); // @Root only
-    QImage getImageFromParent(const QRectF& imageRegion, DynamicTexture * start); // @Child only
+    QImage getImageFromParent( const QRectF& imageRegion,
+                               DynamicTexture* start ); // @Child only
     void generateTexture(); // @All
 
-    void renderChildren(const QRectF& texCoords); // @All
+    void renderChildren( const QRectF& texCoords ); // @All
     void renderTextureBorder(); // @All
-    void renderTexturedUnitQuad(const QRectF& texCoords); // @All
+    void renderTexturedUnitQuad( const QRectF& texCoords ); // @All
 
-    bool getThreadsDoneDescending(); // Used by clearOldChildren() // @Root
+    bool getThreadsDoneDescending(); // @Root
 
-    int getGlobalThreadCount(); // Get the global count of loading threads // @Root
-    void incrementGlobalThreadCount(); // Increment the global cound of loading threads // @Root
 
-    QRect getRootImageCoordinates(float x, float y, float w, float h); // @TODO-Remove
+    int getGlobalThreadCount(); // @Root
+    void incrementGlobalThreadCount(); // @Root
+
+    // @TODO-Remove
+    QRect getRootImageCoordinates( float x, float y, float w, float h );
 };
 
 #endif

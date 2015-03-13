@@ -55,22 +55,26 @@ class RenderController : public QObject
 
 public:
     /** Constructor */
-    RenderController(RenderContextPtr renderContext, FactoriesPtr factories);
+    RenderController( RenderContextPtr renderContext );
 
     /** Get the DisplayGroup */
     DisplayGroupPtr getDisplayGroup() const;
 
     /** Synchronize the objects */
-    void synchronizeObjects(const SyncFunction& versionCheckFunc);
+    void synchronizeObjects( const SyncFunction& versionCheckFunc );
+
+    void preRenderUpdate( WallToWallChannel& wallChannel );
+    void postRenderUpdate( WallToWallChannel& wallChannel );
 
     /** Do we need to stop rendering. */
     bool quitRendering() const;
 
 public slots:
     void updateQuit();
-    void updateDisplayGroup(DisplayGroupPtr displayGroup);
-    void updateOptions(OptionsPtr options);
-    void updateMarkers(MarkersPtr markers);
+    void updateDisplayGroup( DisplayGroupPtr displayGroup );
+    void updateOptions( OptionsPtr options );
+    void updateMarkers( MarkersPtr markers );
+    void updatePixelStream( deflect::PixelStreamFramePtr frame );
 
 private:
     RenderContextPtr renderContext_;
@@ -83,7 +87,7 @@ private:
     SwapSyncObject<OptionsPtr> syncOptions_;
     SwapSyncObject<MarkersPtr> syncMarkers_;
 
-    void setRenderOptions(OptionsPtr options);
+    void setRenderOptions( OptionsPtr options );
 };
 
 #endif // RENDERCONTROLLER_H

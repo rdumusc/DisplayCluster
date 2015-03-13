@@ -41,6 +41,7 @@
 
 #include "ContentWindow.h"
 #include "ContentActionsModel.h"
+#include "ContentItem.h"
 
 /**
  * Register types for use in Qml
@@ -50,6 +51,7 @@ struct QmlTypeRegistration
     QmlTypeRegistration()
     {
         qmlRegisterType<ContentActionsModel>("DisplayCluster", 1, 0, "ContentActionsModel");
+        qmlRegisterType<ContentItem>("DisplayCluster", 1, 0, "ContentItem");
         qmlRegisterUncreatableType<Content>("DisplayCluster", 1, 0, "Content", "Content is linked to a ContentWindow and read-only in QML");
         qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports enums to QML");
     }

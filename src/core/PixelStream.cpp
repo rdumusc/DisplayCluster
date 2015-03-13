@@ -40,7 +40,6 @@
 
 #include "ContentWindow.h"
 #include "WallToWallChannel.h"
-#include "RenderContext.h"
 #include "log.h"
 #include "PixelStreamSegmentRenderer.h"
 #include "FpsCounter.h"
@@ -68,65 +67,126 @@ PixelStream::~PixelStream()
     qDeleteAll( segmentsList_ );
 }
 
-void PixelStream::preRenderUpdate(const QRectF& windowRect, WallToWallChannel& wallToWallChannel)
+void PixelStream::setNewFrame( const deflect::PixelStreamFramePtr frame )
 {
-    sync(wallToWallChannel);
+    syncPixelStreamFrame_.update( frame );
+}
 
-    // Store the window coordinates for the rendering pass
-    contentWindowRect_ = windowRect;
+QString PixelStream::getStatistics() const
+{
+    return fpsCounter_.toString();
+}
 
-    if(isDecodingInProgress(wallToWallChannel))
+QList<QObject*> PixelStream::getSegments() const
+{
+    return segmentsList_;
+}
+
+void PixelStream::render()
+{
+    glPushMatrix();
+    glScalef( 1.f/(float)width_, 1.f/(float)height_, 0.f );
+
+    BOOST_FOREACH( PixelStreamSegmentRendererPtr renderer, segmentRenderers_ )
+    {
+        if( isVisible( renderer->getRect( )))
+            renderer->render();
+    }
+
+    glPopMatrix();
+}
+
+void PixelStream::preRenderUpdate( ContentWindowPtr window,
+                                   const QRect& wallArea )
+{
+    contentWindowRect_ = window->getCoordinates();
+    wallArea_ = wallArea;
+}
+
+void PixelStream::preRenderSync( WallToWallChannel& wallToWallChannel )
+{
+    const SyncFunction& versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, &wallToWallChannel, _1 );
+    if( syncPixelStreamFrame_.sync( versionCheckFunc ))
+    {
+        backBuffer_ = syncPixelStreamFrame_.get()->segments;
+        emit requestFrame( uri_ );
+    }
+
+    if( isDecodingInProgress( wallToWallChannel ))
         return;
 
-    // After swapping the buffers, wait until decoding has finished to update the renderers.
+    // After swapping the buffers, wait until decoding has finished to update
+    // the renderers.
     if( buffersSwapped_ )
     {
-        adjustSegmentRendererCount(frontBuffer_.size());
-        updateRenderers(frontBuffer_);
-        recomputeDimensions(frontBuffer_);
-        refreshSegmentsList(frontBuffer_);
+        adjustSegmentRendererCount( frontBuffer_.size( ));
+        updateRenderers( frontBuffer_ );
+        recomputeDimensions( frontBuffer_ );
+        refreshSegmentsList( frontBuffer_ );
         buffersSwapped_ = false;
     }
 
-    // The window may have moved, so always check if some segments have become visible to upload them.
-    updateVisibleTextures(windowRect);
+    // The window may have moved, so always check if some segments have become
+    // visible to upload them.
+    updateVisibleTextures();
 
-    if ( !backBuffer_.empty( ))
+    if( !backBuffer_.empty( ))
     {
         swapBuffers();
-        adjustFrameDecodersCount(frontBuffer_.size());
+        adjustFrameDecodersCount( frontBuffer_.size( ));
     }
 
-    // The window may have moved, so always check if some segments have become visible to decode them.
-    decodeVisibleTextures(windowRect);
+    // The window may have moved, so always check if some segments have become
+    // visible to decode them.
+    decodeVisibleTextures();
 }
 
-void PixelStream::updateRenderers(const deflect::PixelStreamSegments& segments)
+bool PixelStream::isDecodingInProgress( WallToWallChannel& wallToWallChannel )
 {
-    assert(segmentRenderers_.size() == segments.size());
+    // determine if threads are running on any processes for this PixelStream
+    int localThreadsRunning = 0;
 
-    for(size_t i=0; i<segments.size(); i++)
+    std::vector<PixelStreamSegmentDecoderPtr>::const_iterator it;
+    for( it = frameDecoders_.begin(); it != frameDecoders_.end(); ++it )
     {
-        // The parameters always need to be up to date to determine visibility when rendering.
+        if( (*it)->isRunning( ))
+            ++localThreadsRunning;
+    }
+
+    int globalThreadsRunning = wallToWallChannel.globalSum( localThreadsRunning );
+    return globalThreadsRunning > 0;
+}
+
+void PixelStream::updateRenderers( const deflect::PixelStreamSegments& segments )
+{
+    assert( segmentRenderers_.size() == segments.size( ));
+
+    for( size_t i=0; i<segments.size(); i++ )
+    {
+        // The parameters always need to be up to date to determine visibility
+        // when rendering.
         segmentRenderers_[i]->setParameters( segments[i].parameters );
         segmentRenderers_[i]->setTextureNeedsUpdate();
     }
 }
 
-void PixelStream::updateVisibleTextures(const QRectF& windowRect)
+void PixelStream::updateVisibleTextures()
 {
     bool textureWasUpdated = false;
-    for(size_t i=0; i<frontBuffer_.size(); ++i)
+    for( size_t i=0; i<frontBuffer_.size(); ++i )
     {
-        if (segmentRenderers_[i]->textureNeedsUpdate() && !frontBuffer_[i].parameters.compressed &&
-                isVisible(frontBuffer_[i], windowRect))
+        if( segmentRenderers_[i]->textureNeedsUpdate() &&
+            !frontBuffer_[i].parameters.compressed &&
+            isVisible( frontBuffer_[i] ))
         {
-            const QImage textureWrapper((const uchar*)frontBuffer_[i].imageData.constData(),
-                                        frontBuffer_[i].parameters.width,
-                                        frontBuffer_[i].parameters.height,
-                                        QImage::Format_RGB32);
+            const char* data = frontBuffer_[i].imageData.constData();
+            const QImage textureWrapper( (const uchar*)data,
+                                         frontBuffer_[i].parameters.width,
+                                         frontBuffer_[i].parameters.height,
+                                         QImage::Format_RGB32 );
 
-            segmentRenderers_[i]->updateTexture(textureWrapper);
+            segmentRenderers_[i]->updateTexture( textureWrapper );
 
             textureWasUpdated = true;
         }
@@ -141,7 +201,7 @@ void PixelStream::updateVisibleTextures(const QRectF& windowRect)
 
 void PixelStream::swapBuffers()
 {
-    assert(!backBuffer_.empty());
+    assert( !backBuffer_.empty( ));
 
     frontBuffer_ = backBuffer_;
     backBuffer_.clear();
@@ -149,66 +209,50 @@ void PixelStream::swapBuffers()
     buffersSwapped_ = true;
 }
 
-void PixelStream::recomputeDimensions(const deflect::PixelStreamSegments &segments)
+void PixelStream::recomputeDimensions( const deflect::PixelStreamSegments &segments )
 {
     width_ = 0;
     height_ = 0;
 
-    for(size_t i=0; i<segments.size(); i++)
+    for( size_t i=0; i<segments.size(); ++i )
     {
         const deflect::PixelStreamSegmentParameters& params = segments[i].parameters;
-        width_ = std::max(width_, params.width+params.x);
-        height_ = std::max(height_, params.height+params.y);
+        width_ = std::max( width_, params.width+params.x );
+        height_ = std::max( height_, params.height+params.y );
     }
 }
 
-void PixelStream::decodeVisibleTextures(const QRectF& windowRect)
+void PixelStream::decodeVisibleTextures()
 {
-    assert(frameDecoders_.size() == frontBuffer_.size());
+    assert( frameDecoders_.size() == frontBuffer_.size( ));
 
     std::vector<PixelStreamSegmentDecoderPtr>::iterator frameDecoder_it = frameDecoders_.begin();
     deflect::PixelStreamSegments::iterator segment_it = frontBuffer_.begin();
-    for ( ; segment_it != frontBuffer_.end(); ++segment_it, ++frameDecoder_it )
+    for( ; segment_it != frontBuffer_.end(); ++segment_it, ++frameDecoder_it )
     {
-        if ( segment_it->parameters.compressed && isVisible(*segment_it, windowRect) )
-        {
-            (*frameDecoder_it)->startDecoding(*segment_it);
-        }
+        if( segment_it->parameters.compressed && isVisible( *segment_it ))
+            (*frameDecoder_it)->startDecoding( *segment_it );
     }
 }
 
-void PixelStream::render(const QRectF&)
-{
-    glPushMatrix();
-    glScalef(1.f/(float)width_, 1.f/(float)height_, 0.f);
-
-    BOOST_FOREACH(PixelStreamSegmentRendererPtr renderer, segmentRenderers_)
-    {
-        if (isVisible(renderer->getRect(), contentWindowRect_))
-            renderer->render();
-    }
-
-    glPopMatrix();
-}
-
-void PixelStream::adjustFrameDecodersCount(const size_t count)
+void PixelStream::adjustFrameDecodersCount( const size_t count )
 {
     // We need to insert NEW objects in the vector if it is smaller
-    for (size_t i=frameDecoders_.size(); i<count; ++i)
+    for( size_t i=frameDecoders_.size(); i<count; ++i )
         frameDecoders_.push_back( boost::make_shared<deflect::PixelStreamSegmentDecoder>( ));
     // Or resize it if it is bigger
     frameDecoders_.resize( count );
 }
 
-void PixelStream::adjustSegmentRendererCount(const size_t count)
+void PixelStream::adjustSegmentRendererCount( const size_t count )
 {
     // Recreate the renderers if the number of segments has changed
-    if (segmentRenderers_.size() != count)
-    {
-        segmentRenderers_.clear();
-        for (size_t i=0; i<count; ++i)
-            segmentRenderers_.push_back( boost::make_shared<PixelStreamSegmentRenderer>( ));
-    }
+    if( segmentRenderers_.size() == count )
+        return;
+
+    segmentRenderers_.clear();
+    for( size_t i=0; i<count; ++i )
+        segmentRenderers_.push_back( boost::make_shared<PixelStreamSegmentRenderer>( ));
 }
 
 void PixelStream::refreshSegmentsList( const deflect::PixelStreamSegments& segments )
@@ -240,69 +284,29 @@ void PixelStream::refreshSegmentsList( const deflect::PixelStreamSegments& segme
         emit segmentsChanged();
 }
 
-void PixelStream::setNewFrame(const deflect::PixelStreamFramePtr frame)
+QRectF PixelStream::getSceneCoordinates( const QRect& segment ) const
 {
-    syncPixelStreamFrame_.update(frame);
-}
+    const qreal normX = (qreal)segment.x() / (qreal)width_;
+    const qreal normY = (qreal)segment.y() / (qreal)height_;
+    const qreal normWidth = (qreal)segment.width() / (qreal)width_;
+    const qreal normHeight = (qreal)segment.height() / (qreal)height_;
 
-QString PixelStream::getStatistics() const
-{
-    return fpsCounter_.toString();
-}
-
-QList<QObject*> PixelStream::getSegments() const
-{
-    return segmentsList_;
-}
-
-void PixelStream::sync(WallToWallChannel& wallToWallChannel)
-{
-    const SyncFunction& versionCheckFunc =
-        boost::bind( &WallToWallChannel::checkVersion, &wallToWallChannel, _1 );
-    if (syncPixelStreamFrame_.sync(versionCheckFunc))
-    {
-        backBuffer_ = syncPixelStreamFrame_.get()->segments;
-        emit requestFrame(uri_);
-    }
-}
-
-bool PixelStream::isDecodingInProgress(WallToWallChannel& wallToWallChannel)
-{
-    // determine if threads are running on any processes for this PixelStream
-    int localThreadsRunning = 0;
-
-    std::vector<PixelStreamSegmentDecoderPtr>::const_iterator it;
-    for (it = frameDecoders_.begin(); it != frameDecoders_.end(); ++it)
-    {
-        if ((*it)->isRunning())
-            ++localThreadsRunning;
-    }
-
-    int globalThreadsRunning = wallToWallChannel.globalSum(localThreadsRunning);
-    return globalThreadsRunning > 0;
-}
-
-QRectF PixelStream::getSceneCoordinates( const QRect& segment,
-                                         const QRectF& windowRect ) const
-{
     // coordinates of segment in global tiled display space
-    const double segmentX = windowRect.x() + (double)segment.x() / (double)width_ * windowRect.width();
-    const double segmentY = windowRect.y() + (double)segment.y() / (double)height_ * windowRect.height();
-    const double segmentW = (double)segment.width() / (double)width_ * windowRect.width();
-    const double segmentH = (double)segment.height() / (double)height_ * windowRect.height();
-
-    return QRectF( segmentX, segmentY, segmentW, segmentH );
+    return QRectF( contentWindowRect_.x() + normX * contentWindowRect_.width(),
+                   contentWindowRect_.y() + normY * contentWindowRect_.height(),
+                   normWidth * contentWindowRect_.width(),
+                   normHeight * contentWindowRect_.height( ));
 }
 
-bool PixelStream::isVisible( const QRect& segment, const QRectF& windowRect )
+bool PixelStream::isVisible( const QRect& segment )
 {
-    return renderContext_->isRegionVisible( getSceneCoordinates( segment, windowRect ));
+    return wallArea_.intersects( getSceneCoordinates( segment ));
 }
 
-bool PixelStream::isVisible(const deflect::PixelStreamSegment& segment, const QRectF& windowRect)
+bool PixelStream::isVisible( const deflect::PixelStreamSegment& segment )
 {
-    QRect segmentRegion(segment.parameters.x, segment.parameters.y,
-                        segment.parameters.width, segment.parameters.height);
-    return isVisible(segmentRegion, windowRect);
+    QRect segmentRegion( segment.parameters.x, segment.parameters.y,
+                         segment.parameters.width, segment.parameters.height );
+    return isVisible( segmentRegion );
 }
 

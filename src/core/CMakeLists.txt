@@ -46,15 +46,12 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentType.h
   ContentInteractionDelegate.h
   ContentWindow.h
-  ContentWindowRenderer.h
   DisplayGroup.h
   DisplayGroupRenderer.h
   Drawable.h
   DynamicTexture.h
   DynamicTextureContent.h
   ElapsedTimer.h
-  Factory.hpp
-  Factories.h
   FactoryObject.h
   FFMPEGMovie.h
   FFMPEGVideoFrameConverter.h
@@ -137,12 +134,12 @@ list(APPEND DCCORE_MOC_HEADERS
   Content.h
   ContentAction.h
   ContentActionsModel.h
+  ContentItem.h
   ContentWindow.h
   ContentWindowController.h
   Coordinates.h
   DisplayGroup.h
   DisplayGroupRenderer.h
-  Factories.h
   Markers.h
   MarkerRenderer.h
   MasterFromWallChannel.h
@@ -179,18 +176,16 @@ list(APPEND DCCORE_SOURCES
   ContentFactory.cpp
   ContentLoader.cpp
   ContentType.cpp
+  ContentItem.cpp
   ContentInteractionDelegate.cpp
   ContentWindow.cpp
   ContentWindowController.cpp
-  ContentWindowRenderer.cpp
   Coordinates.cpp
   DisplayGroup.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
   DynamicTextureContent.cpp
   ElapsedTimer.cpp
-  Factory.hpp
-  Factories.cpp
   FactoryObject.cpp
   FFMPEGMovie.cpp
   FFMPEGVideoFrameConverter.cpp

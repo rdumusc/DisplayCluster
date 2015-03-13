@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,59 +37,33 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENTWINDOWRENDERER_H
-#define CONTENTWINDOWRENDERER_H
+#ifndef CONTENTITEM_H
+#define CONTENTITEM_H
 
-#include "types.h"
-#include "Renderable.h"
-#include "GLQuad.h"
+#include <QDeclarativeItem>
 
-#include <QRectF>
+#include "FactoryObject.h"
 
 /**
- * Render a ContentWindow and its Content using the associated FactoryObject.
+ * Render a Content in Qml.
  */
-class ContentWindowRenderer : public Renderable
+class ContentItem : public QDeclarativeItem
 {
+    Q_OBJECT
+
 public:
-    /**
-     * Constructor.
-     * @param factories Used to retrieve FactoryObjects for rendering Contents.
-     */
-    ContentWindowRenderer( FactoriesPtr factories );
+    /** Constructor. */
+    explicit ContentItem( QDeclarativeItem* parentItem = 0  );
 
-    /**
-     * Render the associated ContentWindow.
-     * @see setContentWindow()
-     */
-    void render() override;
+    /** Draw call, reimplemented from QGraphicsItem. */
+    void paint( QPainter* painter, const QStyleOptionGraphicsItem*,
+                QWidget* ) override;
 
-    /**
-     * Set the ContentWindow to be rendered.
-     * @see render()
-     */
-    void setContentWindow( ContentWindowPtr window );
-
-    /** Display the window borders. */
-    void setShowWindowBorders( const bool show );
-
-    /** Display the zoom context. */
-    void setShowZoomContext( const bool show );
+    /** Set the factory object to be rendered. */
+    void setFactoryObject( FactoryObject* factoryObject );
 
 private:
-    FactoriesPtr factories_;
-    ContentWindowPtr window_;
-    GLQuad quad_;
-
-    bool showWindowBorders_;
-    bool showZoomContext_;
-
-    void renderWindowBorder();
-    void renderContent();
-    void renderContextView( FactoryObjectPtr object, const QRectF& texCoord );
-
-    void drawQuad( const QRectF& coord );
-    void drawQuadBorder( const QRectF& coord, const float width );
+    FactoryObject* factoryObject_;
 };
 
-#endif // CONTENTWINDOWRENDERER_H
+#endif // CONTENTITEM_H

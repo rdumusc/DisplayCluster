@@ -39,21 +39,19 @@
 #include "SVGContent.h"
 
 #include "SVG.h"
-#include "Factories.h"
-#include "ContentWindow.h"
 
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 
 #include <QFileInfo>
 
-BOOST_CLASS_EXPORT_GUID(SVGContent, "SVGContent")
+BOOST_CLASS_EXPORT_GUID( SVGContent, "SVGContent" )
 
-SVGContent::SVGContent(const QString& uri)
-    : Content(uri)
+SVGContent::SVGContent( const QString& uri )
+    : Content( uri )
 {}
 
-CONTENT_TYPE SVGContent::getType()
+CONTENT_TYPE SVGContent::getType() const
 {
     return CONTENT_TYPE_SVG;
 }
@@ -61,7 +59,7 @@ CONTENT_TYPE SVGContent::getType()
 bool SVGContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    if(!file.exists() || !file.isReadable())
+    if( !file.exists() || !file.isReadable( ))
         return false;
 
     const SVG svg( getURI( ));
@@ -76,26 +74,9 @@ const QStringList& SVGContent::getSupportedExtensions()
 {
     static QStringList extensions;
 
-    if (extensions.empty())
+    if( extensions.empty( ))
     {
         extensions << "svg";
     }
-
     return extensions;
-}
-
-void SVGContent::preRenderUpdate( Factories& factories, ContentWindowPtr window,
-                                  WallToWallChannel& )
-{
-    if( window->isResizing( ))
-        return;
-
-    SVGPtr svg = factories.getSVGFactory().getObject( getURI( ));
-
-    const QSize& windowSize = window->getCoordinates().size().toSize();
-    if( svg->getTextureSize() != windowSize ||
-        svg->getTextureRegion() != window->getZoomRect( ) )
-    {
-        svg->updateTexture( windowSize, window->getZoomRect( ));
-    }
 }

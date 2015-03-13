@@ -38,37 +38,48 @@
 
 #include "FactoryObject.h"
 
-FactoryObject::FactoryObject()
-    : renderContext_(0)
-    , frameIndex_( 0 )
-{
-}
+#include "Content.h"
 
-void FactoryObject::renderPreview()
+#include "DynamicTexture.h"
+#include "Movie.h"
+#include "PixelStream.h"
+#include "SVG.h"
+#include "Texture.h"
+#include "PDF.h"
+
+#include <boost/make_shared.hpp>
+
+FactoryObject::FactoryObject()
 {
-    render( UNIT_RECTF );
 }
 
 FactoryObject::~FactoryObject()
 {
 }
 
-void FactoryObject::setRenderContext(RenderContext* renderContext)
+void FactoryObject::renderPreview()
 {
-    renderContext_ = renderContext;
+    // TODO FIX THIS
+//    render( UNIT_RECTF );
 }
 
-RenderContext* FactoryObject::getRenderContext() const
+FactoryObjectPtr FactoryObject::create( const Content& content )
 {
-    return renderContext_;
-}
-
-uint64_t FactoryObject::getFrameIndex() const
-{
-    return frameIndex_;
-}
-
-void FactoryObject::setFrameIndex(const uint64_t frameIndex)
-{
-    frameIndex_ = frameIndex;
+    switch( content.getType( ))
+    {
+    case CONTENT_TYPE_DYNAMIC_TEXTURE:
+        return boost::make_shared<DynamicTexture>( content.getURI( ));
+    case CONTENT_TYPE_MOVIE:
+        return boost::make_shared<Movie>( content.getURI( ));
+    case CONTENT_TYPE_PIXEL_STREAM:
+        return boost::make_shared<PixelStream>( content.getURI( ));
+    case CONTENT_TYPE_SVG:
+        return boost::make_shared<SVG>( content.getURI( ));
+    case CONTENT_TYPE_TEXTURE:
+        return boost::make_shared<Texture>( content.getURI( ));
+    case CONTENT_TYPE_PDF:
+        return boost::make_shared<PDF>( content.getURI( ));
+    default:
+        return FactoryObjectPtr();
+    }
 }

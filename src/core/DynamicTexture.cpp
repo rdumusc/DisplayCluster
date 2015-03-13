@@ -37,15 +37,17 @@
 /*********************************************************************/
 
 #include "DynamicTexture.h"
-#include "RenderContext.h"
+
+#include "ContentWindow.h"
 #include "GLWindow.h"
 #include "log.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
-#include <QDir>
-#include <QImageReader>
-#include <QtConcurrentRun>
+
+#include <QtCore/QDir>
+#include <QtGui/QImageReader>
+#include <QtCore/QtConcurrentRun>
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
@@ -296,33 +298,51 @@ const QSize& DynamicTexture::getSize() const
     return imageSize_;
 }
 
-void DynamicTexture::render(const QRectF& texCoords)
+void DynamicTexture::render()
 {
-    if(!isVisibleInCurrentGLView())
+    assert( isRoot( ));
+
+    if( !isVisibleInCurrentGLView( ))
         return;
 
-    if(canHaveChildren() && !isResolutionSufficientForCurrentGLView())
+    render( zoomRect_ );
+}
+
+void DynamicTexture::render( const QRectF& texCoords )
+{
+    if( !isVisibleInCurrentGLView( ))
+        return;
+
+    if( canHaveChildren() && !isResolutionSufficientForCurrentGLView( ))
     {
-        renderChildren(texCoords);
+        renderChildren( texCoords );
         renderedChildren_ = true;
         return;
     }
 
     // Normal rendering: load the texture if not already available
-    if(!loadImageThreadStarted_)
+    if( !loadImageThreadStarted_ )
         loadImageAsync();
 
-    render_(texCoords);
+    drawTexture( texCoords );
 }
 
-void DynamicTexture::preRenderUpdate()
+void DynamicTexture::preRenderUpdate( ContentWindowPtr window,
+                                      const QRect& wallArea )
 {
+    assert( isRoot( ));
+
+    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
+        return;
+
     // Root needs to always have a texture for renderInParent()
-    if (isRoot() && !loadImageThreadStarted_)
+    if( !loadImageThreadStarted_ )
         loadImageAsync();
+
+    zoomRect_ = window->getZoomRect();
 }
 
-void DynamicTexture::postRenderUpdate()
+void DynamicTexture::postRenderSync( WallToWallChannel& )
 {
     clearOldChildren();
     renderedChildren_ = false;
@@ -348,7 +368,7 @@ bool DynamicTexture::canHaveChildren()
             getRoot()->imageSize_.height() / (1 << depth_) > TEXTURE_SIZE);
 }
 
-void DynamicTexture::render_(const QRectF& texCoords)
+void DynamicTexture::drawTexture(const QRectF& texCoords)
 {
     if(!texture_.isValid() && loadImageThreadStarted_ && loadImageThread_.isFinished())
         generateTexture();
@@ -365,7 +385,7 @@ void DynamicTexture::render_(const QRectF& texCoords)
         // If we don't yet have a texture, try to render from parent's texture
         DynamicTexturePtr parent = parent_.lock();
         if(parent)
-            parent->render_(getImageRegionInParentImage(texCoords));
+            parent->drawTexture(getImageRegionInParentImage(texCoords));
     }
 }
 
