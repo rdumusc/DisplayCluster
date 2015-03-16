@@ -57,7 +57,7 @@ public:
     virtual void render() = 0;
 
     /** Render the preview ( whole object at low resolution.). */
-    virtual void renderPreview();
+    virtual void renderPreview() = 0;
 
     /** Update internal state before rendering. */
     virtual void preRenderUpdate( ContentWindowPtr window,

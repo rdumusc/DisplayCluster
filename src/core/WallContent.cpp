@@ -59,12 +59,6 @@ WallContent::~WallContent()
 {
 }
 
-void WallContent::renderPreview()
-{
-    // TODO FIX THIS
-//    render( UNIT_RECTF );
-}
-
 WallContentPtr WallContent::create( const Content& content )
 {
     switch( content.getType( ))

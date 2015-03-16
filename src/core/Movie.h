@@ -66,6 +66,7 @@ private:
     QString uri_;
     GLTexture2D texture_;
     GLQuad quad_;
+    GLQuad previewQuad_;
     ElapsedTimer elapsedTimer_;
 
     bool paused_;
@@ -76,6 +77,7 @@ private:
     boost::posix_time::time_duration timestamp_;
 
     void render() override;
+    void renderPreview() override;
     void preRenderUpdate( ContentWindowPtr window,
                           const QRect& wallArea ) override;
     void preRenderSync( WallToWallChannel& wallToWallChannel ) override;

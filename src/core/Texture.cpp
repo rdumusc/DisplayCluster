@@ -76,6 +76,14 @@ void Texture::render()
     quad_.render();
 }
 
+void Texture::renderPreview()
+{
+    if( !texture_.isValid( ))
+        return;
+
+    previewQuad_.render();
+}
+
 void Texture::preRenderUpdate( ContentWindowPtr window, const QRect& )
 {
     if( !texture_.isValid( ))
@@ -83,4 +91,6 @@ void Texture::preRenderUpdate( ContentWindowPtr window, const QRect& )
 
     quad_.setTexCoords( window->getZoomRect( ));
     quad_.setTexture( texture_.getTextureId( ));
+
+    previewQuad_.setTexture( texture_.getTextureId( ));
 }

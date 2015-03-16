@@ -55,8 +55,10 @@ private:
 
     GLTexture2D texture_;
     GLQuad quad_;
+    GLQuad previewQuad_;
 
     void render() override;
+    void renderPreview() override;
     void preRenderUpdate( ContentWindowPtr window,
                           const QRect& wallArea ) override;
 

@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,65 +37,36 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef SVG_H
-#define SVG_H
+#include "ZoomContextItem.h"
 
-#include "WallContent.h"
+#include <QtGui/QPainter>
 
-#include "types.h"
-#include "GLQuad.h"
+#include <GL/gl.h>
 
-#include <QtSvg/QtSvg>
-#include <QtOpenGL/QGLWidget>
-#include <QtOpenGL/QGLFramebufferObject>
-
-typedef boost::shared_ptr<QGLFramebufferObject> FBOPtr;
-
-/**
- * Hold texture FBO and region rendered.
- */
-struct SVGTextureData
+ZoomContextItem::ZoomContextItem( QDeclarativeItem* parentItem_ )
+    : QDeclarativeItem( parentItem_ )
+    , wallContent_( 0 )
 {
-    /** Frame Buffer Object */
-    FBOPtr fbo;
+    setFlag( QGraphicsItem::ItemHasNoContents, false );
+}
 
-    /** Normalized svg region */
-    QRectF region;
-};
-
-class SVG : public WallContent
+void ZoomContextItem::paint( QPainter* painter, const QStyleOptionGraphicsItem*,
+                             QWidget*)
 {
-public:
-    SVG( const QString& uri );
+    painter->beginNativePainting();
 
-    bool isValid() const;
-    QSize getSize() const;
+    glPushMatrix();
+    glScalef( width(), height(), 1.f );
 
-private:
-    QRectF svgExtents_;
-    QSvgRenderer svgRenderer_;
+    wallContent_->renderPreview();
 
-    SVGTextureData textureData_;
-    FBOPtr previewFbo_;
-    GLQuad quad_;
+    glPopMatrix();
 
-    void render() override;
-    void renderPreview() override;
-    void preRenderUpdate( ContentWindowPtr window,
-                          const QRect& wallArea ) override;
+    painter->endNativePainting();
+}
 
-    QSize getTextureSize() const;
-    const QRectF& getTextureRegion() const;
-    void updateTexture( const QSize& textureSize, const QRectF& svgRegion );
+void ZoomContextItem::setWallContent( WallContent* wallContent )
+{
+    wallContent_ = wallContent;
+}
 
-    void generatePreviewTexture();
-    bool setImageData( const QByteArray& imageData );
-    void renderToTexture( const QRectF& svgRegion, FBOPtr targetFbo );
-    QRectF getViewBox( const QRectF& svgRegion );
-    FBOPtr createMultisampledFBO( const QSize& size );
-
-    void saveGLState();
-    void restoreGLState();
-};
-
-#endif

@@ -96,6 +96,11 @@ void PixelStream::render()
     glPopMatrix();
 }
 
+void PixelStream::renderPreview()
+{
+    // PixelStreams don't support zooming and don't have previews
+}
+
 void PixelStream::preRenderUpdate( ContentWindowPtr window,
                                    const QRect& wallArea )
 {

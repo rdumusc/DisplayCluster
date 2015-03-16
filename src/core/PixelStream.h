@@ -143,6 +143,7 @@ private:
     QList<QObject*> segmentsList_;
 
     void render() override;
+    void renderPreview() override;
     void preRenderUpdate( ContentWindowPtr window,
                           const QRect& wallArea ) override;
     void preRenderSync( WallToWallChannel& wallToWallChannel ) override;

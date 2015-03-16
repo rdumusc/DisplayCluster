@@ -305,6 +305,11 @@ void DynamicTexture::render()
     render( zoomRect_ );
 }
 
+void DynamicTexture::renderPreview()
+{
+    render( UNIT_RECTF );
+}
+
 void DynamicTexture::render( const QRectF& texCoords )
 {
     if( !isVisibleInCurrentGLView( ))

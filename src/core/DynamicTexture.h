@@ -92,6 +92,9 @@ public:
     /** Render the dynamic texture. */
     void render() override;
 
+    /** Render the preview. */
+    void renderPreview() override;
+
     /** Pre render step. */
     void preRenderUpdate( ContentWindowPtr window,
                           const QRect& wallArea ) override;

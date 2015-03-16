@@ -77,6 +77,40 @@ QSize SVG::getSize() const
     return svgRenderer_.defaultSize();
 }
 
+void SVG::render()
+{
+    if( !textureData_.fbo )
+        return;
+
+    quad_.setTexture( textureData_.fbo->texture( ));
+    quad_.render();
+}
+
+void SVG::renderPreview()
+{
+    if( !previewFbo_ )
+        generatePreviewTexture();
+
+    quad_.setTexture( previewFbo_->texture( ));
+    quad_.render();
+}
+
+void SVG::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
+{
+    if( window->isResizing( ))
+        return;
+
+    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
+        return;
+
+    const QSize& windowSize = window->getCoordinates().size().toSize();
+    if( getTextureSize() != windowSize ||
+        getTextureRegion() != window->getZoomRect( ))
+    {
+        updateTexture( windowSize, window->getZoomRect( ));
+    }
+}
+
 QSize SVG::getTextureSize() const
 {
     return textureData_.fbo ? textureData_.fbo->size() : QSize();
@@ -105,24 +139,6 @@ void SVG::updateTexture( const QSize& textureSize, const QRectF& svgRegion )
     }
 
     assert( textureData_.fbo );
-}
-
-void SVG::render()
-{
-    if( !textureData_.fbo )
-        return;
-
-    quad_.setTexture( textureData_.fbo->texture( ));
-    quad_.render();
-}
-
-void SVG::renderPreview()
-{
-    if( !previewFbo_ )
-        generatePreviewTexture();
-
-    quad_.setTexture( previewFbo_->texture( ));
-    quad_.render();
 }
 
 void SVG::generatePreviewTexture()
@@ -207,20 +223,4 @@ void SVG::restoreGLState()
     glMatrixMode( GL_MODELVIEW );
     glPopMatrix();
     glPopAttrib();
-}
-
-void SVG::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
-{
-    if( window->isResizing( ))
-        return;
-
-    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
-        return;
-
-    const QSize& windowSize = window->getCoordinates().size().toSize();
-    if( getTextureSize() != windowSize ||
-        getTextureRegion() != window->getZoomRect( ))
-    {
-        updateTexture( windowSize, window->getZoomRect( ));
-    }
 }

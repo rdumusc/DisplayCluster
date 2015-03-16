@@ -42,6 +42,7 @@
 #include "ContentWindow.h"
 #include "PixelStream.h"
 #include "ContentItem.h"
+#include "ZoomContextItem.h"
 
 #include <QtDeclarative/QDeclarativeComponent>
 
@@ -50,6 +51,7 @@
 namespace
 {
 const QString CONTENT_ITEM_OBJECT_NAME( "ContentItem" );
+const QString ZOOM_CONTEXT_ITEM_OBJECT_NAME( "ZoomContextItem" );
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 }
@@ -70,6 +72,10 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
     ContentItem* contentItem =
        windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
     contentItem->setWallContent( wallContent_.get( ));
+
+    ZoomContextItem* zoomContextItem =
+      windowItem_->findChild<ZoomContextItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
+    zoomContextItem->setWallContent( wallContent_.get( ));
 
     if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
         setupPixelStreamItem();

@@ -80,12 +80,21 @@ void Movie::render()
     quad_.render();
 }
 
+void Movie::renderPreview()
+{
+    if( !texture_.isValid( ))
+        return;
+
+    previewQuad_.render();
+}
+
 void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 {
     if( !texture_.isValid( ))
     {
         generateTexture();
         quad_.setTexture( texture_.getTextureId( ));
+        previewQuad_.setTexture( texture_.getTextureId( ));
     }
 
     quad_.setTexCoords( window->getZoomRect( ));

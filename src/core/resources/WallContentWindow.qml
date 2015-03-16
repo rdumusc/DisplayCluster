@@ -17,6 +17,9 @@ Rectangle {
         anchors.fill: parent
     }
 
+    ZoomContext {
+    }
+
     WindowControls {
     }
 

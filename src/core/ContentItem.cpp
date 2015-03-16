@@ -69,4 +69,3 @@ void ContentItem::setWallContent( WallContent* wallContent )
 {
     wallContent_ = wallContent;
 }
-
