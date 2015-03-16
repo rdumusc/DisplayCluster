@@ -57,24 +57,16 @@ public:
     /** Constructor */
     WallGraphicsScene( const QRectF &size, QObject* parent = 0 );
 
-    /** Add an object to be rendered. */
-    void addRenderable( RenderablePtr renderable );
+    /** Display the markers for the touch points. */
+    void displayMarkers( bool value );
 
-    /** Set the background color */
-    void setBackgroundColor( const QColor& color );
-
-    /** Display the test pattern. When visible, other Renderables are hidden. */
-    void displayTestPattern( const bool value );
+    /** Get the MarkersRenderer. */
+    MarkerRenderer& getMarkersRenderer();
 
 private:
-    void drawBackground( QPainter* painter, const QRectF &rect ) override;
+    void drawForeground( QPainter* painter, const QRectF &rect ) override;
 
-    void clear( const QColor& clearColor );
-    void setOrthographicView( const QRectF& rect );
-
-    QColor backgroundColor_;
-    QList<RenderablePtr> renderables_;
-    bool displayTestPattern_;
+    MarkerRendererPtr markerRenderer_;
 };
 
 #endif // WALLGRAPHICSSCENE_H

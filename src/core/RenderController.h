@@ -83,7 +83,6 @@ private:
     RenderContextPtr renderContext_;
 
     DisplayGroupRendererPtr displayGroupRenderer_;
-    MarkerRendererPtr markerRenderer_;
     PixelStreamUpdater pixelStreamUpdater_;
 
     SwapSyncObject<bool> syncQuit_;

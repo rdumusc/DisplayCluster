@@ -71,7 +71,7 @@ const QRect& RenderContext::getVisibleWallArea() const
 
 void RenderContext::setBackgroundColor( const QColor& color )
 {
-    scene_.setBackgroundColor( color );
+    scene_.setBackgroundBrush( color );
 }
 
 void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
@@ -123,11 +123,6 @@ void RenderContext::setupVSync()
     }
 }
 
-void RenderContext::addRenderable( RenderablePtr renderable )
-{
-    scene_.addRenderable( renderable );
-}
-
 void RenderContext::updateGLWindows()
 {
     BOOST_FOREACH( WallWindowPtr window, windows_ )
@@ -174,5 +169,4 @@ void RenderContext::displayTestPattern( const bool value )
     {
         window->getTestPattern()->setVisible( value );
     }
-    scene_.displayTestPattern( value );
 }

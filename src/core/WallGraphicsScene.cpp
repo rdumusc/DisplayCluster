@@ -39,89 +39,37 @@
 
 #include "WallGraphicsScene.h"
 
-#include "Renderable.h"
+#include "MarkerRenderer.h"
 
-#include <QtOpenGL>
-
-#ifdef __APPLE__
-    #include <OpenGL/glu.h>
-    // glu functions are deprecated from OSX 10.9
-    #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-    #include <GL/glu.h>
-#endif
+#include <QtOpenGL/QtOpenGL>
 
 WallGraphicsScene::WallGraphicsScene( const QRectF &size, QObject* parent_ )
     : QGraphicsScene( size, parent_ )
-    , backgroundColor_( Qt::black )
-    , displayTestPattern_( false )
+    , markerRenderer_( new MarkerRenderer )
 {
 }
 
-void WallGraphicsScene::addRenderable( RenderablePtr renderable )
+void WallGraphicsScene::displayMarkers( const bool value )
 {
-    renderables_.append( renderable );
+    markerRenderer_->setVisible( value );
 }
 
-void WallGraphicsScene::setBackgroundColor( const QColor& color )
+MarkerRenderer& WallGraphicsScene::getMarkersRenderer()
 {
-    backgroundColor_ = color;
+    return *markerRenderer_;
 }
 
-void WallGraphicsScene::displayTestPattern( const bool value )
+void WallGraphicsScene::drawForeground( QPainter* painter, const QRectF& )
 {
-    displayTestPattern_ = value;
-}
-
-void WallGraphicsScene::drawBackground( QPainter* painter, const QRectF& rect )
-{
-    const QPaintEngine::Type type = painter->paintEngine()->type();
-    if( type != QPaintEngine::OpenGL && type != QPaintEngine::OpenGL2 )
-    {
-        qWarning("OpenGLScene: drawBackground needs a QGLWidget to be set as "
-                 "viewport on the graphics view");
-        return;
-    }
-
     painter->beginNativePainting();
-    clear( backgroundColor_ );
 
-    if( !displayTestPattern_ )
-    {
-        setOrthographicView( rect );
+    glPushAttrib( GL_ENABLE_BIT );
+    glEnable( GL_DEPTH_TEST );
+    glDisable( GL_LIGHTING );
 
-        glPushAttrib( GL_ENABLE_BIT );
-        glEnable( GL_DEPTH_TEST );
-        glDisable( GL_LIGHTING );
+    markerRenderer_->render();
 
-        foreach( RenderablePtr renderable, renderables_ )
-        {
-            if( renderable->isVisible( ))
-                renderable->render();
-        }
-
-        glPopAttrib();
-    }
+    glPopAttrib();
 
     painter->endNativePainting();
-}
-
-void WallGraphicsScene::clear(const QColor& clearColor)
-{
-    glClearColor( clearColor.redF(), clearColor.greenF(),
-                  clearColor.blueF(), clearColor.alpha( ));
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-}
-
-void WallGraphicsScene::setOrthographicView( const QRectF& rect )
-{
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-
-    gluOrtho2D( rect.left(), rect.right(), rect.bottom(), rect.top( ));
-    glPushMatrix();
-
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
 }

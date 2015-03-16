@@ -68,9 +68,6 @@ public:
     /** Set the background color of all windows. */
     void setBackgroundColor( const QColor& color );
 
-    /** Add an object to be rendered. */
-    void addRenderable( RenderablePtr renderable );
-
     /** Render GL objects on all windows. */
     void updateGLWindows();
 

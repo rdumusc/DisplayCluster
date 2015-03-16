@@ -83,7 +83,7 @@ void MarkerRenderer::render( const Marker& marker )
     glScalef( MARKER_SIZE_PIXELS, MARKER_SIZE_PIXELS, 1.f );
     glTranslatef( -0.5f, -0.5f, 0.f ); // Center unit quad
 
-    texture_.bind();
+    quad_.setTexture( texture_.getTextureId( ));
     quad_.render();
 
     glPopMatrix();

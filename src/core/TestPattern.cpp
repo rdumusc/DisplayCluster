@@ -67,6 +67,9 @@ TestPattern::TestPattern( const WallConfiguration& configuration,
 
 void TestPattern::draw( QPainter* painter, const QRectF& rect )
 {
+    painter->setBrush( Qt::black );
+    painter->drawRect( rect );
+
     renderCrossPattern( painter );
     renderLabels( painter, rect );
 }

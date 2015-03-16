@@ -53,19 +53,17 @@
 RenderController::RenderController( RenderContextPtr renderContext )
     : renderContext_( renderContext )
     , displayGroupRenderer_( new DisplayGroupRenderer( renderContext ))
-    , markerRenderer_( new MarkerRenderer )
     , syncQuit_( false )
     , syncDisplayGroup_( boost::make_shared<DisplayGroup>( QSize( )))
     , syncOptions_( boost::make_shared<Options>( ))
 {
-    renderContext_->addRenderable( markerRenderer_ );
-
     syncDisplayGroup_.setCallback( boost::bind(
                                        &DisplayGroupRenderer::setDisplayGroup,
                                        displayGroupRenderer_.get(), _1 ));
 
+    MarkerRenderer& markers = renderContext_->getScene().getMarkersRenderer();
     syncMarkers_.setCallback( boost::bind( &MarkerRenderer::setMarkers,
-                                           markerRenderer_.get(), _1 ));
+                                           &markers, _1 ));
 
     syncOptions_.setCallback( boost::bind( &RenderController::setRenderOptions,
                                           this, _1 ));
@@ -144,8 +142,7 @@ void RenderController::setRenderOptions( OptionsPtr options )
     renderContext_->setBackgroundColor( options->getBackgroundColor( ));
     renderContext_->displayTestPattern( options->getShowTestPattern( ));
     renderContext_->displayFps( options->getShowStatistics( ));
-
-    markerRenderer_->setVisible( options->getShowTouchPoints( ));
+    renderContext_->getScene().displayMarkers( options->getShowTouchPoints( ));
 
     displayGroupRenderer_->setRenderingOptions( options );
 }
