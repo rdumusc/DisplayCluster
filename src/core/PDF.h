@@ -40,11 +40,12 @@
 #ifndef PDF_H
 #define PDF_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 namespace Poppler
 {
@@ -52,7 +53,7 @@ namespace Poppler
     class Page;
 }
 
-class PDF : public FactoryObject
+class PDF : public WallContent
 {
 public:
     PDF( const QString& uri );

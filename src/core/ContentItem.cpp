@@ -45,7 +45,7 @@
 
 ContentItem::ContentItem( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
-    , factoryObject_( 0 )
+    , wallContent_( 0 )
 {
     setFlag( QGraphicsItem::ItemHasNoContents, false );
 }
@@ -58,15 +58,15 @@ void ContentItem::paint( QPainter* painter, const QStyleOptionGraphicsItem*,
     glPushMatrix();
     glScalef( width(), height(), 1.f );
 
-    factoryObject_->render();
+    wallContent_->render();
 
     glPopMatrix();
 
     painter->endNativePainting();
 }
 
-void ContentItem::setFactoryObject( FactoryObject* factoryObject )
+void ContentItem::setWallContent( WallContent* wallContent )
 {
-    factoryObject_ = factoryObject;
+    wallContent_ = wallContent;
 }
 

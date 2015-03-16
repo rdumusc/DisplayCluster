@@ -98,10 +98,6 @@ private:
     void initMPIConnection(MPIChannelPtr worldChannel);
 
     void startRendering();
-
-    void syncObjects();
-    void preRenderUpdate();
-    void postRenderUpdate();
 };
 
 #endif // WALLAPPLICATION_H

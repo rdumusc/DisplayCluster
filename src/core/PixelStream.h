@@ -39,22 +39,19 @@
 #ifndef PIXEL_STREAM_H
 #define PIXEL_STREAM_H
 
-#include "FactoryObject.h"
-#include "FpsCounter.h"
-#include "SwapSyncObject.h"
+#include "WallContent.h"
+
 #include "types.h"
+#include "FpsCounter.h"
 
 #include <deflect/PixelStreamSegment.h>
 
-#include <QObject>
-#include <QRectF>
-#include <QString>
-#include <boost/shared_ptr.hpp>
+#include <QtCore/QObject>
+#include <QtCore/QString>
+
 #include <boost/scoped_ptr.hpp>
-#include <vector>
 
 class PixelStreamSegmentRenderer;
-class WallToWallChannel;
 typedef boost::shared_ptr<deflect::PixelStreamSegmentDecoder> PixelStreamSegmentDecoderPtr;
 typedef boost::shared_ptr<PixelStreamSegmentRenderer> PixelStreamSegmentRendererPtr;
 
@@ -101,47 +98,41 @@ private:
 /**
  * Decompress, upload and render the segments of a PixelStream.
  */
-class PixelStream : public QObject, public FactoryObject
+class PixelStream : public QObject, public WallContent
 {
     Q_OBJECT
     Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
     Q_PROPERTY( QList<QObject*> segments READ getSegments NOTIFY segmentsChanged )
 
 public:
-    PixelStream(const QString& uri);
+    PixelStream( const QString& uri );
     ~PixelStream();
 
-    void setNewFrame(const deflect::PixelStreamFramePtr frame);
+    void setNewFrame( const deflect::PixelStreamFramePtr frame );
 
     QString getStatistics() const;
     QList<QObject*> getSegments() const;
 
 signals:
-    void requestFrame(const QString uri);
-
     void statisticsChanged();
     void segmentsChanged();
 
 private:
-    SwapSyncObject<deflect::PixelStreamFramePtr> syncPixelStreamFrame_;
-
-    // pixel stream identifier
     QString uri_;
-
-    // dimensions of entire pixel stream
     unsigned int width_;
     unsigned int height_;
 
-    // The front buffer is decoded by the frameDecoders and then used to upload the frameRenderers
+    // The front buffer is decoded by the frameDecoders and then used to upload
+    // the frameRenderers. The back buffer contains the next frame to process
+    // (last frame received).
     deflect::PixelStreamSegments frontBuffer_;
-    // The back buffer contains the next frame to process (last frame received)
     deflect::PixelStreamSegments backBuffer_;
     bool buffersSwapped_;
 
     // The list of decoded images for the next frame
     std::vector<PixelStreamSegmentDecoderPtr> frameDecoders_;
 
-    // For each segment, object for image decoding, rendering and storing parameters
+    // For each segment, object for image parameters, decoding and rendering
     std::vector<PixelStreamSegmentRendererPtr> segmentRenderers_;
 
     QRectF contentWindowRect_;
@@ -166,7 +157,6 @@ private:
     void adjustFrameDecodersCount( const size_t count );
     void adjustSegmentRendererCount( const size_t count );
     void refreshSegmentsList( const deflect::PixelStreamSegments& segments );
-
 
     QRectF getSceneCoordinates( const QRect& segment ) const;
     bool isVisible( const QRect& segment );

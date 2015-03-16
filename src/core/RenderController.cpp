@@ -45,6 +45,7 @@
 
 #include "DisplayGroup.h"
 #include "Options.h"
+#include "WallToWallChannel.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
@@ -57,16 +58,25 @@ RenderController::RenderController( RenderContextPtr renderContext )
     , syncDisplayGroup_( boost::make_shared<DisplayGroup>( QSize( )))
     , syncOptions_( boost::make_shared<Options>( ))
 {
-    renderContext_->addRenderable(markerRenderer_);
+    renderContext_->addRenderable( markerRenderer_ );
 
-    syncDisplayGroup_.setCallback(boost::bind(&DisplayGroupRenderer::setDisplayGroup,
-                                               displayGroupRenderer_.get(), _1));
+    syncDisplayGroup_.setCallback( boost::bind(
+                                       &DisplayGroupRenderer::setDisplayGroup,
+                                       displayGroupRenderer_.get(), _1 ));
 
-    syncMarkers_.setCallback(boost::bind(&MarkerRenderer::setMarkers,
-                                          markerRenderer_.get(), _1));
+    syncMarkers_.setCallback( boost::bind( &MarkerRenderer::setMarkers,
+                                           markerRenderer_.get(), _1 ));
 
-    syncOptions_.setCallback(boost::bind(&RenderController::setRenderOptions,
-                                         this, _1));
+    syncOptions_.setCallback( boost::bind( &RenderController::setRenderOptions,
+                                          this, _1 ));
+
+    connect( displayGroupRenderer_.get(),
+             SIGNAL( windowAdded( QmlWindowPtr )),
+             &pixelStreamUpdater_, SLOT( onWindowAdded( QmlWindowPtr )));
+
+    connect( displayGroupRenderer_.get(),
+             SIGNAL( windowRemoved( QmlWindowPtr )),
+             &pixelStreamUpdater_, SLOT( onWindowRemoved( QmlWindowPtr )));
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const
@@ -74,27 +84,29 @@ DisplayGroupPtr RenderController::getDisplayGroup() const
     return syncDisplayGroup_.get();
 }
 
-void RenderController::synchronizeObjects(const SyncFunction& versionCheckFunc)
+PixelStreamUpdater& RenderController::getPixelStreamUpdater()
 {
-    syncQuit_.sync(versionCheckFunc);
-    syncDisplayGroup_.sync(versionCheckFunc);
-    syncMarkers_.sync(versionCheckFunc);
-    syncOptions_.sync(versionCheckFunc);
-}
-
-bool RenderController::quitRendering() const
-{
-    return syncQuit_.get();
+    return pixelStreamUpdater_;
 }
 
 void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
 {
+    const SyncFunction& versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, &wallChannel, _1 );
+
+    synchronizeObjects( versionCheckFunc );
+
     displayGroupRenderer_->preRenderUpdate( wallChannel );
 }
 
 void RenderController::postRenderUpdate( WallToWallChannel& wallChannel )
 {
     displayGroupRenderer_->postRenderUpdate( wallChannel );
+}
+
+bool RenderController::quitRendering() const
+{
+    return syncQuit_.get();
 }
 
 void RenderController::updateQuit()
@@ -117,13 +129,14 @@ void RenderController::updateMarkers( MarkersPtr markers )
     syncMarkers_.update( markers );
 }
 
-void RenderController::updatePixelStream( deflect::PixelStreamFramePtr /*frame*/ )
+void RenderController::synchronizeObjects( const SyncFunction&
+                                           versionCheckFunc )
 {
-    // TODO //
-//    typedef boost::shared_ptr<PixelStream> PixelStreamPtr;
-//    PixelStreamPtr pixelStream = pixelStreamFactory_.getObject(frame->uri);
-//    pixelStream->setNewFrame(frame);
-//    pixelStream->setFrameIndex(frameIndex_);
+    syncQuit_.sync( versionCheckFunc );
+    syncDisplayGroup_.sync( versionCheckFunc );
+    syncMarkers_.sync( versionCheckFunc );
+    syncOptions_.sync( versionCheckFunc );
+    pixelStreamUpdater_.synchronizeFramesSwap( versionCheckFunc );
 }
 
 void RenderController::setRenderOptions( OptionsPtr options )
@@ -136,4 +149,3 @@ void RenderController::setRenderOptions( OptionsPtr options )
 
     displayGroupRenderer_->setRenderingOptions( options );
 }
-

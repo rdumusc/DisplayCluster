@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,62 +37,50 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef RENDERCONTROLLER_H
-#define RENDERCONTROLLER_H
+#ifndef WALLCONTENT_H
+#define WALLCONTENT_H
 
 #include "types.h"
 
-#include "SwapSyncObject.h"
-#include "PixelStreamUpdater.h"
-
-#include <QObject>
-
 /**
- * Setup the scene and control the rendering options during runtime.
+ * A content to be rendered by Wall processes.
+ *
+ * An implementation must exist for every valid ContentType.
  */
-class RenderController : public QObject
+class WallContent
 {
-    Q_OBJECT
-
 public:
-    /** Constructor */
-    RenderController( RenderContextPtr renderContext );
+    /** Destructor. */
+    virtual ~WallContent();
 
-    /** Get the DisplayGroup */
-    DisplayGroupPtr getDisplayGroup() const;
+    /** Render the content. */
+    virtual void render() = 0;
 
-    /** Get the PixelStream updater. */
-    PixelStreamUpdater& getPixelStreamUpdater();
+    /** Render the preview ( whole object at low resolution.). */
+    virtual void renderPreview();
 
-    /** Update and synchronize scene objects before rendering a frame. */
-    void preRenderUpdate( WallToWallChannel& wallChannel );
+    /** Update internal state before rendering. */
+    virtual void preRenderUpdate( ContentWindowPtr window,
+                                  const QRect& visibleWallArea ) = 0;
 
-    /** Update and synchronize scene objects after rendering a frame. */
-    void postRenderUpdate( WallToWallChannel& wallChannel );
+    /** Optional synchronization step before rendering. */
+    virtual void preRenderSync( WallToWallChannel& wallToWallChannel )
+    {
+        Q_UNUSED( wallToWallChannel )
+    }
 
-    /** Do we need to stop rendering. */
-    bool quitRendering() const;
+    /** Optional synchronization step after rendering. */
+    virtual void postRenderSync( WallToWallChannel& wallToWallChannel )
+    {
+        Q_UNUSED( wallToWallChannel )
+    }
 
-public slots:
-    void updateQuit();
-    void updateDisplayGroup( DisplayGroupPtr displayGroup );
-    void updateOptions( OptionsPtr options );
-    void updateMarkers( MarkersPtr markers );
+    /** Create an object corresponding to the given content. */
+    static WallContentPtr create( const Content& content );
 
-private:
-    RenderContextPtr renderContext_;
-
-    DisplayGroupRendererPtr displayGroupRenderer_;
-    MarkerRendererPtr markerRenderer_;
-    PixelStreamUpdater pixelStreamUpdater_;
-
-    SwapSyncObject<bool> syncQuit_;
-    SwapSyncObject<DisplayGroupPtr> syncDisplayGroup_;
-    SwapSyncObject<OptionsPtr> syncOptions_;
-    SwapSyncObject<MarkersPtr> syncMarkers_;
-
-    void synchronizeObjects( const SyncFunction& versionCheckFunc );
-    void setRenderOptions( OptionsPtr options );
+protected:
+    /** Constructor. */
+    WallContent();
 };
 
-#endif // RENDERCONTROLLER_H
+#endif // WALLCONTENT_H

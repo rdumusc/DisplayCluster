@@ -43,6 +43,9 @@
 #include "ContentWindow.h"
 #include "RenderContext.h"
 #include "Options.h"
+#include "PixelStream.h"
+
+#include <deflect/PixelStreamFrame.h>
 
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
@@ -105,7 +108,10 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         if( updatedWindows.contains( it.key( )))
             ++it;
         else
+        {
+            emit windowRemoved( *it );
             it = windowItems_.erase( it );
+        }
     }
 
     // Store the new DisplayGroup
@@ -149,4 +155,5 @@ void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
     const QUuid& id = window->getID();
     windowItems_[id].reset( new QmlWindowRenderer( engine, *displayGroupItem_,
                                                    window ));
+    emit windowAdded( windowItems_[id] );
 }

@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,62 +37,51 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef RENDERCONTROLLER_H
-#define RENDERCONTROLLER_H
+#ifndef PIXELSTREAMUPDATER_H
+#define PIXELSTREAMUPDATER_H
 
 #include "types.h"
 
 #include "SwapSyncObject.h"
-#include "PixelStreamUpdater.h"
 
-#include <QObject>
+#include <QtCore/QObject>
+#include <QtCore/QMap>
 
 /**
- * Setup the scene and control the rendering options during runtime.
+ * Synchronize the update of PixelStreams and send new frame requests.
  */
-class RenderController : public QObject
+class PixelStreamUpdater : public QObject
 {
     Q_OBJECT
 
 public:
-    /** Constructor */
-    RenderController( RenderContextPtr renderContext );
+    /** Constructor. */
+    PixelStreamUpdater();
 
-    /** Get the DisplayGroup */
-    DisplayGroupPtr getDisplayGroup() const;
-
-    /** Get the PixelStream updater. */
-    PixelStreamUpdater& getPixelStreamUpdater();
-
-    /** Update and synchronize scene objects before rendering a frame. */
-    void preRenderUpdate( WallToWallChannel& wallChannel );
-
-    /** Update and synchronize scene objects after rendering a frame. */
-    void postRenderUpdate( WallToWallChannel& wallChannel );
-
-    /** Do we need to stop rendering. */
-    bool quitRendering() const;
+    /** Synchronize the update of the PixelStreams. */
+    void synchronizeFramesSwap( const SyncFunction& versionCheckFunc );
 
 public slots:
-    void updateQuit();
-    void updateDisplayGroup( DisplayGroupPtr displayGroup );
-    void updateOptions( OptionsPtr options );
-    void updateMarkers( MarkersPtr markers );
+    /** Update the appropriate PixelStream with the given frame. */
+    void updatePixelStream( deflect::PixelStreamFramePtr frame );
+
+    /** Connect the new window to receive PixelStream frame updates. */
+    void onWindowAdded( QmlWindowPtr qmlWindow );
+
+    /** Disconnect the window from PixelStream frame updates. */
+    void onWindowRemoved( QmlWindowPtr qmlWindow );
+
+signals:
+    /** Emitted to request a new frame after a successful swap. */
+    void requestFrame( QString uri );
 
 private:
-    RenderContextPtr renderContext_;
+    typedef QMap<QString,PixelStreamPtr> PixelStreamMap;
+    PixelStreamMap pixelStreamMap_;
 
-    DisplayGroupRendererPtr displayGroupRenderer_;
-    MarkerRendererPtr markerRenderer_;
-    PixelStreamUpdater pixelStreamUpdater_;
-
-    SwapSyncObject<bool> syncQuit_;
-    SwapSyncObject<DisplayGroupPtr> syncDisplayGroup_;
-    SwapSyncObject<OptionsPtr> syncOptions_;
-    SwapSyncObject<MarkersPtr> syncMarkers_;
-
-    void synchronizeObjects( const SyncFunction& versionCheckFunc );
-    void setRenderOptions( OptionsPtr options );
+    typedef SwapSyncObject<deflect::PixelStreamFramePtr> SwapSyncFrame;
+    typedef QMap<QString,SwapSyncFrame> SwapSyncFramesMap;
+    SwapSyncFramesMap swapSyncFrames_;
 };
 
-#endif // RENDERCONTROLLER_H
+#endif // PIXELSTREAMUPDATER_H

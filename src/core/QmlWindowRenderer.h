@@ -69,11 +69,14 @@ public:
                           const QRect& visibleWallArea );
     void postRenderUpdate( WallToWallChannel& wallChannel );
 
+    WallContentPtr getWallContent();
+    ContentWindowPtr getContentWindow();
+
 private:
     ContentWindowPtr contentWindow_;
     boost::scoped_ptr<QDeclarativeContext> windowContext_;
     QDeclarativeItem* windowItem_;
-    FactoryObjectPtr factoryObject_;
+    WallContentPtr wallContent_;
 
     void setupPixelStreamItem();
     QDeclarativeItem* createQmlItem( const QUrl& url );

@@ -39,7 +39,8 @@
 #ifndef SVG_H
 #define SVG_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "types.h"
 #include "GLQuad.h"
 
@@ -61,7 +62,7 @@ struct SVGTextureData
     QRectF region;
 };
 
-class SVG : public FactoryObject
+class SVG : public WallContent
 {
 public:
     SVG( const QString& uri );

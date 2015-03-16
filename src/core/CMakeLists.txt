@@ -52,7 +52,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   DynamicTexture.h
   DynamicTextureContent.h
   ElapsedTimer.h
-  FactoryObject.h
   FFMPEGMovie.h
   FFMPEGVideoFrameConverter.h
   FileCommandHandler.h
@@ -95,6 +94,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   TestPattern.h
   Texture.h
   TextureContent.h
+  WallContent.h
   WallFromMasterChannel.h
   WallToMasterChannel.h
   WallToWallChannel.h
@@ -147,6 +147,7 @@ list(APPEND DCCORE_MOC_HEADERS
   MovieContent.h
   Options.h
   PixelStream.h
+  PixelStreamUpdater.h
   PixelStreamWindowManager.h
   RenderController.h
   WallFromMasterChannel.h
@@ -186,7 +187,6 @@ list(APPEND DCCORE_SOURCES
   DynamicTexture.cpp
   DynamicTextureContent.cpp
   ElapsedTimer.cpp
-  FactoryObject.cpp
   FFMPEGMovie.cpp
   FFMPEGVideoFrameConverter.cpp
   FileCommandHandler.cpp
@@ -212,6 +212,7 @@ list(APPEND DCCORE_SOURCES
   PixelStreamContent.cpp
   PixelStreamInteractionDelegate.cpp
   PixelStreamSegmentRenderer.cpp
+  PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
@@ -226,6 +227,7 @@ list(APPEND DCCORE_SOURCES
   TestPattern.cpp
   Texture.cpp
   TextureContent.cpp
+  WallContent.cpp
   WallFromMasterChannel.cpp
   WallGraphicsScene.cpp
   WallToMasterChannel.cpp

@@ -302,9 +302,6 @@ void DynamicTexture::render()
 {
     assert( isRoot( ));
 
-    if( !isVisibleInCurrentGLView( ))
-        return;
-
     render( zoomRect_ );
 }
 

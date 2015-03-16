@@ -69,7 +69,7 @@ PixelStream::~PixelStream()
 
 void PixelStream::setNewFrame( const deflect::PixelStreamFramePtr frame )
 {
-    syncPixelStreamFrame_.update( frame );
+    backBuffer_ = frame->segments;
 }
 
 QString PixelStream::getStatistics() const
@@ -105,14 +105,6 @@ void PixelStream::preRenderUpdate( ContentWindowPtr window,
 
 void PixelStream::preRenderSync( WallToWallChannel& wallToWallChannel )
 {
-    const SyncFunction& versionCheckFunc =
-        boost::bind( &WallToWallChannel::checkVersion, &wallToWallChannel, _1 );
-    if( syncPixelStreamFrame_.sync( versionCheckFunc ))
-    {
-        backBuffer_ = syncPixelStreamFrame_.get()->segments;
-        emit requestFrame( uri_ );
-    }
-
     if( isDecodingInProgress( wallToWallChannel ))
         return;
 

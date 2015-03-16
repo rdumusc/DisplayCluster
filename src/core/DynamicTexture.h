@@ -39,14 +39,13 @@
 #ifndef DYNAMIC_TEXTURE_H
 #define DYNAMIC_TEXTURE_H
 
-#include "types.h"
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 
 #include <QImage>
 #include <QFuture>
-#include <QRectF>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -61,7 +60,7 @@
  * @see generateImagePyramid()
  */
 class DynamicTexture : public boost::enable_shared_from_this<DynamicTexture>,
-        public FactoryObject
+        public WallContent
 {
 public:
     /**

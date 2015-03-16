@@ -61,9 +61,7 @@ class WallToWallChannel;
  *
  * This class does not actually hold any content data because it
  * is meant to be sent through MPI to Rank>0 processes.
- * The content data is held by FactoryObjects on Rank>0 processes.
- * A Content object references a FactoryObject of the same ContentType based on its URI.
- * It is possible for multiple Content objects to reference the same FactoryObject.
+ * The content data is held by WallContent objects on Wall processes.
  */
 class Content : public QObject
 {

@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,49 +37,62 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FACTORY_OBJECT_H
-#define FACTORY_OBJECT_H
+#include "PixelStreamUpdater.h"
 
-#include "types.h"
+#include "log.h"
 
-/**
- * An interface for objects that store Content data on Wall processes.
- *
- * An implementation must exist for every valid ContentType.
- */
-class FactoryObject
+#include "QmlWindowRenderer.h"
+#include "ContentWindow.h"
+#include "PixelStream.h"
+
+#include <deflect/PixelStreamFrame.h>
+
+PixelStreamUpdater::PixelStreamUpdater()
 {
-public:
-    /** Constructor */
-    FactoryObject();
+}
 
-    /** Destructor */
-    virtual ~FactoryObject();
-
-    /** Render the FactoryObject */
-    virtual void render() = 0;
-
-    /** Render the preview ( whole object at low resolution.) */
-    virtual void renderPreview();
-
-    /** Update internal state before rendering. */
-    virtual void preRenderUpdate( ContentWindowPtr window,
-                                  const QRect& visibleWallArea ) = 0;
-
-    /** Optional synchronize step before rendering. */
-    virtual void preRenderSync( WallToWallChannel& wallToWallChannel )
+void PixelStreamUpdater::synchronizeFramesSwap( const SyncFunction&
+                                                versionCheckFunc )
+{
+    PixelStreamMap::const_iterator streamIt = pixelStreamMap_.begin();
+    for( ; streamIt != pixelStreamMap_.end(); ++streamIt )
     {
-        Q_UNUSED( wallToWallChannel )
+        const QString& uri = streamIt.key();
+
+        SwapSyncFrame& swapSyncFrame = swapSyncFrames_[uri];
+        if( swapSyncFrame.sync( versionCheckFunc ))
+        {
+            streamIt.value()->setNewFrame( swapSyncFrame.get( ));
+            emit requestFrame( uri );
+        }
     }
+}
 
-    /** Optional synchronize step after rendering. */
-    virtual void postRenderSync( WallToWallChannel& wallToWallChannel )
-    {
-        Q_UNUSED( wallToWallChannel )
-    }
+void PixelStreamUpdater::updatePixelStream( deflect::PixelStreamFramePtr frame )
+{
+    swapSyncFrames_[frame->uri].update( frame );
+}
 
-    /** Create an object corresponding to the given content. */
-    static FactoryObjectPtr create( const Content& content );
-};
+void PixelStreamUpdater::onWindowAdded( QmlWindowPtr qmlWindow )
+{
+    ContentWindowPtr window = qmlWindow->getContentWindow();
+    if( window->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM )
+        return;
 
-#endif
+    WallContentPtr stream = qmlWindow->getWallContent();
+
+    const QString& uri = window->getContent()->getURI();
+    pixelStreamMap_[uri] = boost::static_pointer_cast<PixelStream>( stream );
+}
+
+void PixelStreamUpdater::onWindowRemoved( QmlWindowPtr qmlWindow )
+{
+    ContentWindowPtr window = qmlWindow->getContentWindow();
+    if( window->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM )
+        return;
+
+    const QString& uri = window->getContent()->getURI();
+    disconnect( pixelStreamMap_[uri].get( ));
+    pixelStreamMap_.remove( uri );
+    swapSyncFrames_.remove( uri );
+}

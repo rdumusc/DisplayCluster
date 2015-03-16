@@ -68,18 +68,18 @@ public:
     void postRenderUpdate( WallToWallChannel& wallChannel );
 
 public slots:
-    /**
-     * Set the DisplayGroup to render, replacing the previous one.
-     * @see render()
-     */
+    /** Set the DisplayGroup to render, replacing the previous one. */
     void setDisplayGroup( DisplayGroupPtr displayGroup );
+
+signals:
+    void windowAdded( QmlWindowPtr qmlWindow );
+    void windowRemoved( QmlWindowPtr qmlWindow );
 
 private:
     RenderContextPtr renderContext_;
     DisplayGroupPtr displayGroup_;
     QDeclarativeItem* displayGroupItem_;
 
-    typedef boost::shared_ptr<QmlWindowRenderer> QmlWindowPtr;
     typedef QMap<QUuid,QmlWindowPtr> QmlWindows;
     QmlWindows windowItems_;
 

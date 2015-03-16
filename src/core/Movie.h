@@ -39,7 +39,8 @@
 #ifndef MOVIE_H
 #define MOVIE_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 #include "ElapsedTimer.h"
@@ -48,7 +49,7 @@
 
 class FFMPEGMovie;
 
-class Movie : public FactoryObject
+class Movie : public WallContent
 {
 public:
     Movie( const QString& uri );

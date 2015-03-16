@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,8 +37,9 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FactoryObject.h"
+#include "WallContent.h"
 
+#include "config.h"
 #include "Content.h"
 
 #include "DynamicTexture.h"
@@ -49,21 +51,21 @@
 
 #include <boost/make_shared.hpp>
 
-FactoryObject::FactoryObject()
+WallContent::WallContent()
 {
 }
 
-FactoryObject::~FactoryObject()
+WallContent::~WallContent()
 {
 }
 
-void FactoryObject::renderPreview()
+void WallContent::renderPreview()
 {
     // TODO FIX THIS
 //    render( UNIT_RECTF );
 }
 
-FactoryObjectPtr FactoryObject::create( const Content& content )
+WallContentPtr WallContent::create( const Content& content )
 {
     switch( content.getType( ))
     {
@@ -77,9 +79,11 @@ FactoryObjectPtr FactoryObject::create( const Content& content )
         return boost::make_shared<SVG>( content.getURI( ));
     case CONTENT_TYPE_TEXTURE:
         return boost::make_shared<Texture>( content.getURI( ));
+#if ENABLE_PDF_SUPPORT
     case CONTENT_TYPE_PDF:
         return boost::make_shared<PDF>( content.getURI( ));
+#endif
     default:
-        return FactoryObjectPtr();
+        return WallContentPtr();
     }
 }

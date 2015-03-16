@@ -39,11 +39,12 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 
-class Texture : public FactoryObject
+class Texture : public WallContent
 {
 public:
     Texture( const QString& uri );

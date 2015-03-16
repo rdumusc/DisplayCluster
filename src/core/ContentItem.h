@@ -42,7 +42,7 @@
 
 #include <QDeclarativeItem>
 
-#include "FactoryObject.h"
+#include "WallContent.h"
 
 /**
  * Render a Content in Qml.
@@ -60,10 +60,10 @@ public:
                 QWidget* ) override;
 
     /** Set the factory object to be rendered. */
-    void setFactoryObject( FactoryObject* factoryObject );
+    void setWallContent( WallContent* wallContent );
 
 private:
-    FactoryObject* factoryObject_;
+    WallContent* wallContent_;
 };
 
 #endif // CONTENTITEM_H
