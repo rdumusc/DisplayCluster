@@ -58,10 +58,13 @@ namespace
 {
 const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
+const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
+const int BACKGROUND_STACKING_ORDER = -1;
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
     : renderContext_( renderContext )
+    , displayGroup_( new DisplayGroup( QSize( )))
     , displayGroupItem_( 0 )
 {
     setRenderingOptions( boost::make_shared<Options>( ));
@@ -85,10 +88,13 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     if( !displayGroupItem_ )
         createDisplayGroupQmlItem();
 
+    setBackground( displayGroup->getBackgroundContent( ));
+
     ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
 
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
+    int stackingOrder = 0;
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         const QUuid& id = window->getID();
@@ -99,6 +105,8 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
             windowItems_[id]->update( window );
         else
             createWindowQmlItem( window );
+
+        windowItems_[id]->setStackingOrder( stackingOrder++ );
     }
 
     // Remove old windows
@@ -114,19 +122,19 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         }
     }
 
-    // Store the new DisplayGroup
+    // Retain the new DisplayGroup
     displayGroup_ = displayGroup;
 }
 
 void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )
 {
+    const QRect& visibleWallArea = renderContext_->getVisibleWallArea();
     foreach( QmlWindowPtr window, windowItems_ )
     {
-        const QRect& visibleWallArea = renderContext_->getVisibleWallArea();
         window->preRenderUpdate( wallChannel, visibleWallArea );
     }
-
-    // TODO BACKGROUND CONTENT
+    if( backgroundWindowItem_ )
+        backgroundWindowItem_->preRenderUpdate( wallChannel, visibleWallArea );
 }
 
 void DisplayGroupRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
@@ -135,8 +143,8 @@ void DisplayGroupRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
     {
         window->postRenderUpdate( wallChannel );
     }
-
-    // TODO BACKGROUND CONTENT
+    if( backgroundWindowItem_ )
+        backgroundWindowItem_->postRenderUpdate( wallChannel );
 }
 
 void DisplayGroupRenderer::createDisplayGroupQmlItem()
@@ -156,4 +164,32 @@ void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
     windowItems_[id].reset( new QmlWindowRenderer( engine, *displayGroupItem_,
                                                    window ));
     emit windowAdded( windowItems_[id] );
+}
+
+void DisplayGroupRenderer::setBackground( ContentPtr content )
+{
+    if( !content )
+    {
+        backgroundWindowItem_.reset();
+        return;
+    }
+
+    ContentPtr previousContent = displayGroup_->getBackgroundContent();
+    if( previousContent && content->getURI() == previousContent->getURI( ))
+        return;
+
+    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
+
+    QSizeF size( content->getDimensions( ));
+    size.scale( displayGroup_->getCoordinates().size(), Qt::KeepAspectRatio );
+
+    QRectF coord( QPointF(), size );
+    coord.moveCenter( displayGroup_->getCoordinates().center( ));
+    window->setCoordinates( coord );
+
+    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
+                                                        *displayGroupItem_,
+                                                        window ));
+    backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
 }

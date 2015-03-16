@@ -57,7 +57,7 @@ const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 }
 
 QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
-                                      QDeclarativeItem& displayGroupItem,
+                                      QDeclarativeItem& parentItem,
                                       ContentWindowPtr contentWindow )
     : contentWindow_( contentWindow )
     , windowContext_( new QDeclarativeContext( engine.rootContext( )))
@@ -67,7 +67,7 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
     windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
 
     windowItem_ = createQmlItem( QML_WINDOW_URL );
-    windowItem_->setParentItem( &displayGroupItem );
+    windowItem_->setParentItem( &parentItem );
 
     ContentItem* contentItem =
        windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
@@ -93,6 +93,11 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
     // Could be optimized by checking for changes before updating the context
     windowContext_->setContextProperty( "contentwindow", contentWindow.get( ));
     contentWindow_ = contentWindow;
+}
+
+void QmlWindowRenderer::setStackingOrder( const int value )
+{
+    windowItem_->setProperty( "z", value );
 }
 
 void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,

@@ -82,11 +82,13 @@ private:
 
     typedef QMap<QUuid,QmlWindowPtr> QmlWindows;
     QmlWindows windowItems_;
+    QmlWindowPtr backgroundWindowItem_;
 
     OptionsPtr options_;
 
     void createDisplayGroupQmlItem();
     void createWindowQmlItem( ContentWindowPtr window );
+    void setBackground( ContentPtr backgroundContent );
 };
 
 #endif // DISPLAYGROUPRENDERER_H

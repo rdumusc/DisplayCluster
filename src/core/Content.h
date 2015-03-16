@@ -92,7 +92,7 @@ public:
     void setDimensions( const QSize& dimensions );
 
     /** Get the aspect ratio. */
-    float getAspectRatio() const;
+    qreal getAspectRatio() const;
 
     /** Get the actions from QML. */
     ContentActionsModel* getActions();

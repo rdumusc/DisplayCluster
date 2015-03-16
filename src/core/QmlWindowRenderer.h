@@ -57,19 +57,26 @@
 class QmlWindowRenderer : public boost::noncopyable
 {
 public:
+    /** Constructor. */
     QmlWindowRenderer( QDeclarativeEngine& engine,
-                       QDeclarativeItem& displayGroupItem,
+                       QDeclarativeItem& parentItem,
                        ContentWindowPtr contentWindow );
+    /** Destructor. */
     ~QmlWindowRenderer();
 
     /** Update the qml object with a new data model. */
     void update( ContentWindowPtr contentWindow );
 
+    void setStackingOrder( int value );
+
     void preRenderUpdate( WallToWallChannel& wallChannel,
                           const QRect& visibleWallArea );
     void postRenderUpdate( WallToWallChannel& wallChannel );
 
+    /** Get the WallContent. */
     WallContentPtr getWallContent();
+
+    /** Get the ContentWindow. */
     ContentWindowPtr getContentWindow();
 
 private:
