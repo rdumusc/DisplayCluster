@@ -59,7 +59,6 @@
 
 RenderContext::RenderContext( const WallConfiguration& configuration )
     : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
-    , activeGLWindowIndex_( -1 )
 {
     setupOpenGLWindows( configuration );
     setupVSync();
@@ -119,11 +118,6 @@ void RenderContext::setupVSync()
     }
 }
 
-int RenderContext::getActiveGLWindowIndex() const
-{
-    return activeGLWindowIndex_;
-}
-
 void RenderContext::addRenderable( RenderablePtr renderable )
 {
     scene_.addRenderable( renderable );
@@ -136,14 +130,11 @@ bool RenderContext::isRegionVisible( const QRectF& region ) const
 
 void RenderContext::updateGLWindows()
 {
-    activeGLWindowIndex_ = 0;
-
     BOOST_FOREACH( WallWindowPtr window, windows_ )
     {
         window->setBlockDrawCalls( false );
         window->viewport()->repaint();
         window->setBlockDrawCalls( true );
-        ++activeGLWindowIndex_;
     }
     glFinish();
 }

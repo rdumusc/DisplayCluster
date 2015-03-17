@@ -56,7 +56,6 @@ ContentWindowRenderer::ContentWindowRenderer( FactoriesPtr factories )
     , showWindowBorders_( true )
     , showZoomContext_( false )
 {
-    quad_.setEnableTexture( false );
 }
 
 void ContentWindowRenderer::render()

@@ -65,9 +65,6 @@ public:
     /** Set the background color of all windows. */
     void setBackgroundColor( const QColor& color );
 
-    /** Get the index of the active window during rendering. @deprecated */
-    int getActiveGLWindowIndex() const;
-
     /** Add an object to be rendered. */
     void addRenderable( RenderablePtr renderable );
 
@@ -101,8 +98,6 @@ private:
     QRect visibleWallArea_;
 
     QDeclarativeEngine engine_;
-
-    int activeGLWindowIndex_;
 };
 
 #endif

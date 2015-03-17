@@ -375,7 +375,7 @@ void DynamicTexture::renderTextureBorder()
 
     glColor4f(0.,1.,0.,1.);
 
-    quad_.setEnableTexture(false);
+    quad_.setTexture(0);
     quad_.setRenderMode(GL_LINE_LOOP);
     quad_.render();
 
@@ -384,16 +384,10 @@ void DynamicTexture::renderTextureBorder()
 
 void DynamicTexture::renderTexturedUnitQuad(const QRectF& texCoords)
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT);
-
-    texture_.bind();
-
-    quad_.setEnableTexture(true);
-    quad_.setTexCoords(texCoords);
-    quad_.setRenderMode(GL_QUADS);
+    quad_.setTexture( texture_.getTextureId( ));
+    quad_.setTexCoords( texCoords );
+    quad_.setRenderMode( GL_QUADS );
     quad_.render();
-
-    glPopAttrib();
 }
 
 void DynamicTexture::clearOldChildren()

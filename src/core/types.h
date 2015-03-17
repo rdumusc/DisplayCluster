@@ -64,6 +64,7 @@ class PDF;
 class PixelStreamWindowManager;
 class Renderable;
 class RenderContext;
+class SVG;
 class TestPattern;
 class WallWindow;
 class WallConfiguration;
@@ -84,6 +85,7 @@ typedef boost::shared_ptr< Options > OptionsPtr;
 typedef boost::shared_ptr< PDF > PDFPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< RenderContext > RenderContextPtr;
+typedef boost::shared_ptr< SVG > SVGPtr;
 typedef boost::shared_ptr< TestPattern > TestPatternPtr;
 
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;

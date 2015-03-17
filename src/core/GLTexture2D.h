@@ -81,6 +81,9 @@ public:
     /** Free the GLTexture. */
     void free();
 
+    /** Get the GL texture id. */
+    GLuint getTextureId() const;
+
 private:
     GLuint textureId_;
     QSize size_;

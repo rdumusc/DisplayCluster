@@ -91,6 +91,11 @@ void GLTexture2D::free()
     }
 }
 
+GLuint GLTexture2D::getTextureId() const
+{
+    return textureId_;
+}
+
 void GLTexture2D::update(const QImage image, const GLenum format)
 {
     if (size_ != image.size())

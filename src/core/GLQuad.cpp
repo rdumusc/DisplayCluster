@@ -44,7 +44,7 @@
 GLQuad::GLQuad()
     : texCoords_(0.f, 0.f, 1.f, 1.f)
     , renderMode_(GL_QUADS)
-    , enableTexture_(true)
+    , textureId_(0)
 {
 }
 
@@ -53,9 +53,9 @@ void GLQuad::setTexCoords(const QRectF& texCoords)
     texCoords_ = texCoords;
 }
 
-void GLQuad::setEnableTexture(const bool enable)
+void GLQuad::setTexture( const GLuint textureId )
 {
-    enableTexture_ = enable;
+    textureId_ = textureId;
 }
 
 void GLQuad::setRenderMode(const GLenum mode)
@@ -66,24 +66,32 @@ void GLQuad::setRenderMode(const GLenum mode)
 
 void GLQuad::render()
 {
-    if (enableTexture_)
-        glEnable(GL_TEXTURE_2D);
+    glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
+
+    if( textureId_ )
+    {
+        glEnable( GL_TEXTURE_2D );
+        glBindTexture( GL_TEXTURE_2D, textureId_ );
+    }
     else
-        glDisable(GL_TEXTURE_2D);
+        glDisable( GL_TEXTURE_2D );
 
-    glBegin(renderMode_);
+    glBegin( renderMode_ );
 
-    glTexCoord2f(texCoords_.x(), texCoords_.y());
-    glVertex2f(0., 0.);
+    glTexCoord2f( texCoords_.x(), texCoords_.y( ));
+    glVertex2f( 0., 0. );
 
-    glTexCoord2f(texCoords_.x() + texCoords_.width(), texCoords_.y());
-    glVertex2f(1., 0.);
+    glTexCoord2f( texCoords_.x() + texCoords_.width(), texCoords_.y( ));
+    glVertex2f( 1., 0. );
 
-    glTexCoord2f(texCoords_.x() + texCoords_.width(), texCoords_.y() + texCoords_.height());
-    glVertex2f(1., 1.);
+    glTexCoord2f( texCoords_.x() + texCoords_.width(),
+                  texCoords_.y() + texCoords_.height( ));
+    glVertex2f( 1., 1. );
 
-    glTexCoord2f(texCoords_.x(), texCoords_.y() + texCoords_.height());
-    glVertex2f(0., 1.);
+    glTexCoord2f( texCoords_.x(), texCoords_.y() + texCoords_.height( ));
+    glVertex2f( 0., 1. );
 
     glEnd();
+
+    glPopAttrib();
 }

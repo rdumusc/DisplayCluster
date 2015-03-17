@@ -43,60 +43,52 @@
 #include "types.h"
 #include "GLQuad.h"
 
-#include <QtSvg>
-#include <QGLWidget>
-#include <QGLFramebufferObject>
-#include <boost/shared_ptr.hpp>
-#include <map>
+#include <QtSvg/QtSvg>
+#include <QtOpenGL/QGLWidget>
+#include <QtOpenGL/QGLFramebufferObject>
 
-typedef boost::shared_ptr<QGLFramebufferObject> QGLFramebufferObjectPtr;
+typedef boost::shared_ptr<QGLFramebufferObject> FBOPtr;
 
 /**
- * Hold texture FBO and region rendered for one GLWindow.
+ * Hold texture FBO and region rendered.
  */
 struct SVGTextureData
 {
-    /** Frame buffer Object */
-    QGLFramebufferObjectPtr fbo;
+    /** Frame Buffer Object */
+    FBOPtr fbo;
 
-    /** Texture region */
+    /** Normalized svg region */
     QRectF region;
 };
 
 class SVG : public FactoryObject
 {
 public:
-    SVG(const QString uri);
-    ~SVG();
+    SVG( const QString& uri );
 
     bool isValid() const;
-
     QSize getSize() const;
-    void render(const QRectF& texCoords) override;
+
+    QSize getTextureSize() const;
+    const QRectF& getTextureRegion() const;
+    void updateTexture( const QSize& textureSize, const QRectF& svgRegion );
+    void render( const QRectF& texCoords ) override;
+    void renderPreview() override;
 
 private:
-    // image location
-    QString uri_;
-
-    // SVG renderer
     QRectF svgExtents_;
     QSvgRenderer svgRenderer_;
 
-    // Per-GLWindow texture data
-    std::map<int, SVGTextureData> textureData_;
-
-    // SVG default dimensions
-    QSize size_;
-
+    SVGTextureData textureData_;
+    FBOPtr previewFbo_;
     GLQuad quad_;
 
-    bool setImageData(const QByteArray& imageData);
-    void drawUnitTexturedQuad(const GLuint textureID);
-
-    QRectF computeTextureRect(const QRectF& screenRect, const QRectF& fullRect,
-                              const QRectF& texCoords) const;
-
-    void renderToTexture(const QRectF& textureRect, QGLFramebufferObjectPtr targetFbo);
+    void renderTexturedQuad( const GLuint textureId );
+    void generatePreviewTexture();
+    bool setImageData( const QByteArray& imageData );
+    void renderToTexture( const QRectF& svgRegion, FBOPtr targetFbo );
+    QRectF getViewBox( const QRectF& svgRegion );
+    FBOPtr createMultisampledFBO( const QSize& size );
 
     void saveGLState();
     void restoreGLState();

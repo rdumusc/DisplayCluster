@@ -90,8 +90,6 @@ private:
     QRect rect_;
 
     bool textureNeedsUpdate_;
-
-    void drawUnitTexturedQuad();
 };
 
 #endif
