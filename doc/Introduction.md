@@ -12,10 +12,10 @@ DisplayCluster provides the following functionality:
 * Interactively view media such as high-resolution imagery and video.
 * Receive content from remote sources such as laptops / desktops or
   high-performance remote visualization machines using the
-  [Deflect library](https://github.com/BlueBrain/Deflect.git)
+  [Deflect library](https://github.com/BlueBrain/Deflect.git).
 
-The @ref documentation can be found on
-[bluebrain.github.io](http://bluebrain.github.io/)
+A copy of this documentation can be found at
+[bluebrain.github.io](http://bluebrain.github.io/).
 
 Please also take a look at the latest @ref ReleaseNotes.
 
@@ -26,5 +26,5 @@ The following platforms and build environments are tested:
 
 * Linux: Ubuntu 14.04 and RHEL 6.5 (using a Qt4.8.6 module)
 (Makefile, i386, x64)
-* Mac OS X: 10.7, 10.8, 10.9 - DesktopStreamer and dc::Stream library only
+* Mac OS X: 10.7, 10.8, 10.9, 10.10 (very limited testing)
 (Makefile, XCode, i386, x64)

@@ -3,9 +3,60 @@ Release Notes {#ReleaseNotes}
 
 # New in this release {#New}
 
-DisplayCluster 0.4 provides the following improvements:
+DisplayCluster 0.5 provides the following improvements:
 
 ## New Features {#NewFeatures}
+
+* The dcStream library has been moved to a separate project:
+  [Deflect](https://github.com/BlueBrain/Deflect).
+* Compilation of external dependencies (Deflect, TUIO) has been simplified
+  thanks to the "git subproject" functionality. Dependencies are cloned during
+  the CMake configure step and built alongside the project.
+* Rendering of contents is done in QML for a better and simplified UI design.
+* Windows have customizable action buttons which allow users to close / maximize
+  windows and pause movies from the wall.
+* Windows have dragable borders for reszing them from the wall.
+* Synchronized buffer swap and vsync works for all types of window settings.
+
+## Enhancements {#Enhancements}
+
+* The startdisplaycluster script has been greatly improved and handles more MPI
+  implementations (OpenMpi, MVAPICH, MPICH2, MPICH v3).
+* Window move and resize operations go through a controller to constrain them
+  inside a valid range.
+* Resizing and zooming inside windows happens around the mouse or touch gesture
+  center.
+* FPS statistics of PixelStreams are per-stream instead of per-segment.
+* Debug display of PixelStream segements show the absolute size of the segments.
+* A few extra unit tests (StateSerialization, ContentWindowController,
+  DoubleTapGesture).
+* Multiple refactorings and code cleanups. All global variables have been
+  removed.
+
+## Optimizations {#Optimizations}
+
+* PDFs and SVGs have been optimized to move and resize much faster.
+* PDFs and SVGs don't redraw constantly in zoomed mode or in settings with
+  mutliple windows per node.
+
+## Documentation {#Documentation}
+
+* Added a short user guide.
+* Removed obsolete manual.pdf.
+
+## Bug Fixes {#Fixes}
+
+* The Webbrowser widget uses the correct webpage from the configuration.
+* Improved support for decoding Movies.
+* Fix session loading from legacy xml.
+
+- - -
+
+# New in DisplayCluster 0.4
+
+DisplayCluster 0.4 provides the following improvements:
+
+## New Features
 
 * Movies play synchronously across all screens.
 * The launch procedure relies on a single python script that works out of the
@@ -14,7 +65,7 @@ DisplayCluster 0.4 provides the following improvements:
 * dc::Stream implements an asyncSend() function for PixelStreams.
 * MPIBenchmark application to measure interprocess communication performance.
 
-## Enhancements {#Enhancements}
+## Enhancements
 
 * DesktopStreamer properly handles AppNap on OSX 10.9.
 * DesktopStreamer detects Retina displays automatically (no retina checkbox).
@@ -29,7 +80,7 @@ DisplayCluster 0.4 provides the following improvements:
 * MPI message headers are now separate from dc::Stream message headers.
 * The OpenGL rendering code has been improved, but still needs more attention.
 
-## Optimizations {#Optimizations}
+## Optimizations
 
 * Multithreaded MPI communication between the processes brings significant
   performance improvements.
@@ -38,11 +89,11 @@ DisplayCluster 0.4 provides the following improvements:
 * The handling of Content dimensions is greatly simplified and the
   ContentDimensionsRequest has been removed.
 
-## Documentation {#Documentation}
+## Documentation
 
 * Separate Introduction page from Release Notes for more clarity.
 
-## Bug Fixes {#Fixes}
+## Bug Fixes
 
 * Fixed DynamicTexture LOD mechanism. Textures are now displayed at the correct
   resolution.
@@ -54,7 +105,7 @@ DisplayCluster 0.4 provides the following improvements:
 * Fixed all cppcheck warnings.
 * Fixed build with older FFMPEG versions.
 
-## Known Bugs {#Bugs}
+## Known Bugs
 
 The following bugs were known at release time:
 * Sometimes, once closed the dock may refuse to open again ("Already have a
@@ -62,11 +113,7 @@ The following bugs were known at release time:
 * Touch events may occasionnaly pass through the active window onto the
   background.
 
-Please file a [Bug Report](https://bbpteam.epfl.ch/project/issues/browse/DISCL)
-if you find any other issue with this release.
-
 - - -
 
-# Errata {#Errata}
-
-* Post-release hot fixes go here
+Please file a [Bug Report](https://bbpteam.epfl.ch/project/issues/browse/DISCL)
+if you find any other issue with this release.

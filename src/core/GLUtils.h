@@ -51,6 +51,7 @@ public:
     /**
      * Enable or disable VSync on a given window.
      * @param window A QWidget which must already be initialized.
+     * @param enabled The value to set.
      * @return true on success.
      */
     static bool setEnableVSync( const QWidget* window, bool enabled );

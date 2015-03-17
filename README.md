@@ -5,8 +5,8 @@ tiled displays.
 
 ## Documentation
 
-The DisplayCluster manual is included in the distribution in the doc/ directory,
-and covers installation and usage.
+The documentation is available at
+[bluebrain.github.io](http://bluebrain.github.io/)
 
 ## Features
 
@@ -15,7 +15,6 @@ DisplayCluster provides the following functionality:
 * Receive content from remote sources such as laptops / desktops or
   high-performance remote visualization machines using the
   [Deflect library](https://github.com/BlueBrain/Deflect.git)
-* [Documentation](http://bluebrain.github.io/DisplayCluster-0.4/index.html)
 
 ## Building from Source
 

@@ -19,7 +19,7 @@ auxilary documentation.
 * doc: Doxygen and other documentation.
 * examples: Example xml configuration files, installed under
   share/DisplayCluster.
-* webservice: Configuration files and static content for the webservice.
+* webservice: %Configuration files and static content for the webservice.
 
 ## CMakeLists
 

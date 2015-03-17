@@ -11,7 +11,7 @@ include(SubProject)
 
 # Versioning
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 4)
+set(VERSION_MINOR 5)
 set(VERSION_PATCH 0)
 set(VERSION_ABI 0)
 
@@ -31,8 +31,6 @@ list(APPEND CPPCHECK_EXTRA_ARGS --suppress=preprocessorErrorDirective)
 
 # Fix for avutil: https://code.google.com/p/ffmpegsource/source/detail?r=311
 add_definitions(-D__STDC_CONSTANT_MACROS)
-
-option(FORCE_BUILD_DCCORE "Force build the core library" OFF)
 
 include_directories(SYSTEM ${MPI_INCLUDE_PATH})
 
@@ -54,7 +52,6 @@ add_subdirectory(tests)
 # Documentation
 set(COMMON_PROJECT_DOMAIN ch.epfl.bluebrain)
 include(DoxygenRule)
-add_subdirectory(doc)
 
 # Install example files
 install(DIRECTORY examples DESTINATION share/DisplayCluster COMPONENT examples)
