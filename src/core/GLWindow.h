@@ -55,17 +55,6 @@ public:
      * @throw std::runtime_error if the initialization failed.
      */
     GLWindow( QGLWidget* shareWidget = 0, QWidget* parent = 0 );
-
-    /**
-     * Get the region spanned by a unit rectangle {(0;0),(1;1)} in the current
-     * GL view.
-     * The region is in screen coordinates with the origin at the viewport's
-     * top-left corner.
-     * @param clampToViewportBorders Clamp to the visible part of the region.
-     * @return The region in pixel units.
-     * @deprecated
-     */
-    static QRectF getProjectedPixelRect( const bool clampToViewportBorders );
 };
 
 #endif

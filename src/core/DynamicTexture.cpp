@@ -38,9 +38,8 @@
 
 #include "DynamicTexture.h"
 
-#include "ContentWindow.h"
-#include "GLWindow.h"
 #include "log.h"
+#include "ContentWindow.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
@@ -51,6 +50,9 @@
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
+    // glu functions deprecated in 10.9
+#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else
     #include <GL/glu.h>
 #endif
@@ -354,13 +356,13 @@ bool DynamicTexture::isVisibleInCurrentGLView()
 {
     // TODO This objects visibility should be determined by using the GLWindow
     // as a pre-render step, not retro-fitted in here!
-    const QRectF screenRect = GLWindow::getProjectedPixelRect(true);
+    const QRectF screenRect = getProjectedPixelRect(true);
     return screenRect.width()*screenRect.height() > 0.;
 }
 
 bool DynamicTexture::isResolutionSufficientForCurrentGLView()
 {
-    const QRectF fullRect = GLWindow::getProjectedPixelRect(false);
+    const QRectF fullRect = getProjectedPixelRect(false);
     return fullRect.width() <= TEXTURE_SIZE && fullRect.height() <= TEXTURE_SIZE;
 }
 
@@ -687,4 +689,53 @@ void DynamicTexture::incrementGlobalThreadCount()
     {
         return getRoot()->incrementGlobalThreadCount();
     }
+}
+
+QRectF DynamicTexture::getProjectedPixelRect( const bool clampToViewportBorders )
+{
+    // get four corners in object space (recall we're in normalized 0->1 coord)
+    const double corners[4][3] =
+    {
+        {0.,0.,0.},
+        {1.,0.,0.},
+        {1.,1.,0.},
+        {0.,1.,0.}
+    };
+
+    // get four corners in screen space
+    GLdouble modelview[16];
+    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+
+    GLdouble projection[16];
+    glGetDoublev( GL_PROJECTION_MATRIX, projection );
+
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport );
+
+    GLdouble xWin[4][3];
+
+    for(size_t i=0; i<4; i++)
+    {
+        gluProject( corners[i][0], corners[i][1], corners[i][2],
+                    modelview, projection, viewport,
+                    &xWin[i][0], &xWin[i][1], &xWin[i][2] );
+
+        const GLdouble viewportWidth = (GLdouble)viewport[2];
+        const GLdouble viewportHeight = (GLdouble)viewport[3];
+
+        // The GL coordinates system origin is at the bottom-left corner with
+        // the y-axis pointing upwards. For the QRect, we want the origin at
+        // the top of the viewport with the y-axis pointing downwards.
+        xWin[i][1] = viewportHeight - xWin[i][1];
+
+        if( clampToViewportBorders )
+        {
+            xWin[i][0] = std::min( std::max( xWin[i][0], 0. ), viewportWidth );
+            xWin[i][1] = std::min( std::max( xWin[i][1], 0. ), viewportHeight );
+        }
+    }
+
+    const QPointF topleft( xWin[0][0], xWin[0][1] );
+    const QPointF bottomright( xWin[2][0], xWin[2][1] );
+    return QRectF( topleft, bottomright );
 }

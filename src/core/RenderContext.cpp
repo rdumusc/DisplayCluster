@@ -48,15 +48,6 @@
 
 #include <boost/foreach.hpp>
 
-#ifdef __APPLE__
-    #include <OpenGL/glu.h>
-    // glu functions deprecated in 10.9
-#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-    #include <GL/glu.h>
-#endif
-
 RenderContext::RenderContext( const WallConfiguration& configuration )
     : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
 {
