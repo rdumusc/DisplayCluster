@@ -1,11 +1,11 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import "style.js" as Style
 
 Rectangle {
     id: windowRect
-    color: "#80000000"
-    border.color: "black"
-    border.width: 10
+    border.color: Style.windowBorderDefaultColor
+    border.width: options.showWindowBorders ? Style.windowBorderWidth : 0
 
     x: contentwindow.x
     y: contentwindow.y
@@ -32,7 +32,7 @@ Rectangle {
             when: contentwindow.state === ContentWindow.SELECTED
             PropertyChanges {
                 target: windowRect
-                border.color: "red"
+                border.color: Style.windowBorderSelectedColor
             }
         },
         State {
@@ -40,7 +40,7 @@ Rectangle {
             when: contentwindow.state === ContentWindow.MOVING
             PropertyChanges {
                 target: windowRect
-                border.color: "green"
+                border.color: Style.windowBorderMovingColor
             }
         },
         State {
@@ -48,7 +48,7 @@ Rectangle {
             when: contentwindow.state === ContentWindow.RESIZING
             PropertyChanges {
                 target: windowRect
-                border.color: "blue"
+                border.color: Style.windowBorderResizingColor
             }
         },
         State {

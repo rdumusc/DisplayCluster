@@ -7,7 +7,7 @@ import "qrc:/qml/core/style.js" as Style
 Rectangle {
     id: windowRect
     color: "#80000000"
-    border.color: "black"
+    border.color: Style.windowBorderDefaultColor
     border.width: 10
 
     x: contentwindow.x
@@ -141,7 +141,7 @@ Rectangle {
             when: contentwindow.state === ContentWindow.SELECTED
             PropertyChanges {
                 target: windowRect
-                border.color: "red"
+                border.color: Style.windowBorderSelectedColor
             }
         },
         State {
@@ -149,7 +149,7 @@ Rectangle {
             when: contentwindow.state === ContentWindow.MOVING
             PropertyChanges {
                 target: windowRect
-                border.color: "green"
+                border.color: Style.windowBorderMovingColor
             }
         },
         State {
@@ -157,7 +157,7 @@ Rectangle {
             when: contentwindow.state === ContentWindow.RESIZING
             PropertyChanges {
                 target: windowRect
-                border.color: "blue"
+                border.color: Style.windowBorderResizingColor
             }
         },
         State {

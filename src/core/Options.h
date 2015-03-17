@@ -58,6 +58,7 @@ class Options : public QObject, public boost::enable_shared_from_this<Options>
     Q_OBJECT
     Q_PROPERTY( bool showStatistics READ getShowStatistics CONSTANT )
     Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
+    Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders CONSTANT )
     Q_PROPERTY( bool showZoomContext READ getShowZoomContext CONSTANT )
 
 public:
