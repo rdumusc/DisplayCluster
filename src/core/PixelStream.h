@@ -160,8 +160,8 @@ private:
     void refreshSegmentsList( const deflect::PixelStreamSegments& segments );
 
     QRectF getSceneCoordinates( const QRect& segment ) const;
-    bool isVisible( const QRect& segment );
-    bool isVisible( const deflect::PixelStreamSegment& segment );
+    bool isVisible( const QRect& segment ) const;
+    bool isVisible( const deflect::PixelStreamSegment& segment ) const;
 };
 
 

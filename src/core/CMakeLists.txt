@@ -156,7 +156,6 @@ list(APPEND DCCORE_MOC_HEADERS
   WallToMasterChannel.h
   WallToWallChannel.h
   WebbrowserCommandHandler.h
-  ZoomContextItem.h
   localstreamer/AsyncImageLoader.h
   localstreamer/DockPixelStreamer.h
   localstreamer/PixelStreamer.h
@@ -235,7 +234,6 @@ list(APPEND DCCORE_SOURCES
   WallToWallChannel.cpp
   WallWindow.cpp
   WebbrowserCommandHandler.cpp
-  ZoomContextItem.cpp
   ZoomInteractionDelegate.cpp
   configuration/Configuration.cpp
   configuration/MasterConfiguration.cpp

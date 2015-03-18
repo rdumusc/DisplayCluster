@@ -56,7 +56,6 @@
 
 namespace
 {
-const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
 const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
 const int BACKGROUND_STACKING_ORDER = -1;
@@ -94,7 +93,7 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
-    int stackingOrder = 0;
+    int stackingOrder = BACKGROUND_STACKING_ORDER + 1;
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         const QUuid& id = window->getID();

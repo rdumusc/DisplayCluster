@@ -42,7 +42,6 @@
 #include "ContentWindow.h"
 #include "PixelStream.h"
 #include "ContentItem.h"
-#include "ZoomContextItem.h"
 
 #include <QtDeclarative/QDeclarativeComponent>
 
@@ -73,8 +72,8 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
        windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
     contentItem->setWallContent( wallContent_.get( ));
 
-    ZoomContextItem* zoomContextItem =
-      windowItem_->findChild<ZoomContextItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
+    ContentItem* zoomContextItem =
+      windowItem_->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
     zoomContextItem->setWallContent( wallContent_.get( ));
 
     if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )

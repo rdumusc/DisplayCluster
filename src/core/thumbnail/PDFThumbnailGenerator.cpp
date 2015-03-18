@@ -50,11 +50,19 @@ PDFThumbnailGenerator::PDFThumbnailGenerator( const QSize& size )
 QImage PDFThumbnailGenerator::generate( const QString& filename ) const
 {
     const PDF pdf( filename );
+
+    if( !pdf.isValid( ))
+    {
+        put_flog( LOG_ERROR, "could not open pdf file: %s",
+                  filename.toLatin1().constData( ));
+        return createErrorImage( "pdf" );
+    }
+
     QImage image = pdf.renderToImage( size_ );
 
     if( image.isNull( ))
     {
-        put_flog( LOG_ERROR, "could not pdf file: %s",
+        put_flog( LOG_ERROR, "could not render pdf file: %s",
                   filename.toLatin1().constData( ));
         return createErrorImage( "pdf" );
     }

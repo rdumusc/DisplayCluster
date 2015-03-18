@@ -39,6 +39,9 @@
 
 #include "ContentItem.h"
 
+#include "log.h"
+#include "WallContent.h"
+
 #include <QtGui/QPainter>
 
 #include <GL/gl.h>
@@ -46,6 +49,7 @@
 ContentItem::ContentItem( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
     , wallContent_( 0 )
+    , role_( ROLE_CONTENT )
 {
     setFlag( QGraphicsItem::ItemHasNoContents, false );
 }
@@ -58,7 +62,18 @@ void ContentItem::paint( QPainter* painter, const QStyleOptionGraphicsItem*,
     glPushMatrix();
     glScalef( width(), height(), 1.f );
 
-    wallContent_->render();
+    switch ( role_ )
+    {
+    case ROLE_CONTENT:
+        wallContent_->render();
+        break;
+    case ROLE_PREVIEW:
+        wallContent_->renderPreview();
+        break;
+    default:
+        put_flog( LOG_ERROR, "Unsupported ContentItem::Role : ", role_ );
+        break;
+    }
 
     glPopMatrix();
 
@@ -68,4 +83,18 @@ void ContentItem::paint( QPainter* painter, const QStyleOptionGraphicsItem*,
 void ContentItem::setWallContent( WallContent* wallContent )
 {
     wallContent_ = wallContent;
+}
+
+ContentItem::Role ContentItem::getRole() const
+{
+    return role_;
+}
+
+void ContentItem::setRole( const Role arg )
+{
+    if( role_ == arg )
+        return;
+
+    role_ = arg;
+    emit roleChanged( arg );
 }

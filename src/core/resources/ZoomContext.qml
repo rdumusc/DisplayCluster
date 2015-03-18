@@ -15,9 +15,10 @@ Rectangle {
              contentwindow.zoomRect.width !== 1 &&
              contentwindow.zoomRect.height !== 1
 
-    ZoomContextItem {
+    ContentItem {
         objectName: "ZoomContextItem"
         anchors.fill: parent
+        role: ContentItem.ROLE_PREVIEW
 
         Rectangle {
             border.width: Style.zoomContextSelectionWidth

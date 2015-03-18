@@ -8,7 +8,7 @@ Item {
 
     Repeater {
         // context object pixelstream is set later
-        model: (pixelstream !== null) ? pixelstream.segments : undefined
+        model: pixelstream !== null ? pixelstream.segments : undefined
         Rectangle {
             visible: options.showStreamingSegments
             width: model.modelData.coord.width

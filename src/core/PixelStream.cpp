@@ -151,8 +151,7 @@ bool PixelStream::isDecodingInProgress( WallToWallChannel& wallToWallChannel )
             ++localThreadsRunning;
     }
 
-    int globalThreadsRunning = wallToWallChannel.globalSum( localThreadsRunning );
-    return globalThreadsRunning > 0;
+    return wallToWallChannel.globalSum( localThreadsRunning ) > 0;
 }
 
 void PixelStream::updateRenderers( const deflect::PixelStreamSegments& segments )
@@ -295,12 +294,12 @@ QRectF PixelStream::getSceneCoordinates( const QRect& segment ) const
                    normHeight * contentWindowRect_.height( ));
 }
 
-bool PixelStream::isVisible( const QRect& segment )
+bool PixelStream::isVisible( const QRect& segment ) const
 {
     return wallArea_.intersects( getSceneCoordinates( segment ));
 }
 
-bool PixelStream::isVisible( const deflect::PixelStreamSegment& segment )
+bool PixelStream::isVisible( const deflect::PixelStreamSegment& segment ) const
 {
     QRect segmentRegion( segment.parameters.x, segment.parameters.y,
                          segment.parameters.width, segment.parameters.height );

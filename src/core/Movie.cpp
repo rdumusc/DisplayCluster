@@ -132,7 +132,7 @@ void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
 
 void Movie::postRenderSync( WallToWallChannel& wallToWallChannel )
 {
-    if( suspended_ )
+    if( paused_ || suspended_ )
         return;
 
     synchronizeTimestamp( wallToWallChannel );

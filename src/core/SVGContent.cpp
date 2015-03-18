@@ -75,8 +75,6 @@ const QStringList& SVGContent::getSupportedExtensions()
     static QStringList extensions;
 
     if( extensions.empty( ))
-    {
         extensions << "svg";
-    }
     return extensions;
 }

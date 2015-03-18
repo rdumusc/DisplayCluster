@@ -4,16 +4,9 @@ import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
 import "qrc:/qml/core/style.js" as Style
 
-Rectangle {
-    id: windowRect
+BaseContentWindow {
     color: "#80000000"
-    border.color: Style.windowBorderDefaultColor
     border.width: 10
-
-    x: contentwindow.x
-    y: contentwindow.y
-    width: contentwindow.width
-    height: contentwindow.height
 
     function closeWindow() {
         displaygroup.removeContentWindow(contentwindow.id)
@@ -134,41 +127,6 @@ Rectangle {
         }
         mousearea.onReleased: contentwindow.state = ContentWindow.NONE
     }
-
-    states: [
-        State {
-            name: "selected"
-            when: contentwindow.state === ContentWindow.SELECTED
-            PropertyChanges {
-                target: windowRect
-                border.color: Style.windowBorderSelectedColor
-            }
-        },
-        State {
-            name: "moving"
-            when: contentwindow.state === ContentWindow.MOVING
-            PropertyChanges {
-                target: windowRect
-                border.color: Style.windowBorderMovingColor
-            }
-        },
-        State {
-            name: "resizing"
-            when: contentwindow.state === ContentWindow.RESIZING
-            PropertyChanges {
-                target: windowRect
-                border.color: Style.windowBorderResizingColor
-            }
-        },
-        State {
-            name: "hidden"
-            when: contentwindow.state === ContentWindow.HIDDEN
-            PropertyChanges {
-                target: windowRect
-                visible: false
-            }
-        }
-    ]
 
     NumberAnimation {
         id: controlsFadeAnimation

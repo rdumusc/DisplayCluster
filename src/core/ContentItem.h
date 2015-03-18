@@ -40,9 +40,9 @@
 #ifndef CONTENTITEM_H
 #define CONTENTITEM_H
 
-#include <QDeclarativeItem>
+#include "types.h"
 
-#include "WallContent.h"
+#include <QtDeclarative/QDeclarativeItem>
 
 /**
  * Render a Content in Qml.
@@ -50,8 +50,16 @@
 class ContentItem : public QDeclarativeItem
 {
     Q_OBJECT
+    Q_PROPERTY( Role role READ getRole WRITE setRole NOTIFY roleChanged )
 
 public:
+    enum Role
+    {
+        ROLE_CONTENT,
+        ROLE_PREVIEW
+    };
+    Q_ENUMS( Role )
+
     /** Constructor. */
     explicit ContentItem( QDeclarativeItem* parentItem = 0  );
 
@@ -62,8 +70,18 @@ public:
     /** Set the factory object to be rendered. */
     void setWallContent( WallContent* wallContent );
 
+    /** Get the role of this item. */
+    Role getRole() const;
+
+public slots:
+    void setRole( Role arg );
+
+signals:
+    void roleChanged( Role arg );
+
 private:
     WallContent* wallContent_;
+    Role role_;
 };
 
 #endif // CONTENTITEM_H
