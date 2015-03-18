@@ -37,18 +37,22 @@
 /*********************************************************************/
 
 #include "DynamicTexture.h"
-#include "RenderContext.h"
-#include "GLWindow.h"
+
 #include "log.h"
+#include "ContentWindow.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
-#include <QDir>
-#include <QImageReader>
-#include <QtConcurrentRun>
+
+#include <QtCore/QDir>
+#include <QtGui/QImageReader>
+#include <QtCore/QtConcurrentRun>
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
+    // glu functions deprecated in 10.9
+#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else
     #include <GL/glu.h>
 #endif
@@ -296,33 +300,53 @@ const QSize& DynamicTexture::getSize() const
     return imageSize_;
 }
 
-void DynamicTexture::render(const QRectF& texCoords)
+void DynamicTexture::render()
 {
-    if(!isVisibleInCurrentGLView())
+    assert( isRoot( ));
+
+    render( zoomRect_ );
+}
+
+void DynamicTexture::renderPreview()
+{
+    render( UNIT_RECTF );
+}
+
+void DynamicTexture::render( const QRectF& texCoords )
+{
+    if( !isVisibleInCurrentGLView( ))
         return;
 
-    if(canHaveChildren() && !isResolutionSufficientForCurrentGLView())
+    if( canHaveChildren() && !isResolutionSufficientForCurrentGLView( ))
     {
-        renderChildren(texCoords);
+        renderChildren( texCoords );
         renderedChildren_ = true;
         return;
     }
 
     // Normal rendering: load the texture if not already available
-    if(!loadImageThreadStarted_)
+    if( !loadImageThreadStarted_ )
         loadImageAsync();
 
-    render_(texCoords);
+    drawTexture( texCoords );
 }
 
-void DynamicTexture::preRenderUpdate()
+void DynamicTexture::preRenderUpdate( ContentWindowPtr window,
+                                      const QRect& wallArea )
 {
+    assert( isRoot( ));
+
+    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
+        return;
+
     // Root needs to always have a texture for renderInParent()
-    if (isRoot() && !loadImageThreadStarted_)
+    if( !loadImageThreadStarted_ )
         loadImageAsync();
+
+    zoomRect_ = window->getZoomRect();
 }
 
-void DynamicTexture::postRenderUpdate()
+void DynamicTexture::postRenderSync( WallToWallChannel& )
 {
     clearOldChildren();
     renderedChildren_ = false;
@@ -332,13 +356,13 @@ bool DynamicTexture::isVisibleInCurrentGLView()
 {
     // TODO This objects visibility should be determined by using the GLWindow
     // as a pre-render step, not retro-fitted in here!
-    const QRectF screenRect = GLWindow::getProjectedPixelRect(true);
+    const QRectF screenRect = getProjectedPixelRect(true);
     return screenRect.width()*screenRect.height() > 0.;
 }
 
 bool DynamicTexture::isResolutionSufficientForCurrentGLView()
 {
-    const QRectF fullRect = GLWindow::getProjectedPixelRect(false);
+    const QRectF fullRect = getProjectedPixelRect(false);
     return fullRect.width() <= TEXTURE_SIZE && fullRect.height() <= TEXTURE_SIZE;
 }
 
@@ -348,7 +372,7 @@ bool DynamicTexture::canHaveChildren()
             getRoot()->imageSize_.height() / (1 << depth_) > TEXTURE_SIZE);
 }
 
-void DynamicTexture::render_(const QRectF& texCoords)
+void DynamicTexture::drawTexture(const QRectF& texCoords)
 {
     if(!texture_.isValid() && loadImageThreadStarted_ && loadImageThread_.isFinished())
         generateTexture();
@@ -365,7 +389,7 @@ void DynamicTexture::render_(const QRectF& texCoords)
         // If we don't yet have a texture, try to render from parent's texture
         DynamicTexturePtr parent = parent_.lock();
         if(parent)
-            parent->render_(getImageRegionInParentImage(texCoords));
+            parent->drawTexture(getImageRegionInParentImage(texCoords));
     }
 }
 
@@ -665,4 +689,53 @@ void DynamicTexture::incrementGlobalThreadCount()
     {
         return getRoot()->incrementGlobalThreadCount();
     }
+}
+
+QRectF DynamicTexture::getProjectedPixelRect( const bool clampToViewportBorders )
+{
+    // get four corners in object space (recall we're in normalized 0->1 coord)
+    const double corners[4][3] =
+    {
+        {0.,0.,0.},
+        {1.,0.,0.},
+        {1.,1.,0.},
+        {0.,1.,0.}
+    };
+
+    // get four corners in screen space
+    GLdouble modelview[16];
+    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
+
+    GLdouble projection[16];
+    glGetDoublev( GL_PROJECTION_MATRIX, projection );
+
+    GLint viewport[4];
+    glGetIntegerv( GL_VIEWPORT, viewport );
+
+    GLdouble xWin[4][3];
+
+    for(size_t i=0; i<4; i++)
+    {
+        gluProject( corners[i][0], corners[i][1], corners[i][2],
+                    modelview, projection, viewport,
+                    &xWin[i][0], &xWin[i][1], &xWin[i][2] );
+
+        const GLdouble viewportWidth = (GLdouble)viewport[2];
+        const GLdouble viewportHeight = (GLdouble)viewport[3];
+
+        // The GL coordinates system origin is at the bottom-left corner with
+        // the y-axis pointing upwards. For the QRect, we want the origin at
+        // the top of the viewport with the y-axis pointing downwards.
+        xWin[i][1] = viewportHeight - xWin[i][1];
+
+        if( clampToViewportBorders )
+        {
+            xWin[i][0] = std::min( std::max( xWin[i][0], 0. ), viewportWidth );
+            xWin[i][1] = std::min( std::max( xWin[i][1], 0. ), viewportHeight );
+        }
+    }
+
+    const QPointF topleft( xWin[0][0], xWin[0][1] );
+    const QPointF bottomright( xWin[2][0], xWin[2][1] );
+    return QRectF( topleft, bottomright );
 }

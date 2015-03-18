@@ -37,24 +37,51 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef GLUTILS_H
-#define GLUTILS_H
+#ifndef PIXELSTREAMUPDATER_H
+#define PIXELSTREAMUPDATER_H
 
-class QWidget;
+#include "types.h"
+
+#include "SwapSyncObject.h"
+
+#include <QtCore/QObject>
+#include <QtCore/QMap>
 
 /**
- * OpenGL utility functions.
+ * Synchronize the update of PixelStreams and send new frame requests.
  */
-class GLUtils
+class PixelStreamUpdater : public QObject
 {
+    Q_OBJECT
+
 public:
-    /**
-     * Enable or disable VSync on a given window.
-     * @param window A QWidget which must already be initialized.
-     * @param enabled The value to set.
-     * @return true on success.
-     */
-    static bool setEnableVSync( const QWidget* window, bool enabled );
+    /** Constructor. */
+    PixelStreamUpdater();
+
+    /** Synchronize the update of the PixelStreams. */
+    void synchronizeFramesSwap( const SyncFunction& versionCheckFunc );
+
+public slots:
+    /** Update the appropriate PixelStream with the given frame. */
+    void updatePixelStream( deflect::PixelStreamFramePtr frame );
+
+    /** Connect the new window to receive PixelStream frame updates. */
+    void onWindowAdded( QmlWindowPtr qmlWindow );
+
+    /** Disconnect the window from PixelStream frame updates. */
+    void onWindowRemoved( QmlWindowPtr qmlWindow );
+
+signals:
+    /** Emitted to request a new frame after a successful swap. */
+    void requestFrame( QString uri );
+
+private:
+    typedef QMap<QString,PixelStreamPtr> PixelStreamMap;
+    PixelStreamMap pixelStreamMap_;
+
+    typedef SwapSyncObject<deflect::PixelStreamFramePtr> SwapSyncFrame;
+    typedef QMap<QString,SwapSyncFrame> SwapSyncFramesMap;
+    SwapSyncFramesMap swapSyncFrames_;
 };
 
-#endif // GLUTILS_H
+#endif // PIXELSTREAMUPDATER_H

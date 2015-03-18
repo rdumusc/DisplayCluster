@@ -40,11 +40,12 @@
 #ifndef PDF_H
 #define PDF_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 
-#include <QString>
+#include <QtCore/QString>
 
 namespace Poppler
 {
@@ -52,7 +53,7 @@ namespace Poppler
     class Page;
 }
 
-class PDF : public FactoryObject
+class PDF : public WallContent
 {
 public:
     PDF( const QString& uri );
@@ -70,12 +71,6 @@ public:
     QImage renderToImage( const QSize& imageSize,
                           const QRectF& region = UNIT_RECTF ) const;
 
-    const QSize& getTextureSize() const;
-    const QRectF& getTextureRegion() const;
-    void updateTexture( const QSize& textureSize, const QRectF& pdfRegion );
-    void render( const QRectF& texCoords ) override;
-    void renderPreview() override;
-
 private:
     Poppler::Document* pdfDoc_;
     Poppler::Page* pdfPage_;
@@ -90,6 +85,14 @@ private:
     void closeDocument();
     void closePage();
     bool isValid( const int pageNumber ) const;
+
+    const QSize& getTextureSize() const;
+    const QRectF& getTextureRegion() const;
+    void updateTexture( const QSize& textureSize, const QRectF& pdfRegion );
+    void render() override;
+    void renderPreview() override;
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
 };
 
 #endif // PDF_H

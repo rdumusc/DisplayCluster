@@ -39,14 +39,17 @@
 #include "Movie.h"
 
 #include "FFMPEGMovie.h"
+#include "ContentWindow.h"
+#include "MovieContent.h"
 #include "WallToWallChannel.h"
 
-Movie::Movie(QString uri)
-    : ffmpegMovie_(new FFMPEGMovie(uri))
-    , uri_(uri)
-    , paused_(false)
-    , isVisible_(true)
-    , skippedLastFrame_(false)
+Movie::Movie( const QString& uri )
+    : ffmpegMovie_( new FFMPEGMovie( uri ))
+    , uri_( uri )
+    , paused_( false )
+    , suspended_( false )
+    , isVisible_( true )
+    , skippedLastFrame_( false )
 {}
 
 Movie::~Movie()
@@ -54,72 +57,107 @@ Movie::~Movie()
     delete ffmpegMovie_;
 }
 
-void Movie::preRenderUpdate(WallToWallChannel& wallToWallChannel)
-{
-    if(paused_)
-        return;
-
-    elapsedTimer_.setCurrentTime(wallToWallChannel.getTime());
-    timestamp_ += elapsedTimer_.getElapsedTime();
-
-    skippedLastFrame_ = !isVisible_;
-    ffmpegMovie_->update(timestamp_, skippedLastFrame_);
-
-    // Get the current timestamp back from the FFMPEG movie.
-    timestamp_ = ffmpegMovie_->getTimestamp();
-
-    if (ffmpegMovie_->isNewFrameAvailable())
-        texture_.update(ffmpegMovie_->getData(), GL_RGBA);
-}
-
-void Movie::synchronizeTimestamp(WallToWallChannel& wallToWallChannel)
-{
-    // Elect a leader among processes which have decoded a frame
-    const int leader = wallToWallChannel.electLeader(!skippedLastFrame_);
-
-    if (leader < 0)
-        return;
-
-    if (leader == wallToWallChannel.getRank())
-        wallToWallChannel.broadcast(timestamp_);
-    else
-        timestamp_ = wallToWallChannel.receiveTimestampBroadcast(leader);
-}
-
-void Movie::postRenderUpdate(WallToWallChannel& wallToWallChannel)
-{
-    synchronizeTimestamp(wallToWallChannel);
-}
-
-bool Movie::generateTexture()
-{
-    QImage image(ffmpegMovie_->getWidth(), ffmpegMovie_->getHeight(), QImage::Format_RGB32);
-    image.fill(0);
-
-    return texture_.init(image);
-}
-
-void Movie::render(const QRectF& texCoords)
-{
-    if( !texture_.isValid() && !generateTexture( ))
-        return;
-
-    quad_.setTexCoords( texCoords );
-    quad_.setTexture( texture_.getTextureId( ));
-    quad_.render();
-}
-
-void Movie::setVisible(const bool isVisible)
+void Movie::setVisible( const bool isVisible )
 {
     isVisible_ = isVisible;
 }
 
-void Movie::setPause(const bool pause)
+void Movie::setPause( const bool pause )
 {
     paused_ = pause;
 }
 
-void Movie::setLoop(const bool loop)
+void Movie::setLoop( const bool loop )
 {
-    ffmpegMovie_->setLoop(loop);
+    ffmpegMovie_->setLoop( loop );
 }
+
+void Movie::render()
+{
+    if( !texture_.isValid( ))
+        return;
+
+    quad_.render();
+}
+
+void Movie::renderPreview()
+{
+    if( !texture_.isValid( ))
+        return;
+
+    previewQuad_.render();
+}
+
+void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
+{
+    if( !texture_.isValid( ))
+    {
+        generateTexture();
+        quad_.setTexture( texture_.getTextureId( ));
+        previewQuad_.setTexture( texture_.getTextureId( ));
+    }
+
+    quad_.setTexCoords( window->getZoomRect( ));
+
+    // Stop decoding when the window is moving.
+    // This is to avoid saccades when reaching a new GLWindow.
+    // The decoding resumes when the movement is finished.
+    suspended_ = window->isMoving() || window->isResizing();
+
+    MovieContent& movie = static_cast<MovieContent&>( *window->getContent( ));
+
+    setPause( movie.getControlState() & STATE_PAUSED );
+    setLoop( movie.getControlState() & STATE_LOOP );
+
+    setVisible( QRectF( wallArea ).intersects( window->getCoordinates( )));
+}
+
+void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
+{
+    if( paused_ || suspended_ )
+        return;
+
+    elapsedTimer_.setCurrentTime( wallToWallChannel.getTime( ));
+    timestamp_ += elapsedTimer_.getElapsedTime();
+
+    skippedLastFrame_ = !isVisible_;
+    ffmpegMovie_->update( timestamp_, skippedLastFrame_ );
+
+    // Get the current timestamp back from the FFMPEG movie.
+    timestamp_ = ffmpegMovie_->getTimestamp();
+
+    if( ffmpegMovie_->isNewFrameAvailable( ))
+        texture_.update( ffmpegMovie_->getData( ), GL_RGBA );
+}
+
+void Movie::postRenderSync( WallToWallChannel& wallToWallChannel )
+{
+    if( paused_ || suspended_ )
+        return;
+
+    synchronizeTimestamp( wallToWallChannel );
+}
+
+bool Movie::generateTexture()
+{
+    QImage image( ffmpegMovie_->getWidth(), ffmpegMovie_->getHeight(),
+                  QImage::Format_RGB32 );
+    image.fill( 0 );
+
+    return texture_.init( image );
+}
+
+void Movie::synchronizeTimestamp( WallToWallChannel& wallToWallChannel )
+{
+    // Elect a leader among processes which have decoded a frame
+    const int leader = wallToWallChannel.electLeader( !skippedLastFrame_ );
+
+    if( leader < 0 )
+        return;
+
+    if( leader == wallToWallChannel.getRank( ))
+        wallToWallChannel.broadcast( timestamp_ );
+    else
+        timestamp_ = wallToWallChannel.receiveTimestampBroadcast( leader );
+}
+

@@ -39,7 +39,7 @@
 #include "Options.h"
 
 Options::Options()
-    : showWindowBorders_(false)
+    : showWindowBorders_(true)
     , showTouchPoints_(false)
     , showTestPattern_(false)
     , showZoomContext_(true)

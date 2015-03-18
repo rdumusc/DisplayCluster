@@ -61,9 +61,7 @@ class WallToWallChannel;
  *
  * This class does not actually hold any content data because it
  * is meant to be sent through MPI to Rank>0 processes.
- * The content data is held by FactoryObjects on Rank>0 processes.
- * A Content object references a FactoryObject of the same ContentType based on its URI.
- * It is possible for multiple Content objects to reference the same FactoryObject.
+ * The content data is held by WallContent objects on Wall processes.
  */
 class Content : public QObject
 {
@@ -78,7 +76,7 @@ public:
     const QString& getURI() const;
 
     /** Get the content type **/
-    virtual CONTENT_TYPE getType() = 0;
+    virtual CONTENT_TYPE getType() const = 0;
 
     /**
      * Read content metadata from the data source.
@@ -94,13 +92,7 @@ public:
     void setDimensions( const QSize& dimensions );
 
     /** Get the aspect ratio. */
-    float getAspectRatio() const;
-
-    /** Re-implement this method to update or synchronize before rendering. */
-    virtual void preRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
-
-    /** Re-implement this method to update or synchronize after rendering. */
-    virtual void postRenderUpdate( Factories&, ContentWindowPtr, WallToWallChannel& ) { }
+    qreal getAspectRatio() const;
 
     /** Get the actions from QML. */
     ContentActionsModel* getActions();

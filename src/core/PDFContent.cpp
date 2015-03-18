@@ -38,9 +38,8 @@
 /*********************************************************************/
 
 #include "PDFContent.h"
+
 #include "PDF.h"
-#include "Factories.h"
-#include "ContentWindow.h"
 
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
@@ -55,7 +54,7 @@ PDFContent::PDFContent(const QString& uri)
     connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
 }
 
-CONTENT_TYPE PDFContent::getType()
+CONTENT_TYPE PDFContent::getType() const
 {
     return CONTENT_TYPE_PDF;
 }
@@ -103,21 +102,7 @@ void PDFContent::previousPage()
     }
 }
 
-void PDFContent::preRenderUpdate( Factories& factories, ContentWindowPtr window,
-                                  WallToWallChannel& )
+int PDFContent::getPage() const
 {
-    if( window->isResizing( ))
-        return;
-
-    PDFPtr pdf = factories.getPDFFactory().getObject( getURI( ));
-
-    const bool pageHasChanged = (pdf->getPage() != pageNumber_);
-    pdf->setPage( pageNumber_ );
-
-    const QSize& windowSize = window->getCoordinates().size().toSize();
-    if( pageHasChanged || pdf->getTextureSize() != windowSize ||
-        pdf->getTextureRegion() != window->getZoomRect( ) )
-    {
-        pdf->updateTexture( windowSize, window->getZoomRect( ));
-    }
+    return pageNumber_;
 }

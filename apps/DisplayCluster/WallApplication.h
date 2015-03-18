@@ -85,7 +85,6 @@ private:
     boost::scoped_ptr<WallConfiguration> config_;
     RenderContextPtr renderContext_;
     boost::scoped_ptr<RenderController> renderController_;
-    FactoriesPtr factories_;
 
     boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
     boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
@@ -99,11 +98,6 @@ private:
     void initMPIConnection(MPIChannelPtr worldChannel);
 
     void startRendering();
-
-    void onNewObject(FactoryObject& object);
-    void syncObjects();
-    void preRenderUpdate();
-    void postRenderUpdate();
 };
 
 #endif // WALLAPPLICATION_H

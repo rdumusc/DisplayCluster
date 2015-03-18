@@ -23,3 +23,14 @@ var statisticsFontSize = 24;
 var statisticsFontColor = "red";
 
 var segmentBorderColor = "lightgreen";
+
+var windowBorderWidth = 10;
+var windowBorderDefaultColor = "black";
+var windowBorderSelectedColor = "red";
+var windowBorderMovingColor= "green";
+var windowBorderResizingColor = "blue";
+
+var zoomContextBorderColor = "white";
+var zoomContextBorderWidth = 10;
+var zoomContextSelectionColor = "red";
+var zoomContextSelectionWidth = 5;

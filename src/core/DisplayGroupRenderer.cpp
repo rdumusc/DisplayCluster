@@ -41,9 +41,11 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
-#include "Factories.h"
 #include "RenderContext.h"
 #include "Options.h"
+#include "PixelStream.h"
+
+#include <deflect/PixelStreamFrame.h>
 
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
@@ -54,34 +56,21 @@
 
 namespace
 {
-const float BACKGROUND_Z_COORD = -1.f + std::numeric_limits<float>::epsilon();
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
+const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
+const int BACKGROUND_STACKING_ORDER = -1;
 }
 
-DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext,
-                                            FactoriesPtr factories )
+DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
     : renderContext_( renderContext )
-    , factories_( factories )
-    , windowRenderer_( factories )
+    , displayGroup_( new DisplayGroup( QSize( )))
     , displayGroupItem_( 0 )
 {
     setRenderingOptions( boost::make_shared<Options>( ));
 }
 
-void DisplayGroupRenderer::render()
-{
-    if( !displayGroup_ )
-        return;
-
-    renderBackground( displayGroup_->getBackgroundContent( ));
-    render( displayGroup_->getContentWindows( ));
-}
-
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
-    windowRenderer_.setShowWindowBorders( options->getShowWindowBorders( ));
-    windowRenderer_.setShowZoomContext( options->getShowZoomContext( ));
-
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     engine.rootContext()->setContextProperty( "options", options.get( ));
     options_ = options;
@@ -92,15 +81,19 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
 
     // Update the scene with the new information
-    engine.rootContext()->setContextProperty( "displaygroup", displayGroup.get( ));
+    engine.rootContext()->setContextProperty( "displaygroup",
+                                              displayGroup.get( ));
 
     if( !displayGroupItem_ )
         createDisplayGroupQmlItem();
+
+    setBackground( displayGroup->getBackgroundContent( ));
 
     ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
 
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
+    int stackingOrder = BACKGROUND_STACKING_ORDER + 1;
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         const QUuid& id = window->getID();
@@ -111,6 +104,8 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
             windowItems_[id]->update( window );
         else
             createWindowQmlItem( window );
+
+        windowItems_[id]->setStackingOrder( stackingOrder++ );
     }
 
     // Remove old windows
@@ -120,62 +115,35 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         if( updatedWindows.contains( it.key( )))
             ++it;
         else
+        {
+            emit windowRemoved( *it );
             it = windowItems_.erase( it );
+        }
     }
 
-    // Store the new DisplayGroup
+    // Retain the new DisplayGroup
     displayGroup_ = displayGroup;
 }
 
-void DisplayGroupRenderer::renderBackground( ContentPtr content )
+void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )
 {
-    if( !content )
-        return;
-
-    // Scale fullscreen, keep aspect ratio
-    QSizeF size( content->getDimensions( ));
-    size.scale( displayGroup_->getCoordinates().size(), Qt::KeepAspectRatio );
-    QRectF coord( QPointF(), size );
-    coord.moveCenter( displayGroup_->getCoordinates().center( ));
-
-    glPushMatrix();
-    glTranslatef( coord.x(), coord.y(), BACKGROUND_Z_COORD );
-    glScalef( coord.width(), coord.height(), 1.f );
-
-    factories_->getFactoryObject( content )->render( UNIT_RECTF );
-
-    glPopMatrix();
+    const QRect& visibleWallArea = renderContext_->getVisibleWallArea();
+    foreach( QmlWindowPtr window, windowItems_ )
+    {
+        window->preRenderUpdate( wallChannel, visibleWallArea );
+    }
+    if( backgroundWindowItem_ )
+        backgroundWindowItem_->preRenderUpdate( wallChannel, visibleWallArea );
 }
 
-void DisplayGroupRenderer::render( const ContentWindowPtrs& contentWindows )
+void DisplayGroupRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
 {
-    const unsigned int windowCount = contentWindows.size();
-    unsigned int windowIndex = 0;
-    for( ContentWindowPtrs::const_iterator it = contentWindows.begin();
-         it != contentWindows.end(); ++it, ++windowIndex )
+    foreach( QmlWindowPtr window, windowItems_ )
     {
-        // It is currently not possible to cull windows that are invisible as
-        // this conflics with the "garbage collection" mechanism for Contents.
-        // In fact, "stale" objects are objects which have not been rendered for
-        // more than one frame (implicitly: objects without a window) and those
-        // are destroyed by Factory::clearStaleObjects(). It is currently the
-        // only way to remove a Content.
-        //if( !isRegionVisible( (*it)->getCoordinates( )))
-        //    continue;
-
-        // the visible depths are in the range (-1,1);
-        // make the content window depths be in the range (-1,0)
-        const float zCoordinate = -(float)( windowCount - windowIndex ) /
-                                   (float)( windowCount + 1 );
-
-        glPushMatrix();
-        glTranslatef( 0.f, 0.f, zCoordinate );
-
-        windowRenderer_.setContentWindow( *it );
-        windowRenderer_.render();
-
-        glPopMatrix();
+        window->postRenderUpdate( wallChannel );
     }
+    if( backgroundWindowItem_ )
+        backgroundWindowItem_->postRenderUpdate( wallChannel );
 }
 
 void DisplayGroupRenderer::createDisplayGroupQmlItem()
@@ -194,8 +162,33 @@ void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
     const QUuid& id = window->getID();
     windowItems_[id].reset( new QmlWindowRenderer( engine, *displayGroupItem_,
                                                    window ));
+    emit windowAdded( windowItems_[id] );
+}
 
-    // Currently only needed to link the PixelStream with Qml for rendering fps
-    ContentPtr content = window->getContent();
-    windowItems_[id]->associateWith( *factories_->getFactoryObject( content ));
+void DisplayGroupRenderer::setBackground( ContentPtr content )
+{
+    if( !content )
+    {
+        backgroundWindowItem_.reset();
+        return;
+    }
+
+    ContentPtr previousContent = displayGroup_->getBackgroundContent();
+    if( previousContent && content->getURI() == previousContent->getURI( ))
+        return;
+
+    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
+
+    QSizeF size( content->getDimensions( ));
+    size.scale( displayGroup_->getCoordinates().size(), Qt::KeepAspectRatio );
+
+    QRectF coord( QPointF(), size );
+    coord.moveCenter( displayGroup_->getCoordinates().center( ));
+    window->setCoordinates( coord );
+
+    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
+                                                        *displayGroupItem_,
+                                                        window ));
+    backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
 }

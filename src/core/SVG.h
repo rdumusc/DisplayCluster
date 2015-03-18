@@ -39,7 +39,8 @@
 #ifndef SVG_H
 #define SVG_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "types.h"
 #include "GLQuad.h"
 
@@ -61,19 +62,13 @@ struct SVGTextureData
     QRectF region;
 };
 
-class SVG : public FactoryObject
+class SVG : public WallContent
 {
 public:
     SVG( const QString& uri );
 
     bool isValid() const;
     QSize getSize() const;
-
-    QSize getTextureSize() const;
-    const QRectF& getTextureRegion() const;
-    void updateTexture( const QSize& textureSize, const QRectF& svgRegion );
-    void render( const QRectF& texCoords ) override;
-    void renderPreview() override;
 
 private:
     QRectF svgExtents_;
@@ -83,7 +78,15 @@ private:
     FBOPtr previewFbo_;
     GLQuad quad_;
 
-    void renderTexturedQuad( const GLuint textureId );
+    void render() override;
+    void renderPreview() override;
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
+
+    QSize getTextureSize() const;
+    const QRectF& getTextureRegion() const;
+    void updateTexture( const QSize& textureSize, const QRectF& svgRegion );
+
     void generatePreviewTexture();
     bool setImageData( const QByteArray& imageData );
     void renderToTexture( const QRectF& svgRegion, FBOPtr targetFbo );

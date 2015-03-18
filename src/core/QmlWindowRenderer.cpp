@@ -41,6 +41,7 @@
 
 #include "ContentWindow.h"
 #include "PixelStream.h"
+#include "ContentItem.h"
 
 #include <QtDeclarative/QDeclarativeComponent>
 
@@ -48,24 +49,35 @@
 
 namespace
 {
+const QString CONTENT_ITEM_OBJECT_NAME( "ContentItem" );
+const QString ZOOM_CONTEXT_ITEM_OBJECT_NAME( "ZoomContextItem" );
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 }
 
 QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
-                                      QDeclarativeItem& displayGroupItem,
+                                      QDeclarativeItem& parentItem,
                                       ContentWindowPtr contentWindow )
     : contentWindow_( contentWindow )
     , windowContext_( new QDeclarativeContext( engine.rootContext( )))
     , windowItem_( 0 )
-    , contentItem_( 0 )
+    , wallContent_( WallContent::create( *(contentWindow->getContent( ))))
 {
     windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
 
     windowItem_ = createQmlItem( QML_WINDOW_URL );
-    windowItem_->setParentItem( &displayGroupItem );
+    windowItem_->setParentItem( &parentItem );
 
-    createContentItem();
+    ContentItem* contentItem =
+       windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
+    contentItem->setWallContent( wallContent_.get( ));
+
+    ContentItem* zoomContextItem =
+      windowItem_->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
+    zoomContextItem->setWallContent( wallContent_.get( ));
+
+    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
+        setupPixelStreamItem();
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
@@ -82,23 +94,39 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
     contentWindow_ = contentWindow;
 }
 
-void QmlWindowRenderer::associateWith( FactoryObject& object )
+void QmlWindowRenderer::setStackingOrder( const int value )
 {
-    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
-    {
-        PixelStream* stream = static_cast<PixelStream*>( &object );
-        windowContext_->setContextProperty( "pixelstream", stream );
-    }
+    windowItem_->setProperty( "z", value );
 }
 
-void QmlWindowRenderer::createContentItem()
+void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
+                                         const QRect& visibleWallArea )
 {
-    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
-    {
-        windowContext_->setContextProperty( "pixelstream", NULL );
-        contentItem_ = createQmlItem( QML_PIXELSTREAM_URL );
-        contentItem_->setParentItem( windowItem_ );
-    }
+    wallContent_->preRenderUpdate( contentWindow_, visibleWallArea );
+    wallContent_->preRenderSync( wallChannel );
+}
+
+void QmlWindowRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
+{
+    wallContent_->postRenderSync( wallChannel );
+}
+
+WallContentPtr QmlWindowRenderer::getWallContent()
+{
+    return wallContent_;
+}
+
+ContentWindowPtr QmlWindowRenderer::getContentWindow()
+{
+    return contentWindow_;
+}
+
+void QmlWindowRenderer::setupPixelStreamItem()
+{
+    PixelStream* stream = static_cast<PixelStream*>( wallContent_.get( ));
+    windowContext_->setContextProperty( "pixelstream", stream );
+    QDeclarativeItem* pixelStreamItem = createQmlItem( QML_PIXELSTREAM_URL );
+    pixelStreamItem->setParentItem( windowItem_ );
 }
 
 QDeclarativeItem* QmlWindowRenderer::createQmlItem( const QUrl& url )

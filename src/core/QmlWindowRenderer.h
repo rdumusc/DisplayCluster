@@ -40,7 +40,7 @@
 #ifndef QMLWINDOWRENDERER_H
 #define QMLWINDOWRENDERER_H
 
-#include <types.h>
+#include "types.h"
 
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -57,24 +57,35 @@
 class QmlWindowRenderer : public boost::noncopyable
 {
 public:
+    /** Constructor. */
     QmlWindowRenderer( QDeclarativeEngine& engine,
-                       QDeclarativeItem& displayGroupItem,
+                       QDeclarativeItem& parentItem,
                        ContentWindowPtr contentWindow );
+    /** Destructor. */
     ~QmlWindowRenderer();
 
     /** Update the qml object with a new data model. */
     void update( ContentWindowPtr contentWindow );
 
-    /** Associate the renderer with its corresponding FactoryObject. */
-    void associateWith( FactoryObject& pixelStream );
+    void setStackingOrder( int value );
+
+    void preRenderUpdate( WallToWallChannel& wallChannel,
+                          const QRect& visibleWallArea );
+    void postRenderUpdate( WallToWallChannel& wallChannel );
+
+    /** Get the WallContent. */
+    WallContentPtr getWallContent();
+
+    /** Get the ContentWindow. */
+    ContentWindowPtr getContentWindow();
 
 private:
     ContentWindowPtr contentWindow_;
     boost::scoped_ptr<QDeclarativeContext> windowContext_;
     QDeclarativeItem* windowItem_;
-    QDeclarativeItem* contentItem_;
+    WallContentPtr wallContent_;
 
-    void createContentItem();
+    void setupPixelStreamItem();
     QDeclarativeItem* createQmlItem( const QUrl& url );
 };
 

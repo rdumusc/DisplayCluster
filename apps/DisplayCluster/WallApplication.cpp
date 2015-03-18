@@ -50,25 +50,26 @@
 #include "configuration/WallConfiguration.h"
 
 #include "RenderContext.h"
-#include "Factories.h"
 
 #include <stdexcept>
 
 #include <boost/bind.hpp>
 
-WallApplication::WallApplication(int& argc_, char** argv_, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel)
-    : QApplication(argc_, argv_)
-    , wallChannel_(new WallToWallChannel(wallChannel))
+WallApplication::WallApplication( int& argc_, char** argv_,
+                                  MPIChannelPtr worldChannel,
+                                  MPIChannelPtr wallChannel )
+    : QApplication( argc_, argv_ )
+    , wallChannel_( new WallToWallChannel( wallChannel ))
 {
-    CommandLineParameters options(argc_, argv_);
-    if (options.getHelp())
+    CommandLineParameters options( argc_, argv_ );
+    if( options.getHelp( ))
         options.showSyntax();
 
-    if (!createConfig(options.getConfigFilename(), worldChannel->getRank()))
-        throw std::runtime_error("WallApplication: initialization failed.");
+    if ( !createConfig( options.getConfigFilename(), worldChannel->getRank( )))
+        throw std::runtime_error(" WallApplication: initialization failed." );
 
     initRenderContext();
-    initMPIConnection(worldChannel);
+    initMPIConnection( worldChannel );
     startRendering();
 }
 
@@ -79,20 +80,17 @@ WallApplication::~WallApplication()
 
     mpiSendThread_.quit();
     mpiSendThread_.wait();
-
-    // Must be done before destructing the GLWindows to release GL objects
-    factories_->clear();
 }
 
-bool WallApplication::createConfig(const QString& filename, const int rank)
+bool WallApplication::createConfig( const QString& filename, const int rank )
 {
     try
     {
-        config_.reset(new WallConfiguration(filename, rank));
+        config_.reset( new WallConfiguration( filename, rank ));
     }
-    catch (const std::runtime_error& e)
+    catch( const std::runtime_error& e )
     {
-        put_flog(LOG_FATAL, "Could not load configuration. '%s'", e.what());
+        put_flog( LOG_FATAL, "Could not load configuration. '%s'", e.what( ));
         return false;
     }
     return true;
@@ -100,63 +98,59 @@ bool WallApplication::createConfig(const QString& filename, const int rank)
 
 void WallApplication::initRenderContext()
 {
-    connect(this, SIGNAL(lastWindowClosed()), this, SLOT(quit()));
+    connect( this, SIGNAL( lastWindowClosed( )), this, SLOT( quit( )));
 
     try
     {
-        renderContext_.reset(new RenderContext(*config_));
+        renderContext_.reset( new RenderContext( *config_ ));
     }
-    catch (const std::runtime_error& e)
+    catch( const std::runtime_error& e )
     {
-        put_flog(LOG_FATAL, "Error creating the RenderContext: '%s'", e.what());
-        throw std::runtime_error("WallApplication: initialization failed.");
+        put_flog( LOG_FATAL, "Error creating the RenderContext: '%s'",
+                  e.what( ));
+        throw std::runtime_error( "WallApplication: initialization failed." );
     }
 
-    factories_.reset(new Factories(boost::bind(&WallApplication::onNewObject, this, _1)));
-    renderController_.reset(new RenderController(renderContext_, factories_));
+    renderController_.reset( new RenderController( renderContext_ ));
 }
 
-void WallApplication::onNewObject(FactoryObject& object)
+void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 {
-    object.setRenderContext(renderContext_.get());
+    fromMasterChannel_.reset( new WallFromMasterChannel( worldChannel ));
+    toMasterChannel_.reset( new WallToMasterChannel( worldChannel ));
 
-    PixelStream* pixelStream = dynamic_cast< PixelStream* >(&object);
-    // only one process needs to request new frames
-    if(pixelStream && wallChannel_->getRank() == 0)
+    fromMasterChannel_->moveToThread( &mpiReceiveThread_ );
+    toMasterChannel_->moveToThread( &mpiSendThread_ );
+
+    connect( fromMasterChannel_.get(), SIGNAL( receivedQuit( )),
+             renderController_.get(), SLOT( updateQuit( )));
+
+    connect( fromMasterChannel_.get(), SIGNAL( received( DisplayGroupPtr )),
+             renderController_.get(), SLOT( updateDisplayGroup( DisplayGroupPtr )));
+
+    connect( fromMasterChannel_.get(), SIGNAL( received( OptionsPtr )),
+             renderController_.get(), SLOT( updateOptions( OptionsPtr )));
+
+    connect( fromMasterChannel_.get(), SIGNAL( received( MarkersPtr )),
+             renderController_.get(), SLOT( updateMarkers( MarkersPtr )));
+
+    connect( fromMasterChannel_.get(),
+             SIGNAL( received( deflect::PixelStreamFramePtr )),
+             &renderController_->getPixelStreamUpdater(),
+             SLOT( updatePixelStream( deflect::PixelStreamFramePtr )));
+
+    if( wallChannel_->getRank() == 0 )
     {
-        connect(pixelStream, SIGNAL(requestFrame(const QString)),
-                toMasterChannel_.get(), SLOT(sendRequestFrame(const QString)));
+        connect( &renderController_->getPixelStreamUpdater(),
+                 SIGNAL( requestFrame( QString )),
+                 toMasterChannel_.get(), SLOT( sendRequestFrame( QString )));
     }
-}
 
-void WallApplication::initMPIConnection(MPIChannelPtr worldChannel)
-{
-    fromMasterChannel_.reset(new WallFromMasterChannel(worldChannel));
-    toMasterChannel_.reset(new WallToMasterChannel(worldChannel));
+    connect( fromMasterChannel_.get(), SIGNAL( receivedQuit( )),
+             toMasterChannel_.get(), SLOT( sendQuit( )));
 
-    fromMasterChannel_->moveToThread(&mpiReceiveThread_);
-    toMasterChannel_->moveToThread(&mpiSendThread_);
-
-    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
-            renderController_.get(), SLOT(updateQuit()));
-
-    connect(fromMasterChannel_.get(), SIGNAL(received(DisplayGroupPtr)),
-            renderController_.get(), SLOT(updateDisplayGroup(DisplayGroupPtr)));
-
-    connect(fromMasterChannel_.get(), SIGNAL(received(OptionsPtr)),
-            renderController_.get(), SLOT(updateOptions(OptionsPtr)));
-
-    connect(fromMasterChannel_.get(), SIGNAL(received(MarkersPtr)),
-            renderController_.get(), SLOT(updateMarkers(MarkersPtr)));
-
-    connect(fromMasterChannel_.get(), SIGNAL(received(deflect::PixelStreamFramePtr)),
-            factories_.get(), SLOT(updatePixelStream(deflect::PixelStreamFramePtr)));
-
-    connect(fromMasterChannel_.get(), SIGNAL(receivedQuit()),
-            toMasterChannel_.get(), SLOT(sendQuit()));
-
-    connect(&mpiReceiveThread_, SIGNAL(started()),
-            fromMasterChannel_.get(), SLOT(processMessages()));
+    connect( &mpiReceiveThread_, SIGNAL( started( )),
+             fromMasterChannel_.get(), SLOT( processMessages( )));
 
     mpiReceiveThread_.start();
     mpiSendThread_.start();
@@ -166,43 +160,25 @@ void WallApplication::startRendering()
 {
     // setup connection so renderFrame() will be called continuously.
     // Must be a queued connection to avoid infinite recursion.
-    connect(this, SIGNAL(frameFinished()),
-            this, SLOT(renderFrame()), Qt::QueuedConnection);
+    connect( this, SIGNAL( frameFinished( )),
+             this, SLOT( renderFrame( )), Qt::QueuedConnection );
     renderFrame();
 }
 
 void WallApplication::renderFrame()
 {
-    preRenderUpdate();
+    wallChannel_->synchronizeClock();
+
+    renderController_->preRenderUpdate( *wallChannel_ );
 
     renderContext_->updateGLWindows();
     wallChannel_->globalBarrier();
     renderContext_->swapBuffers();
 
-    postRenderUpdate();
+    renderController_->postRenderUpdate( *wallChannel_ );
 
-    if (renderController_->quitRendering())
+    if( renderController_->quitRendering( ))
         quit();
 
-    emit(frameFinished());
-}
-
-void WallApplication::preRenderUpdate()
-{
-    syncObjects();
-    wallChannel_->synchronizeClock();
-    factories_->preRenderUpdate(*renderController_->getDisplayGroup(), *wallChannel_);
-}
-
-void WallApplication::syncObjects()
-{
-    const SyncFunction& versionCheckFunc =
-        boost::bind( &WallToWallChannel::checkVersion, wallChannel_.get(), _1 );
-
-    renderController_->synchronizeObjects(versionCheckFunc);
-}
-
-void WallApplication::postRenderUpdate()
-{
-    factories_->postRenderUpdate(*renderController_->getDisplayGroup(), *wallChannel_);
+    emit( frameFinished( ));
 }

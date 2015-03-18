@@ -31,5 +31,7 @@
         <file>WindowControlsDelegate.qml</file>
         <file>style.js</file>
         <file>PixelStream.qml</file>
+        <file>ZoomContext.qml</file>
+        <file>BaseContentWindow.qml</file>
     </qresource>
 </RCC>

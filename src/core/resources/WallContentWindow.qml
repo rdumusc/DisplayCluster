@@ -1,29 +1,21 @@
 import QtQuick 1.1
 import DisplayCluster 1.0
+import "style.js" as Style
 
-Rectangle {
-    id: windowRect
-    color: "transparent"
+BaseContentWindow {
+    border.width: options.showWindowBorders ? Style.windowBorderWidth : 0
 
-    x: contentwindow.x
-    y: contentwindow.y
-    width: contentwindow.width
-    height: contentwindow.height
+    ContentItem {
+        objectName: "ContentItem"
+        anchors.fill: parent
+    }
+
+    ZoomContext {
+    }
 
     WindowControls {
     }
 
     WindowBorders {
     }
-
-    states: [
-        State {
-            name: "hidden"
-            when: contentwindow.state === ContentWindow.HIDDEN
-            PropertyChanges {
-                target: windowRect
-                visible: false
-            }
-        }
-    ]
 }

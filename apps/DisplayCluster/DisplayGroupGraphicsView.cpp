@@ -57,7 +57,7 @@
 namespace
 {
 const QString TOUCH_AREA_OBJECT_NAME( "ContentWindowTouchArea" );
-const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/ContentWindow.qml" );
+const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/MasterContentWindow.qml" );
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
 }
 

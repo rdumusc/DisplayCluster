@@ -38,12 +38,9 @@
 
 #include "MovieContent.h"
 
-#include "ContentWindow.h"
-#include "Factories.h"
 #include "FFMPEGMovie.h"
-#include "Movie.h"
-#include "RenderContext.h"
-#include "WallToWallChannel.h"
+
+#include <QtCore/QFileInfo>
 
 #include <boost/serialization/export.hpp>
 BOOST_CLASS_EXPORT_GUID( MovieContent, "MovieContent" )
@@ -66,7 +63,7 @@ MovieContent::MovieContent()
 {
 }
 
-CONTENT_TYPE MovieContent::getType()
+CONTENT_TYPE MovieContent::getType() const
 {
     return CONTENT_TYPE_MOVIE;
 }
@@ -98,34 +95,9 @@ const QStringList& MovieContent::getSupportedExtensions()
     return extensions;
 }
 
-void MovieContent::preRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel &wallToWallChannel)
+ControlState MovieContent::getControlState() const
 {
-    // Stop decoding when the window is moving.
-    // This is to avoid saccades when reaching a new GLWindow.
-    // The decoding resumes when the movement is finished.
-    if( window && ( window->isMoving() || window->isResizing( )))
-        return;
-
-    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject( uri_ );
-
-    movie->setPause( controlState_ & STATE_PAUSED );
-    movie->setLoop( controlState_ & STATE_LOOP );
-
-    const RenderContext* renderContext = movie->getRenderContext();
-    movie->setVisible(renderContext->isRegionVisible(window->getCoordinates()));
-
-    movie->preRenderUpdate( wallToWallChannel );
-}
-
-void MovieContent::postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel)
-{
-    // Stop decoding when the window is moving to avoid saccades when reaching a new GLWindow
-    // The decoding resumes when the movement is finished
-    if( window && ( window->isMoving() || window->isResizing( )))
-        return;
-
-    boost::shared_ptr< Movie > movie = factories.getMovieFactory().getObject( uri_ );
-    movie->postRenderUpdate( wallToWallChannel );
+    return controlState_;
 }
 
 void MovieContent::play()

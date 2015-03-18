@@ -52,10 +52,10 @@ public:
      * Constructor.
      * @param uri The image or pyramid file.
      */
-    explicit DynamicTextureContent(const QString& uri);
+    explicit DynamicTextureContent( const QString& uri );
 
     /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    CONTENT_TYPE getType() const override;
 
     /**
      * Read texture informations from the source URI.
@@ -72,15 +72,11 @@ private:
     DynamicTextureContent() {}
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
         // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
     }
-
-    void preRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&) override;
-
-    void postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&) override;
 };
 
 #endif

@@ -37,24 +37,51 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef GLUTILS_H
-#define GLUTILS_H
+#ifndef CONTENTITEM_H
+#define CONTENTITEM_H
 
-class QWidget;
+#include "types.h"
+
+#include <QtDeclarative/QDeclarativeItem>
 
 /**
- * OpenGL utility functions.
+ * Render a Content in Qml.
  */
-class GLUtils
+class ContentItem : public QDeclarativeItem
 {
+    Q_OBJECT
+    Q_PROPERTY( Role role READ getRole WRITE setRole NOTIFY roleChanged )
+
 public:
-    /**
-     * Enable or disable VSync on a given window.
-     * @param window A QWidget which must already be initialized.
-     * @param enabled The value to set.
-     * @return true on success.
-     */
-    static bool setEnableVSync( const QWidget* window, bool enabled );
+    enum Role
+    {
+        ROLE_CONTENT,
+        ROLE_PREVIEW
+    };
+    Q_ENUMS( Role )
+
+    /** Constructor. */
+    explicit ContentItem( QDeclarativeItem* parentItem = 0  );
+
+    /** Draw call, reimplemented from QGraphicsItem. */
+    void paint( QPainter* painter, const QStyleOptionGraphicsItem*,
+                QWidget* ) override;
+
+    /** Set the factory object to be rendered. */
+    void setWallContent( WallContent* wallContent );
+
+    /** Get the role of this item. */
+    Role getRole() const;
+
+public slots:
+    void setRole( Role arg );
+
+signals:
+    void roleChanged( Role arg );
+
+private:
+    WallContent* wallContent_;
+    Role role_;
 };
 
-#endif // GLUTILS_H
+#endif // CONTENTITEM_H

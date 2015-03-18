@@ -50,7 +50,8 @@
 #error PopplerPixelStreamer needs Qt4 or Qt5
 #endif
 
-#include "GLWindow.h"
+#include "ContentWindow.h"
+#include "PDFContent.h"
 #include "log.h"
 
 namespace
@@ -152,7 +153,7 @@ void PDF::updateTexture( const QSize& textureSize, const QRectF& pdfRegion )
     textureRect_ = pdfRegion;
 }
 
-void PDF::render( const QRectF& )
+void PDF::render()
 {
     if( !texture_.isValid( ))
         return;
@@ -221,3 +222,22 @@ bool PDF::isValid( const int pageNumber ) const
 {
     return pageNumber >=0 && pageNumber < pdfDoc_->numPages();
 }
+
+void PDF::preRenderUpdate( ContentWindowPtr window, const QRect& /*wallArea*/ )
+{
+    if( window->isResizing( ))
+        return;
+
+    PDFContent& content = static_cast<PDFContent&>( *window->getContent( ));
+
+    const bool pageHasChanged = (pageNumber_ != content.getPage( ));
+    setPage( content.getPage( ));
+
+    const QSize& windowSize = window->getCoordinates().size().toSize();
+    if( pageHasChanged || texture_.getSize() != windowSize ||
+        textureRect_ != window->getZoomRect( ) )
+    {
+        updateTexture( windowSize, window->getZoomRect( ));
+    }
+}
+

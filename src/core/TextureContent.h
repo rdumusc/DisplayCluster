@@ -49,10 +49,10 @@ public:
      * Constructor.
      * @param uri The uri of the pdf document.
      */
-    explicit TextureContent(const QString& uri);
+    explicit TextureContent( const QString& uri );
 
     /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    CONTENT_TYPE getType() const override;
 
     /**
      * Read texture metadata.
@@ -69,10 +69,10 @@ private:
     TextureContent() {}
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
         // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
     }
 };
 

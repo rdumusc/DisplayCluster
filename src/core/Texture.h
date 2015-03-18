@@ -39,17 +39,15 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "FactoryObject.h"
+#include "WallContent.h"
+
 #include "GLTexture2D.h"
 #include "GLQuad.h"
 
-class Texture : public FactoryObject
+class Texture : public WallContent
 {
 public:
-    Texture(const QString uri);
-    ~Texture();
-
-    void render(const QRectF& texCoords) override;
+    Texture( const QString& uri );
 
 private:
     QString uri_;
@@ -57,6 +55,12 @@ private:
 
     GLTexture2D texture_;
     GLQuad quad_;
+    GLQuad previewQuad_;
+
+    void render() override;
+    void renderPreview() override;
+    void preRenderUpdate( ContentWindowPtr window,
+                          const QRect& wallArea ) override;
 
     bool generateTexture();
 };

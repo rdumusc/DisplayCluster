@@ -82,7 +82,6 @@ public:
     const ContentWindowPtrs& getContentWindows() const;
 
     /**
-     * @deprecated
      * Load content windows stored in the given XML file.
      * @return success if the legacy state file could be loaded
      */

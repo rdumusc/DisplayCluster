@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,94 +37,47 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FACTORY_HPP
-#define FACTORY_HPP
+#include "WallContent.h"
 
-#include <map>
-#ifndef Q_MOC_RUN  // See: https://bugreports.qt-project.org/browse/QTBUG-22829
-#  include <boost/shared_ptr.hpp>
-#  include <boost/signals2/signal.hpp>
-#endif
-#include <QString>
-#include <QMutex>
+#include "config.h"
+#include "Content.h"
 
+#include "DynamicTexture.h"
+#include "Movie.h"
+#include "PixelStream.h"
+#include "SVG.h"
+#include "Texture.h"
+#include "PDF.h"
 
-template <class T>
-class Factory
+#include <boost/make_shared.hpp>
+
+WallContent::WallContent()
 {
-public:
-    typedef void NewObjectSignature(T&);
-    typedef boost::function< NewObjectSignature > NewObjectFunc;
+}
 
-    Factory(const NewObjectFunc& slot)
+WallContent::~WallContent()
+{
+}
+
+WallContentPtr WallContent::create( const Content& content )
+{
+    switch( content.getType( ))
     {
-        newObjectSignal_.connect(slot);
-    }
-
-    boost::shared_ptr<T> getObject(const QString& uri)
-    {
-        QMutexLocker locker(&mapMutex_);
-
-        if(!map_.count(uri))
-        {
-            boost::shared_ptr<T> t(new T(uri));
-            newObjectSignal_(*t);
-
-            map_[uri] = t;
-        }
-
-        return map_[uri];
-    }
-
-    void removeObject(const QString& uri)
-    {
-        QMutexLocker locker(&mapMutex_);
-
-        map_.erase(uri);
-    }
-
-    std::map<QString, boost::shared_ptr<T> > getMap()
-    {
-        QMutexLocker locker(&mapMutex_);
-
-        return map_;
-    }
-
-    void clear()
-    {
-        QMutexLocker locker(&mapMutex_);
-
-        map_.clear();
-    }
-
-    bool contains(const QString& uri) const
-    {
-        return map_.count(uri);
-    }
-
-    void clearStaleObjects(const uint64_t currentFrameIndex)
-    {
-        QMutexLocker locker(&mapMutex_);
-
-        typename std::map<QString, boost::shared_ptr<T> >::iterator it = map_.begin();
-
-        while(it != map_.end())
-        {
-            if(currentFrameIndex - it->second->getFrameIndex() > 1)
-                map_.erase(it++);  // note the post increment; increments the iterator but returns original value for erase
-            else
-                ++it;
-        }
-    }
-
-private:
-    boost::signals2::signal< NewObjectSignature > newObjectSignal_;
-
-    // mutex for thread-safe access to map
-    QMutex mapMutex_;
-
-    // all existing objects
-    std::map<QString, boost::shared_ptr<T> > map_;
-};
-
+    case CONTENT_TYPE_DYNAMIC_TEXTURE:
+        return boost::make_shared<DynamicTexture>( content.getURI( ));
+    case CONTENT_TYPE_MOVIE:
+        return boost::make_shared<Movie>( content.getURI( ));
+    case CONTENT_TYPE_PIXEL_STREAM:
+        return boost::make_shared<PixelStream>( content.getURI( ));
+    case CONTENT_TYPE_SVG:
+        return boost::make_shared<SVG>( content.getURI( ));
+    case CONTENT_TYPE_TEXTURE:
+        return boost::make_shared<Texture>( content.getURI( ));
+#if ENABLE_PDF_SUPPORT
+    case CONTENT_TYPE_PDF:
+        return boost::make_shared<PDF>( content.getURI( ));
 #endif
+    default:
+        return WallContentPtr();
+    }
+}

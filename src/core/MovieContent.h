@@ -57,7 +57,7 @@ public:
     explicit MovieContent( const QString& uri );
 
     /** Get the content type **/
-    CONTENT_TYPE getType() override;
+    CONTENT_TYPE getType() const override;
 
     /**
      * Read movie informations from the source URI.
@@ -67,8 +67,7 @@ public:
 
     static const QStringList& getSupportedExtensions();
 
-    void preRenderUpdate(Factories&, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
-    void postRenderUpdate(Factories& factories, ContentWindowPtr window, WallToWallChannel& wallToWallChannel) override;
+    ControlState getControlState() const;
 
 private slots:
     void play();

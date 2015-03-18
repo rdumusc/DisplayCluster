@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,59 +37,64 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENTWINDOWRENDERER_H
-#define CONTENTWINDOWRENDERER_H
+#include "ContentItem.h"
 
-#include "types.h"
-#include "Renderable.h"
-#include "GLQuad.h"
+#include "log.h"
+#include "WallContent.h"
 
-#include <QRectF>
+#include <QtGui/QPainter>
 
-/**
- * Render a ContentWindow and its Content using the associated FactoryObject.
- */
-class ContentWindowRenderer : public Renderable
+#include <GL/gl.h>
+
+ContentItem::ContentItem( QDeclarativeItem* parentItem_ )
+    : QDeclarativeItem( parentItem_ )
+    , wallContent_( 0 )
+    , role_( ROLE_CONTENT )
 {
-public:
-    /**
-     * Constructor.
-     * @param factories Used to retrieve FactoryObjects for rendering Contents.
-     */
-    ContentWindowRenderer( FactoriesPtr factories );
+    setFlag( QGraphicsItem::ItemHasNoContents, false );
+}
 
-    /**
-     * Render the associated ContentWindow.
-     * @see setContentWindow()
-     */
-    void render() override;
+void ContentItem::paint( QPainter* painter, const QStyleOptionGraphicsItem*,
+                         QWidget*)
+{
+    painter->beginNativePainting();
 
-    /**
-     * Set the ContentWindow to be rendered.
-     * @see render()
-     */
-    void setContentWindow( ContentWindowPtr window );
+    glPushMatrix();
+    glScalef( width(), height(), 1.f );
 
-    /** Display the window borders. */
-    void setShowWindowBorders( const bool show );
+    switch ( role_ )
+    {
+    case ROLE_CONTENT:
+        wallContent_->render();
+        break;
+    case ROLE_PREVIEW:
+        wallContent_->renderPreview();
+        break;
+    default:
+        put_flog( LOG_ERROR, "Unsupported ContentItem::Role : ", role_ );
+        break;
+    }
 
-    /** Display the zoom context. */
-    void setShowZoomContext( const bool show );
+    glPopMatrix();
 
-private:
-    FactoriesPtr factories_;
-    ContentWindowPtr window_;
-    GLQuad quad_;
+    painter->endNativePainting();
+}
 
-    bool showWindowBorders_;
-    bool showZoomContext_;
+void ContentItem::setWallContent( WallContent* wallContent )
+{
+    wallContent_ = wallContent;
+}
 
-    void renderWindowBorder();
-    void renderContent();
-    void renderContextView( FactoryObjectPtr object, const QRectF& texCoord );
+ContentItem::Role ContentItem::getRole() const
+{
+    return role_;
+}
 
-    void drawQuad( const QRectF& coord );
-    void drawQuadBorder( const QRectF& coord, const float width );
-};
+void ContentItem::setRole( const Role arg )
+{
+    if( role_ == arg )
+        return;
 
-#endif // CONTENTWINDOWRENDERER_H
+    role_ = arg;
+    emit roleChanged( arg );
+}

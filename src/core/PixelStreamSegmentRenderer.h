@@ -88,7 +88,6 @@ private:
     GLTexture2D texture_;
     GLQuad quad_;
     QRect rect_;
-
     bool textureNeedsUpdate_;
 };
 

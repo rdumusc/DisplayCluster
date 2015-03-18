@@ -43,6 +43,7 @@
 #include "types.h"
 
 #include "SwapSyncObject.h"
+#include "PixelStreamUpdater.h"
 
 #include <QObject>
 
@@ -55,35 +56,42 @@ class RenderController : public QObject
 
 public:
     /** Constructor */
-    RenderController(RenderContextPtr renderContext, FactoriesPtr factories);
+    RenderController( RenderContextPtr renderContext );
 
     /** Get the DisplayGroup */
     DisplayGroupPtr getDisplayGroup() const;
 
-    /** Synchronize the objects */
-    void synchronizeObjects(const SyncFunction& versionCheckFunc);
+    /** Get the PixelStream updater. */
+    PixelStreamUpdater& getPixelStreamUpdater();
+
+    /** Update and synchronize scene objects before rendering a frame. */
+    void preRenderUpdate( WallToWallChannel& wallChannel );
+
+    /** Update and synchronize scene objects after rendering a frame. */
+    void postRenderUpdate( WallToWallChannel& wallChannel );
 
     /** Do we need to stop rendering. */
     bool quitRendering() const;
 
 public slots:
     void updateQuit();
-    void updateDisplayGroup(DisplayGroupPtr displayGroup);
-    void updateOptions(OptionsPtr options);
-    void updateMarkers(MarkersPtr markers);
+    void updateDisplayGroup( DisplayGroupPtr displayGroup );
+    void updateOptions( OptionsPtr options );
+    void updateMarkers( MarkersPtr markers );
 
 private:
     RenderContextPtr renderContext_;
 
     DisplayGroupRendererPtr displayGroupRenderer_;
-    MarkerRendererPtr markerRenderer_;
+    PixelStreamUpdater pixelStreamUpdater_;
 
     SwapSyncObject<bool> syncQuit_;
     SwapSyncObject<DisplayGroupPtr> syncDisplayGroup_;
     SwapSyncObject<OptionsPtr> syncOptions_;
     SwapSyncObject<MarkersPtr> syncMarkers_;
 
-    void setRenderOptions(OptionsPtr options);
+    void synchronizeObjects( const SyncFunction& versionCheckFunc );
+    void setRenderOptions( OptionsPtr options );
 };
 
 #endif // RENDERCONTROLLER_H

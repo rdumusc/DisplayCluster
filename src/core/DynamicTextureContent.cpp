@@ -40,18 +40,18 @@
 
 #include "DynamicTexture.h"
 #include "serializationHelpers.h"
-#include "Factories.h"
-#include "ContentWindow.h"
 
 #include <boost/serialization/export.hpp>
+#include <QtCore/QFileInfo>
+#include <QtGui/QImageReader>
 
-BOOST_CLASS_EXPORT_GUID(DynamicTextureContent, "DynamicTextureContent")
+BOOST_CLASS_EXPORT_GUID( DynamicTextureContent, "DynamicTextureContent" )
 
-DynamicTextureContent::DynamicTextureContent(const QString& uri)
-    : Content(uri)
+DynamicTextureContent::DynamicTextureContent( const QString& uri )
+    : Content( uri )
 {}
 
-CONTENT_TYPE DynamicTextureContent::getType()
+CONTENT_TYPE DynamicTextureContent::getType() const
 {
     return CONTENT_TYPE_DYNAMIC_TEXTURE;
 }
@@ -59,10 +59,10 @@ CONTENT_TYPE DynamicTextureContent::getType()
 bool DynamicTextureContent::readMetadata()
 {
     QFileInfo file( getURI( ));
-    if (!file.exists() || !file.isReadable())
+    if( !file.exists() || !file.isReadable( ))
         return false;
 
-    const DynamicTexture dynamicTexture(getURI());
+    const DynamicTexture dynamicTexture( getURI( ));
     size_ = dynamicTexture.getSize();
     return true;
 }
@@ -71,24 +71,14 @@ const QStringList& DynamicTextureContent::getSupportedExtensions()
 {
     static QStringList extensions;
 
-    if (extensions.empty())
+    if( extensions.empty( ))
     {
         extensions << "pyr";
 
-        const QList<QByteArray>& imageFormats = QImageReader::supportedImageFormats();
+        const QList<QByteArray>& imageFormats =
+                QImageReader::supportedImageFormats();
         foreach( const QByteArray entry, imageFormats )
             extensions << entry;
     }
-
     return extensions;
-}
-
-void DynamicTextureContent::preRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&)
-{
-    factories.getDynamicTextureFactory().getObject(getURI())->preRenderUpdate();
-}
-
-void DynamicTextureContent::postRenderUpdate(Factories& factories, ContentWindowPtr, WallToWallChannel&)
-{
-    factories.getDynamicTextureFactory().getObject(getURI())->postRenderUpdate();
 }

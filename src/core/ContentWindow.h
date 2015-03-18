@@ -72,6 +72,7 @@ class ContentWindow : public Coordinates
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
     Q_PROPERTY( qreal controlsOpacity READ getControlsOpacity WRITE setControlsOpacity NOTIFY controlsOpacityChanged )
     Q_PROPERTY( Content* content READ getContentPtr CONSTANT )
+    Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
 
 public:
     /** The current active window border used for resizing */

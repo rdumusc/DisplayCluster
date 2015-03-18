@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,67 +37,50 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FACTORY_OBJECT_H
-#define FACTORY_OBJECT_H
+#ifndef WALLCONTENT_H
+#define WALLCONTENT_H
 
 #include "types.h"
 
-#include <stdint.h>
-
-class RenderContext;
-
 /**
- * An interface for objects that store Content data on Wall processes.
+ * A content to be rendered by Wall processes.
  *
  * An implementation must exist for every valid ContentType.
  */
-class FactoryObject
+class WallContent
 {
 public:
-    /** Constructor */
-    FactoryObject();
+    /** Destructor. */
+    virtual ~WallContent();
 
-    /** Destructor */
-    virtual ~FactoryObject();
+    /** Render the content. */
+    virtual void render() = 0;
 
-    /**
-     * Render the FactoryObject
-     * @param textCoord The region of the texture to render
-     */
-    virtual void render(const QRectF& textCoord) = 0;
+    /** Render the preview ( whole object at low resolution.). */
+    virtual void renderPreview() = 0;
 
-    /** Render the preview ( whole object at low resolution.) */
-    virtual void renderPreview();
+    /** Update internal state before rendering. */
+    virtual void preRenderUpdate( ContentWindowPtr window,
+                                  const QRect& visibleWallArea ) = 0;
 
-    /**
-     * Set the render context.
-     * @param renderContext The render context
-     */
-    void setRenderContext(RenderContext* renderContext);
+    /** Optional synchronization step before rendering. */
+    virtual void preRenderSync( WallToWallChannel& wallToWallChannel )
+    {
+        Q_UNUSED( wallToWallChannel )
+    }
 
-    /** Get the render context. */
-    RenderContext* getRenderContext() const;
+    /** Optional synchronization step after rendering. */
+    virtual void postRenderSync( WallToWallChannel& wallToWallChannel )
+    {
+        Q_UNUSED( wallToWallChannel )
+    }
 
-    /**
-     * Get the current frame index for this Object.
-     * Used by the Factory to check if the object is still being used/referenced
-     * by a ContentWindow.
-     */
-    uint64_t getFrameIndex() const;
-
-    /**
-     * Must be called everytime a derived object is rendered.
-     * Failing that, it will be garbage collected by the factory.
-     */
-    void setFrameIndex(const uint64_t frameIndex);
+    /** Create an object corresponding to the given content. */
+    static WallContentPtr create( const Content& content );
 
 protected:
-    /** A reference to the render context. */
-    RenderContext* renderContext_;
-
-private:
-    /** Frame index when object was last rendered. */
-    uint64_t frameIndex_;
+    /** Constructor. */
+    WallContent();
 };
 
-#endif
+#endif // WALLCONTENT_H

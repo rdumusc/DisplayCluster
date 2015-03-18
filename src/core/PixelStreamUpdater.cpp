@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,39 +37,62 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "FactoryObject.h"
+#include "PixelStreamUpdater.h"
 
-FactoryObject::FactoryObject()
-    : renderContext_(0)
-    , frameIndex_( 0 )
+#include "log.h"
+
+#include "QmlWindowRenderer.h"
+#include "ContentWindow.h"
+#include "PixelStream.h"
+
+#include <deflect/PixelStreamFrame.h>
+
+PixelStreamUpdater::PixelStreamUpdater()
 {
 }
 
-void FactoryObject::renderPreview()
+void PixelStreamUpdater::synchronizeFramesSwap( const SyncFunction&
+                                                versionCheckFunc )
 {
-    render( UNIT_RECTF );
+    PixelStreamMap::const_iterator streamIt = pixelStreamMap_.begin();
+    for( ; streamIt != pixelStreamMap_.end(); ++streamIt )
+    {
+        const QString& uri = streamIt.key();
+
+        SwapSyncFrame& swapSyncFrame = swapSyncFrames_[uri];
+        if( swapSyncFrame.sync( versionCheckFunc ))
+        {
+            streamIt.value()->setNewFrame( swapSyncFrame.get( ));
+            emit requestFrame( uri );
+        }
+    }
 }
 
-FactoryObject::~FactoryObject()
+void PixelStreamUpdater::updatePixelStream( deflect::PixelStreamFramePtr frame )
 {
+    swapSyncFrames_[frame->uri].update( frame );
 }
 
-void FactoryObject::setRenderContext(RenderContext* renderContext)
+void PixelStreamUpdater::onWindowAdded( QmlWindowPtr qmlWindow )
 {
-    renderContext_ = renderContext;
+    ContentWindowPtr window = qmlWindow->getContentWindow();
+    if( window->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM )
+        return;
+
+    WallContentPtr stream = qmlWindow->getWallContent();
+
+    const QString& uri = window->getContent()->getURI();
+    pixelStreamMap_[uri] = boost::static_pointer_cast<PixelStream>( stream );
 }
 
-RenderContext* FactoryObject::getRenderContext() const
+void PixelStreamUpdater::onWindowRemoved( QmlWindowPtr qmlWindow )
 {
-    return renderContext_;
-}
+    ContentWindowPtr window = qmlWindow->getContentWindow();
+    if( window->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM )
+        return;
 
-uint64_t FactoryObject::getFrameIndex() const
-{
-    return frameIndex_;
-}
-
-void FactoryObject::setFrameIndex(const uint64_t frameIndex)
-{
-    frameIndex_ = frameIndex;
+    const QString& uri = window->getContent()->getURI();
+    disconnect( pixelStreamMap_[uri].get( ));
+    pixelStreamMap_.remove( uri );
+    swapSyncFrames_.remove( uri );
 }

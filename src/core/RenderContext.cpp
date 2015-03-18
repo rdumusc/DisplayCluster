@@ -48,15 +48,6 @@
 
 #include <boost/foreach.hpp>
 
-#ifdef __APPLE__
-    #include <OpenGL/glu.h>
-    // glu functions deprecated in 10.9
-#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-    #include <GL/glu.h>
-#endif
-
 RenderContext::RenderContext( const WallConfiguration& configuration )
     : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
 {
@@ -64,9 +55,14 @@ RenderContext::RenderContext( const WallConfiguration& configuration )
     setupVSync();
 }
 
+const QRect& RenderContext::getVisibleWallArea() const
+{
+    return visibleWallArea_;
+}
+
 void RenderContext::setBackgroundColor( const QColor& color )
 {
-    scene_.setBackgroundColor( color );
+    scene_.setBackgroundBrush( color );
 }
 
 void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
@@ -118,16 +114,6 @@ void RenderContext::setupVSync()
     }
 }
 
-void RenderContext::addRenderable( RenderablePtr renderable )
-{
-    scene_.addRenderable( renderable );
-}
-
-bool RenderContext::isRegionVisible( const QRectF& region ) const
-{
-    return region.intersects( visibleWallArea_ );
-}
-
 void RenderContext::updateGLWindows()
 {
     BOOST_FOREACH( WallWindowPtr window, windows_ )
@@ -174,5 +160,4 @@ void RenderContext::displayTestPattern( const bool value )
     {
         window->getTestPattern()->setVisible( value );
     }
-    scene_.displayTestPattern( value );
 }
