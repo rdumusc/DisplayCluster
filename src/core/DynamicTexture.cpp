@@ -178,10 +178,10 @@ bool DynamicTexture::writeMetadataFile(const QString& pyramidFolder, const QStri
 
 bool DynamicTexture::writePyramidMetadataFiles(const QString& pyramidFolder) const
 {
-    // First metadata file in the pyramid folder
+    // First metadata file inside the pyramid folder
     const QString metadataFilename = pyramidFolder + PYRAMID_METADATA_FILE_NAME;
 
-    // Second more conveniently named metadata file in the same directory as the original image
+    // Second (more conveniently named) metadata file outside the pyramid folder
     QString secondMetadataFilename = pyramidFolder;
     const int lastIndex = secondMetadataFilename.lastIndexOf(pyramidFolderSuffix);
     secondMetadataFilename.truncate(lastIndex);
@@ -206,6 +206,38 @@ QString DynamicTexture::getPyramidImageFilename() const
     filename.append(".").append(IMAGE_EXTENSION);
 
     return filename;
+}
+
+bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
+{
+    // load this object's scaledImage_
+    loadImage();
+
+    const QString filename = pyramidFolder + getPyramidImageFilename();
+    put_flog( LOG_DEBUG, "saving %s", filename.toLocal8Bit().constData( ));
+
+    if( !scaledImage_.save( filename, IMAGE_EXTENSION ))
+        return false;
+    scaledImage_ = QImage(); // no longer need scaled image
+
+    // recursively generate and save children images
+    if( canHaveChildren( ))
+    {
+        QRectF imageBounds[4];
+        imageBounds[0] = QRectF( 0.0, 0.0, 0.5, 0.5 );
+        imageBounds[1] = QRectF( 0.5, 0.0, 0.5, 0.5 );
+        imageBounds[2] = QRectF( 0.5, 0.5, 0.5, 0.5 );
+        imageBounds[3] = QRectF( 0.0, 0.5, 0.5, 0.5 );
+
+#pragma omp parallel for
+        for( unsigned int i=0; i<4; ++i )
+        {
+            DynamicTexturePtr child( new DynamicTexture( "", shared_from_this(),
+                                                         imageBounds[i], i ));
+            child->writePyramidImagesRecursive( pyramidFolder );
+        }
+    }
+    return true;
 }
 
 void loadImageInThread(DynamicTexturePtr dynamicTexture)
@@ -424,66 +456,37 @@ void DynamicTexture::clearOldChildren()
         children_[i]->clearOldChildren();
 }
 
-bool DynamicTexture::makePyramidFolder(const QString& pyramidFolder)
+bool DynamicTexture::makeFolder( const QString& folder )
 {
-    // make directory if necessary
-    if(!QDir(pyramidFolder).exists())
+    if( !QDir( folder ).exists ())
     {
-        if(!QDir().mkdir(pyramidFolder))
+        if( !QDir().mkdir( folder ))
         {
-            put_flog(LOG_ERROR, "error creating directory %s",
-                     pyramidFolder.toLocal8Bit().constData());
+            put_flog( LOG_ERROR, "error creating directory %s",
+                      folder.toLocal8Bit().constData( ));
             return false;
         }
     }
     return true;
 }
 
-bool DynamicTexture::generateImagePyramid(const QString& pyramidFolder)
+bool DynamicTexture::generateImagePyramid( const QString& outputFolder )
 {
-    if(isRoot())
-    {
-        if(loadImageThreadStarted_)
-            loadImageThread_.waitForFinished();
+    assert( isRoot( ));
 
-        if (!makePyramidFolder(pyramidFolder))
-            return false;
+    const QString imageName( QFileInfo( uri_ ).fileName( ));
+    const QString pyramidFolder( outputFolder + "/" + imageName +
+                                 pyramidFolderSuffix );
+    if( loadImageThreadStarted_ )
+        loadImageThread_.waitForFinished();
 
-        if (!writePyramidMetadataFiles(pyramidFolder))
-            return false;
-    }
-
-    // load this object's scaledImage_
-    loadImage();
-
-    const QString filename = pyramidFolder + getPyramidImageFilename();
-    put_flog(LOG_DEBUG, "saving %s", filename.toLocal8Bit().constData());
-
-    if (!scaledImage_.save(filename, IMAGE_EXTENSION))
+    if( !makeFolder(pyramidFolder ))
         return false;
-    scaledImage_ = QImage(); // no longer need scaled image
 
-    // if we need to descend further...
-    if(canHaveChildren())
-    {
-        // image rectangle a child quadrant contains
-        QRectF imageBounds[4];
-        imageBounds[0] = QRectF(0.,0.,0.5,0.5);
-        imageBounds[1] = QRectF(0.5,0.,0.5,0.5);
-        imageBounds[2] = QRectF(0.5,0.5,0.5,0.5);
-        imageBounds[3] = QRectF(0.,0.5,0.5,0.5);
+    if( !writePyramidMetadataFiles( pyramidFolder ))
+        return false;
 
-        // generate and compute children
-#pragma omp parallel for
-        for(unsigned int i=0; i<4; i++)
-        {
-            DynamicTexturePtr child(new DynamicTexture("", shared_from_this(), imageBounds[i], i));
-
-            child->generateImagePyramid(pyramidFolder);
-        }
-    }
-
-    return true;
+    return writePyramidImagesRecursive( pyramidFolder );
 }
 
 void DynamicTexture::decrementGlobalThreadCount()

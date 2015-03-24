@@ -4,3 +4,4 @@
 
 add_subdirectory(DisplayCluster)
 add_subdirectory(LocalStreamer)
+add_subdirectory(PyramidMaker)

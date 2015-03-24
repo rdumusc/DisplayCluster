@@ -104,10 +104,10 @@ public:
 
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
-     * @param baseFolder The folder in which the metadata and pyramid images
+     * @param outputFolder The folder in which the metadata and pyramid images
      *        will be created.
      */
-    bool generateImagePyramid( const QString& baseFolder );
+    bool generateImagePyramid( const QString& outputFolder );
 
     /**
      * Load the image for this part of the texture
@@ -196,12 +196,14 @@ private:
     bool readFullImageMetadata( const QString& uri );
 
     bool readPyramidMetadataFromFile( const QString& uri ); // @Root only
-    bool makePyramidFolder( const QString& pyramidFolder ); // @Root only
+    bool makeFolder(const QString& folder ); // @Root only
     bool writeMetadataFile( const QString& pyramidFolder,
                             const QString& filename ) const; // @Root only
     // @Root only
     bool writePyramidMetadataFiles( const QString& pyramidFolder ) const;
     QString getPyramidImageFilename() const; // @All
+
+    bool writePyramidImagesRecursive( const QString& pyramidFolder ); // @All
 
     QRectF getImageRegionInParentImage( const QRectF& imageRegion ) const;
 

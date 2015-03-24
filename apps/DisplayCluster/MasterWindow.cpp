@@ -431,17 +431,14 @@ void MasterWindow::computeImagePyramid()
 
     contentFolder_ = QFileInfo( filename ).absoluteDir().path();
 
-    put_flog( LOG_DEBUG, "source image filename %s",
+    put_flog( LOG_DEBUG, "source image filename: %s",
               filename.toLocal8Bit().constData( ));
 
-    const QString imagePyramidPath = filename +
-                                     DynamicTexture::pyramidFolderSuffix;
-
-    put_flog( LOG_DEBUG, "target image pyramid folder %s",
-              imagePyramidPath.toLocal8Bit().constData( ));
+    put_flog( LOG_DEBUG, "target location for image pyramid folder: %s",
+              contentFolder_.toLocal8Bit().constData( ));
 
     DynamicTexturePtr dynamicTexture( new DynamicTexture( filename ));
-    if ( !dynamicTexture->generateImagePyramid( imagePyramidPath ))
+    if( !dynamicTexture->generateImagePyramid( contentFolder_ ))
     {
         QMessageBox::warning( this, "Error", "Image pyramid creation failed.",
                               QMessageBox::Ok, QMessageBox::Ok );
