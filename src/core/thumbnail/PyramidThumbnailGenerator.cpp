@@ -39,28 +39,27 @@
 
 #include "PyramidThumbnailGenerator.h"
 
-#include <QImageReader>
-
+#include "DynamicTexture.h"
 #include "log.h"
 
-PyramidThumbnailGenerator::PyramidThumbnailGenerator(const QSize &size)
-    : ThumbnailGenerator(size)
+PyramidThumbnailGenerator::PyramidThumbnailGenerator( const QSize& size )
+    : ThumbnailGenerator( size )
 {
 }
 
-QImage PyramidThumbnailGenerator::generate(const QString &filename) const
+QImage PyramidThumbnailGenerator::generate( const QString &filename ) const
 {
-    QImageReader reader( filename + "amid/0.jpg" );
-    if (reader.canRead())
+    QImage image = DynamicTexture( filename ).getRootImage();
+    if( !image.isNull( ))
     {
-        QImage image = reader.read();
-        image = image.scaled(size_, aspectRatioMode_);
-        addMetadataToImage(image, filename);
+        image = image.scaled( size_, aspectRatioMode_ );
+        addMetadataToImage( image, filename );
         return image;
     }
     else
     {
-        put_flog(LOG_ERROR, "could not open pyramid file: %s", filename.toLatin1().constData());
-        return createErrorImage("pyramid");
+        put_flog( LOG_ERROR, "could not open pyramid file: %s",
+                  filename.toLatin1().constData( ));
+        return createErrorImage( "pyramid" );
     }
 }
