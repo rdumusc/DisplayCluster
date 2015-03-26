@@ -102,6 +102,9 @@ public:
     /** Post render step. */
     void postRenderSync( WallToWallChannel& wallToWallChannel ) override;
 
+    /** Get the root image of the pyramid. */
+    QImage getRootImage() const;
+
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
      * @param outputFolder The folder in which the metadata and pyramid images
@@ -129,6 +132,7 @@ private:
     /* for root only: */
 
     QString uri_;
+    QString imageExtension_;
 
     QString imagePyramidPath_;
     bool useImagePyramid_;
@@ -196,6 +200,7 @@ private:
     bool readFullImageMetadata( const QString& uri );
 
     bool readPyramidMetadataFromFile( const QString& uri ); // @Root only
+    bool determineImageExtension( const QString& imagePyramidPath );
     bool makeFolder(const QString& folder ); // @Root only
     bool writeMetadataFile( const QString& pyramidFolder,
                             const QString& filename ) const; // @Root only

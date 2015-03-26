@@ -61,13 +61,13 @@
 
 #undef DYNAMIC_TEXTURE_SHOW_BORDER // define this to show borders around image tiles
 
-#define PYRAMID_METADATA_FILE_EXTENSION    "pyr"
-#define PYRAMID_METADATA_FILE_NAME         "pyramid.pyr"
-#define PYRAMID_FOLDER_SUFFIX              ".pyramid/"
-#define IMAGE_EXTENSION                    "jpg"
+const QString DynamicTexture::pyramidFileExtension = QString( "pyr" );
+const QString DynamicTexture::pyramidFolderSuffix = QString( ".pyramid/" );
 
-const QString DynamicTexture::pyramidFileExtension = QString(PYRAMID_METADATA_FILE_EXTENSION);
-const QString DynamicTexture::pyramidFolderSuffix = QString(PYRAMID_FOLDER_SUFFIX);
+namespace
+{
+const QString PYRAMID_METADATA_FILE_NAME( "pyramid.pyr" );
+}
 
 DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
                                const QRectF& parentCoordinates, const int childIndex)
@@ -88,6 +88,8 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
         // append childIndex to parent's path to form this object's path
         treePath_ = parent->treePath_;
         treePath_.push_back(childIndex);
+
+        imageExtension_ = parent->imageExtension_;
     }
 
     // if we're the top-level object
@@ -113,17 +115,18 @@ bool DynamicTexture::isRoot() const
     return depth_ == 0;
 }
 
-bool DynamicTexture::readFullImageMetadata(const QString& uri)
+bool DynamicTexture::readFullImageMetadata( const QString& uri )
 {
     const QImageReader imageReader(uri);
-    if(!imageReader.canRead())
+    if( !imageReader.canRead( ))
         return false;
 
+    imageExtension_ = QString( imageReader.format( ));
     imageSize_ = imageReader.size();
     return true;
 }
 
-bool DynamicTexture::readPyramidMetadataFromFile(const QString& uri)
+bool DynamicTexture::readPyramidMetadataFromFile( const QString& uri )
 {
     std::ifstream ifs(uri.toAscii());
 
@@ -149,6 +152,8 @@ bool DynamicTexture::readPyramidMetadataFromFile(const QString& uri)
     }
 
     imagePyramidPath_ = QString(tokens[0].c_str());
+    if( !determineImageExtension( imagePyramidPath_ ))
+        return false;
 
     imageSize_.setWidth(atoi(tokens[1].c_str()));
     imageSize_.setHeight(atoi(tokens[2].c_str()));
@@ -158,6 +163,21 @@ bool DynamicTexture::readPyramidMetadataFromFile(const QString& uri)
     put_flog(LOG_DEBUG, "got image pyramid path %s, imageWidth = %i, imageHeight = %i",
              imagePyramidPath_.toLocal8Bit().constData(), imageSize_.width(), imageSize_.height());
 
+    return true;
+}
+
+bool DynamicTexture::determineImageExtension( const QString& imagePyramidPath )
+{
+    const QFileInfoList pyramidRootFiles =
+            QDir( imagePyramidPath ).entryInfoList( QStringList( "0.*" ));
+    if( pyramidRootFiles.empty( ))
+        return false;
+
+    const QString extension = pyramidRootFiles.first().suffix();
+    if( !QImageReader().supportedImageFormats().contains( extension.toAscii( )))
+        return false;
+
+    imageExtension_ = extension;
     return true;
 }
 
@@ -195,15 +215,15 @@ QString DynamicTexture::getPyramidImageFilename() const
 {
     QString filename;
 
-    for(unsigned int i=0; i<treePath_.size(); i++)
+    for( unsigned int i=0; i<treePath_.size(); ++i )
     {
-        filename.append(QString::number(treePath_[i]));
+        filename.append( QString::number( treePath_[i] ));
 
-        if(i != treePath_.size() - 1)
-            filename.append("-");
+        if( i != treePath_.size() - 1 )
+            filename.append( "-" );
     }
 
-    filename.append(".").append(IMAGE_EXTENSION);
+    filename.append( "." ).append( imageExtension_ );
 
     return filename;
 }
@@ -216,7 +236,7 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     const QString filename = pyramidFolder + getPyramidImageFilename();
     put_flog( LOG_DEBUG, "saving %s", filename.toLocal8Bit().constData( ));
 
-    if( !scaledImage_.save( filename, IMAGE_EXTENSION ))
+    if( !scaledImage_.save( filename ))
         return false;
     scaledImage_ = QImage(); // no longer need scaled image
 
@@ -288,7 +308,7 @@ void DynamicTexture::loadImage()
     {
         if(useImagePyramid_)
         {
-            scaledImage_.load(imagePyramidPath_+'/'+getPyramidImageFilename(), IMAGE_EXTENSION);
+            scaledImage_.load(imagePyramidPath_+'/'+getPyramidImageFilename());
         }
         else
         {
@@ -302,7 +322,7 @@ void DynamicTexture::loadImage()
 
         if(root->useImagePyramid_)
         {
-            scaledImage_.load(root->imagePyramidPath_+'/'+getPyramidImageFilename(), IMAGE_EXTENSION);
+            scaledImage_.load(root->imagePyramidPath_+'/'+getPyramidImageFilename());
         }
         else
         {
@@ -382,6 +402,11 @@ void DynamicTexture::postRenderSync( WallToWallChannel& )
 {
     clearOldChildren();
     renderedChildren_ = false;
+}
+
+QImage DynamicTexture::getRootImage() const
+{
+    return QImage( imagePyramidPath_+ '/' + getPyramidImageFilename( ));
 }
 
 bool DynamicTexture::isVisibleInCurrentGLView()
@@ -475,12 +500,12 @@ bool DynamicTexture::generateImagePyramid( const QString& outputFolder )
     assert( isRoot( ));
 
     const QString imageName( QFileInfo( uri_ ).fileName( ));
-    const QString pyramidFolder( outputFolder + "/" + imageName +
-                                 pyramidFolderSuffix );
+    const QString pyramidFolder( QDir( outputFolder ).absolutePath() +
+                                 "/" + imageName + pyramidFolderSuffix );
     if( loadImageThreadStarted_ )
         loadImageThread_.waitForFinished();
 
-    if( !makeFolder(pyramidFolder ))
+    if( !makeFolder( pyramidFolder ))
         return false;
 
     if( !writePyramidMetadataFiles( pyramidFolder ))

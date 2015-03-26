@@ -18,6 +18,7 @@ DisplayCluster 0.5 provides the following improvements:
 * Windows have dragable borders for reszing them from the wall.
 * Synchronized buffer swap and vsync works for all types of window settings.
 * Added pyramidmaker utility to create image pyramids from the command line.
+* Image pyramids keep the format of the source image file instead of using jpg.
 
 ## Enhancements {#Enhancements}
 
