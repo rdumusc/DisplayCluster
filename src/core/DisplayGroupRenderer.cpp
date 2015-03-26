@@ -41,6 +41,7 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
+#include "ContentWindowController.h"
 #include "RenderContext.h"
 #include "Options.h"
 #include "PixelStream.h"
@@ -87,7 +88,11 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     if( !displayGroupItem_ )
         createDisplayGroupQmlItem();
 
-    setBackground( displayGroup->getBackgroundContent( ));
+    if( hasBackgroundChanged( *displayGroup ))
+    {
+        setBackground( displayGroup->getBackgroundContent( ));
+        adjustBackgroundTo( *displayGroup );
+    }
 
     ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
 
@@ -165,6 +170,18 @@ void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
     emit windowAdded( windowItems_[id] );
 }
 
+bool DisplayGroupRenderer::hasBackgroundChanged( const DisplayGroup&
+                                                 newDisplayGroup )
+{
+    ContentPtr prevContent = displayGroup_->getBackgroundContent();
+    ContentPtr newContent = newDisplayGroup.getBackgroundContent();
+
+    const QString& newUri = newContent ? newContent->getURI() : QString();
+    const QString& prevUri = prevContent ? prevContent->getURI() : QString();
+
+    return newUri != prevUri;
+}
+
 void DisplayGroupRenderer::setBackground( ContentPtr content )
 {
     if( !content )
@@ -173,22 +190,21 @@ void DisplayGroupRenderer::setBackground( ContentPtr content )
         return;
     }
 
-    ContentPtr previousContent = displayGroup_->getBackgroundContent();
-    if( previousContent && content->getURI() == previousContent->getURI( ))
-        return;
-
     ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
-
-    QSizeF size( content->getDimensions( ));
-    size.scale( displayGroup_->getCoordinates().size(), Qt::KeepAspectRatio );
-
-    QRectF coord( QPointF(), size );
-    coord.moveCenter( displayGroup_->getCoordinates().center( ));
-    window->setCoordinates( coord );
-
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
                                                         *displayGroupItem_,
                                                         window ));
     backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
+}
+
+void DisplayGroupRenderer::adjustBackgroundTo( const DisplayGroup&
+                                               displayGroup )
+{
+    if( !backgroundWindowItem_ )
+        return;
+
+    ContentWindow& window = *backgroundWindowItem_->getContentWindow();
+    ContentWindowController controller( window, displayGroup );
+    controller.adjustSize( SIZE_FULLSCREEN );
 }
