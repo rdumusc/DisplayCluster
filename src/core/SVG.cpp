@@ -83,6 +83,7 @@ void SVG::render()
         return;
 
     quad_.setTexture( textureData_.fbo->texture( ));
+    quad_.enableAlphaBlending( true );
     quad_.render();
 }
 
@@ -92,6 +93,7 @@ void SVG::renderPreview()
         generatePreviewTexture();
 
     quad_.setTexture( previewFbo_->texture( ));
+    quad_.enableAlphaBlending( false );
     quad_.render();
 }
 

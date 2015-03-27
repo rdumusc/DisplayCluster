@@ -66,11 +66,15 @@ public:
     /** Set the render mode [GL_QUADS|GL_LINE_LOOP] (default: GL_QUADS) */
     void setRenderMode( const GLenum mode );
 
+    /** Enable or disable alpha blending. (default: OFF)*/
+    void enableAlphaBlending( bool value );
+
 private:
     QRectF texCoords_;
     // Material properties (may go to a separate class)
     GLenum renderMode_;
     GLuint textureId_;
+    bool alphaBlending_;
 };
 
 #endif // GLQUAD_H

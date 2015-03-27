@@ -161,6 +161,7 @@ private:
     QImage scaledImage_; // for texture upload to GPU
     GLTexture2D texture_;
     GLQuad quad_;
+    GLQuad quadBorder_;
 
     std::vector<DynamicTexturePtr> children_; // Children in the image pyramid
     bool renderedChildren_; // Used for garbage-collecting unused child objects

@@ -65,6 +65,8 @@ bool Texture::generateTexture()
                   uri_.toLocal8Bit().constData( ));
         return false;
     }
+    quad_.enableAlphaBlending( image.hasAlphaChannel( ));
+
     return texture_.init( image, GL_BGRA, true );
 }
 
