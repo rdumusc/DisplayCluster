@@ -19,6 +19,7 @@ DisplayCluster 0.5 provides the following improvements:
 * Synchronized buffer swap and vsync works for all types of window settings.
 * Added pyramidmaker utility to create image pyramids from the command line.
 * Image pyramids keep the format of the source image file instead of using jpg.
+* Alpha blending (transparency) for SVGs and appropriate image types.
 
 ## Enhancements {#Enhancements}
 

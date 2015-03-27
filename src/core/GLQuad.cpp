@@ -47,6 +47,7 @@ GLQuad::GLQuad()
     : texCoords_( UNIT_RECTF )
     , renderMode_( GL_QUADS )
     , textureId_( 0 )
+    , alphaBlending_( false )
 {
 }
 
@@ -66,6 +67,11 @@ void GLQuad::setRenderMode( const GLenum mode )
         renderMode_ = mode;
 }
 
+void GLQuad::enableAlphaBlending( const bool value )
+{
+    alphaBlending_ = value;
+}
+
 void GLQuad::render()
 {
     glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
@@ -78,20 +84,26 @@ void GLQuad::render()
     else
         glDisable( GL_TEXTURE_2D );
 
+    if( alphaBlending_ )
+    {
+        glEnable( GL_BLEND );
+        glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+    }
+
     glBegin( renderMode_ );
 
     glTexCoord2f( texCoords_.x(), texCoords_.y( ));
-    glVertex2f( 0., 0. );
+    glVertex2f( 0.f, 0.f );
 
     glTexCoord2f( texCoords_.x() + texCoords_.width(), texCoords_.y( ));
-    glVertex2f( 1., 0. );
+    glVertex2f( 1.f, 0.f );
 
     glTexCoord2f( texCoords_.x() + texCoords_.width(),
                   texCoords_.y() + texCoords_.height( ));
-    glVertex2f( 1., 1. );
+    glVertex2f( 1.f, 1.f );
 
     glTexCoord2f( texCoords_.x(), texCoords_.y() + texCoords_.height( ));
-    glVertex2f( 0., 1. );
+    glVertex2f( 0.f, 1.f );
 
     glEnd();
 

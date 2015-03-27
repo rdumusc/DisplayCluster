@@ -4,6 +4,7 @@ import "style.js" as Style
 
 BaseContentWindow {
     border.width: options.showWindowBorders ? Style.windowBorderWidth : 0
+    color: "transparent" // for contents with alpha channel such as SVG or PNG
 
     ContentItem {
         objectName: "ContentItem"

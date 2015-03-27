@@ -452,22 +452,19 @@ void DynamicTexture::drawTexture(const QRectF& texCoords)
 
 void DynamicTexture::renderTextureBorder()
 {
-    glPushAttrib(GL_CURRENT_BIT);
+    glPushAttrib( GL_CURRENT_BIT );
 
-    glColor4f(0.,1.,0.,1.);
+    glColor4f( 0.f, 1.f, 0.f, 1.f );
 
-    quad_.setTexture(0);
-    quad_.setRenderMode(GL_LINE_LOOP);
-    quad_.render();
+    quadBorder_.setRenderMode( GL_LINE_LOOP );
+    quadBorder_.render();
 
     glPopAttrib();
 }
 
-void DynamicTexture::renderTexturedUnitQuad(const QRectF& texCoords)
+void DynamicTexture::renderTexturedUnitQuad( const QRectF& texCoords )
 {
-    quad_.setTexture( texture_.getTextureId( ));
     quad_.setTexCoords( texCoords );
-    quad_.setRenderMode( GL_QUADS );
     quad_.render();
 }
 
@@ -613,10 +610,12 @@ QImage DynamicTexture::getImageFromParent(const QRectF& imageRegion, DynamicText
 
 void DynamicTexture::generateTexture()
 {
-    texture_.init(scaledImage_, GL_BGRA);
+    texture_.init( scaledImage_, GL_BGRA );
 
-    // no longer need the scaled image
-    scaledImage_ = QImage();
+    quad_.setTexture( texture_.getTextureId( ));
+    quad_.enableAlphaBlending( scaledImage_.hasAlphaChannel( ));
+
+    scaledImage_ = QImage(); // no longer need the source image
 }
 
 void DynamicTexture::renderChildren(const QRectF& texCoords)
