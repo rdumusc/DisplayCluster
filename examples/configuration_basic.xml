@@ -1,0 +1,7 @@
+<configuration>
+    <dimensions fullscreen="0" numTilesWidth="1" numTilesHeight="1" screenWidth="640" screenHeight="480" mullionWidth="0" mullionHeight="0" />
+    <masterProcess display=":0" host="localhost"/>
+    <process display=":0" host="localhost">
+        <screen x="0" y="0" i="0" j="0"/>
+    </process>
+</configuration>
