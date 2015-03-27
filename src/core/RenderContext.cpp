@@ -118,9 +118,15 @@ void RenderContext::updateGLWindows()
 {
     BOOST_FOREACH( WallWindowPtr window, windows_ )
     {
+#ifdef __APPLE__
+        // Using Qt's update() mechanism on OSX. Blocking draw calls causes
+        // the app to never render anything and hang forever in swapBuffer().
+        window->viewport()->update();
+#else
         window->setBlockDrawCalls( false );
         window->viewport()->repaint();
         window->setBlockDrawCalls( true );
+#endif
     }
     glFinish();
 }

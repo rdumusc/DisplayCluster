@@ -7,7 +7,7 @@
 # which runs all of them.
 
 # TEST_LIBRARIES is used by CommonCTest.cmake to link tests against them
-set(TEST_LIBRARIES mock ${DC_LIBRARIES} ${Boost_LIBRARIES})
+set(TEST_LIBRARIES dcmock ${DC_LIBRARIES} ${Boost_LIBRARIES})
 
 find_package(X11)
 if(NOT X11_FOUND)
