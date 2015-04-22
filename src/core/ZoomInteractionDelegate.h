@@ -56,10 +56,10 @@ public:
     static qreal adaptZoomFactor( const qreal pinchGestureScaleFactor );
 
 private:
-    void moveZoomRect( const QPointF& sceneDelta ) const;
-    void scaleZoomRect( const QPointF& center, const qreal zoomFactor ) const;
-    void constrainZoomRectPosition( QRectF& zoomRect ) const;
-    QPointF getNormalizedPoint( const QPointF& point ) const;
+    void moveZoomRect_( const QPointF& sceneDelta ) const;
+    void scaleZoomRect_( const QPointF& center, const qreal zoomFactor ) const;
+    void constraintPosition_( QRectF& zoomRect ) const;
+    QPointF getNormalizedPoint_( const QPointF& point ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

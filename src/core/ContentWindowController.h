@@ -79,13 +79,6 @@ public:
     /** Resize the window relative to the current active window border */
     Q_INVOKABLE void resizeRelative( const QPointF delta );
 
-    /**
-     * Resize the window around a given center point.
-     * @param center the center of scaling
-     * @param size the new desired size
-     */
-    void resize( const QPointF& center, QSizeF size );
-
     /** Scale the window by the given factor (around the given center). */
     void scale( const QPointF& center, const double factor );
 
@@ -106,9 +99,16 @@ public:
     }
 
 private:
-    void constrainSize( QSizeF& windowSize ) const;
-    void constrainPosition( QRectF& window ) const;
-    QRectF getCenteredCoordinates( const QSizeF& size ) const;
+    /**
+     * Resize the window around a given center point.
+     * @param center the center of scaling
+     * @param size the new desired size
+     */
+    void resize_( const QPointF& center, QSizeF size );
+
+    void constrainSize_( QSizeF& windowSize ) const;
+    void constrainPosition_( QRectF& window ) const;
+    QRectF getCenteredCoordinates_( const QSizeF& size ) const;
 
     ContentWindow& contentWindow_;
     const DisplayGroup& displayGroup_;

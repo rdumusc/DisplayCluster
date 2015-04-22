@@ -88,6 +88,9 @@ public:
     /** Get the dimensions. */
     QSize getDimensions() const;
 
+    /** @return the max dimensions, used to constrain resize/scale. */
+    virtual QSize getMaxDimensions() const;
+
     /** Set the dimensions. */
     void setDimensions( const QSize& dimensions );
 

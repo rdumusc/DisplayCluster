@@ -37,6 +37,7 @@
 /*********************************************************************/
 
 #include "Configuration.h"
+#include "ContentWindow.h"
 
 #include <QtXmlPatterns>
 
@@ -88,10 +89,13 @@ void Configuration::load()
     if(query.evaluateTo(&queryResult))
         mullionHeight_ = queryResult.toInt();
 
-    // check for fullscreen mode flag
     query.setQuery("string(/configuration/dimensions/@fullscreen)");
     if(query.evaluateTo(&queryResult))
         fullscreen_ = queryResult.toInt() != 0;
+
+    query.setQuery("string(/configuration/content/@maxScale)");
+    if(query.evaluateTo(&queryResult))
+        ContentWindow::setMaxContentScale(queryResult.toDouble( ));
 }
 
 int Configuration::getTotalScreenCountX() const

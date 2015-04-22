@@ -195,6 +195,12 @@ public:
     /** Set the opacity of the window control buttons. */
     void setControlsOpacity( qreal value );
 
+    /** Set the maximum factor for zoom and resize; value times content size */
+    static void setMaxContentScale( qreal value );
+
+    /** @return the maxium scale factor for zoom and resize */
+    static qreal getMaxContentScale();
+
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
@@ -300,6 +306,8 @@ private:
     unsigned int eventReceiversCount_;
 
     boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
+
+    static qreal maxContentScale_;
 };
 
 BOOST_CLASS_VERSION( ContentWindow, 2 )

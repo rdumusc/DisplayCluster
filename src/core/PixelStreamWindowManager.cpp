@@ -39,7 +39,6 @@
 
 #include "PixelStreamWindowManager.h"
 
-#include "configuration/Configuration.h"
 #include "ContentWindow.h"
 #include "ContentWindowController.h"
 #include "ContentFactory.h"
