@@ -33,11 +33,13 @@ BaseContentWindow {
                     onPan: {
                         controlsFadeAnimation.stop()
                         contentwindow.border = parent.border
+                        contentwindow.state = ContentWindow.RESIZING
                         controller.resizeRelative(delta)
                     }
                     onPanFinished: {
                         controlsFadeAnimation.restart()
                         contentwindow.border = ContentWindow.NOBORDER
+                        contentwindow.state = ContentWindow.NONE
                     }
                 }
             }
