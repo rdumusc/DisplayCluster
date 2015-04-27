@@ -80,6 +80,10 @@ MasterApplication::MasterApplication(int& argc_, char** argv_, MPIChannelPtr wor
     , masterFromWallChannel_(new MasterFromWallChannel(worldChannel))
     , markers_(new Markers)
 {
+    // don't create touch points for mouse events and vice versa
+    setAttribute( Qt::AA_SynthesizeTouchForUnhandledMouseEvents, false );
+    setAttribute( Qt::AA_SynthesizeMouseForUnhandledTouchEvents, false );
+
     CommandLineParameters options(argc_, argv_);
     if (options.getHelp())
         options.showSyntax();

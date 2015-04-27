@@ -43,7 +43,7 @@
 #include "Content.h"
 #include "ContentWindowListWidgetItem.h"
 
-#include <QtGui/QListWidget>
+#include <QListWidget>
 
 DisplayGroupListWidget::DisplayGroupListWidget( QWidget* parent_ )
     : QListWidget( parent_ )

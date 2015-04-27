@@ -110,7 +110,7 @@ bool FFMPEGMovie::open(const QString& uri)
 bool FFMPEGMovie::createAvFormatContext(const QString& uri)
 {
     // Read movie file header information into avFormatContext_ (and allocating it if null)
-    if(avformat_open_input(&avFormatContext_, uri.toAscii(), NULL, NULL) != 0)
+    if(avformat_open_input(&avFormatContext_, uri.toLatin1(), NULL, NULL) != 0)
     {
         put_flog(LOG_ERROR, "could not open movie file %s", uri.toLocal8Bit().constData());
         return false;
@@ -123,7 +123,7 @@ bool FFMPEGMovie::createAvFormatContext(const QString& uri)
         return false;
     }
 
-    av_dump_format(avFormatContext_, 0, uri.toAscii(), 0); // dump format information to stderr
+    av_dump_format(avFormatContext_, 0, uri.toLatin1(), 0); // dump format information to stderr
     return true;
 }
 

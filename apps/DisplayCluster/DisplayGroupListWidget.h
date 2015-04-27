@@ -41,7 +41,7 @@
 
 #include "types.h"
 
-#include <QtGui/QListWidget>
+#include <QListWidget>
 
 /**
  * A list view of a DisplayGroup's ContentWindows.

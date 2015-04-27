@@ -42,7 +42,7 @@
 
 #include "types.h"
 
-#include <QtGui/QGraphicsScene>
+#include <QGraphicsScene>
 
 /**
  * The scene representing the whole wall area.

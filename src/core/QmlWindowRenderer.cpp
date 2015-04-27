@@ -45,7 +45,7 @@
 
 #include <QtDeclarative/QDeclarativeComponent>
 
-#include <QtGui/QGraphicsScene>
+#include <QGraphicsScene>
 
 namespace
 {

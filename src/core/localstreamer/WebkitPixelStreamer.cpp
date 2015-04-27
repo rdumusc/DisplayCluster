@@ -39,9 +39,9 @@
 
 #include "WebkitPixelStreamer.h"
 
-#include <QtWebKit/QWebFrame>
-#include <QtWebKit/QWebView>
-#include <QtWebKit/QWebElement>
+#include <QWebFrame>
+#include <QWebView>
+#include <QWebElement>
 #include <QKeyEvent>
 
 #include <QTimer>

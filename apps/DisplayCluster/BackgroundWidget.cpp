@@ -39,7 +39,7 @@
 
 #include "BackgroundWidget.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 #include "configuration/MasterConfiguration.h"
 #include "ContentFactory.h"

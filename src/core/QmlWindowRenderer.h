@@ -45,7 +45,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#include <QtGui/QGraphicsObject>
+#include <QGraphicsObject>
 
 #include <QtDeclarative/QDeclarativeEngine>
 #include <QtDeclarative/QDeclarativeContext>

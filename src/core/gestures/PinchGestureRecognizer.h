@@ -40,7 +40,7 @@
 #ifndef PINCHGESTURERECOGNIZER_H
 #define PINCHGESTURERECOGNIZER_H
 
-#include <QtGui/QGestureRecognizer>
+#include <QGestureRecognizer>
 
 /**
  * Gesture recognizer for a pinch gesture. The implementation enhances the Qt

@@ -48,6 +48,7 @@ class ContentWindow;
 class DoubleTapGesture;
 class PanGesture;
 class PinchGesture;
+class QGestureEvent;
 class QTapGesture;
 class QSwipeGesture;
 class QTapAndHoldGesture;

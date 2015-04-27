@@ -68,6 +68,8 @@ public:
 private:
     friend class boost::serialization::access;
 
+    QHash<int, QByteArray> roleNames() const final;
+
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {

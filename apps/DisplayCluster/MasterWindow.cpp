@@ -58,7 +58,7 @@
 #include "BackgroundWidget.h"
 #include "WebbrowserWidget.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 namespace
 {

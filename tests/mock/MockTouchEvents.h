@@ -48,7 +48,7 @@ const QRect widget( QPoint( 510, 353 ), QSize( 435, 212 ));
 QMap< int, QTouchEvent::TouchPoint > touchPointMap;
 
 QEvent* createTouchEvent( const int id, const QEvent::Type eventType,
-                          const Qt::TouchPointState state,
+                          const Qt::TouchPointState touchPointStates,
                           const QPointF& normalizedPos )
 {
     const QPoint scenePos( wallSize.width()  * normalizedPos.x(),
@@ -57,7 +57,6 @@ QEvent* createTouchEvent( const int id, const QEvent::Type eventType,
     const QPoint screenPos( widget.x() + widget.width()  * normalizedPos.x(),
                             widget.y() + widget.height() * normalizedPos.y( ));
 
-    const Qt::TouchPointStates touchPointStates = Qt::TouchPointPrimary | state;
     QTouchEvent::TouchPoint touchPoint( id );
     touchPoint.setPressure( 1.0 );
     touchPoint.setNormalizedPos( normalizedPos );
@@ -100,9 +99,8 @@ QEvent* createTouchEvent( const int id, const QEvent::Type eventType,
 
     touchPointMap.insert( id, touchPoint );
 
-    QEvent* event = new QTouchEvent( eventType, QTouchEvent::TouchScreen,
-                                     Qt::NoModifier, touchPointStates,
-                                     touchPointMap.values( ));
+    QEvent* event = new QTouchEvent( eventType, 0, Qt::NoModifier,
+                                     touchPointStates, touchPointMap.values( ));
 
     if( eventType == QEvent::TouchEnd )
         touchPointMap.remove( id );

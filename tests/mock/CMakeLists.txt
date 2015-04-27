@@ -15,7 +15,7 @@ set(DCMOCK_HEADERS
 set(DCMOCK_MOC_HEADERS MockTextInputDispatcher.h)
 set(DCMOCK_SOURCES MockTextInputDispatcher.cpp)
 
-qt4_wrap_cpp(MOC_OUTFILES ${DCMOCK_MOC_HEADERS})
+qt5_wrap_cpp(MOC_OUTFILES ${DCMOCK_MOC_HEADERS})
 
 add_library(dcmock SHARED ${MOC_OUTFILES} ${DCMOCK_HEADERS} ${DCMOCK_SOURCES})
 set_target_properties(dcmock PROPERTIES

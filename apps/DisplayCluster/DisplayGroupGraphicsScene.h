@@ -41,7 +41,7 @@
 
 #include "types.h"
 
-#include <QtGui/QGraphicsScene>
+#include <QGraphicsScene>
 
 /**
  * A scene to draw a representation of a DisplayGroup.

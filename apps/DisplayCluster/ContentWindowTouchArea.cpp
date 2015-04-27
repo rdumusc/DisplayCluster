@@ -50,10 +50,10 @@
 #include "gestures/PinchGesture.h"
 #include "gestures/PinchGestureRecognizer.h"
 
-#include <QtCore/QEvent>
-#include <QtGui/QSwipeGesture>
-#include <QtGui/QTapGesture>
-#include <QtGui/QPainter>
+#include <QEvent>
+#include <QSwipeGesture>
+#include <QTapGesture>
+#include <QPainter>
 
 #define STD_WHEEL_DELTA 120 // Common value for the delta of mouse wheel events
 
