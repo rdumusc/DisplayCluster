@@ -63,7 +63,8 @@
 #define BUTTON_REL_HEIGHT   0.45
 
 ContentWindowTouchArea::ContentWindowTouchArea()
-    : controller_( 0 )
+    : blockTapGesture_( false )
+    , controller_( 0 )
 {
     setFlag( QGraphicsItem::ItemIsMovable, true );
     setFlag( QGraphicsItem::ItemIsSelectable, true );
@@ -190,6 +191,16 @@ void ContentWindowTouchArea::gestureEvent( QGestureEvent* event_ )
         return;
     }
 
+    // Qt does not allow canceling Tap gestures after a TapAndHold has been
+    // accepted, so blockTapGesture_ is here to prevent the Tap at the end
+    // of the following sequence:
+    // *Tap begin* ----- *TapAndHold begin* - *TapAndHold end* -- *Tap end*
+    if( blockTapGesture_ )
+    {
+        blockTapGesture_ = false;
+        return;
+    }
+
     if( contentWindow_->isSelected( ))
     {
         contentWindow_->getInteractionDelegate().gestureEvent( event_ );
@@ -256,5 +267,8 @@ void ContentWindowTouchArea::pinch( PinchGesture* gesture )
 void ContentWindowTouchArea::tapAndHold( QTapAndHoldGesture* gesture )
 {
     if( gesture->state() == Qt::GestureFinished )
+    {
+        blockTapGesture_ = true;
         contentWindow_->toggleSelectedState();
+    }
 }
