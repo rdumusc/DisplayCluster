@@ -55,6 +55,11 @@ QSize Content::getDimensions() const
     return size_;
 }
 
+QSize Content::getMaxDimensions() const
+{
+    return getDimensions();
+}
+
 void Content::setDimensions( const QSize& dimensions )
 {
     if( size_ == dimensions )

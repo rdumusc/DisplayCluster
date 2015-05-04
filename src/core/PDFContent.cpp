@@ -72,21 +72,22 @@ bool PDFContent::readMetadata()
     return true;
 }
 
+QSize PDFContent::getMaxDimensions() const
+{
+    return UNDEFINED_SIZE;
+}
+
 const QStringList& PDFContent::getSupportedExtensions()
 {
     static QStringList extensions;
-
-    if (extensions.empty())
-    {
+    if( extensions.empty( ))
         extensions << "pdf";
-    }
-
     return extensions;
 }
 
 void PDFContent::nextPage()
 {
-    if (pageNumber_ < pageCount_-1)
+    if( pageNumber_ < pageCount_-1 )
     {
         ++pageNumber_;
         emit(pageChanged());
@@ -95,7 +96,7 @@ void PDFContent::nextPage()
 
 void PDFContent::previousPage()
 {
-    if (pageNumber_ > 0)
+    if (pageNumber_ > 0 )
     {
         --pageNumber_;
         emit(pageChanged());

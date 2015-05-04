@@ -60,6 +60,9 @@ public:
     **/
     bool readMetadata() override;
 
+    /** @return UNDEFINED_SIZE which limits resize/scale to the wall size. */
+    QSize getMaxDimensions() const override;
+
     static const QStringList& getSupportedExtensions();
 
 private:

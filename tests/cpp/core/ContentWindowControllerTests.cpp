@@ -94,10 +94,10 @@ BOOST_AUTO_TEST_CASE( testResizeAndMove )
 
     controller.resize( centeredSize, WindowPoint::CENTER );
 
-    BOOST_CHECK_EQUAL( coords.center().x(), fixedCenter.x( ));
-    BOOST_CHECK_EQUAL( coords.center().y(), fixedCenter.y( ));
-    BOOST_CHECK_EQUAL( coords.width(), centeredSize.width( ));
-    BOOST_CHECK_EQUAL( coords.height(), centeredSize.height( ));
+    BOOST_CHECK_CLOSE( coords.center().x(), fixedCenter.x(), 0.00001 );
+    BOOST_CHECK_CLOSE( coords.center().y(), fixedCenter.y(), 0.00001 );
+    BOOST_CHECK_CLOSE( coords.width(), centeredSize.width(), 0.00001 );
+    BOOST_CHECK_CLOSE( coords.height(), centeredSize.height(), 0.00001 );
 }
 
 BOOST_AUTO_TEST_CASE( testOneToOneSize )

@@ -52,6 +52,8 @@
 
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
+qreal ContentWindow::maxContentScale_ = 2.0;
+
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( UNIT_RECTF )
@@ -130,6 +132,9 @@ const QRectF& ContentWindow::getZoomRect() const
 
 void ContentWindow::setZoomRect( const QRectF& zoomRect )
 {
+    if( zoomRect_ == zoomRect )
+        return;
+
     zoomRect_ = zoomRect;
     emit modified();
 }
@@ -251,6 +256,17 @@ void ContentWindow::setControlsOpacity( const qreal value )
     controlsOpacity_ = value;
     emit controlsOpacityChanged();
     emit modified();
+}
+
+void ContentWindow::setMaxContentScale( const qreal value )
+{
+    if( value > 0 )
+        maxContentScale_ = value;
+}
+
+qreal ContentWindow::getMaxContentScale()
+{
+    return maxContentScale_;
 }
 
 void ContentWindow::createInteractionDelegate()
