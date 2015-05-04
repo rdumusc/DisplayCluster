@@ -1,7 +1,6 @@
 # DisplayCluster
 
-DisplayCluster is a software environment for interactively driving large-scale
-tiled displays.
+A collaborative software for driving large display walls.
 
 ## Documentation
 
