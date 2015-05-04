@@ -67,7 +67,7 @@ public:
     /** Destructor. */
     virtual ~ContentWindowTouchArea();
 
-    /** Init must be separate from the constructor for instanciation in QML. */
+    /** Init must be separate from the constructor for instantiation in QML. */
     void init( ContentWindowPtr contentWindow,
                ContentWindowController* controller );
 
@@ -94,6 +94,8 @@ private:
     void pan( PanGesture* gesture );
     void pinch( PinchGesture* gesture );
     void tapAndHold( QTapAndHoldGesture* gesture );
+
+    bool blockTapGesture_;
 
     ContentWindowPtr contentWindow_;
     ContentWindowController* controller_;
