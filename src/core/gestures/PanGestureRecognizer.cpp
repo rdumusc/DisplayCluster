@@ -119,20 +119,24 @@ QGestureRecognizer::Result PanGestureRecognizer::recognize( QGesture* state,
     case QEvent::TouchUpdate:
         if( touchEvent->touchPoints().size() == _nPoints )
         {
-            gesture->setLastOffset( gesture->offset( ));
             QPointF offset( 0, 0 );
             QPointF position( 0, 0 );
+            QPointF lastOffset( 0, 0 );
             for( int i = 0; i < touchEvent->touchPoints().size(); ++i )
             {
                 const QTouchEvent::TouchPoint& point = touchEvent->touchPoints().at( i );
                 offset += QPointF( point.pos().x() - point.startPos().x(),
                                    point.pos().y() - point.startPos().y( ));
                 position += point.scenePos();
+                lastOffset += QPointF( point.lastPos().x() - point.startPos().x(),
+                                       point.lastPos().y() - point.startPos().y( ));
             }
             offset /= _nPoints;
             position /= _nPoints;
+            lastOffset /= _nPoints;
             gesture->setOffset( offset );
             gesture->setPosition( position );
+            gesture->setLastOffset( lastOffset );
 
             if( offset.x() > 10  || offset.y() > 10 ||
                 offset.x() < -10 || offset.y() < -10 )
