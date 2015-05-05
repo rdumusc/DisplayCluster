@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 
     const QString uri = CONTENT_URI;
     const QPointF pos( 400.0, 300.0 );
-    const QSizeF size( 100.0, 200.0 );
+    const QSizeF size( 500.0, 400.0 );
 
     ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
 
     const QString uri = CONTENT_URI;
     const QPointF pos( 400.0, 300.0 );
-    const QSize size( 100, 200 );
+    const QSize size( 500, 400 );
 
     ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
     BOOST_REQUIRE( window );
