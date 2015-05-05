@@ -47,7 +47,7 @@
 namespace
 {
 const qreal MIN_SIZE = 0.05;
-const qreal MIN_VISIBLE_AREA_PX = 50.0;
+const qreal MIN_VISIBLE_AREA_PX = 300.0;
 }
 
 ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
@@ -159,6 +159,7 @@ void ContentWindowController::adjustSize( const SizeState state )
         QSizeF size = contentWindow_.getContent()->getDimensions();
         size.scale( displayGroup_.getCoordinates().size(),
                     Qt::KeepAspectRatio );
+        constrainSize_( size );
         contentWindow_.setCoordinates( getCenteredCoordinates_( size ));
     } break;
 
@@ -203,26 +204,34 @@ void ContentWindowController::moveTo( const QPointF& position,
     contentWindow_.setCoordinates( coordinates );
 }
 
-void ContentWindowController::constrainSize_( QSizeF& windowSize ) const
+QSizeF ContentWindowController::getMinSize() const
+{
+    const QSizeF& wallSize = displayGroup_.getCoordinates().size();
+    return QSizeF( std::max( MIN_SIZE * wallSize.width(), MIN_VISIBLE_AREA_PX ),
+                   std::max( MIN_SIZE * wallSize.height(),
+                             MIN_VISIBLE_AREA_PX ));
+}
+
+QSizeF ContentWindowController::getMaxSize() const
 {
     QSizeF maxSize = contentWindow_.getContent()->getMaxDimensions();
     if( maxSize.isEmpty() || maxSize == UNDEFINED_SIZE )
         maxSize = displayGroup_.getCoordinates().size();
+    maxSize = std::max( maxSize, getMinSize( ));
     maxSize *= ContentWindow::getMaxContentScale();
     maxSize.rwidth() *= contentWindow_.getZoomRect().size().width();
     maxSize.rheight() *= contentWindow_.getZoomRect().size().height();
-    if( windowSize.width() > maxSize.width() ||
-        windowSize.height() > maxSize.height( ))
+    return maxSize;
+}
+
+void ContentWindowController::constrainSize_( QSizeF& windowSize ) const
+{
+    const QSizeF& minSize = getMinSize();
+    const QSizeF& maxSize = getMaxSize();
+    if( windowSize > maxSize || windowSize < minSize )
     {
         windowSize = contentWindow_.getCoordinates().size();
         return;
-    }
-
-    const QSizeF minSize = MIN_SIZE * displayGroup_.getCoordinates().size();
-    if( windowSize.width() < minSize.width() ||
-        windowSize.height() < minSize.height( ))
-    {
-        windowSize.scale( minSize, Qt::KeepAspectRatioByExpanding );
     }
 }
 

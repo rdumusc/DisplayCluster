@@ -98,6 +98,13 @@ public:
         moveTo( position, CENTER );
     }
 
+    /** @return the minimum size of the window, 5% of wall size or 300px. */
+    QSizeF getMinSize() const;
+
+    /** @return the maximum size of the window, considering max size of content,
+     *          wall size and current content zoom. */
+    QSizeF getMaxSize() const;
+
 private:
     /**
      * Resize the window around a given center point.

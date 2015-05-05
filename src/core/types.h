@@ -97,4 +97,14 @@ typedef std::vector< WallWindowPtr > WallWindowPtrs;
 static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 static const QSize UNDEFINED_SIZE( -1, -1 );
 
+inline bool operator < ( const QSizeF& a, const QSizeF& b )
+{
+    return (a.width() < b.width() || a.height() < b.height());
+}
+
+inline bool operator > ( const QSizeF& a, const QSizeF& b )
+{
+    return (a.width() > b.width() || a.height() > b.height());
+}
+
 #endif

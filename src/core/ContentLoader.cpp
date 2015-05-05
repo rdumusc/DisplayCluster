@@ -64,13 +64,10 @@ bool ContentLoader::load( const QString& filename,
         controller.resize( windowSize );
     else
     {
-        QSizeF size = content->getDimensions();
         const QSizeF wallSize = displayGroup_->getCoordinates().size();
-        if( size.width() >  wallSize.width() ||
-            size.height() > wallSize.height( ))
-        {
-            size.scale( wallSize, Qt::KeepAspectRatio );
-        }
+        QSizeF size = content->getDimensions();
+        size = std::max( size, controller.getMinSize( ));
+        size = std::min( size, std::min( wallSize, controller.getMaxSize( )));
         controller.resize( size );
     }
 

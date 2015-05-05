@@ -52,8 +52,8 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 namespace
 {
-const int WIDTH = 512;
-const int HEIGHT = 256;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 const QSizeF wallSize( 1000, 1000 );
 const QSizeF contentSize( WIDTH, HEIGHT );
 const qreal CONTENT_AR = qreal(WIDTH)/qreal(HEIGHT);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE( testFullScreenSize )
     // full screen, center on wall
     BOOST_CHECK( window.hasBackupCoordinates( ));
     BOOST_CHECK_EQUAL( coords.x(), 0.0 );
-    BOOST_CHECK_EQUAL( coords.y(),  0.5 * ( wallSize.width() / CONTENT_AR ));
+    BOOST_CHECK_EQUAL( coords.y(),  125 );
     BOOST_CHECK_EQUAL( coords.width(), wallSize.width( ));
     BOOST_CHECK_EQUAL( coords.height(), wallSize.width() / CONTENT_AR );
 }
