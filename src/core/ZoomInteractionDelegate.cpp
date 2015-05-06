@@ -91,8 +91,9 @@ void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
 
 void ZoomInteractionDelegate::moveZoomRect_( const QPointF& sceneDelta ) const
 {
-    const QPointF normalizedDelta = getNormalizedPoint_( sceneDelta );
     QRectF zoomRect = contentWindow_.getZoomRect();
+    const qreal zoom = zoomRect.width();
+    const QPointF normalizedDelta = getNormalizedPoint_( sceneDelta ) * zoom;
     zoomRect.translate( -normalizedDelta );
 
     constraintPosition_( zoomRect );
