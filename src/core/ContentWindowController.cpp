@@ -168,8 +168,16 @@ void ContentWindowController::adjustSize( const SizeState state )
         break;
 
     case SIZE_NORMALIZED:
+    {
         contentWindow_.restoreCoordinates();
-        break;
+
+        // we allow zoom in fullscreen mode, so we need to constrain the backup
+        // coordinates accordingly
+        QRectF coordinates = contentWindow_.getCoordinates();
+        QSizeF size = coordinates.size();
+        constrainSize_( size );
+        resize( size, CENTER );
+    } break;
 
     default:
         return;
@@ -226,13 +234,16 @@ QSizeF ContentWindowController::getMaxSize() const
 
 void ContentWindowController::constrainSize_( QSizeF& windowSize ) const
 {
-    const QSizeF& minSize = getMinSize();
     const QSizeF& maxSize = getMaxSize();
-    if( windowSize > maxSize || windowSize < minSize )
+    if( windowSize > maxSize )
     {
-        windowSize = contentWindow_.getCoordinates().size();
+        windowSize.scale( maxSize, Qt::KeepAspectRatio );
         return;
     }
+
+    const QSizeF& minSize = getMinSize();
+    if( windowSize < minSize )
+        windowSize = contentWindow_.getCoordinates().size();
 }
 
 void ContentWindowController::constrainPosition_( QRectF& window ) const
@@ -251,7 +262,8 @@ void ContentWindowController::constrainPosition_( QRectF& window ) const
     window.moveTopLeft( position );
 }
 
-QRectF ContentWindowController::getCenteredCoordinates_( const QSizeF& size ) const
+QRectF
+ContentWindowController::getCenteredCoordinates_( const QSizeF& size ) const
 {
     const qreal totalWidth = displayGroup_.getCoordinates().width();
     const qreal totalHeight = displayGroup_.getCoordinates().height();
