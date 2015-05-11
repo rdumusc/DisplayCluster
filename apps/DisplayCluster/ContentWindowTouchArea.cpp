@@ -161,7 +161,7 @@ void ContentWindowTouchArea::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_
 
 void ContentWindowTouchArea::wheelEvent( QGraphicsSceneWheelEvent* event_ )
 {
-    if ( contentWindow_->isSelected( ))
+    if( contentWindow_->isSelected( ))
         contentWindow_->getInteractionDelegate().wheelEvent( event_ );
     else
         controller_->scale( event_->scenePos(), 1.0 + WHEEL_SCALE_SPEED *
@@ -195,10 +195,12 @@ void ContentWindowTouchArea::gestureEvent( QGestureEvent* event_ )
     // accepted, so blockTapGesture_ is here to prevent the Tap at the end
     // of the following sequence:
     // *Tap begin* ----- *TapAndHold begin* - *TapAndHold end* -- *Tap end*
-    if( blockTapGesture_ )
+    if( ( gesture = event_->gesture( Qt::TapGesture )))
     {
-        blockTapGesture_ = false;
-        return;
+        if( gesture->state() == Qt::GestureStarted )
+            blockTapGesture_ = false;
+        else if( blockTapGesture_ )
+            return;
     }
 
     if( contentWindow_->isSelected( ))
