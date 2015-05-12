@@ -46,9 +46,13 @@ const int ROLE_ACTION = Qt::UserRole;
 
 ContentActionsModel::ContentActionsModel()
 {
+}
+
+QHash<int, QByteArray> ContentActionsModel::roleNames() const
+{
     QHash<int, QByteArray> roles;
     roles[ ROLE_ACTION ] = "action";
-    setRoleNames( roles );
+    return roles;
 }
 
 QVariant ContentActionsModel::data( const QModelIndex& index_, int role ) const

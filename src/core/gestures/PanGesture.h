@@ -40,7 +40,7 @@
 #ifndef PANGESTURE_H
 #define PANGESTURE_H
 
-#include <QtGui/QGesture>
+#include <QGesture>
 
 /**
  * This class defines a pan gesture. The implementation enhances the Qt

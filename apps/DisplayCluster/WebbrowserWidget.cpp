@@ -41,7 +41,7 @@
 
 #include "configuration/MasterConfiguration.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 #define SPIN_BOX_MIN_VALUE 0
 #define SPIN_BOX_MAX_VALUE 10000

@@ -42,10 +42,10 @@
 #include "gestures/PanGesture.h"
 #include "gestures/PanGestureRecognizer.h"
 
-#include <QtCore/QEvent>
-#include <QtGui/QTapGesture>
-#include <QtGui/QTapAndHoldGesture>
-#include <QtGui/QGestureEvent>
+#include <QEvent>
+#include <QTapGesture>
+#include <QTapAndHoldGesture>
+#include <QGestureEvent>
 
 TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )

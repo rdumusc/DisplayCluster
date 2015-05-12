@@ -44,9 +44,9 @@
 #include <fstream>
 #include <boost/tokenizer.hpp>
 
-#include <QtCore/QDir>
-#include <QtGui/QImageReader>
-#include <QtCore/QtConcurrentRun>
+#include <QDir>
+#include <QImageReader>
+#include <QtConcurrentRun>
 
 #ifdef __APPLE__
     #include <OpenGL/glu.h>
@@ -128,7 +128,7 @@ bool DynamicTexture::readFullImageMetadata( const QString& uri )
 
 bool DynamicTexture::readPyramidMetadataFromFile( const QString& uri )
 {
-    std::ifstream ifs(uri.toAscii());
+    std::ifstream ifs(uri.toLatin1());
 
     // read the whole line
     std::string lineString;
@@ -174,7 +174,7 @@ bool DynamicTexture::determineImageExtension( const QString& imagePyramidPath )
         return false;
 
     const QString extension = pyramidRootFiles.first().suffix();
-    if( !QImageReader().supportedImageFormats().contains( extension.toAscii( )))
+    if( !QImageReader().supportedImageFormats().contains( extension.toLatin1( )))
         return false;
 
     imageExtension_ = extension;

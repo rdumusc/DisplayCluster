@@ -40,7 +40,7 @@
 #ifndef PINCHGESTURE_H
 #define PINCHGESTURE_H
 
-#include <QtGui/QGesture>
+#include <QGesture>
 
 /**
  * This class defines a pinch gesture. The implementation enhances the Qt

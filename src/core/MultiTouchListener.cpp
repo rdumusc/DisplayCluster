@@ -50,7 +50,10 @@
 MultiTouchListener::MultiTouchListener( QGraphicsView* graphicsView )
     : TUIO::TuioListener()
     , graphicsView_( graphicsView )
+    , device_()
 {
+    device_.setType( QTouchDevice::TouchScreen );
+
     assert( graphicsView_ );
 
     DoubleTapGestureRecognizer::install();
@@ -158,8 +161,6 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     touchPoint.setNormalizedPos( normalizedPos );
 
     Qt::TouchPointStates touchPointStates = 0;
-    if( tcur->getCursorID() == 0 )
-        touchPointStates |= Qt::TouchPointPrimary;
 
     switch( eventType )
     {
@@ -191,7 +192,7 @@ void MultiTouchListener::handleEvent( TUIO::TuioCursor* tcur,
     touchPoint.setState( touchPointStates );
     touchPointMap_.insert( tcur->getCursorID(), touchPoint );
 
-    QEvent* touchEvent = new QTouchEvent( eventType, QTouchEvent::TouchScreen,
+    QEvent* touchEvent = new QTouchEvent( eventType, &device_,
                                           Qt::NoModifier, touchPointStates,
                                           touchPointMap_.values( ));
     QApplication::postEvent( graphicsView_->viewport(), touchEvent );

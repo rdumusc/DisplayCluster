@@ -40,7 +40,7 @@
 #ifndef DOUBLETAPGESTURE_H
 #define DOUBLETAPGESTURE_H
 
-#include <QtGui/QGesture>
+#include <QGesture>
 
 /**
  * This class defines a doubletap gesture. The doubletap is recognized if two

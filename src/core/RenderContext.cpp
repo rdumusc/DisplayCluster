@@ -73,7 +73,7 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
         const QRect screenRect = config.getScreenRect( screenIndex );
         const QPoint windowPos = config.getWindowPos( i );
 
-        visibleWallArea_ = visibleWallArea_.unite( screenRect );
+        visibleWallArea_ = visibleWallArea_.united( screenRect );
 
         WallWindowPtr window( new WallWindow( &scene_, screenRect, windowPos ));
         window->setTestPattern( TestPatternPtr( new TestPattern( config, i )));

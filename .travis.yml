@@ -43,7 +43,7 @@ before_install:
  - sudo apt-get install -qq libfcgi-dev || /bin/true
  - sudo apt-get install -qq libjpeg-turbo8-dev || /bin/true
  - sudo apt-get install -qq libopenmpi-dev || /bin/true
- - sudo apt-get install -qq libpoppler-dev || /bin/true
+ - sudo apt-get install -qq libpoppler-qt5-dev || /bin/true
  - sudo apt-get install -qq libswscale-dev || /bin/true
  - sudo apt-get install -qq libturbojpeg || /bin/true
  - sudo apt-get install -qq libxmu-dev || /bin/true

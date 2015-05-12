@@ -40,8 +40,8 @@
 #include "PanGestureRecognizer.h"
 #include "PanGesture.h"
 
-#include <QtGui/QTouchEvent>
-#include <QtGui/QWidget>
+#include <QTouchEvent>
+#include <QWidget>
 
 
 Qt::GestureType PanGestureRecognizer::_type = Qt::CustomGesture;

@@ -40,8 +40,8 @@
 #include "PinchGestureRecognizer.h"
 #include "PinchGesture.h"
 
-#include <QtGui/QTouchEvent>
-#include <QtGui/QWidget>
+#include <QTouchEvent>
+#include <QWidget>
 
 Qt::GestureType PinchGestureRecognizer::_type = Qt::CustomGesture;
 

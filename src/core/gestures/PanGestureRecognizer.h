@@ -40,7 +40,7 @@
 #ifndef PANGESTURERECOGNIZER_H
 #define PANGESTURERECOGNIZER_H
 
-#include <QtGui/QGestureRecognizer>
+#include <QGestureRecognizer>
 
 /**
  * Gesture recognizer for a pan gesture. The implementation enhances the Qt

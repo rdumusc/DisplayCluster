@@ -44,7 +44,7 @@
 
 #include "FpsRenderer.h"
 
-#include <QtGui/QGraphicsView>
+#include <QGraphicsView>
 
 class WallWindow : public QGraphicsView
 {

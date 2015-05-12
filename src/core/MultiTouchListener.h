@@ -46,8 +46,8 @@
 #include <TUIO/TuioClient.h>
 
 #include <QObject>
-#include <QtGui/QtEvents>
-#include <QtGui/QGraphicsView>
+#include <QTouchEvent>
+#include <QGraphicsView>
 
 /**
  * Listen to TUIO events and transmit the touch points to a target QGraphicsView.
@@ -88,6 +88,8 @@ private:
     QGraphicsView* graphicsView_;
 
     TUIO::TuioClient client_;
+
+    QTouchDevice device_;
 };
 
 #endif

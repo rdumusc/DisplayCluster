@@ -41,7 +41,7 @@
 
 #include "types.h"
 
-#include <QtGui/QListWidgetItem>
+#include <QListWidgetItem>
 
 /**
  * Represent a ContentWindow in a QListView.

@@ -48,8 +48,8 @@
 #if defined( Q_OS_WIN )
 #include <GL/wglext.h>
 #elif defined( Q_OS_LINUX )
-#include <QtGui/QApplication>
-#include <QtGui/QDesktopWidget>
+#include <QApplication>
+#include <QDesktopWidget>
 #include <GL/glx.h>
 #include <GL/glxext.h>
 #endif

@@ -41,11 +41,11 @@
 
 #include "types.h"
 
-#include <QtCore/QUuid>
-#include <QtGui/QGraphicsView>
-#include <QtGui/QGesture>
-#include <QtGui/QGestureEvent>
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QUuid>
+#include <QGraphicsView>
+#include <QGesture>
+#include <QGestureEvent>
+#include <QDeclarativeEngine>
 
 class PanGesture;
 class PinchGesture;
