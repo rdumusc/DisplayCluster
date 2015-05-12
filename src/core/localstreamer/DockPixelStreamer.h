@@ -98,7 +98,7 @@ private:
     QLinkedList<int> slideImagesToLoad_;
 
     void createFlow(const QSize& dockSize);
-    void createToolbar(const unsigned int width, const unsigned int height);
+    void createToolbar(const QSize& toolbarSize);
     void createImageLoader();
 
     void processClickEvent(const deflect::Event& clickEvent);
