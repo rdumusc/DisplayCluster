@@ -162,13 +162,18 @@ void MasterApplication::startNetworkListener()
         return;
     }
 
-    deflect::PixelStreamDispatcher& dispatcher = networkListener_->getPixelStreamDispatcher();
-    connect(&dispatcher, SIGNAL(openPixelStream(QString, QSize)),
-            pixelStreamWindowManager_.get(), SLOT(openPixelStreamWindow(QString, QSize)));
-    connect(&dispatcher, SIGNAL(deletePixelStream(QString)),
-            pixelStreamWindowManager_.get(), SLOT(closePixelStreamWindow(QString)));
-    connect(pixelStreamWindowManager_.get(), SIGNAL(pixelStreamWindowClosed(QString)),
-            &dispatcher, SLOT(deleteStream(QString)));
+    deflect::PixelStreamDispatcher& dispatcher =
+            networkListener_->getPixelStreamDispatcher();
+
+    connect( &dispatcher, SIGNAL( openPixelStream( QString )),
+             pixelStreamWindowManager_.get(),
+             SLOT( openPixelStreamWindow( QString )));
+    connect( &dispatcher, SIGNAL( deletePixelStream( QString )),
+             pixelStreamWindowManager_.get(),
+             SLOT( closePixelStreamWindow( QString )));
+    connect( pixelStreamWindowManager_.get(),
+             SIGNAL(pixelStreamWindowClosed( QString )),
+             &dispatcher, SLOT( deleteStream( QString )));
 
     deflect::CommandHandler& handler = networkListener_->getCommandHandler();
     handler.registerCommandHandler(new FileCommandHandler(displayGroup_, *pixelStreamWindowManager_));

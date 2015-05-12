@@ -51,9 +51,10 @@
 
 #define DOCK_ASPECT_RATIO        0.45
 #define SLIDE_REL_HEIGHT_FACTOR  0.55
+#define TOOLBAR_REL_HEIGHT       0.15
 
-#define SLIDE_MIN_SIZE           128
-#define SLIDE_MAX_SIZE           512
+#define SLIDE_MIN_SIZE           128.0
+#define SLIDE_MAX_SIZE           512.0
 
 #define COVERFLOW_SPEED_FACTOR   0.1
 
@@ -70,16 +71,18 @@ float DockPixelStreamer::getDefaultAspectRatio()
     return DOCK_ASPECT_RATIO;
 }
 
-DockPixelStreamer::DockPixelStreamer(const QSize& desiredDockSize, const QString& rootDir)
+DockPixelStreamer::DockPixelStreamer( const QSize& desiredDockSize,
+                                      const QString& rootDir )
     : PixelStreamer()
-    , flow_(new PictureFlow())
-    , loader_(0)
-    , toolbar_(0)
+    , flow_( new PictureFlow( ))
+    , loader_( 0 )
+    , toolbar_( 0 )
 {
-    const QSize& dockSize = constrainSize(desiredDockSize);
+    const QSize& dockSize = constrainSize( desiredDockSize );
+    const int toolbarHeight = dockSize.height() * TOOLBAR_REL_HEIGHT;
 
-    createFlow(dockSize);
-    createToolbar(dockSize.width(), dockSize.height()*0.15);
+    createFlow( QSize( dockSize.width(), dockSize.height() - toolbarHeight ));
+    createToolbar( QSize( dockSize.width(), toolbarHeight ));
     createImageLoader();
 
     loadThread_.start();
@@ -234,17 +237,20 @@ void DockPixelStreamer::createFlow(const QSize& dockSize)
     connect( flow_, SIGNAL( targetIndexChanged(int)), this, SLOT(loadThumbnails(int)) );
 }
 
-void DockPixelStreamer::createToolbar(const unsigned int width, const unsigned int height)
+void DockPixelStreamer::createToolbar( const QSize& toolbarSize )
 {
-    toolbar_ = new DockToolbar(QSize(width, height));
+    toolbar_ = new DockToolbar( toolbarSize );
 
-    deflect::Command webbrowserCommand(deflect::COMMAND_TYPE_WEBBROWSER, "");
-    toolbar_->addButton( new ToolbarButton( "Webbrowser", QImage(WEBBROWSER_ICON),
-                                            webbrowserCommand.getCommand() ));
+    deflect::Command webbrowserCommand( deflect::COMMAND_TYPE_WEBBROWSER, "" );
+    toolbar_->addButton( new ToolbarButton( "Webbrowser",
+                                            QImage( WEBBROWSER_ICON ),
+                                            webbrowserCommand.getCommand( )));
 
-    deflect::Command clearallCommand(deflect::COMMAND_TYPE_SESSION, "clearall");
-    toolbar_->addButton( new ToolbarButton( "Clear all", QImage(CLEARALL_ICON),
-                                            clearallCommand.getCommand() ));
+    deflect::Command clearallCommand( deflect::COMMAND_TYPE_SESSION,
+                                      "clearall" );
+    toolbar_->addButton( new ToolbarButton( "Clear all",
+                                            QImage( CLEARALL_ICON ),
+                                            clearallCommand.getCommand( )));
 }
 
 void DockPixelStreamer::createImageLoader()
@@ -337,27 +343,27 @@ void DockPixelStreamer::addFoldersToFlow()
 
 QSize DockPixelStreamer::getMinSize()
 {
-    const float dockHeight = SLIDE_MIN_SIZE / SLIDE_REL_HEIGHT_FACTOR;
-    const float dockWidth = dockHeight / getDefaultAspectRatio();
+    const qreal dockHeight = SLIDE_MIN_SIZE / SLIDE_REL_HEIGHT_FACTOR;
+    const qreal dockWidth = dockHeight / getDefaultAspectRatio();
     return QSize( dockWidth, dockHeight );
 }
 
 QSize DockPixelStreamer::getMaxSize()
 {
-    const float dockHeight = SLIDE_MAX_SIZE / SLIDE_REL_HEIGHT_FACTOR;
-    const float dockWidth = dockHeight / getDefaultAspectRatio();
+    const qreal dockHeight = SLIDE_MAX_SIZE / SLIDE_REL_HEIGHT_FACTOR;
+    const qreal dockWidth = dockHeight / getDefaultAspectRatio();
     return QSize( dockWidth, dockHeight );
 }
 
-QSize DockPixelStreamer::constrainSize(const QSize& targetSize)
+QSize DockPixelStreamer::constrainSize( const QSize& targetSize )
 {
-    QSize minSize = getMinSize();
-    QSize maxSize = getMaxSize();
+    const QSize minSize = getMinSize();
+    const QSize maxSize = getMaxSize();
 
-    if (targetSize.width() < minSize.width() || targetSize.height() < minSize.height())
+    if( targetSize < minSize )
         return minSize;
 
-    if (targetSize.width() > maxSize.width() || targetSize.height() > maxSize.height())
+    if( targetSize > maxSize )
         return maxSize;
 
     return targetSize;

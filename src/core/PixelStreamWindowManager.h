@@ -43,6 +43,7 @@
 #include <QObject>
 #include <QPointF>
 #include <QSize>
+#include <QUuid>
 #include <map>
 
 #include "types.h"
@@ -63,29 +64,6 @@ public:
      *                     to and removed from this DisplayGroup.
      */
     PixelStreamWindowManager( DisplayGroup& displayGroup );
-
-    /**
-     * Create a content window which will be associated to the pixel stream once
-     * the stream is ready.
-     *
-     * @param uri the URI of the streamer
-     * @param pos the desired position for the center of the window in pixels.
-     *        If pos.isNull(), the window is centered on the DisplayGroup.
-     * @param size the desired size of the window in pixels.
-     * @return the window of the streamer. Is never NULL.
-     */
-    ContentWindowPtr createContentWindow( const QString& uri,
-                                          const QPointF& pos,
-                                          const QSizeF& size );
-
-    /**
-     * Remove the associated content window from the given stream. This should
-     * usually happen automatically once the stream is closed or the content
-     * window is closed from the DisplayGroup.
-     *
-     * @param uri the URI of the streamer
-     */
-    void removeContentWindow( const QString& uri );
 
     /**
      * @param uri the URI of streamer
@@ -119,18 +97,18 @@ public:
 
 public slots:
     /**
-     * Is called once a new streamer was created. This will associate the
-     * streamer to its content window. If there is no window yet, one will be
-     * created using the size of the streamer source.
+     * Open a window for a new PixelStream.
      *
      * @param uri the URI of the streamer
-     * @param size the size in pixels of the streaming source
+     * @param pos the desired position for the center of the window in pixels.
+     *        If pos.isNull(), the window is centered on the DisplayGroup.
+     * @param size the desired size of the window in pixels.
      */
-    void openPixelStreamWindow( QString uri, QSize size );
+    void openPixelStreamWindow( QString uri, QPointF pos = QPointF(),
+                                QSize size = QSize( ));
 
     /**
-     * Is called when streamer is closed. This will remove the associated
-     * content window.
+     * Close the window of a PixelStream.
      *
      * @param uri the URI of the streamer
      */
@@ -181,7 +159,7 @@ private slots:
 private:
     DisplayGroup& displayGroup_;
 
-    typedef std::map< QString, ContentWindowPtr > ContentWindowMap;
+    typedef std::map< QString, QUuid > ContentWindowMap;
     ContentWindowMap streamerWindows_;
 };
 

@@ -63,9 +63,10 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 
     const QString uri = CONTENT_URI;
     const QPointF pos( 400.0, 300.0 );
-    const QSizeF size( 500.0, 400.0 );
+    const QSize size( 500, 400 );
 
-    ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
+    windowManager.openPixelStreamWindow( uri, pos, size );
+    ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
@@ -76,7 +77,7 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     BOOST_CHECK_EQUAL( coords.width(), size.width( ));
     BOOST_CHECK_EQUAL( coords.height(), size.height( ));
 
-    windowManager.removeContentWindow( uri );
+    windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
 }
 
@@ -89,12 +90,13 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     const QPointF pos( 400.0, 300.0 );
     const QSize size( 500, 400 );
 
-    ContentWindowPtr window = windowManager.createContentWindow( uri, pos, size );
+    windowManager.openPixelStreamWindow( uri, pos, size );
+    ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
 
-    windowManager.openPixelStreamWindow( uri, size );
+    windowManager.openPixelStreamWindow( uri );
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
 
     ContentPtr content = window->getContent();
@@ -120,9 +122,9 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
     const QString uri = CONTENT_URI;
     // window will be positioned centerred
     const QPointF pos( wallSize.width() * 0.5, wallSize.height() * 0.5 );
-    const QSize size( 500, 400 ); // window will be sized 1TO1
+    const QSize size( 640, 480 ); // default PixelStream window size
 
-    windowManager.openPixelStreamWindow( uri, size );
+    windowManager.openPixelStreamWindow( uri );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 

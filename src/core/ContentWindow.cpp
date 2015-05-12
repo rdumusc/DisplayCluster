@@ -160,6 +160,15 @@ void ContentWindow::setBorder( const ContentWindow::WindowBorder border )
 
 void ContentWindow::setState( const ContentWindow::WindowState state )
 {
+    if( windowState_ == state )
+        return;
+
+    if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM &&
+        state == SELECTED && !hasEventReceivers( ))
+    {
+        return;
+    }
+
     windowState_ = state;
 
     emit stateChanged();

@@ -70,8 +70,10 @@ bool Application::initialize(const CommandLineOptions& options)
     pixelStreamer_ = PixelStreamerFactory::create(options);
     if (!pixelStreamer_)
         return false;
-    connect(pixelStreamer_, SIGNAL(imageUpdated(QImage)), this, SLOT(sendImage(QImage)));
-    connect(pixelStreamer_, SIGNAL(sendCommand(QString)), this, SLOT(sendCommand(QString)));
+    connect(pixelStreamer_, SIGNAL(imageUpdated(QImage)),
+            this, SLOT(sendImage(QImage)));
+    connect(pixelStreamer_, SIGNAL(sendCommand(QString)),
+            this, SLOT(sendCommand(QString)));
 
     // Connect to DisplayCluster
     dcStream_ = new deflect::Stream( options.getName().toStdString(),
@@ -83,6 +85,7 @@ bool Application::initialize(const CommandLineOptions& options)
         dcStream_ = 0;
         return false;
     }
+    dcStream_->registerForEvents();
 
     // Make sure to quit the application if the connection is closed.
     dcStream_->disconnected.connect( QApplication::quit );
@@ -118,17 +121,8 @@ void Application::sendImage(QImage image)
 
 void Application::processPendingEvents()
 {
-    if (!dcStream_->isRegisteredForEvents())
-    {
-        dcStream_->registerForEvents();
-    }
-    else
-    {
-        while(dcStream_->hasEvent())
-        {
-            pixelStreamer_->processEvent(dcStream_->getEvent());
-        }
-    }
+    while(dcStream_->hasEvent())
+        pixelStreamer_->processEvent(dcStream_->getEvent());
 }
 
 void Application::sendCommand(QString command)
