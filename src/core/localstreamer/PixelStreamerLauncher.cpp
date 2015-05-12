@@ -76,7 +76,7 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     const QString& uri = QString( "WebBrowser_%1" ).arg( webbrowserCounter++ );
 
     const QSize viewportSize = !size.isEmpty() ? size : WEBBROWSER_DEFAULT_SIZE;
-    windowManager_.createContentWindow( uri, pos, viewportSize );
+    windowManager_.openPixelStreamWindow( uri, pos, viewportSize );
 
     CommandLineOptions options;
     options.setPixelStreamerType( PS_WEBKIT );
@@ -108,7 +108,7 @@ void PixelStreamerLauncher::openDock( const QPointF pos, const QSize size,
     const QString& dockUri = DockPixelStreamer::getUniqueURI();
     const QSize& dockSize = DockPixelStreamer::constrainSize( size );
 
-    windowManager_.createContentWindow( dockUri, pos, dockSize );
+    windowManager_.openPixelStreamWindow( dockUri, pos, dockSize );
     windowManager_.showWindow( dockUri );
 
     if( !processes_.count( dockUri ))
