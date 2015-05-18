@@ -41,13 +41,25 @@
 
 #include "types.h"
 #include "Coordinates.h"
+#include "ContentWindow.h"
 
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/nvp.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <QObject>
 #include <QUuid>
 #include <QRectF>
+
+/**
+ * The different versions of the xml serialized display group.
+ */
+enum DisplayGroupVersion
+{
+    INVALID_DISPLAYGROUP_VERSION = -1,
+    FIRST_DISPLAYGROUP_VERSION = 0
+};
 
 /**
  * A collection of ContentWindows.
@@ -58,6 +70,8 @@ class DisplayGroup : public Coordinates,
         public boost::enable_shared_from_this<DisplayGroup>
 {
     Q_OBJECT
+    Q_PROPERTY( bool showWindowTitles READ getShowWindowTitles
+                WRITE setShowWindowTitles NOTIFY showWindowTitlesChanged )
 
 public:
     /** Constructor */
@@ -68,6 +82,9 @@ public:
 
     /** Add a content window. */
     void addContentWindow( ContentWindowPtr contentWindow );
+
+    /** @return true if window titles are visible. */
+    bool getShowWindowTitles() const;
 
     /**
      * Is the DisplayGroup empty.
@@ -84,9 +101,9 @@ public:
     ContentWindowPtr getActiveWindow() const;
 
     /** Get all windows. */
-    ContentWindowPtrs getContentWindows() const;
+    const ContentWindowPtrs& getContentWindows() const;
 
-    /** Get a single window by its id */
+    /** Get a single window by its id. */
     ContentWindowPtr getContentWindow( const QUuid& id ) const;
 
     /**
@@ -95,9 +112,15 @@ public:
      */
     void setContentWindows( ContentWindowPtrs contentWindows );
 
+    /** Assignment operator. */
+    DisplayGroup& operator=( const DisplayGroup& displayGroup );
+
 public slots:
-    /** Clear all ContentWindows */
+    /** Clear all ContentWindows. */
     void clear();
+
+    /** Enable/Disable the visibility of window titles. */
+    void setShowWindowTitles( bool set );
 
     /** Remove a content window. */
     void removeContentWindow( const QUuid id );
@@ -112,6 +135,12 @@ public slots:
     void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
 signals:
+
+    /** @name QProperty notifiers */
+    //@{
+    void showWindowTitlesChanged( bool set );
+    //@}
+
     /** Emitted whenever the DisplayGroup is modified */
     void modified( DisplayGroupPtr displayGroup );
 
@@ -136,13 +165,43 @@ private:
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
+        ar & showWindowTitles_;
         ar & contentWindows_;
         ar & coordinates_;
     }
 
+    /** Serialize for saving to an xml file */
+    template< class Archive >
+    void serialize_members_xml( Archive & ar, const unsigned int )
+    {
+        ar & boost::serialization::make_nvp( "showWindowTitles",
+                                             showWindowTitles_ );
+        ar & boost::serialization::make_nvp( "contentWindows",
+                                             contentWindows_ );
+        ar & boost::serialization::make_nvp( "coordinates", coordinates_ );
+    }
+
+    /** Loading from xml. */
+    void serialize_for_xml( boost::archive::xml_iarchive& ar,
+                            const unsigned int version)
+    {
+        serialize_members_xml( ar, version );
+    }
+
+    /** Saving to xml. */
+    void serialize_for_xml( boost::archive::xml_oarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
+    }
+
     void watchChanges( ContentWindowPtr contentWindow );
 
+    bool showWindowTitles_;
     ContentWindowPtrs contentWindows_;
 };
+
+BOOST_CLASS_VERSION( DisplayGroup, FIRST_DISPLAYGROUP_VERSION )
+DECLARE_SERIALIZE_FOR_XML( DisplayGroup )
 
 #endif

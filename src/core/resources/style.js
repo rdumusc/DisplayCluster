@@ -24,11 +24,13 @@ var statisticsFontColor = "red";
 
 var segmentBorderColor = "lightgreen";
 
-var windowBorderWidth = 10;
-var windowBorderDefaultColor = "black";
-var windowBorderSelectedColor = "red";
-var windowBorderMovingColor= "green";
-var windowBorderResizingColor = "blue";
+var windowTitleFontSize = 45;
+var windowTitleHeight = 100;
+var windowBorderWidth = 24;
+var windowBorderDefaultColor = "#F2F2F2";
+var windowBorderSelectedColor = "#FCEE21";
+var windowBorderMovingColor= "#F2F2F2";
+var windowBorderResizingColor = "#F2F2F2";
 
 var zoomContextBorderColor = "white";
 var zoomContextBorderWidth = 10;

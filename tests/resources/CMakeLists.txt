@@ -15,6 +15,8 @@ set(TEST_RESOURCES
   state_v0.dcx
   state_v0.dcxpreview
   state_v0_broken.dcx
+  state_v3.dcx
+  state_v3_noTitles.dcx
   wall.png
 )
 

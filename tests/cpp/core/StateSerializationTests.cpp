@@ -77,6 +77,8 @@ const QString LEGACY_URI = "legacy.dcx";
 const QString STATE_V0_URI = "state_v0.dcx";
 const QString STATE_V0_PREVIEW_FILE = "state_v0.dcxpreview";
 const QString STATE_V0_BROKEN_URI = "state_v0_broken.dcx";
+const QString STATE_V3_URI = "state_v3.dcx";
+const QString STATE_V3_NOTITLES_URI = "state_v3_noTitles.dcx";
 const QString TEST_DIR = "tmp";
 const QSize VALID_TEXTURE_SIZE( 256, 128 );
 }
@@ -93,23 +95,26 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
         content->setDimensions( CONTENT_SIZE );
         ContentWindowPtr window( new ContentWindow( content ));
 
-        ContentWindowPtrs contentWindows;
-        contentWindows.push_back( window );
-        State state( contentWindows );
+        DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+        displayGroup->addContentWindow( window );
+        State state( displayGroup );
         boost::archive::xml_oarchive oa( ss );
         oa << BOOST_SERIALIZATION_NVP( state );
     }
 
     // Deserialize
+    bool showWindowTitles( false );
     ContentWindowPtrs contentWindows;
     {
         State state;
         boost::archive::xml_iarchive ia( ss );
         ia >> BOOST_SERIALIZATION_NVP( state );
-        contentWindows = state.getContentWindows();
+        contentWindows = state.getDisplayGroup()->getContentWindows();
+        showWindowTitles = state.getDisplayGroup()->getShowWindowTitles();
     }
 
     BOOST_REQUIRE_EQUAL( contentWindows.size(), 1 );
+    BOOST_REQUIRE_EQUAL( showWindowTitles, true );
     Content* content = contentWindows[0]->getContent().get();
     DummyContent* dummyContent = dynamic_cast< DummyContent* >( content );
     BOOST_REQUIRE( dummyContent );
@@ -133,9 +138,10 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidLegacyStateThenContentIsLoaded )
 {
     State state;
     BOOST_CHECK( state.legacyLoadXML( LEGACY_URI ));
-    ContentWindowPtrs contentWindows = state.getContentWindows();
+    ContentWindowPtrs contentWindows = state.getDisplayGroup()->getContentWindows();
 
     BOOST_REQUIRE_EQUAL( contentWindows.size(), 1 );
+    BOOST_REQUIRE_EQUAL( state.getDisplayGroup()->getShowWindowTitles(), false );
 }
 
 BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromLegacyFile )
@@ -149,6 +155,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromLegacyFile )
     BOOST_CHECK( success );
 
     BOOST_CHECK_EQUAL( displayGroup->getContentWindows().size(), 1 );
+    BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), false );
 }
 
 BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
@@ -162,16 +169,20 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
     BOOST_CHECK( !success );
 }
 
+void checkContent( ContentPtr content )
+{
+    BOOST_CHECK_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
+    BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_TEXTURE );
+    BOOST_CHECK_EQUAL( content->getURI().toStdString(),
+                       VALID_TEXTURE_URI.toStdString() );
+}
+
 void checkLegacyWindow( ContentWindowPtr window )
 {
     BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0/1.5 );
     BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 0.25, 0.25, 0.5, 0.5 ));
 
-    ContentPtr content = window->getContent();
-    BOOST_CHECK_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
-    BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_TEXTURE );
-    BOOST_CHECK_EQUAL( content->getURI().toStdString(),
-                       VALID_TEXTURE_URI.toStdString() );
+    checkContent( window->getContent( ));
 }
 
 void checkWindow( ContentWindowPtr window )
@@ -182,11 +193,15 @@ void checkWindow( ContentWindowPtr window )
     BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 * wallSize.height( ));
     BOOST_CHECK_EQUAL( window->getCoordinates().size(), 0.5 * wallSize );
 
-    ContentPtr content = window->getContent();
-    BOOST_CHECK_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
-    BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_TEXTURE );
-    BOOST_CHECK_EQUAL( content->getURI().toStdString(),
-                       VALID_TEXTURE_URI.toStdString() );
+    checkContent( window->getContent( ));
+}
+
+void checkWindowVersion3( ContentWindowPtr window )
+{
+    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0 );
+    BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 486, 170, 600, 300 ));
+
+    checkContent( window->getContent( ));
 }
 
 BOOST_AUTO_TEST_CASE( testWhenOpeningValidStateThenContentIsLoaded )
@@ -199,8 +214,9 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidStateThenContentIsLoaded )
     BOOST_CHECK_NO_THROW( ia >> BOOST_SERIALIZATION_NVP( state ));
     ifs.close();
 
-    ContentWindowPtrs contentWindows = state.getContentWindows();
+    ContentWindowPtrs contentWindows = state.getDisplayGroup()->getContentWindows();
     BOOST_CHECK_EQUAL( contentWindows.size(), 1 );
+    BOOST_CHECK_EQUAL( state.getDisplayGroup()->getShowWindowTitles(), false );
 
     checkLegacyWindow( contentWindows[0] );
 }
@@ -214,8 +230,39 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
     BOOST_REQUIRE_NO_THROW( success = helper.load( STATE_V0_URI ));
     BOOST_REQUIRE( success );
     BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
+    BOOST_REQUIRE_EQUAL( displayGroup->getShowWindowTitles(), false );
 
     checkWindow( displayGroup->getContentWindows()[0] );
+}
+
+BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3File )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    StateSerializationHelper helper( displayGroup );
+
+    bool success( false );
+    BOOST_REQUIRE_NO_THROW( success = helper.load( STATE_V3_URI ));
+    BOOST_REQUIRE( success );
+    BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
+    BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), true );
+    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( 0, 0, 1536, 648 ));
+
+    checkWindowVersion3( displayGroup->getContentWindows()[0] );
+}
+
+BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3NoTitlesFile )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    StateSerializationHelper helper( displayGroup );
+
+    bool success( false );
+    BOOST_REQUIRE_NO_THROW( success = helper.load( STATE_V3_NOTITLES_URI ));
+    BOOST_REQUIRE( success );
+    BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
+    BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), false );
+    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( 0, 0, 1536, 648 ));
+
+    checkWindowVersion3( displayGroup->getContentWindows()[0] );
 }
 
 DisplayGroupPtr createTestDisplayGroup()
@@ -296,6 +343,10 @@ BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
 
     BOOST_REQUIRE_EQUAL( loadedDisplayGroup->getContentWindows().size(),
                          displayGroup->getContentWindows().size( ));
+    BOOST_REQUIRE_EQUAL( loadedDisplayGroup->getShowWindowTitles(),
+                         displayGroup->getShowWindowTitles());
+    BOOST_REQUIRE_EQUAL( loadedDisplayGroup->getCoordinates(),
+                         displayGroup->getCoordinates());
     checkWindow( loadedDisplayGroup->getContentWindows()[0] );
 
     // 4) Cleanup

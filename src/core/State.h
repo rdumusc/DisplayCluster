@@ -46,6 +46,7 @@
 #include <boost/serialization/vector.hpp>
 
 #include "ContentWindow.h"
+#include "DisplayGroup.h"
 
 class QString;
 class QXmlQuery;
@@ -58,7 +59,8 @@ enum StateVersion
     INVALID_FILE_VERSION = -1,
     FIRST_BOOST_FILE_VERSION = 0,
     LEGACY_FILE_VERSION = 1,
-    FIRST_PIXEL_COORDINATES_FILE_VERSION = 2
+    FIRST_PIXEL_COORDINATES_FILE_VERSION = 2,
+    WINDOW_TITLES_VERSION = 3
 };
 
 /**
@@ -74,12 +76,9 @@ public:
     State();
     /**
      * Constructor
-     * @param contentWindows a list of contentWindows to serialize
+     * @param displayGroup the DisplayGroup to serialize
      */
-    State( const ContentWindowPtrs& contentWindows );
-
-    /** Get the content windows */
-    const ContentWindowPtrs& getContentWindows() const;
+    State( DisplayGroupPtr displayGroup );
 
     /**
      * Load content windows stored in the given XML file.
@@ -90,6 +89,9 @@ public:
     /** Get the version that was last used for loading or saving. */
     StateVersion getVersion() const;
 
+    /** Get the DisplayGroup. */
+    DisplayGroupPtr getDisplayGroup();
+
 private:
     friend class boost::serialization::access;
 
@@ -97,8 +99,18 @@ private:
     void serialize( Archive & ar, const unsigned int version )
     {
         version_ = static_cast< StateVersion >( version );
-        ar & boost::serialization::make_nvp( "contentWindows",
-                                             contentWindows_ );
+        if( version < WINDOW_TITLES_VERSION )
+        {
+            ContentWindowPtrs contentWindows;
+            ar & boost::serialization::make_nvp( "contentWindows",
+            contentWindows );
+            displayGroup_->setContentWindows( contentWindows );
+            displayGroup_->setShowWindowTitles( false );
+        }
+        else
+        {
+            ar & boost::serialization::make_nvp( "displayGroup", displayGroup_ );
+        }
     }
 
     /** Legacy methods. @deprecated */
@@ -107,10 +119,10 @@ private:
     ContentWindowPtr restoreContent_( QXmlQuery& query, ContentPtr content,
                                       const int index ) const;
 
-    ContentWindowPtrs contentWindows_;
+    DisplayGroupPtr displayGroup_;
     StateVersion version_;
 };
 
-BOOST_CLASS_VERSION( State, FIRST_PIXEL_COORDINATES_FILE_VERSION )
+BOOST_CLASS_VERSION( State, WINDOW_TITLES_VERSION )
 
 #endif

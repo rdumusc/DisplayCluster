@@ -209,6 +209,16 @@ void MasterWindow::setupMasterWindowUI()
     showStatisticsAction->setChecked(options_->getShowStatistics());
     connect(showStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStatistics(bool)));
 
+    // show window title action
+    QAction* showWindowTitlesAction = new QAction( "Show Window Titles", this );
+    showWindowTitlesAction->setStatusTip( "Show window titles" );
+    showWindowTitlesAction->setCheckable( true );
+    showWindowTitlesAction->setChecked( displayGroup_->getShowWindowTitles( ));
+    connect( showWindowTitlesAction, SIGNAL( toggled( bool )),
+             displayGroup_.get(), SLOT( setShowWindowTitles( bool )));
+    connect( displayGroup_.get(), SIGNAL( showWindowTitlesChanged( bool )),
+             showWindowTitlesAction, SLOT( setChecked( bool )));
+
     // enable alpha blending
     QAction* enableAlphaBlendingAction = new QAction( "Alpha Blending", this );
     enableAlphaBlendingAction->setStatusTip(
@@ -223,24 +233,25 @@ void MasterWindow::setupMasterWindowUI()
     connect(showAboutDialog, SIGNAL(triggered()), this, SLOT(openAboutWidget()));
 
     // add actions to menus
-    fileMenu->addAction(openContentAction);
-    fileMenu->addAction(openContentsDirectoryAction);
-    fileMenu->addAction(loadStateAction);
-    fileMenu->addAction(saveStateAction);
-    fileMenu->addAction(webbrowserAction);
-    fileMenu->addAction(clearContentsAction);
-    fileMenu->addAction(quitAction);
-    editMenu->addAction(backgroundAction);
-    viewMenu->addAction(showStatisticsAction);
-    viewMenu->addAction(showStreamingSegmentsAction);
-    viewMenu->addAction(showWindowBordersAction);
-    viewMenu->addAction(showTouchPoints);
-    viewMenu->addAction(showTestPatternAction);
-    viewMenu->addAction(showZoomContextAction);
-    viewMenu->addAction(enableAlphaBlendingAction);
-    toolsMenu->addAction(computeImagePyramidAction);
+    fileMenu->addAction( openContentAction );
+    fileMenu->addAction( openContentsDirectoryAction );
+    fileMenu->addAction( loadStateAction );
+    fileMenu->addAction( saveStateAction );
+    fileMenu->addAction( webbrowserAction );
+    fileMenu->addAction( clearContentsAction );
+    fileMenu->addAction( quitAction );
+    editMenu->addAction( backgroundAction );
+    viewMenu->addAction( showStatisticsAction );
+    viewMenu->addAction( showWindowTitlesAction );
+    viewMenu->addAction( showStreamingSegmentsAction );
+    viewMenu->addAction( showWindowBordersAction );
+    viewMenu->addAction( showTouchPoints );
+    viewMenu->addAction( showTestPatternAction );
+    viewMenu->addAction( showZoomContextAction );
+    viewMenu->addAction( enableAlphaBlendingAction );
+    toolsMenu->addAction( computeImagePyramidAction );
 
-    helpMenu->addAction(showAboutDialog);
+    helpMenu->addAction( showAboutDialog );
 
     // add actions to toolbar
     toolbar->addAction(openContentAction);
