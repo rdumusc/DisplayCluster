@@ -75,8 +75,9 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
 
         visibleWallArea_ = visibleWallArea_.united( screenRect );
 
-        WallWindowPtr window( new WallWindow( &scene_, screenRect, windowPos ));
+        WallWindowPtr window( new WallWindow( &scene_, screenRect ));
         window->setTestPattern( TestPatternPtr( new TestPattern( config, i )));
+        window->move( windowPos );
         windows_.push_back( window );
 
         // share OpenGL context from the first GLWindow
@@ -96,10 +97,7 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
         if( config.getFullscreen( ))
             window->showFullScreen();
         else
-        {
-            window->setWindowFlags( Qt::FramelessWindowHint );
             window->show();
-        }
     }
 }
 

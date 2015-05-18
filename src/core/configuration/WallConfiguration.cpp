@@ -80,7 +80,7 @@ void WallConfiguration::loadWallSettings(const int processIndex)
         screenCountForCurrentProcess_ = queryResult.toInt();
 
     // populate parameters for each screen
-    for(int i=1; i<=screenCountForCurrentProcess_; i++)
+    for(int i=1; i<=screenCountForCurrentProcess_; ++i)
     {
         QPoint screenPosition;
 
