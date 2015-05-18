@@ -40,7 +40,7 @@
 
 Options::Options()
     : showWindowBorders_(true)
-    , showTouchPoints_(false)
+    , showTouchPoints_(true)
     , showTestPattern_(false)
     , showZoomContext_(true)
     , showStreamingSegments_(false)
