@@ -76,6 +76,9 @@ public:
     /** Disable VSync on this window for the next swapBuffer() call. */
     void disableVSync();
 
+    /** Check if the window is exposed in the window system. */
+    bool isExposed() const;
+
 private:
     /** Reimplemented from QGraphicsView to draw the test pattern */
     void drawForeground( QPainter* painter, const QRectF& rect ) override;
@@ -86,6 +89,7 @@ private:
     TestPatternPtr testPattern_;
     FpsRenderer fpsRenderer_;
     bool blockUpdates_;
+    bool isExposed_;
 };
 
 #endif // WALLWINDOW_H
