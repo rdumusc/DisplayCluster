@@ -61,6 +61,9 @@ MarkerRenderer& WallGraphicsScene::getMarkersRenderer()
 
 void WallGraphicsScene::drawForeground( QPainter* painter, const QRectF& )
 {
+    if( !markerRenderer_->isVisible( ))
+        return;
+
     painter->beginNativePainting();
 
     glPushAttrib( GL_ENABLE_BIT );

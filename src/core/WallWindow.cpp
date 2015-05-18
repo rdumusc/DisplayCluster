@@ -46,6 +46,7 @@ WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
                         const QPoint& windowPos )
     : QGraphicsView( scene_ )
     , blockUpdates_( false )
+    , isExposed_( false )
 {
     QRect windowGeometry( sceneRect_ );
     if( !windowPos.isNull( ))
@@ -89,6 +90,11 @@ void WallWindow::disableVSync()
     GLUtils::setEnableVSync( this, false );
 }
 
+bool WallWindow::isExposed() const
+{
+    return isExposed_;
+}
+
 void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
 {
     if( testPattern_ && testPattern_->isVisible( ))
@@ -107,6 +113,8 @@ void WallWindow::paintEvent( QPaintEvent* event_ )
 {
     if( blockUpdates_ )
         return;
+
+    isExposed_ = true;
 
     QGraphicsView::paintEvent( event_ );
 }
