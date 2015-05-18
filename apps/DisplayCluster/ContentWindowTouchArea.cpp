@@ -121,12 +121,10 @@ void ContentWindowTouchArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
 
     if( event_->buttons().testFlag( Qt::LeftButton ))
     {
-        if( contentWindow_->isMoving( ))
-        {
-            const QPointF delta = event_->scenePos() - event_->lastScenePos();
-            const QPointF newPos = parentItem()->pos() + delta;
-            controller_->moveTo( newPos );
-        }
+        const QPointF delta = event_->scenePos() - event_->lastScenePos();
+        const QPointF newPos = parentItem()->pos() + delta;
+        contentWindow_->setState( ContentWindow::MOVING );
+        controller_->moveTo( newPos );
     }
 }
 
@@ -135,12 +133,7 @@ void ContentWindowTouchArea::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
     emit activated();
 
     if( contentWindow_->isSelected( ))
-    {
         contentWindow_->getInteractionDelegate().mousePressEvent( event_ );
-        return;
-    }
-
-    contentWindow_->setState( ContentWindow::MOVING );
 }
 
 void ContentWindowTouchArea::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* )
