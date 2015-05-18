@@ -48,10 +48,11 @@ namespace ut = boost::unit_test;
 #include <QWebPage>
 #include <QWebFrame>
 #include <QWebElement>
+#include <QDir>
 
 #include "GlobalQtApp.h"
 
-#define TEST_PAGE_URL               "select_test.htm"
+#define TEST_PAGE_URL               "/select_test.htm"
 #define HTTP_BODY_SELECTOR          "body"
 #define HTTP_SELECT_SELECTOR        "select[id=language]"
 #define HTTP_SELECTBOXIT_SELECTOR   "span[id=languageSelectBoxIt]"
@@ -59,6 +60,11 @@ namespace ut = boost::unit_test;
 #define DISPLAY_STYLE_NONE          "none"
 
 BOOST_GLOBAL_FIXTURE( GlobalQtApp );
+
+QString testPageURL()
+{
+    return "file://" + QDir::currentPath() + TEST_PAGE_URL;
+}
 
 class TestPage
 {
@@ -72,7 +78,7 @@ public:
 
     void load()
     {
-        webview.load(QUrl(TEST_PAGE_URL));
+        webview.load(QUrl(testPageURL()));
         QApplication::instance()->exec();
 
         // Check that the page could be loaded

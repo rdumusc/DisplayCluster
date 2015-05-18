@@ -83,25 +83,25 @@ BOOST_AUTO_TEST_CASE( test_webgl_support )
     BOOST_REQUIRE_EQUAL( webglCanvases.count(), 1 );
 
     // http://stackoverflow.com/questions/11871077/proper-way-to-detect-webgl-support
-    QVariant hasContext = frame->evaluateJavaScript("var hasContext = false;"
-                                                    "if( window.WebGLRenderingContext ) {"
-                                                    "  hasContext = true;"
-                                                    "}");
+    QVariant hasContext = frame->evaluateJavaScript(
+                "hasContext = window.WebGLRenderingContext !== null;");
+    BOOST_REQUIRE( hasContext.toBool( ));
 
-    QVariant hasGL = frame->evaluateJavaScript("var hasGL = false;"
-                                               "gl = canvas.getContext(\"webgl\");"
-                                               "if( gl ) {"
-                                               "  hasGL = true;"
-                                               "}");
-
-    QVariant hasExperimentalGL = frame->evaluateJavaScript("var hasGL = false;"
-                                                           "gl = canvas.getContext(\"experimental-webgl\");"
-                                                           "if( gl ) {"
-                                                           "  hasGL = true;"
-                                                           "}");
-
-    BOOST_CHECK( hasContext.toBool( ));
-    BOOST_CHECK( hasGL.toBool() || hasExperimentalGL.toBool( ));
+    QVariant hasGL = frame->evaluateJavaScript(
+                "try {"
+                "  gl = canvas.getContext(\"webgl\");"
+                "  hasGL = true;"
+                "}"
+                "catch(e) {"
+                "  try {"
+                "    gl = canvas.getContext(\"experimental-webgl\");"
+                "    hasGL = true;"
+                "  }"
+                "  catch(e) {"
+                "    hasGL = false;"
+                "  }"
+                "}");
+    BOOST_CHECK( hasGL.toBool( ));
 
     delete streamer;
 }
