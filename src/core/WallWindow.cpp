@@ -42,27 +42,23 @@
 #include "TestPattern.h"
 #include "GLUtils.h"
 
-WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_,
-                        const QPoint& windowPos )
+WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_ )
     : QGraphicsView( scene_ )
     , blockUpdates_( false )
     , isExposed_( false )
 {
-    QRect windowGeometry( sceneRect_ );
-    if( !windowPos.isNull( ))
-        windowGeometry.moveTopLeft( windowPos );
-
-    setGeometry( windowGeometry );
-    setSceneRect( sceneRect_ );
-
     setCacheMode( QGraphicsView::CacheNone );
     setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
     setAttribute( Qt::WA_OpaquePaintEvent );
     setAttribute( Qt::WA_NoSystemBackground );
+    setWindowFlags( Qt::FramelessWindowHint );
 
     setStyleSheet( "border: 0px" );
     setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
     setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+
+    setSceneRect( sceneRect_ );
+    resize( sceneRect_.size( ));
 }
 
 void WallWindow::setTestPattern( TestPatternPtr testPattern )
