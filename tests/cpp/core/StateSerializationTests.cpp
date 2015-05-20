@@ -68,8 +68,7 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 namespace
 {
 const QSize wallSize( 3840*2+14, 1080*3+2*12 );
-const int CONTENT_WIDTH = 100;
-const int CONTENT_HEIGHT = 100;
+const QSize CONTENT_SIZE( 100, 100 );
 const int DUMMY_PARAM_VALUE = 10;
 const QString DUMMY_URI = "/dummuy/uri";
 const QString INVALID_URI = "/invalid/uri";
@@ -79,8 +78,7 @@ const QString STATE_V0_URI = "state_v0.dcx";
 const QString STATE_V0_PREVIEW_FILE = "state_v0.dcxpreview";
 const QString STATE_V0_BROKEN_URI = "state_v0_broken.dcx";
 const QString TEST_DIR = "tmp";
-const int VALID_TEXTURE_WIDTH = 256;
-const int VALID_TEXTURE_HEIGHT = 128;
+const QSize VALID_TEXTURE_SIZE( 256, 128 );
 }
 
 BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropertiesArePreserved )
@@ -92,7 +90,7 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
         ContentPtr content( dummyContent );
         dummyContent->dummyParam_ = DUMMY_PARAM_VALUE;
 
-        content->setDimensions( QSize( CONTENT_WIDTH, CONTENT_HEIGHT ));
+        content->setDimensions( CONTENT_SIZE );
         ContentWindowPtr window( new ContentWindow( content ));
 
         ContentWindowPtrs contentWindows;
@@ -118,8 +116,7 @@ BOOST_AUTO_TEST_CASE( testWhenStateIsSerializedAndDeserializedThenContentPropert
 
     const QSize dimensions = dummyContent->getDimensions();
 
-    BOOST_CHECK_EQUAL( dimensions.width(), CONTENT_WIDTH );
-    BOOST_CHECK_EQUAL( dimensions.height(), CONTENT_HEIGHT );
+    BOOST_CHECK_EQUAL( dimensions, CONTENT_SIZE );
     BOOST_CHECK_EQUAL( dummyContent->dummyParam_, DUMMY_PARAM_VALUE );
     BOOST_CHECK_EQUAL( dummyContent->getType(), CONTENT_TYPE_ANY );
     BOOST_CHECK_EQUAL( dummyContent->getURI().toStdString(),
@@ -168,15 +165,10 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningBrokenStateThenNoExceptionIsThrown )
 void checkLegacyWindow( ContentWindowPtr window )
 {
     BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0/1.5 );
-
-    BOOST_CHECK_EQUAL( window->getCoordinates().x(), 0.25 );
-    BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 );
-    BOOST_CHECK_EQUAL( window->getCoordinates().width(), 0.5 );
-    BOOST_CHECK_EQUAL( window->getCoordinates().height(), 0.5 );
+    BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 0.25, 0.25, 0.5, 0.5 ));
 
     ContentPtr content = window->getContent();
-    BOOST_CHECK_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
-    BOOST_CHECK_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
+    BOOST_CHECK_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
     BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_TEXTURE );
     BOOST_CHECK_EQUAL( content->getURI().toStdString(),
                        VALID_TEXTURE_URI.toStdString() );
@@ -188,12 +180,10 @@ void checkWindow( ContentWindowPtr window )
 
     BOOST_CHECK_EQUAL( window->getCoordinates().x(), 0.25 * wallSize.width( ));
     BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 * wallSize.height( ));
-    BOOST_CHECK_EQUAL( window->getCoordinates().width(), 0.5 * wallSize.width( ));
-    BOOST_CHECK_EQUAL( window->getCoordinates().height(), 0.5 * wallSize.height( ));
+    BOOST_CHECK_EQUAL( window->getCoordinates().size(), 0.5 * wallSize );
 
     ContentPtr content = window->getContent();
-    BOOST_CHECK_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
-    BOOST_CHECK_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
+    BOOST_CHECK_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
     BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_TEXTURE );
     BOOST_CHECK_EQUAL( content->getURI().toStdString(),
                        VALID_TEXTURE_URI.toStdString() );
@@ -231,8 +221,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
 DisplayGroupPtr createTestDisplayGroup()
 {
     ContentPtr content = ContentFactory::getContent( VALID_TEXTURE_URI );
-    BOOST_REQUIRE_EQUAL( content->getDimensions().width(), VALID_TEXTURE_WIDTH );
-    BOOST_REQUIRE_EQUAL( content->getDimensions().height(), VALID_TEXTURE_HEIGHT );
+    BOOST_REQUIRE_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
     const QPointF position( 0.25 * wallSize.width(), 0.25 * wallSize.height( ));
     contentWindow->setCoordinates( QRectF( position, 0.5 * wallSize ));
@@ -256,8 +245,7 @@ float compareImages( const QString& file1, const QString& file2 )
     BOOST_REQUIRE( image1.load( file1 ));
     BOOST_REQUIRE( image2.load( file2 ));
 
-    BOOST_REQUIRE_EQUAL( image1.width(), image2.width( ));
-    BOOST_REQUIRE_EQUAL( image1.height(), image2.height( ));
+    BOOST_REQUIRE_EQUAL( image1.size(), image2.size( ));
     BOOST_REQUIRE_EQUAL( image1.byteCount(), image2.byteCount( ));
 
     // BOOST_CHECK_EQUAL_COLLECTION is too noisy so do a silent comparison

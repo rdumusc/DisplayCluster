@@ -42,22 +42,20 @@
 namespace ut = boost::unit_test;
 
 #include "localstreamer/DockToolbar.h"
+#include "types.h"
 
 BOOST_AUTO_TEST_CASE( testDockToolbarImageSize )
 {
-    QSize size( 512, 64 );
+    const QSize size( 512, 64 );
     DockToolbar toolbar( size );
 
-    BOOST_CHECK_EQUAL( toolbar.getSize().width(), size.width( ));
-    BOOST_CHECK_EQUAL( toolbar.getSize().height(), size.height( ));
-
-    BOOST_CHECK_EQUAL( toolbar.getImage().size().width(), size.width( ));
-    BOOST_CHECK_EQUAL( toolbar.getImage().size().height(), size.height( ));
+    BOOST_CHECK_EQUAL( toolbar.getSize(), size );
+    BOOST_CHECK_EQUAL( toolbar.getImage().size(), size );
 }
 
 BOOST_AUTO_TEST_CASE( testDockToolbarButtons )
 {
-    QSize size( 512, 64 );
+    const QSize size( 512, 64 );
     DockToolbar toolbar( size );
 
     BOOST_CHECK( !toolbar.getButtonAt( QPoint( 128, 10 )));
