@@ -73,15 +73,6 @@ public:
     ContentWindowPtr getContentWindow( const QString& uri ) const;
 
     /**
-     * Update the dimension of the content (and maybe the window) when the size
-     * of the streaming source changed.
-     *
-     * @param uri the URI of the streamer
-     * @param size the size in pixels of the streaming source
-     */
-    void updateDimension( const QString& uri, const QSize& size );
-
-    /**
      * Hide the associated content window of the stream.
      *
      * @param uri the URI of the streamer
@@ -130,7 +121,7 @@ public slots:
      * Update the dimension of the content according to the stream's dimension
      * @param frame the new stream frame to check its dimension
      */
-    void onSendFrame( deflect::PixelStreamFramePtr frame );
+    void updateStreamDimensions( deflect::PixelStreamFramePtr frame );
 
 signals:
     /**

@@ -172,7 +172,7 @@ void MasterApplication::startNetworkListener()
              pixelStreamWindowManager_.get(),
              SLOT( closePixelStreamWindow( QString )));
     connect( pixelStreamWindowManager_.get(),
-             SIGNAL(pixelStreamWindowClosed( QString )),
+             SIGNAL( pixelStreamWindowClosed( QString )),
              &dispatcher, SLOT( deleteStream( QString )));
 
     deflect::CommandHandler& handler = networkListener_->getCommandHandler();
@@ -253,7 +253,7 @@ void MasterApplication::initMPIConnection()
     connect( &networkListener_->getPixelStreamDispatcher(),
              SIGNAL( sendFrame( deflect::PixelStreamFramePtr )),
              pixelStreamWindowManager_.get(),
-             SLOT( onSendFrame( deflect::PixelStreamFramePtr )));
+             SLOT( updateStreamDimensions( deflect::PixelStreamFramePtr )));
     connect( networkListener_.get(),
              SIGNAL( registerToEvents( QString, bool, deflect::EventReceiver*)),
              pixelStreamWindowManager_.get(),

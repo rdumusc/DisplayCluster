@@ -70,16 +70,6 @@ PixelStreamWindowManager::getContentWindow( const QString& uri ) const
                      ContentWindowPtr();
 }
 
-void PixelStreamWindowManager::updateDimension( const QString& uri,
-                                                const QSize& size )
-{
-    ContentWindowPtr contentWindow = getContentWindow( uri );
-    if( !contentWindow )
-        return;
-
-    contentWindow->getContent()->setDimensions( size );
-}
-
 void PixelStreamWindowManager::hideWindow( const QString& uri )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
@@ -112,15 +102,14 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
 
     if( pos.isNull( ))
         pos = displayGroup_.getCoordinates().center();
-    if( !size.isValid( ))
-        size = EMPTY_STREAM_SIZE;
 
     ContentPtr content = ContentFactory::getPixelStreamContent( uri );
-    content->setDimensions( size );
+    if( size.isValid( ))
+        content->setDimensions( size );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
 
     ContentWindowController controller( *contentWindow, displayGroup_ );
-    controller.resize( size );
+    controller.resize( size.isValid() ? size : EMPTY_STREAM_SIZE );
     controller.moveCenterTo( pos );
 
     streamerWindows_[ uri ] = contentWindow->getID();
@@ -175,9 +164,21 @@ void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
     emit pixelStreamWindowClosed( uri );
 }
 
-void PixelStreamWindowManager::onSendFrame( deflect::PixelStreamFramePtr frame )
+void PixelStreamWindowManager::updateStreamDimensions(
+                                            deflect::PixelStreamFramePtr frame )
 {
     const QSize& size =
           deflect::PixelStreamBuffer::computeFrameDimensions( frame->segments );
-    updateDimension( frame->uri, size );
+
+    ContentWindowPtr contentWindow = getContentWindow( frame->uri );
+    if( !contentWindow )
+        return;
+
+    // External streamers don't have an initial size
+    if( contentWindow->getContent()->getDimensions().isEmpty( ))
+    {
+        ContentWindowController controller( *contentWindow, displayGroup_ );
+        controller.resize( size, CENTER );
+    }
+    contentWindow->getContent()->setDimensions( size );
 }
