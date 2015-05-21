@@ -78,10 +78,7 @@ BOOST_AUTO_TEST_CASE( testInitialSize )
     const QRectF& coords = window.getCoordinates();
 
     // default 1:1 size, left-corner at the origin
-    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
-    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
-    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
-    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
+    BOOST_CHECK_EQUAL( coords, QRectF( 0.0, 0.0, WIDTH, HEIGHT ));
     BOOST_CHECK_EQUAL( window.getBorder(), ContentWindow::NOBORDER );
 }
 
@@ -126,10 +123,7 @@ BOOST_AUTO_TEST_CASE( testSetContent )
 
     // Dimensions are currently not modified by the change of content,
     // because the only use case is to set an error content of the same size.
-    BOOST_CHECK_EQUAL( coords.x(), 0.0 );
-    BOOST_CHECK_EQUAL( coords.y(), 0.0 );
-    BOOST_CHECK_EQUAL( coords.width(), WIDTH );
-    BOOST_CHECK_EQUAL( coords.height(), HEIGHT );
+    BOOST_CHECK_EQUAL( coords, QRectF( 0.0, 0.0, WIDTH, HEIGHT ));
 }
 
 BOOST_AUTO_TEST_CASE( testZoom )
@@ -208,25 +202,15 @@ BOOST_AUTO_TEST_CASE( testBackupCoordinates )
     const QRectF coord1( 100.0, 200.0, 300.0, 400.0 );
     const QRectF coord2( 432.0, 523.0, 123.0, 98.0 );
 
-
     window.setCoordinates( coord1 );
     window.backupCoordinates();
-    BOOST_CHECK_EQUAL( coords.x(), coord1.x() );
-    BOOST_CHECK_EQUAL( coords.y(), coord1.y() );
-    BOOST_CHECK_EQUAL( coords.width(), coord1.width() );
-    BOOST_CHECK_EQUAL( coords.height(), coord1.height() );
+    BOOST_CHECK_EQUAL( coords, coord1 );
 
     window.setCoordinates( coord2 );
-    BOOST_CHECK_EQUAL( coords.x(), coord2.x() );
-    BOOST_CHECK_EQUAL( coords.y(), coord2.y() );
-    BOOST_CHECK_EQUAL( coords.width(), coord2.width() );
-    BOOST_CHECK_EQUAL( coords.height(), coord2.height() );
+    BOOST_CHECK_EQUAL( coords, coord2 );
 
     window.restoreCoordinates();
-    BOOST_CHECK_EQUAL( coords.x(), coord1.x() );
-    BOOST_CHECK_EQUAL( coords.y(), coord1.y() );
-    BOOST_CHECK_EQUAL( coords.width(), coord1.width() );
-    BOOST_CHECK_EQUAL( coords.height(), coord1.height() );
+    BOOST_CHECK_EQUAL( coords, coord1 );
 }
 
 BOOST_AUTO_TEST_CASE( testToggleSelectedState )

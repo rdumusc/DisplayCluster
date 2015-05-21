@@ -44,6 +44,7 @@
 #include <vector>
 #include <boost/shared_ptr.hpp>
 #include <QtCore/QRectF>
+#include <iostream>
 
 class Configuration;
 class Content;
@@ -105,6 +106,24 @@ inline bool operator < ( const QSizeF& a, const QSizeF& b )
 inline bool operator > ( const QSizeF& a, const QSizeF& b )
 {
     return (a.width() > b.width() || a.height() > b.height());
+}
+
+inline std::ostream& operator << ( std::ostream& str, const QSizeF& s )
+{
+    str << s.width() << 'x' << s.height();
+    return str;
+}
+
+inline std::ostream& operator << ( std::ostream& str, const QPointF& p )
+{
+    str << p.x() << ',' << p.y();
+    return str;
+}
+
+inline std::ostream& operator << ( std::ostream& str, const QRectF& r )
+{
+    str << r.x() << ',' << r.y() << ' ' << r.width() << 'x' << r.height();
+    return str;
 }
 
 #endif

@@ -41,6 +41,8 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
+#include <deflect/PixelStreamFrame.h>
+
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "Options.h"
@@ -49,11 +51,26 @@ namespace ut = boost::unit_test;
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
-#define CONTENT_URI "bla"
-
 namespace
 {
+const QString CONTENT_URI( "bla" );
 const QSize wallSize( 1000, 1000 );
+const QSize defaultPixelStreamWindowSize( 640, 480 );
+const QSize testWindowSize( 500, 400 );
+const QPointF testWindowPos( 400.0, 300.0 );
+const QSize testFrameSize( 600, 500 );
+const QSize testFrameSize2( 700, 600 );
+}
+
+deflect::PixelStreamFramePtr createTestFrame( const QSize& size )
+{
+    deflect::PixelStreamFramePtr frame( new deflect::PixelStreamFrame );
+    frame->uri = CONTENT_URI;
+    deflect::PixelStreamSegment segment;
+    segment.parameters.width = size.width();
+    segment.parameters.height = size.height();
+    frame->segments.push_back( segment );
+    return frame;
 }
 
 BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
@@ -62,8 +79,8 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( 400.0, 300.0 );
-    const QSize size( 500, 400 );
+    const QPointF pos( testWindowPos );
+    const QSize size( testWindowSize );
 
     windowManager.openPixelStreamWindow( uri, pos, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
@@ -72,10 +89,8 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
 
     const QRectF& coords = window->getCoordinates();
-    BOOST_CHECK_EQUAL( coords.center().x(), pos.x( ));
-    BOOST_CHECK_EQUAL( coords.center().y(), pos.y( ));
-    BOOST_CHECK_EQUAL( coords.width(), size.width( ));
-    BOOST_CHECK_EQUAL( coords.height(), size.height( ));
+    BOOST_CHECK_EQUAL( coords.center(), pos );
+    BOOST_CHECK_EQUAL( coords.size(), size );
 
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
@@ -87,14 +102,16 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     PixelStreamWindowManager windowManager( *displayGroup );
 
     const QString uri = CONTENT_URI;
-    const QPointF pos( 400.0, 300.0 );
-    const QSize size( 500, 400 );
+    const QPointF pos( testWindowPos );
+    const QSize size( testWindowSize );
 
     windowManager.openPixelStreamWindow( uri, pos, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
+    BOOST_CHECK_EQUAL( window,
+                       displayGroup->getContentWindow( window->getID( )));
 
     windowManager.openPixelStreamWindow( uri );
     BOOST_CHECK_EQUAL( window, windowManager.getContentWindow( uri ));
@@ -105,13 +122,18 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_PIXEL_STREAM );
 
     const QRectF& coords = window->getCoordinates();
-    BOOST_CHECK_EQUAL( coords.center().x(), pos.x( ));
-    BOOST_CHECK_EQUAL( coords.center().y(), pos.y( ));
-    BOOST_CHECK_EQUAL( coords.width(), size.width( ));
-    BOOST_CHECK_EQUAL( coords.height(), size.height( ));
+    BOOST_CHECK_EQUAL( coords.center(), pos );
+    BOOST_CHECK_EQUAL( coords.size(), size );
+
+    // Check that the window is NOT resized to the first frame dimensions
+    windowManager.updateStreamDimensions( createTestFrame( testFrameSize ));
+    BOOST_CHECK_EQUAL( content->getDimensions(), testFrameSize );
+    BOOST_CHECK_EQUAL( coords.center(), pos );
+    BOOST_CHECK_EQUAL( coords.size(), size );
 
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
+    BOOST_CHECK( !displayGroup->getContentWindow( window->getID( )));
 }
 
 BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
@@ -122,23 +144,37 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
     const QString uri = CONTENT_URI;
     // window will be positioned centerred
     const QPointF pos( wallSize.width() * 0.5, wallSize.height() * 0.5 );
-    const QSize size( 640, 480 ); // default PixelStream window size
+    const QSize size( defaultPixelStreamWindowSize );
 
     windowManager.openPixelStreamWindow( uri );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
+    BOOST_CHECK_EQUAL( window,
+                       displayGroup->getContentWindow( window->getID( )));
 
     ContentPtr content = window->getContent();
     BOOST_REQUIRE( content );
     BOOST_CHECK( content->getURI() == uri );
     BOOST_CHECK_EQUAL( content->getType(), CONTENT_TYPE_PIXEL_STREAM );
+    BOOST_CHECK_EQUAL( content->getDimensions(), UNDEFINED_SIZE );
 
     const QRectF& coords = window->getCoordinates();
-    BOOST_CHECK_EQUAL( coords.center().x(), pos.x( ));
-    BOOST_CHECK_EQUAL( coords.center().y(), pos.y( ));
-    BOOST_CHECK_EQUAL( coords.width(), size.width( ));
-    BOOST_CHECK_EQUAL( coords.height(), size.height( ));
+    BOOST_CHECK_EQUAL( coords.center(), pos );
+    BOOST_CHECK_EQUAL( coords.size(), size );
+
+    // Check that the window is resized to the first frame dimensions
+    windowManager.updateStreamDimensions( createTestFrame( testFrameSize ));
+    BOOST_CHECK_EQUAL( content->getDimensions(), testFrameSize );
+    BOOST_CHECK_EQUAL( coords.center(), pos );
+    BOOST_CHECK_EQUAL( coords.size(), testFrameSize );
+
+    // Check that the window is NOT resized to the next frame dimensions
+    windowManager.updateStreamDimensions( createTestFrame( testFrameSize2 ));
+    BOOST_CHECK_EQUAL( content->getDimensions(), testFrameSize2 );
+    BOOST_CHECK_EQUAL( coords.center(), pos );
+    BOOST_CHECK_EQUAL( coords.size(), testFrameSize );
 
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
+    BOOST_CHECK( !displayGroup->getContentWindow( window->getID( )));
 }
