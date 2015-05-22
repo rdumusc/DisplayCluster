@@ -91,16 +91,19 @@ bool TouchArea::gestureEvent( QGestureEvent* event_ )
         // *Tap begin* ----- *TapAndHold begin* - *TapAndHold end* -- *Tap end*
         if( gesture->state() == Qt::GestureStarted )
             blockTapGesture_ = false;
-        else if( blockTapGesture_ )
-            return false;
-
-        event_->accept( Qt::TapGesture );
-        if( gesture->state() == Qt::GestureFinished )
+        // Only block tap gesture, but let other gestures (like pan) continue
+        // In some cases, they may have been in progress before the tapAndHold
+        // happend
+        if( !blockTapGesture_ )
         {
-            QTapGesture* tapGesture = static_cast<QTapGesture*>( gesture );
-            emit tap( tapGesture->position( ));
+            event_->accept( Qt::TapGesture );
+            if( gesture->state() == Qt::GestureFinished )
+            {
+                QTapGesture* tapGesture = static_cast<QTapGesture*>( gesture );
+                emit tap( tapGesture->position( ));
+            }
+            return true;
         }
-        return true;
     }
     if(( gesture = event_->gesture( PanGestureRecognizer::type( ))))
     {

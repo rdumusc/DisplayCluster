@@ -192,12 +192,15 @@ void ContentWindowTouchArea::gestureEvent( QGestureEvent* event_ )
     {
         if( gesture->state() == Qt::GestureStarted )
             blockTapGesture_ = false;
-        else if( blockTapGesture_ )
-            return;
     }
 
     if( contentWindow_->isSelected( ))
     {
+        // After switching to interaction mode, don't send any events to
+        // the delegate until a new tap has begun
+        if( blockTapGesture_ )
+            return;
+
         contentWindow_->getInteractionDelegate().gestureEvent( event_ );
         return;
     }
