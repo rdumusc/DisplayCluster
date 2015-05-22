@@ -69,9 +69,6 @@ public:
     /** Add a content window. */
     void addContentWindow( ContentWindowPtr contentWindow );
 
-    /** Get the background content. */
-    ContentPtr getBackgroundContent() const;
-
     /**
      * Is the DisplayGroup empty.
      * @return true if the DisplayGroup has no ContentWindow, false otherwise.
@@ -101,13 +98,6 @@ public:
 public slots:
     /** Clear all ContentWindows */
     void clear();
-
-    /**
-     * Set the background content.
-     * @param content The content to set.
-     *        A null pointer removes the current background.
-     */
-    void setBackgroundContent( ContentPtr content );
 
     /** Remove a content window. */
     void removeContentWindow( const QUuid id );
@@ -147,14 +137,12 @@ private:
     void serialize( Archive & ar, const unsigned int )
     {
         ar & contentWindows_;
-        ar & backgroundContent_;
         ar & coordinates_;
     }
 
     void watchChanges( ContentWindowPtr contentWindow );
 
     ContentWindowPtrs contentWindows_;
-    ContentPtr backgroundContent_;
 };
 
 #endif

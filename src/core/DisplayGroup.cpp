@@ -120,11 +120,6 @@ void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
-ContentPtr DisplayGroup::getBackgroundContent() const
-{
-    return backgroundContent_;
-}
-
 bool DisplayGroup::isEmpty() const
 {
     return contentWindows_.empty();
@@ -167,13 +162,6 @@ void DisplayGroup::clear()
 {
     while( !contentWindows_.empty( ))
         removeContentWindow( contentWindows_[0] );
-}
-
-void DisplayGroup::setBackgroundContent( ContentPtr content )
-{
-    backgroundContent_ = content;
-
-    sendDisplayGroup();
 }
 
 void DisplayGroup::sendDisplayGroup()

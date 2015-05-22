@@ -83,6 +83,11 @@ QColor Options::getBackgroundColor() const
     return backgroundColor_;
 }
 
+ContentPtr Options::getBackgroundContent() const
+{
+    return backgroundContent_;
+}
+
 void Options::setShowWindowBorders(bool set)
 {
     showWindowBorders_ = set;
@@ -131,5 +136,14 @@ void Options::setBackgroundColor(QColor color)
         return;
     backgroundColor_ = color;
 
-    emit (updated(shared_from_this()));
+    emit(updated(shared_from_this()));
+}
+
+void Options::setBackgroundContent( ContentPtr content )
+{
+    if( backgroundContent_ == content )
+        return;
+    backgroundContent_ = content;
+
+    emit(updated(shared_from_this()));
 }

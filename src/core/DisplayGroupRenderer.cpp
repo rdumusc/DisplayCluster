@@ -64,16 +64,23 @@ const int BACKGROUND_STACKING_ORDER = -1;
 
 DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
     : renderContext_( renderContext )
-    , displayGroup_( new DisplayGroup( QSize( )))
+    , displayGroup_( new DisplayGroup(
+                        renderContext->getScene().sceneRect().size().toSize( )))
     , displayGroupItem_( 0 )
+    , options_( new Options )
 {
-    setRenderingOptions( boost::make_shared<Options>( ));
+    setDisplayGroup( displayGroup_ );
+    setRenderingOptions( options_ );
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     engine.rootContext()->setContextProperty( "options", options.get( ));
+
+    setBackground( options->getBackgroundContent( ));
+
+    // Retain the new Options
     options_ = options;
 }
 
@@ -87,12 +94,6 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 
     if( !displayGroupItem_ )
         createDisplayGroupQmlItem();
-
-    if( hasBackgroundChanged( *displayGroup ))
-    {
-        setBackground( displayGroup->getBackgroundContent( ));
-        adjustBackgroundTo( *displayGroup );
-    }
 
     ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
 
@@ -170,15 +171,10 @@ void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
     emit windowAdded( windowItems_[id] );
 }
 
-bool DisplayGroupRenderer::hasBackgroundChanged( const DisplayGroup&
-                                                 newDisplayGroup )
+bool DisplayGroupRenderer::hasBackgroundChanged( const QString& newUri ) const
 {
-    ContentPtr prevContent = displayGroup_->getBackgroundContent();
-    ContentPtr newContent = newDisplayGroup.getBackgroundContent();
-
-    const QString& newUri = newContent ? newContent->getURI() : QString();
+    ContentPtr prevContent = options_->getBackgroundContent();
     const QString& prevUri = prevContent ? prevContent->getURI() : QString();
-
     return newUri != prevUri;
 }
 
@@ -190,21 +186,16 @@ void DisplayGroupRenderer::setBackground( ContentPtr content )
         return;
     }
 
+    if( !hasBackgroundChanged( content->getURI( )))
+        return;
+
     ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
                                                         *displayGroupItem_,
                                                         window ));
     backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
-}
 
-void DisplayGroupRenderer::adjustBackgroundTo( const DisplayGroup&
-                                               displayGroup )
-{
-    if( !backgroundWindowItem_ )
-        return;
-
-    ContentWindow& window = *backgroundWindowItem_->getContentWindow();
-    ContentWindowController controller( window, displayGroup );
+    ContentWindowController controller( *window, *displayGroup_ );
     controller.adjustSize( SIZE_FULLSCREEN );
 }

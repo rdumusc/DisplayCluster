@@ -207,14 +207,12 @@ void MasterApplication::startWebservice(const int webServicePort)
 
 void MasterApplication::restoreBackground()
 {
-    masterWindow_->getOptions()->setBackgroundColor( config_->getBackgroundColor( ));
+    OptionsPtr options = masterWindow_->getOptions();
+    options->setBackgroundColor( config_->getBackgroundColor( ));
 
-    const QString& backgroundUri = config_->getBackgroundUri();
-    if ( !backgroundUri.isEmpty( ))
-    {
-        ContentPtr content = ContentFactory::getContent( backgroundUri );
-        displayGroup_->setBackgroundContent( content );
-    }
+    const QString& uri = config_->getBackgroundUri();
+    if( !uri.isEmpty( ))
+        options->setBackgroundContent( ContentFactory::getContent( uri ));
 }
 
 void MasterApplication::initPixelStreamLauncher()

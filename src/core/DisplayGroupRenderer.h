@@ -88,7 +88,7 @@ private:
 
     void createDisplayGroupQmlItem();
     void createWindowQmlItem( ContentWindowPtr window );
-    bool hasBackgroundChanged( const DisplayGroup& newDisplayGroup );
+    bool hasBackgroundChanged( const QString& newUri ) const;
     void setBackground( ContentPtr backgroundContent );
     void adjustBackgroundTo( const DisplayGroup& displayGroup );
 };
