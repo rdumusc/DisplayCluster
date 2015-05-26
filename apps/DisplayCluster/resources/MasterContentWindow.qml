@@ -48,8 +48,37 @@ BaseContentWindow {
 
     WindowControls {
         listview.delegate: buttonDelegate
-        listview.header: fullscreenButton
-        listview.footer: closeButton
+        listview.header: fixedButtonsDelegate
+
+        Component {
+            id: fixedButtonsDelegate
+            Column {
+                CloseControlButton {
+                    TouchArea {
+                        anchors.fill: parent
+                        onTap: closeWindow()
+                    }
+                }
+                OneToOneControlButton {
+                    TouchArea {
+                        anchors.fill: parent
+                        onTap: {
+                            controlsFadeAnimation.restart()
+                            controller.adjustSizeOneToOne()
+                        }
+                    }
+                }
+                FullscreenControlButton {
+                    TouchArea {
+                        anchors.fill: parent
+                        onTap: {
+                            controlsFadeAnimation.restart()
+                            controller.toggleFullscreen()
+                        }
+                    }
+                }
+            }
+        }
 
         Component {
             id: buttonDelegate
@@ -63,30 +92,10 @@ BaseContentWindow {
                 }
             }
         }
-        Component {
-            id: fullscreenButton
-            FullscreenControlButton {
-                TouchArea {
-                    anchors.fill: parent
-                    onTap: {
-                        controlsFadeAnimation.restart()
-                        controller.toggleFullscreen()
-                    }
-                }
-            }
-        }
-        Component {
-            id: closeButton
-            CloseControlButton {
-                TouchArea {
-                    anchors.fill: parent
-                    onTap: closeWindow()
-                }
-            }
-        }
     }
 
     Text {
+        visible: !parent.titleBar.visible
         text: contentwindow.label
         font.pixelSize: 48
         width: Math.min(paintedWidth, parent.width)

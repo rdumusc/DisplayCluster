@@ -1,14 +1,15 @@
 import QtQuick 1.1
+import "style.js" as Style
 
 Item {
     property alias image: image.source
 
-    width: height
-    height: parent.height
+    width: Style.buttonsSize
+    height: Style.buttonsSize
     Image {
         id: image
-        height: parent.height * 0.8
-        width: height
+        width: Style.buttonsImageSize
+        height: Style.buttonsImageSize
         anchors.centerIn: parent
         // Force redraw the SVG
         sourceSize.width: width

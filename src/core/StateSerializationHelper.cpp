@@ -125,9 +125,7 @@ bool StateSerializationHelper::load( const QString& filename )
 
     validate( contentWindows );
     newDisplayGroup->setContentWindows( contentWindows );
-
-    if( state.getVersion() <  WINDOW_TITLES_VERSION )
-        newDisplayGroup->setCoordinates( displayGroup_->getCoordinates( ));
+    newDisplayGroup->setCoordinates( displayGroup_->getCoordinates( ));
 
     *displayGroup_ = *newDisplayGroup;
 

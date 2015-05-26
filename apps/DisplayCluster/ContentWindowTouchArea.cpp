@@ -122,7 +122,7 @@ void ContentWindowTouchArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
     if( event_->buttons().testFlag( Qt::LeftButton ))
     {
         const QPointF delta = event_->scenePos() - event_->lastScenePos();
-        const QPointF newPos = parentItem()->pos() + delta;
+        const QPointF newPos = contentWindow_->getCoordinates().topLeft() + delta;
         contentWindow_->setState( ContentWindow::MOVING );
         controller_->moveTo( newPos );
     }

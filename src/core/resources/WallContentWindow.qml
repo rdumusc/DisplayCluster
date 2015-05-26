@@ -9,31 +9,9 @@ BaseContentWindow {
 
     ContentItem {
         objectName: "ContentItem"
-        anchors.fill: parent
-    }
-
-    Rectangle
-    {
-        visible: displaygroup.showWindowTitles && contentwindow.label !== "Dock"
-        y: -Style.windowTitleHeight + ( parent.border.width / 2 )
-        x: 0
-        width: parent.width
-        height: Style.windowTitleHeight - parent.border.width
-        color: parent.border.color
-        border.width: parent.border.width
-        border.color: parent.border.color
-
-        Text
-        {
-            y: Style.windowTitleHeight / 8
-            x: Style.windowTitleFontSize / 4
-            FontLoader { id: gothamBook; source: "qrc:/fonts/Gotham-Book.otf"; name: "qrc::gotham-book" }
-
-            width: parent.width
-            elide: Text.ElideRight
-            text: contentwindow.label
-            font { family: "qrc::gotham-book"; pixelSize: Style.windowTitleFontSize }
-        }
+        anchors.bottom: parent.bottom
+        width: contentwindow.width
+        height: contentwindow.height
     }
 
     ZoomContext {
