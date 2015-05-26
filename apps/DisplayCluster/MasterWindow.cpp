@@ -82,7 +82,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     connect( backgroundWidget_, SIGNAL( backgroundColorChanged( QColor )),
              options_.get(), SLOT( setBackgroundColor( QColor )));
     connect( backgroundWidget_, SIGNAL( backgroundContentChanged( ContentPtr )),
-             displayGroup_.get(), SLOT( setBackgroundContent( ContentPtr )));
+             options_.get(), SLOT( setBackgroundContent( ContentPtr )));
 
     connect( webbrowserWidget_,
              SIGNAL( openWebBrowser( QPointF, QSize, QString )),

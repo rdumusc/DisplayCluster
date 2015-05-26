@@ -69,12 +69,12 @@ public:
     //@{
     bool getShowWindowBorders() const;
     bool getShowTouchPoints() const;
-    bool getShowMovieControls() const;
     bool getShowTestPattern() const;
     bool getShowZoomContext() const;
     bool getShowStreamingSegments() const;
     bool getShowStatistics() const;
     QColor getBackgroundColor() const;
+    ContentPtr getBackgroundContent() const;
     //@}
 
 public slots:
@@ -87,6 +87,13 @@ public slots:
     void setShowStreamingSegments( bool set );
     void setShowStatistics( bool set );
     void setBackgroundColor( QColor color );
+
+    /**
+     * Set the background content.
+     * @param content The content to set.
+     *        A null pointer removes the current background.
+     */
+    void setBackgroundContent( ContentPtr content );
     //@}
 
 signals:
@@ -106,6 +113,7 @@ private:
         ar & showStreamingSegments_;
         ar & showStreamingStatistics_;
         ar & backgroundColor_;
+        ar & backgroundContent_;
     }
 
     bool showWindowBorders_;
@@ -115,6 +123,7 @@ private:
     bool showStreamingSegments_;
     bool showStreamingStatistics_;
     QColor backgroundColor_;
+    ContentPtr backgroundContent_;
 };
 
 #endif
