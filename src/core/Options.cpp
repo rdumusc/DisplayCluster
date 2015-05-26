@@ -45,6 +45,7 @@ Options::Options()
     , showZoomContext_(true)
     , showStreamingSegments_(false)
     , showStreamingStatistics_(false)
+    , alphaBlendingEnabled_(false)
 {
 }
 
@@ -76,6 +77,11 @@ bool Options::getShowStreamingSegments() const
 bool Options::getShowStatistics() const
 {
     return showStreamingStatistics_;
+}
+
+bool Options::isAlphaBlendingEnabled() const
+{
+    return alphaBlendingEnabled_;
 }
 
 QColor Options::getBackgroundColor() const
@@ -126,6 +132,15 @@ void Options::setShowStreamingSegments(bool set)
 void Options::setShowStatistics(bool set)
 {
     showStreamingStatistics_ = set;
+
+    emit(updated(shared_from_this()));
+}
+
+void Options::enableAlphaBlending( const bool set )
+{
+    if( alphaBlendingEnabled_ == set )
+        return;
+    alphaBlendingEnabled_ = set;
 
     emit(updated(shared_from_this()));
 }

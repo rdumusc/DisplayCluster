@@ -209,6 +209,15 @@ void MasterWindow::setupMasterWindowUI()
     showStatisticsAction->setChecked(options_->getShowStatistics());
     connect(showStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStatistics(bool)));
 
+    // enable alpha blending
+    QAction* enableAlphaBlendingAction = new QAction( "Alpha Blending", this );
+    enableAlphaBlendingAction->setStatusTip(
+           "Enable alpha blending for transparent contents (png, svg, etc..)" );
+    enableAlphaBlendingAction->setCheckable( true );
+    enableAlphaBlendingAction->setChecked( options_->isAlphaBlendingEnabled( ));
+    connect( enableAlphaBlendingAction, SIGNAL( toggled( bool )),
+             options_.get(), SLOT( enableAlphaBlending( bool )));
+
     QAction * showAboutDialog = new QAction("About", this);
     showAboutDialog->setStatusTip("About DisplayCluster");
     connect(showAboutDialog, SIGNAL(triggered()), this, SLOT(openAboutWidget()));
@@ -228,6 +237,7 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction(showTouchPoints);
     viewMenu->addAction(showTestPatternAction);
     viewMenu->addAction(showZoomContextAction);
+    viewMenu->addAction(enableAlphaBlendingAction);
     toolsMenu->addAction(computeImagePyramidAction);
 
     helpMenu->addAction(showAboutDialog);

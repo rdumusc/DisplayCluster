@@ -60,6 +60,7 @@ class Options : public QObject, public boost::enable_shared_from_this<Options>
     Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
     Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders CONSTANT )
     Q_PROPERTY( bool showZoomContext READ getShowZoomContext CONSTANT )
+    Q_PROPERTY( bool alphaBlending READ isAlphaBlendingEnabled CONSTANT )
 
 public:
     /** Constructor */
@@ -73,6 +74,7 @@ public:
     bool getShowZoomContext() const;
     bool getShowStreamingSegments() const;
     bool getShowStatistics() const;
+    bool isAlphaBlendingEnabled() const;
     QColor getBackgroundColor() const;
     ContentPtr getBackgroundContent() const;
     //@}
@@ -86,6 +88,7 @@ public slots:
     void setShowZoomContext( bool set );
     void setShowStreamingSegments( bool set );
     void setShowStatistics( bool set );
+    void enableAlphaBlending( bool set );
     void setBackgroundColor( QColor color );
 
     /**
@@ -112,6 +115,7 @@ private:
         ar & showZoomContext_;
         ar & showStreamingSegments_;
         ar & showStreamingStatistics_;
+        ar & alphaBlendingEnabled_;
         ar & backgroundColor_;
         ar & backgroundContent_;
     }
@@ -122,6 +126,7 @@ private:
     bool showZoomContext_;
     bool showStreamingSegments_;
     bool showStreamingStatistics_;
+    bool alphaBlendingEnabled_;
     QColor backgroundColor_;
     ContentPtr backgroundContent_;
 };
