@@ -43,11 +43,14 @@
 #include "log.h"
 #include <boost/foreach.hpp>
 
+IMPLEMENT_SERIALIZE_FOR_XML( DisplayGroup )
+
 DisplayGroup::DisplayGroup()
 {
 }
 
 DisplayGroup::DisplayGroup( const QSizeF& size )
+    : showWindowTitles_( true )
 {
     coordinates_.setSize( size );
 }
@@ -120,6 +123,11 @@ void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
+bool DisplayGroup::getShowWindowTitles() const
+{
+    return showWindowTitles_;
+}
+
 bool DisplayGroup::isEmpty() const
 {
     return contentWindows_.empty();
@@ -133,7 +141,7 @@ ContentWindowPtr DisplayGroup::getActiveWindow() const
     return contentWindows_.back();
 }
 
-ContentWindowPtrs DisplayGroup::getContentWindows() const
+const ContentWindowPtrs& DisplayGroup::getContentWindows() const
 {
     return contentWindows_;
 }
@@ -158,10 +166,32 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
     }
 }
 
+DisplayGroup& DisplayGroup::operator=( const DisplayGroup& displayGroup )
+{
+    if( this == &displayGroup )
+        return *this;
+
+    setContentWindows( displayGroup.contentWindows_ );
+    setShowWindowTitles( displayGroup.showWindowTitles_ );
+    setCoordinates( displayGroup.coordinates_ );
+    return *this;
+}
+
 void DisplayGroup::clear()
 {
     while( !contentWindows_.empty( ))
         removeContentWindow( contentWindows_[0] );
+}
+
+void DisplayGroup::setShowWindowTitles( const bool set )
+{
+    if( showWindowTitles_ == set )
+        return;
+
+    showWindowTitles_ = set;
+
+    emit showWindowTitlesChanged( set );
+    sendDisplayGroup();
 }
 
 void DisplayGroup::sendDisplayGroup()

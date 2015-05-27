@@ -47,25 +47,23 @@
 #include <QtXmlPatterns/QXmlQuery>
 
 State::State()
-    : version_( INVALID_FILE_VERSION )
-{
-}
+    : displayGroup_( new DisplayGroup( QSizeF( 0, 0 )))
+    , version_( INVALID_FILE_VERSION )
+{}
 
-State::State(const ContentWindowPtrs& contentWindows)
-    : contentWindows_( contentWindows )
+State::State( DisplayGroupPtr displayGroup )
+    : displayGroup_( displayGroup )
     , version_( INVALID_FILE_VERSION )
 {
 }
 
-const ContentWindowPtrs& State::getContentWindows() const
+DisplayGroupPtr State::getDisplayGroup()
 {
-    return contentWindows_;
+    return displayGroup_;
 }
 
 bool State::legacyLoadXML( const QString& filename )
 {
-    contentWindows_.clear();
-
     QXmlQuery query;
 
     if( !query.setFocus( QUrl( filename )))
@@ -86,9 +84,10 @@ bool State::legacyLoadXML( const QString& filename )
         numContentWindows = qstring.toInt();
 
     put_flog( LOG_INFO, "%i content windows", numContentWindows );
-    contentWindows_.reserve( numContentWindows );
 
-    for( int i=1; i<=numContentWindows; i++ )
+    ContentWindowPtrs contentWindows;
+    contentWindows.reserve( numContentWindows );
+    for( int i = 1; i <= numContentWindows; ++i )
     {
         ContentPtr content = loadContent_( query, i );
         if( !content )
@@ -96,9 +95,12 @@ bool State::legacyLoadXML( const QString& filename )
 
         ContentWindowPtr contentWindow = restoreContent_( query, content, i );
         if( contentWindow )
-            contentWindows_.push_back( contentWindow );
+            contentWindows.push_back( contentWindow );
     }
 
+    displayGroup_->setContentWindows( contentWindows );
+    // Preserve appearence of legacy sessions.
+    displayGroup_->setShowWindowTitles( false );
     version_ = LEGACY_FILE_VERSION;
 
     return true;

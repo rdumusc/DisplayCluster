@@ -13,6 +13,9 @@
         <file>pause.svg</file>
         <file>play.svg</file>
     </qresource>
+    <qresource prefix="/fonts">
+        <file>Gotham-Book.otf</file>
+    </qresource>
     <qresource prefix="/">
         <file>selectboxit/jquery-ui.min.js</file>
         <file>selectboxit/jquery.min.js</file>

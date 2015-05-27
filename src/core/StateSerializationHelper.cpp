@@ -77,7 +77,7 @@ bool StateSerializationHelper::save( const QString& filename, const bool generat
 
     // brace this so destructor is called on archive before we use the stream
     {
-        State state( contentWindows );
+        State state( displayGroup_ );
         boost::archive::xml_oarchive oa( ofs );
         oa << BOOST_SERIALIZATION_NVP( state );
     }
@@ -114,15 +114,23 @@ bool StateSerializationHelper::load( const QString& filename )
                       filename.toStdString().c_str(), e.what( ));
             return false;
         }
+
         ifs.close();
     }
 
-    ContentWindowPtrs contentWindows = state.getContentWindows();
+    DisplayGroupPtr newDisplayGroup = state.getDisplayGroup();
+    ContentWindowPtrs contentWindows = newDisplayGroup->getContentWindows();
     if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )
         scaleToDisplayGroup( contentWindows );
-    validate( contentWindows );
 
-    displayGroup_->setContentWindows( contentWindows );
+    validate( contentWindows );
+    newDisplayGroup->setContentWindows( contentWindows );
+
+    if( state.getVersion() <  WINDOW_TITLES_VERSION )
+        newDisplayGroup->setCoordinates( displayGroup_->getCoordinates( ));
+
+    *displayGroup_ = *newDisplayGroup;
+
     return true;
 }
 

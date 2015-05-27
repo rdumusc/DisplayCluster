@@ -71,6 +71,8 @@ public:
     void setWidth( const qreal w );
     void setHeight( const qreal h );
 
+    void setCoordinates( const QRectF& coordinates );
+
 signals:
     void xChanged();
     void yChanged();

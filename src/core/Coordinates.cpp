@@ -114,3 +114,11 @@ void Coordinates::setHeight( const qreal h )
     coordinates_.setHeight( h );
     emit heightChanged();
 }
+
+void Coordinates::setCoordinates( const QRectF& coordinates )
+{
+    setX( coordinates.x( ));
+    setY( coordinates.y( ));
+    setWidth( coordinates.width( ));
+    setHeight( coordinates.height( ));
+}
