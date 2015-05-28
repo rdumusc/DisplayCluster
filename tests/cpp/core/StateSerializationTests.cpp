@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidStateThenContentIsLoaded )
     ifs.close();
 
     ContentWindowPtrs contentWindows = state.getDisplayGroup()->getContentWindows();
-    BOOST_CHECK_EQUAL( contentWindows.size(), 1 );
+    BOOST_REQUIRE_EQUAL( contentWindows.size(), 1 );
     BOOST_CHECK_EQUAL( state.getDisplayGroup()->getShowWindowTitles(), false );
 
     checkLegacyWindow( contentWindows[0] );
@@ -235,6 +235,24 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
     checkWindow( displayGroup->getContentWindows()[0] );
 }
 
+BOOST_AUTO_TEST_CASE( testWhenOpeningValidVersion3StateThenContentIsLoaded )
+{
+    std::ifstream ifs( STATE_V3_URI.toStdString( ));
+    BOOST_REQUIRE( ifs.good( ));
+
+    State state;
+    boost::archive::xml_iarchive ia( ifs );
+    BOOST_CHECK_NO_THROW( ia >> BOOST_SERIALIZATION_NVP( state ));
+    ifs.close();
+
+    ContentWindowPtrs contentWindows = state.getDisplayGroup()->getContentWindows();
+    BOOST_REQUIRE_EQUAL( contentWindows.size(), 1 );
+    BOOST_CHECK_EQUAL( state.getDisplayGroup()->getShowWindowTitles(), true );
+    BOOST_CHECK_EQUAL( state.getDisplayGroup()->getCoordinates(), QRectF( 0, 0, 1536, 648 ));
+
+    checkWindowVersion3( state.getDisplayGroup()->getContentWindows()[0] );
+}
+
 BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3File )
 {
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
@@ -245,7 +263,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3File )
     BOOST_REQUIRE( success );
     BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
     BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), true );
-    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( 0, 0, 1536, 648 ));
+    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( QPointF( 0, 0 ), wallSize ));
 
     checkWindowVersion3( displayGroup->getContentWindows()[0] );
 }
@@ -260,7 +278,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3NoTitlesFil
     BOOST_REQUIRE( success );
     BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
     BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), false );
-    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( 0, 0, 1536, 648 ));
+    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( QPointF( 0, 0 ), wallSize ));
 
     checkWindowVersion3( displayGroup->getContentWindows()[0] );
 }
@@ -337,7 +355,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
     BOOST_CHECK_LT( previewError, 0.02f );
 
     // 4) Test restoring
-    DisplayGroupPtr loadedDisplayGroup = boost::make_shared<DisplayGroup>( QSize( ));
+    DisplayGroupPtr loadedDisplayGroup = boost::make_shared<DisplayGroup>( wallSize );
     StateSerializationHelper loader( loadedDisplayGroup );
     BOOST_CHECK( loader.load( TEST_DIR + "/test.dcx" ));
 
@@ -345,8 +363,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationToFile )
                          displayGroup->getContentWindows().size( ));
     BOOST_REQUIRE_EQUAL( loadedDisplayGroup->getShowWindowTitles(),
                          displayGroup->getShowWindowTitles());
-    BOOST_REQUIRE_EQUAL( loadedDisplayGroup->getCoordinates(),
-                         displayGroup->getCoordinates());
+    BOOST_REQUIRE_EQUAL( loadedDisplayGroup->getCoordinates(), QRectF( QPointF( 0, 0 ), wallSize ));
     checkWindow( loadedDisplayGroup->getContentWindows()[0] );
 
     // 4) Cleanup

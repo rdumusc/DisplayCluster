@@ -7,14 +7,14 @@ var activeBorderColor = "red";
 var inactiveBorderColor = "#80000000";
 var borderOpacity = 0.4;
 
-var controlsColor = "#80000000";
-var controlsBorderColor = "#a0000000";
+var controlsColor = "#FCEE21";
+var controlsBorderColor = "#FCEE21";
 var controlsBorderWidth = 3;
-var controlsRadius = 20;
-var controlsBottomMargin = borderWidth + 20;
+var controlsRadius = 0;
+var controlsLeftMargin = 28;
 
-var buttonsHeight = 100;
-var buttonsSpacing = 10;
+var buttonsSize = 130;
+var buttonsImageSize = 100;
 var buttonsEnabledOpacity = 100;
 var buttonsDisabledOpacity = 20;
 

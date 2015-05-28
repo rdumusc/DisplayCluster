@@ -85,6 +85,9 @@ public:
     /** Adjust the window coordinates to match the desired state. */
     void adjustSize( const SizeState state );
 
+    /** Adjust the window coordinates to match the Content dimensions. */
+    Q_INVOKABLE void adjustSizeOneToOne() { adjustSize( SIZE_1TO1 ); }
+
     /** Toggle between fullscreen and 'normalized' by keeping the position
      *  and size after leaving fullscreen */
     Q_INVOKABLE void toggleFullscreen();
