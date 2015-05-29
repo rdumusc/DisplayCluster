@@ -1,5 +1,5 @@
 
-# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+# Copyright (c) 2013-2015, EPFL/Blue Brain Project
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 configure_file(config.h.in ${PROJECT_BINARY_DIR}/config.h)
@@ -11,5 +11,5 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 endif()
 
-add_subdirectory(dcWebservice)
+add_subdirectory(webservice)
 add_subdirectory(core)

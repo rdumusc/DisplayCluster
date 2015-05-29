@@ -1,10 +1,8 @@
 
-# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+# Copyright (c) 2013-2015, EPFL/Blue Brain Project
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
-include_directories(${CMAKE_SOURCE_DIR}/src/core)
 include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 
 set(DISPLAYCLUSTER_MOC_HEADERS

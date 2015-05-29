@@ -1,17 +1,14 @@
 
-# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+# Copyright (c) 2013-2015, EPFL/Blue Brain Project
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
-include_directories(${CMAKE_SOURCE_DIR}/src/core)
-include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
-
 set(LOCALSTREAMER_MOC_HEADERS
-  src/Application.h
+  Application.h
 )
 
 set(LOCALSTREAMER_SOURCES
-  src/main.cpp
-  src/Application.cpp
+  main.cpp
+  Application.cpp
 )
 
 set(LOCALSTREAMER_LINK_LIBRARIES dccore ${DEFLECT_LIBRARIES})

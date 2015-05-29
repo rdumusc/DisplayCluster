@@ -1,5 +1,5 @@
 
-# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+# Copyright (c) 2013-2015, EPFL/Blue Brain Project
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -279,19 +279,22 @@ list(APPEND DCCORE_SOURCES
 
 set(DCCORE_RESOURCES resources/core.qrc)
 
-# add OPTIONS hacks for Qt's MOC processing of Boost headers, for compiler errors with some versions of Boost
-qt5_wrap_cpp(MOC_OUTFILES ${DCCORE_MOC_HEADERS} OPTIONS -DPOSIX_TIME_HPP___ -DPOSIX_TIME_SERIALIZE_HPP___ -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
+# add OPTIONS hacks for Qt's MOC processing of Boost headers, for compiler
+# errors with some versions of Boost
+qt5_wrap_cpp(MOC_OUTFILES ${DCCORE_MOC_HEADERS} OPTIONS -DPOSIX_TIME_HPP___
+             -DPOSIX_TIME_SERIALIZE_HPP___ -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
 qt5_add_resources(QRC_SOURCES ${DCCORE_RESOURCES})
 
-add_library(dccore SHARED ${DCCORE_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES})
+add_library(dccore SHARED ${DCCORE_PUBLIC_HEADERS} ${DCCORE_HEADERS}
+                          ${DCCORE_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES})
 target_link_libraries(dccore ${DCCORE_LINK_LIBRARIES})
-set_target_properties(dccore PROPERTIES
-  VERSION ${VERSION} SOVERSION ${VERSION_ABI})
+set_target_properties(dccore PROPERTIES VERSION ${VERSION}
+                                        SOVERSION ${VERSION_ABI})
 
 install(TARGETS dccore
-    ARCHIVE DESTINATION lib COMPONENT dev
-    RUNTIME DESTINATION bin COMPONENT core
-    LIBRARY DESTINATION lib COMPONENT core
+  ARCHIVE DESTINATION lib COMPONENT dev
+  RUNTIME DESTINATION bin COMPONENT core
+  LIBRARY DESTINATION lib COMPONENT core
 )
 
 install(FILES ${DCCORE_PUBLIC_HEADERS} ${DCCORE_MOC_HEADERS}

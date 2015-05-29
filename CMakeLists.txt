@@ -11,7 +11,7 @@ include(SubProject)
 
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 5)
-set(VERSION_PATCH 0)
+set(VERSION_PATCH 1)
 set(VERSION_ABI 0)
 
 set(PROJECT_INCLUDE_NAME dc)
@@ -31,9 +31,7 @@ if(POPPLER_FOUND)
   option(ENABLE_PDF_SUPPORT "Enable Pdf support using Poppler" ON)
 endif()
 
-include_directories(src) # for dcWebservice includes
-
-add_subdirectory(src)
+add_subdirectory(dc)
 add_subdirectory(apps)
 add_subdirectory(tests)
 

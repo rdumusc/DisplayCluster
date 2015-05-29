@@ -1,6 +1,8 @@
 
-# Copyright (c) 2013-2014, EPFL/Blue Brain Project
+# Copyright (c) 2013-2015, EPFL/Blue Brain Project
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
+
+include_directories(${PROJECT_SOURCE_DIR}/dc/core)
 
 add_subdirectory(DisplayCluster)
 add_subdirectory(LocalStreamer)

@@ -3,6 +3,7 @@ python/
 CMakeLists.txt.user*
 CMake/common/
 Deflect/
+Servus/
 TUIO/
 Makefile
 .DS_Store

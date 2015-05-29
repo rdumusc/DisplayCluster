@@ -39,9 +39,9 @@
 #define TESTS 1
 #define BOOST_TEST_MODULE RequestBuilderTests
 #include <boost/test/unit_test.hpp>
-#include "dcWebservice/Server.h"
-#include "dcWebservice/Response.h"
-#include "dcWebservice/Request.h"
+#include "dc/webservice/Server.h"
+#include "dc/webservice/Response.h"
+#include "dc/webservice/Request.h"
 
 namespace ut = boost::unit_test;
 

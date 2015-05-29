@@ -46,9 +46,9 @@ namespace ut = boost::unit_test;
 #include "ws/TextInputHandler.h"
 #include "ws/DisplayGroupAdapter.h"
 
-#include "dcWebservice/Response.h"
-#include "dcWebservice/Request.h"
-#include "dcWebservice/types.h"
+#include "dc/webservice/Response.h"
+#include "dc/webservice/Request.h"
+#include "dc/webservice/types.h"
 
 #include "MockTextInputDispatcher.h"
 
