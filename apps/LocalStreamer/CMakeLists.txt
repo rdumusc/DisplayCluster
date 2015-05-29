@@ -13,9 +13,4 @@ set(LOCALSTREAMER_SOURCES
 
 set(LOCALSTREAMER_LINK_LIBRARIES dccore ${DEFLECT_LIBRARIES})
 
-qt5_wrap_cpp(MOC_OUTFILES ${LOCALSTREAMER_MOC_HEADERS})
-
-add_executable(localstreamer ${MOC_OUTFILES} ${LOCALSTREAMER_SOURCES})
-target_link_libraries(localstreamer ${LOCALSTREAMER_LINK_LIBRARIES})
-
-install(TARGETS localstreamer RUNTIME DESTINATION bin)
+common_application(localstreamer)

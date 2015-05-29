@@ -8,7 +8,4 @@ set(PYRAMIDMAKER_SOURCES
 
 set(PYRAMIDMAKER_LINK_LIBRARIES dccore)
 
-add_executable(pyramidmaker ${PYRAMIDMAKER_SOURCES})
-target_link_libraries(pyramidmaker ${PYRAMIDMAKER_LINK_LIBRARIES})
-
-install(TARGETS pyramidmaker RUNTIME DESTINATION bin)
+common_application(pyramidmaker)

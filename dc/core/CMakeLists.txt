@@ -47,14 +47,10 @@ endif()
 list(APPEND DCCORE_PUBLIC_HEADERS
   ${COMMON_INCLUDES}
   types.h
-  Content.h
   ContentFactory.h
   ContentLoader.h
   ContentType.h
   ContentInteractionDelegate.h
-  ContentWindow.h
-  DisplayGroup.h
-  DisplayGroupRenderer.h
   Drawable.h
   DynamicTexture.h
   DynamicTextureContent.h
@@ -75,23 +71,15 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   gestures/PinchGestureRecognizer.h
   log.h
   Marker.h
-  Markers.h
-  MarkerRenderer.h
-  MasterFromWallChannel.h
-  MasterToWallChannel.h
   Movie.h
   MPIChannel.h
   MPIContext.h
-  Options.h
-  PixelStream.h
   PixelStreamContent.h
   PixelStreamInteractionDelegate.h
   PixelStreamSegmentRenderer.h
-  PixelStreamWindowManager.h
   QmlWindowRenderer.h
   Renderable.h
   RenderContext.h
-  RenderController.h
   SessionCommandHandler.h
   State.h
   StatePreview.h
@@ -102,26 +90,14 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   Texture.h
   TextureContent.h
   WallContent.h
-  WallFromMasterChannel.h
-  WallToMasterChannel.h
-  WallToWallChannel.h
-  WebbrowserCommandHandler.h
   ZoomInteractionDelegate.h
   configuration/Configuration.h
   configuration/MasterConfiguration.h
   configuration/WallConfiguration.h
-  localstreamer/AsyncImageLoader.h
   localstreamer/CommandLineOptions.h
-  localstreamer/DockPixelStreamer.h
   localstreamer/DockToolbar.h
-  localstreamer/PixelStreamer.h
   localstreamer/PixelStreamerFactory.h
-  localstreamer/PixelStreamerLauncher.h
   localstreamer/PixelStreamerType.h
-  localstreamer/Pictureflow.h
-  localstreamer/WebkitAuthenticationHelper.h
-  localstreamer/WebkitHtmlSelectReplacer.h
-  localstreamer/WebkitPixelStreamer.h
   thumbnail/DefaultThumbnailGenerator.h
   thumbnail/FolderThumbnailGenerator.h
   thumbnail/ImageThumbnailGenerator.h
@@ -132,12 +108,9 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   thumbnail/ThumbnailGeneratorFactory.h
   ws/AsciiToQtKeyCodeMapper.h
   ws/DisplayGroupAdapter.h
-  ws/TextInputDispatcher.h
-  ws/TextInputHandler.h
-  ws/WebServiceServer.h
 )
 
-list(APPEND DCCORE_MOC_HEADERS
+list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   Content.h
   ContentAction.h
   ContentActionsModel.h
@@ -279,23 +252,6 @@ list(APPEND DCCORE_SOURCES
 
 set(DCCORE_RESOURCES resources/core.qrc)
 
-# add OPTIONS hacks for Qt's MOC processing of Boost headers, for compiler
-# errors with some versions of Boost
-qt5_wrap_cpp(MOC_OUTFILES ${DCCORE_MOC_HEADERS} OPTIONS -DPOSIX_TIME_HPP___
-             -DPOSIX_TIME_SERIALIZE_HPP___ -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED)
-qt5_add_resources(QRC_SOURCES ${DCCORE_RESOURCES})
-
-add_library(dccore SHARED ${DCCORE_PUBLIC_HEADERS} ${DCCORE_HEADERS}
-                          ${DCCORE_SOURCES} ${MOC_OUTFILES} ${QRC_SOURCES})
-target_link_libraries(dccore ${DCCORE_LINK_LIBRARIES})
-set_target_properties(dccore PROPERTIES VERSION ${VERSION}
-                                        SOVERSION ${VERSION_ABI})
-
-install(TARGETS dccore
-  ARCHIVE DESTINATION lib COMPONENT dev
-  RUNTIME DESTINATION bin COMPONENT core
-  LIBRARY DESTINATION lib COMPONENT core
-)
-
-install(FILES ${DCCORE_PUBLIC_HEADERS} ${DCCORE_MOC_HEADERS}
-  DESTINATION include/dc/core COMPONENT dev)
+set(PROJECT_INCLUDE_NAME dc/core)
+set(DCCORE_OMIT_PROJECT_HEADER ON)
+common_library(dccore)

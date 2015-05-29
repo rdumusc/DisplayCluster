@@ -3,7 +3,13 @@
 #                     Raphael Dumusc <raphael.dumusc@epfl.ch>
 
 include_directories(${PROJECT_BINARY_DIR}) ### for config.h ###
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
+
+### for override on pre-C++11 compilers ###
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FI ${PROJECT_BINARY_DIR}/config.h")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
+endif()
 
 set(DISPLAYCLUSTER_MOC_HEADERS
   BackgroundWidget.h
@@ -35,17 +41,10 @@ set(DISPLAYCLUSTER_SOURCES
 )
 
 set(DISPLAYCLUSTER_LINK_LIBRARIES dccore dcwebservice)
-
 set(DISPLAYCLUSTER_RESOURCES resources/displaycluster.qrc)
 
-qt5_add_resources(QRC_SOURCES ${DISPLAYCLUSTER_RESOURCES})
-qt5_wrap_cpp(DISPLAYCLUSTER_MOC_OUTFILES ${DISPLAYCLUSTER_MOC_HEADERS})
-
-add_executable(displaycluster ${DISPLAYCLUSTER_MOC_OUTFILES} ${DISPLAYCLUSTER_SOURCES} ${QRC_SOURCES})
-target_link_libraries(displaycluster ${DISPLAYCLUSTER_LINK_LIBRARIES})
-
-install(TARGETS displaycluster RUNTIME DESTINATION bin COMPONENT core)
-install(PROGRAMS startdisplaycluster DESTINATION bin COMPONENT core)
+common_application(displaycluster)
+install(PROGRAMS startdisplaycluster DESTINATION bin COMPONENT apps)
 
 # Copy the startup script and default config to the bin folder to be able to
 # launch after building without requiring an install folder and 'make install'
