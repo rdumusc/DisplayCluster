@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Julio Delgado <julio.delgadomangas@epfl.ch>   */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -38,57 +38,83 @@
 /*********************************************************************/
 
 
-#define BOOST_TEST_MODULE MapperTests
-#include "dcWebservice/Mapper.h"
-#include "dcWebservice/DefaultHandler.h"
+#define BOOST_TEST_MODULE ResponseTests
 #include <boost/test/unit_test.hpp>
+#include "dc/webservice/Response.h"
 namespace ut = boost::unit_test;
 
-BOOST_AUTO_TEST_CASE( testEmptyMapper )
+BOOST_AUTO_TEST_CASE( testSerializeWithEmptyBody )
 {
-    dcWebservice::Mapper mapper;
-    BOOST_CHECK( dynamic_cast<const dcWebservice::DefaultHandler*>(&mapper.getHandler("/video" )));
-    BOOST_CHECK( dynamic_cast<const dcWebservice::DefaultHandler*>(&mapper.getHandler("/video/12344" )));
+    const std::string expected = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n"
+                                 "Status: 200 OK\r\n\r\n";
+    std::stringstream ss;
+
+    dcWebservice::Response response;
+    response.statusCode = 200;
+    response.statusMsg = "OK";
+    response.body = "";
+
+    ss << response;
+    BOOST_CHECK_EQUAL(expected, response.serialize());
+    BOOST_CHECK_EQUAL(ss.str(), response.serialize());
 }
 
-BOOST_AUTO_TEST_CASE( testUrlDoesNotMatchAnyRegex )
+BOOST_AUTO_TEST_CASE( testSerializeWithNonEmptyBody )
 {
-    dcWebservice::Mapper mapper;
-    dcWebservice::HandlerPtr handler(new dcWebservice::DefaultHandler());
-    mapper.addHandler("/video/play/(.*)", handler);
-    BOOST_CHECK( dynamic_cast<const dcWebservice::DefaultHandler*>(&mapper.getHandler("/video" )));
-    BOOST_CHECK( dynamic_cast<const dcWebservice::DefaultHandler*>(&mapper.getHandler("/video/12344" )));
+    const std::string expected = "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n"
+                                 "Status: 200 OK\r\n\r\n{}";
+    std::stringstream ss;
+    dcWebservice::Response response;
+    response.statusCode = 200;
+    response.statusMsg = "OK";
+    response.body = "{}";
+
+    ss << response;
+    BOOST_CHECK_EQUAL(expected, response.serialize());
+    BOOST_CHECK_EQUAL(ss.str(), response.serialize());
 }
 
-BOOST_AUTO_TEST_CASE( testUrlMatchesFirstRegex )
+BOOST_AUTO_TEST_CASE( testSerializeNoBodyAndCustomHeaders )
 {
-    dcWebservice::Mapper mapper;
-    dcWebservice::HandlerPtr handler1(new dcWebservice::DefaultHandler());
-    dcWebservice::HandlerPtr handler2(new dcWebservice::DefaultHandler());
-    mapper.addHandler("/video/play/(.*)", handler1);
-    mapper.addHandler("/nop/", handler2);
-    BOOST_CHECK_EQUAL( handler1.get(), &mapper.getHandler("/video/play/1234") );
-    BOOST_CHECK_EQUAL( handler1.get(), &mapper.getHandler("/video/play/") );
-    BOOST_CHECK_NE( handler2.get(), &mapper.getHandler("/video/play/1234") );
-    BOOST_CHECK( dynamic_cast<const dcWebservice::DefaultHandler*>(&mapper.getHandler("/video/play" )));
+    const std::string expected = "HTTP/1.1 200 OK\r\nCustom-h1: 1\r\nCustom-h2: 2\r\n"
+                                 "Content-Length: 0\r\nStatus: 200 OK\r\n\r\n";
+    std::stringstream ss;
+
+    dcWebservice::Response response;
+    response.statusCode = 200;
+    response.statusMsg = "OK";
+    response.httpHeaders["Custom-h1"] = "1";
+    response.httpHeaders["Custom-h2"] = "2";
+    response.body = "";
+    ss << response;
+
+    BOOST_CHECK_EQUAL(expected, response.serialize());
+    BOOST_CHECK_EQUAL(ss.str(), response.serialize());
 }
 
-BOOST_AUTO_TEST_CASE( testMapperReturnsFirstMatchWhenMoreThanOnePossible )
+BOOST_AUTO_TEST_CASE( test200Response )
 {
-    dcWebservice::Mapper mapper;
-    dcWebservice::HandlerPtr handler1(new dcWebservice::DefaultHandler());
-    dcWebservice::HandlerPtr handler2(new dcWebservice::DefaultHandler());
-    mapper.addHandler("/video/play/", handler1);
-    mapper.addHandler("/video/play/(.*)", handler2);
-    BOOST_CHECK_EQUAL( handler1.get(), &mapper.getHandler("/video/play/") );
-    BOOST_CHECK_EQUAL( handler2.get(), &mapper.getHandler("/video/play/1234") );
-    BOOST_CHECK_NE( handler1.get(), &mapper.getHandler("/video/play/1234") );
-    BOOST_CHECK( dynamic_cast<const dcWebservice::DefaultHandler*>(&mapper.getHandler("/video/play" )));
+    dcWebservice::Response r = *dcWebservice::Response::OK();
+    BOOST_CHECK_EQUAL(200, r.statusCode);
+    BOOST_CHECK_EQUAL("OK", r.statusMsg);
+    BOOST_CHECK_EQUAL(0, r.httpHeaders.size());
+    BOOST_CHECK_EQUAL("{\"code\":\"200\", \"msg\":\"OK\"}", r.body);
 }
 
-BOOST_AUTO_TEST_CASE( testIncorrectRegex )
+BOOST_AUTO_TEST_CASE( test404Response )
 {
-    dcWebservice::Mapper mapper;
-    dcWebservice::HandlerPtr handler1(new dcWebservice::DefaultHandler());
-    BOOST_CHECK_EQUAL(false, mapper.addHandler("/video/(.*", handler1));
+    dcWebservice::Response r = *dcWebservice::Response::NotFound();
+    BOOST_CHECK_EQUAL(404, r.statusCode);
+    BOOST_CHECK_EQUAL("Not Found", r.statusMsg);
+    BOOST_CHECK_EQUAL(0, r.httpHeaders.size());
+    BOOST_CHECK_EQUAL("{\"code\":\"404\", \"msg\":\"Not Found\"}", r.body);
+}
+
+BOOST_AUTO_TEST_CASE( test500Response )
+{
+    dcWebservice::Response r = *dcWebservice::Response::ServerError();
+    BOOST_CHECK_EQUAL(500, r.statusCode);
+    BOOST_CHECK_EQUAL("Internal Server Error", r.statusMsg);
+    BOOST_CHECK_EQUAL(0, r.httpHeaders.size());
+    BOOST_CHECK_EQUAL("{\"code\":\"500\", \"msg\":\"Internal Server Error\"}", r.body);
 }

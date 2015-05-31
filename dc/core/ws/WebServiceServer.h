@@ -37,53 +37,52 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef TEXTINPUTHANDLER_H
-#define TEXTINPUTHANDLER_H
+#ifndef WEBSERVICESERVER_H
+#define WEBSERVICESERVER_H
 
-#include <QObject>
+#include <QThread>
 
-#include "dcWebservice/Handler.h"
-
-#include "types.h"
+#include "dc/webservice/types.h"
 
 /**
- * Handle "/textinput" requests for the WebService.
- *
- * When a valid request is received, the receivedText() signal is emitted.
- * This class is typically used in the WebServiceServer thread and communicates
- * with the TextInputDispatcher in the main thread via signals/slots.
+ * A Qt wrapper to run the dcWebservice::Server in a QThread.
  */
-class TextInputHandler : public QObject, public dcWebservice::Handler
+class WebServiceServer : public QThread
 {
     Q_OBJECT
-
 public:
-    /**
-     * Handle TextInput requests.
-     * @param displayGroupAdapter An adapter over the displayGroup, used for
-     *        unit testing. If provided, the class takes ownership of it.
-     */
-    TextInputHandler(DisplayGroupAdapterPtr displayGroupAdapter);
+    /** Constructor */
+    WebServiceServer(const unsigned int port, QObject *parentObject = 0);
 
     /** Destructor */
-    virtual ~TextInputHandler();
+    ~WebServiceServer();
 
     /**
-     * Handle a request.
-     * @param request A valid dcWebservice::Request object.
-     * @return A valid Response object.
+     * Registers a request handler with a particular regular expression.
+     *
+     * When the URL of an incoming request matches the regular expression
+     * the handler is invoked.
+     *
+     * @param pattern A regular expression.
+     * @param handler A request handler. If the handler is a QObject, it should be moved
+     *        to this thread before making any signal/slot connections.
+     * @return true if the handler was registered succesfully, false otherwise,
+     *         for instance if the regular expression is not valid.
      */
-    dcWebservice::ConstResponsePtr handle(const dcWebservice::Request& request) const override;
+    bool addHandler(const std::string& pattern, dcWebservice::HandlerPtr handler);
 
-signals:
     /**
-     * Emitted whenever a request is successfully handled.
-     * @param key The key code received in the Request.
+     * Stop the server. This method is thread-safe.
      */
-    void receivedKeyInput(char key) const;
+    bool stop();
+
+protected:
+    /** @overload Start the server. */
+    void run() override;
 
 private:
-    DisplayGroupAdapterPtr displayGroupAdapter_;
+    dcWebservice::Server* server_;
+    unsigned int port_;
 };
 
-#endif // TEXTINPUTHANDLER_H
+#endif // WEBSERVICESERVER_H

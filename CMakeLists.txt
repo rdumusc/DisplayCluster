@@ -31,9 +31,7 @@ if(POPPLER_FOUND)
   option(ENABLE_PDF_SUPPORT "Enable Pdf support using Poppler" ON)
 endif()
 
-include_directories(src) # for dcWebservice includes
-
-add_subdirectory(src)
+add_subdirectory(dc)
 add_subdirectory(apps)
 add_subdirectory(tests)
 

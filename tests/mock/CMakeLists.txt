@@ -15,9 +15,6 @@ set(DCMOCK_HEADERS
 set(DCMOCK_MOC_HEADERS MockTextInputDispatcher.h)
 set(DCMOCK_SOURCES MockTextInputDispatcher.cpp)
 
-qt5_wrap_cpp(MOC_OUTFILES ${DCMOCK_MOC_HEADERS})
-
-add_library(dcmock SHARED ${MOC_OUTFILES} ${DCMOCK_HEADERS} ${DCMOCK_SOURCES})
-set_target_properties(dcmock PROPERTIES
-  COMPILE_DEFINITIONS "DISPLAYCLUSTER_SHARED")
-target_link_libraries(dcmock ${DC_LIBRARIES})
+set(PROJECT_INCLUDE_NAME dc/mock)
+set(DCMOCK_OMIT_PROJECT_HEADER ON)
+common_library(dcmock)

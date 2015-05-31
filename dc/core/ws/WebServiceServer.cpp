@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Julio Delgado <julio.delgadomangas@epfl.ch>   */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,39 +37,41 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
+#include "WebServiceServer.h"
 
-#define BOOST_TEST_MODULE DefaultHandlerTests
-#include <boost/test/unit_test.hpp>
-#include "dcWebservice/DefaultHandler.h"
-#include "dcWebservice/Response.h"
-#include "dcWebservice/Request.h"
+#include "dc/webservice/Server.h"
+#include "dc/webservice/DefaultHandler.h"
 
-namespace ut = boost::unit_test;
+#include "log.h"
 
-/*
- * Mock handler that always returns an OK resonse, regardless of the request
- */
-class MockHandler : public dcWebservice::Handler
+WebServiceServer::WebServiceServer(const unsigned int port, QObject *parentObject)
+    : QThread(parentObject)
+    , server_(new dcWebservice::Server())
+    , port_(port)
+{}
+
+WebServiceServer::~WebServiceServer()
 {
-public:
-    dcWebservice::ConstResponsePtr handle(const dcWebservice::Request&) const override
-    {
-        return dcWebservice::Response::OK();
-    }
-};
-
-BOOST_AUTO_TEST_CASE( testConstructorWithoutParameters )
-{
-    dcWebservice::DefaultHandler handler;
-
-    dcWebservice::Request request;
-    BOOST_CHECK_EQUAL(dcWebservice::Response::NotFound(), handler.handle(request));
+    delete server_;
 }
 
-BOOST_AUTO_TEST_CASE( testConstructorWithParameters )
+bool WebServiceServer::addHandler(const std::string& pattern, dcWebservice::HandlerPtr handler)
 {
-    MockHandler mock;
+    if (server_->addHandler(pattern, handler))
+        return true;
 
-    dcWebservice::Request request;
-    BOOST_CHECK_EQUAL(dcWebservice::Response::OK(), mock.handle(request));
+    put_flog(LOG_WARN, "Invalid regex: '%s', handler could not be added", pattern.c_str());
+    return false;
+}
+
+void WebServiceServer::run()
+{
+    put_flog(LOG_INFO, "Listening on port: %d", port_);
+    server_->run(port_);
+}
+
+bool WebServiceServer::stop()
+{
+    put_flog(LOG_INFO, "Shutting down");
+    return server_->stop();
 }
