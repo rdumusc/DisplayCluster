@@ -43,7 +43,6 @@
 #include "localstreamer/PixelStreamerFactory.h"
 
 #include "localstreamer/CommandLineOptions.h"
-#include <deflect/Socket.h>
 
 #include <QTimer>
 #include <iostream>
