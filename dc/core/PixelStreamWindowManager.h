@@ -121,7 +121,7 @@ public slots:
      * Update the dimension of the content according to the stream's dimension
      * @param frame the new stream frame to check its dimension
      */
-    void updateStreamDimensions( deflect::PixelStreamFramePtr frame );
+    void updateStreamDimensions( deflect::FramePtr frame );
 
 signals:
     /**

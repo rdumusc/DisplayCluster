@@ -41,7 +41,7 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
-#include <deflect/PixelStreamFrame.h>
+#include <deflect/Frame.h>
 
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
@@ -62,11 +62,11 @@ const QSize testFrameSize( 600, 500 );
 const QSize testFrameSize2( 700, 600 );
 }
 
-deflect::PixelStreamFramePtr createTestFrame( const QSize& size )
+deflect::FramePtr createTestFrame( const QSize& size )
 {
-    deflect::PixelStreamFramePtr frame( new deflect::PixelStreamFrame );
+    deflect::FramePtr frame( new deflect::Frame );
     frame->uri = CONTENT_URI;
-    deflect::PixelStreamSegment segment;
+    deflect::Segment segment;
     segment.parameters.width = size.width();
     segment.parameters.height = size.height();
     frame->segments.push_back( segment );

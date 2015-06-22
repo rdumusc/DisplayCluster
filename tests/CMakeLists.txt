@@ -14,7 +14,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 endif()
 
-list(APPEND DC_LIBRARIES dccore dcwebservice)
+set(DC_LIBRARIES dccore dcwebservice)
 
 add_subdirectory(cpp)
 add_subdirectory(mock)

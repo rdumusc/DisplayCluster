@@ -38,7 +38,7 @@
 
 #include "PixelStreamSegmentRenderer.h"
 
-#include <deflect/PixelStreamSegmentParameters.h>
+#include <deflect/SegmentParameters.h>
 
 PixelStreamSegmentRenderer::PixelStreamSegmentRenderer()
     : textureNeedsUpdate_( true )
@@ -66,7 +66,7 @@ void PixelStreamSegmentRenderer::setTextureNeedsUpdate()
     textureNeedsUpdate_ = true;
 }
 
-void PixelStreamSegmentRenderer::setParameters( const deflect::PixelStreamSegmentParameters& param )
+void PixelStreamSegmentRenderer::setParameters( const deflect::SegmentParameters& param )
 {
     rect_.setX( param.x );
     rect_.setY( param.y );

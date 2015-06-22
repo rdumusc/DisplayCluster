@@ -40,10 +40,10 @@
 #ifndef TEXTINPUTDISPATCHER_H
 #define TEXTINPUTDISPATCHER_H
 
-#include <QObject>
-
 #include "types.h"
 #include "AsciiToQtKeyCodeMapper.h"
+
+#include <QObject>
 
 /**
  * Dispatch text input from the WebServiceServer thread to the active ContentWindow.
@@ -55,17 +55,21 @@ class TextInputDispatcher : public QObject
 public:
     /**
      * Constructor.
-     * @param displayGroup The DisplayGroup which holds the target ContentWindow.
+     * @param displayGroup The DisplayGroup which holds the target ContentWindow
      * @param parentObject An optional parent QObject
      */
-    TextInputDispatcher(DisplayGroupPtr displayGroup, QObject *parentObject = 0);
+    TextInputDispatcher( DisplayGroupPtr displayGroup,
+                         QObject* parentObject = 0 );
+
+    /** Destructor. */
+    ~TextInputDispatcher();
 
 public slots:
     /**
      * Send the given key event to the active (frontmost) window
      * @param key The key code to send
      */
-    void sendKeyEventToActiveWindow(const char key) const;
+    void sendKeyEventToActiveWindow( char key ) const;
 
 private:
     DisplayGroupPtr displayGroup_;

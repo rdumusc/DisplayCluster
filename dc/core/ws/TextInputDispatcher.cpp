@@ -45,10 +45,14 @@
 
 #include <QKeyEvent>
 
-TextInputDispatcher::TextInputDispatcher(DisplayGroupPtr displayGroup,
-                                         QObject *parentObject)
-    : QObject(parentObject)
-    , displayGroup_(displayGroup)
+TextInputDispatcher::TextInputDispatcher( DisplayGroupPtr displayGroup,
+                                          QObject* parentObject )
+    : QObject( parentObject )
+    , displayGroup_( displayGroup )
+{
+}
+
+TextInputDispatcher::~TextInputDispatcher()
 {
 }
 

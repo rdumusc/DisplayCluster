@@ -82,7 +82,7 @@ private:
     boost::scoped_ptr<MasterFromWallChannel> masterFromWallChannel_;
     boost::scoped_ptr<MasterWindow> masterWindow_;
     boost::scoped_ptr<MasterConfiguration> config_;
-    boost::scoped_ptr<deflect::NetworkListener> networkListener_;
+    boost::scoped_ptr<deflect::Server> deflectServer_;
     boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;
     boost::scoped_ptr<PixelStreamWindowManager> pixelStreamWindowManager_;
     boost::scoped_ptr<WebServiceServer> webServiceServer_;
