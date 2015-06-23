@@ -44,7 +44,8 @@
 #include "ContentWindow.h"
 #include "Options.h"
 #include "Markers.h"
-#include <deflect/PixelStreamFrame.h>
+
+#include <deflect/Frame.h>
 
 MasterToWallChannel::MasterToWallChannel( MPIChannelPtr mpiChannel )
     : mpiChannel_( mpiChannel )
@@ -86,7 +87,7 @@ void MasterToWallChannel::sendAsync( MarkersPtr markers )
     broadcastAsync( markers, MPI_MESSAGE_TYPE_MARKERS );
 }
 
-void MasterToWallChannel::send( deflect::PixelStreamFramePtr frame )
+void MasterToWallChannel::send( deflect::FramePtr frame )
 {
     assert( !frame->segments.empty() && "received an empty frame" );
     broadcast( frame, MPI_MESSAGE_TYPE_PIXELSTREAM );

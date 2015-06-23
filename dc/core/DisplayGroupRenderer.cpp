@@ -46,7 +46,7 @@
 #include "Options.h"
 #include "PixelStream.h"
 
-#include <deflect/PixelStreamFrame.h>
+#include <deflect/Frame.h>
 
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>

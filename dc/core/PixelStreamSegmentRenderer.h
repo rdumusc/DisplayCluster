@@ -74,7 +74,7 @@ public:
     void setTextureNeedsUpdate();
 
     /** Set the position and size paramters. (0,0) == top-left of the stream. */
-    void setParameters( const deflect::PixelStreamSegmentParameters& param );
+    void setParameters( const deflect::SegmentParameters& param );
 
     /**
      * Render the current texture.

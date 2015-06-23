@@ -63,7 +63,7 @@ public:
 
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
-    void updatePixelStream( deflect::PixelStreamFramePtr frame );
+    void updatePixelStream( deflect::FramePtr frame );
 
     /** Connect the new window to receive PixelStream frame updates. */
     void onWindowAdded( QmlWindowPtr qmlWindow );
@@ -79,7 +79,7 @@ private:
     typedef QMap<QString,PixelStreamPtr> PixelStreamMap;
     PixelStreamMap pixelStreamMap_;
 
-    typedef SwapSyncObject<deflect::PixelStreamFramePtr> SwapSyncFrame;
+    typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     typedef QMap<QString,SwapSyncFrame> SwapSyncFramesMap;
     SwapSyncFramesMap swapSyncFrames_;
 };

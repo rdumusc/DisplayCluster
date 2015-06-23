@@ -135,9 +135,9 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
              renderController_.get(), SLOT( updateMarkers( MarkersPtr )));
 
     connect( fromMasterChannel_.get(),
-             SIGNAL( received( deflect::PixelStreamFramePtr )),
+             SIGNAL( received( deflect::FramePtr )),
              &renderController_->getPixelStreamUpdater(),
-             SLOT( updatePixelStream( deflect::PixelStreamFramePtr )));
+             SLOT( updatePixelStream( deflect::FramePtr )));
 
     if( wallChannel_->getRank() == 0 )
     {

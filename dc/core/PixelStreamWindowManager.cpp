@@ -45,8 +45,7 @@
 #include "DisplayGroup.h"
 #include "log.h"
 
-#include <deflect/PixelStreamBuffer.h>
-#include <deflect/PixelStreamFrame.h>
+#include <deflect/Frame.h>
 
 namespace
 {
@@ -164,11 +163,9 @@ void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
     emit pixelStreamWindowClosed( uri );
 }
 
-void PixelStreamWindowManager::updateStreamDimensions(
-                                            deflect::PixelStreamFramePtr frame )
+void PixelStreamWindowManager::updateStreamDimensions( deflect::FramePtr frame )
 {
-    const QSize& size =
-          deflect::PixelStreamBuffer::computeFrameDimensions( frame->segments );
+    const QSize size( frame->computeDimensions( ));
 
     ContentWindowPtr contentWindow = getContentWindow( frame->uri );
     if( !contentWindow )

@@ -45,7 +45,7 @@
 #include "ContentWindow.h"
 #include "PixelStream.h"
 
-#include <deflect/PixelStreamFrame.h>
+#include <deflect/Frame.h>
 
 PixelStreamUpdater::PixelStreamUpdater()
 {
@@ -68,7 +68,7 @@ void PixelStreamUpdater::synchronizeFramesSwap( const SyncFunction&
     }
 }
 
-void PixelStreamUpdater::updatePixelStream( deflect::PixelStreamFramePtr frame )
+void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 {
     swapSyncFrames_[frame->uri].update( frame );
 }
