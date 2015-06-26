@@ -42,6 +42,7 @@
 #include "ContentWindow.h"
 #include "MovieContent.h"
 #include "WallToWallChannel.h"
+#include "log.h"
 
 Movie::Movie( const QString& uri )
     : ffmpegMovie_( new FFMPEGMovie( uri ))
@@ -50,7 +51,15 @@ Movie::Movie( const QString& uri )
     , suspended_( false )
     , isVisible_( true )
     , skippedLastFrame_( false )
-{}
+{
+    // Observed bug [DISCL-295]: opening a movie might fail on WallProcesses
+    // despite correctly reading metadata on the MasterProcess.
+    // bool FFMPEGMovie::openVideoStreamDecoder(): could not open codec
+    // error: -11 Resource temporarily unavailable
+    if( !ffmpegMovie_->isValid( ))
+        put_flog( LOG_WARN, "Movie is invalid: %s",
+                  uri.toLocal8Bit().constData( ));
+}
 
 Movie::~Movie()
 {
@@ -90,9 +99,12 @@ void Movie::renderPreview()
 
 void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 {
+    if( !ffmpegMovie_->isValid( ))
+        return;
+
     if( !texture_.isValid( ))
     {
-        generateTexture();
+        _generateTexture();
         quad_.setTexture( texture_.getTextureId( ));
         previewQuad_.setTexture( texture_.getTextureId( ));
     }
@@ -114,7 +126,7 @@ void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 
 void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
 {
-    if( paused_ || suspended_ )
+    if( paused_ || suspended_ || !ffmpegMovie_->isValid( ))
         return;
 
     elapsedTimer_.setCurrentTime( wallToWallChannel.getTime( ));
@@ -135,10 +147,10 @@ void Movie::postRenderSync( WallToWallChannel& wallToWallChannel )
     if( paused_ || suspended_ )
         return;
 
-    synchronizeTimestamp( wallToWallChannel );
+    _synchronizeTimestamp( wallToWallChannel );
 }
 
-bool Movie::generateTexture()
+bool Movie::_generateTexture()
 {
     QImage image( ffmpegMovie_->getWidth(), ffmpegMovie_->getHeight(),
                   QImage::Format_RGB32 );
@@ -147,10 +159,11 @@ bool Movie::generateTexture()
     return texture_.init( image );
 }
 
-void Movie::synchronizeTimestamp( WallToWallChannel& wallToWallChannel )
+void Movie::_synchronizeTimestamp( WallToWallChannel& wallToWallChannel )
 {
     // Elect a leader among processes which have decoded a frame
-    const int leader = wallToWallChannel.electLeader( !skippedLastFrame_ );
+    const bool isCandidate = !skippedLastFrame_ && ffmpegMovie_->isValid();
+    const int leader = wallToWallChannel.electLeader( isCandidate );
 
     if( leader < 0 )
         return;
