@@ -94,11 +94,14 @@ ContentPtr Options::getBackgroundContent() const
     return backgroundContent_;
 }
 
-void Options::setShowWindowBorders(bool set)
+void Options::setShowWindowBorders( const bool set )
 {
-    showWindowBorders_ = set;
+    if( showWindowBorders_ == set )
+        return;
 
-    emit(updated(shared_from_this()));
+    showWindowBorders_ = set;
+    emit( showWindowBordersChanged( ));
+    emit( updated( shared_from_this( )));
 }
 
 void Options::setShowTouchPoints(bool set)

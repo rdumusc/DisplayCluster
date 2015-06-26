@@ -58,7 +58,7 @@ class Options : public QObject, public boost::enable_shared_from_this<Options>
     Q_OBJECT
     Q_PROPERTY( bool showStatistics READ getShowStatistics CONSTANT )
     Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
-    Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders CONSTANT )
+    Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders NOTIFY showWindowBordersChanged )
     Q_PROPERTY( bool showZoomContext READ getShowZoomContext CONSTANT )
     Q_PROPERTY( bool alphaBlending READ isAlphaBlendingEnabled CONSTANT )
 
@@ -102,6 +102,11 @@ public slots:
 signals:
     /** Emitted when a value is changed by one of the setters. */
     void updated( OptionsPtr );
+
+    /** @name QProperty notifiers */
+    //@{
+    void showWindowBordersChanged();
+    //@}
 
 private:
     friend class boost::serialization::access;
