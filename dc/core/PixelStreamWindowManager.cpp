@@ -43,6 +43,7 @@
 #include "ContentWindowController.h"
 #include "ContentFactory.h"
 #include "DisplayGroup.h"
+#include "localstreamer/DockPixelStreamer.h"
 #include "log.h"
 
 #include <deflect/Frame.h>
@@ -91,8 +92,12 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
 {
     if( getContentWindow( uri ))
     {
-        put_flog( LOG_WARN, "Already have a window for stream: '%s'",
-                  uri.toStdString().c_str( ));
+        if( uri == DockPixelStreamer::getUniqueURI( ) && !pos.isNull( ))
+        {
+            ContentWindowPtr window = getContentWindow( uri );
+            ContentWindowController controller( *window, displayGroup_ );
+            controller.moveCenterTo( pos );
+        }
         return;
     }
 
