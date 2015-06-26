@@ -42,6 +42,7 @@
 #include "DisplayGroupGraphicsScene.h"
 #include "ContentWindowTouchArea.h"
 #include "ContentWindow.h"
+#include "Options.h"
 
 #include "gestures/PanGesture.h"
 #include "gestures/PanGestureRecognizer.h"
@@ -62,6 +63,7 @@ const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
 }
 
 DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
+                                                    OptionsPtr options,
                                                     QWidget* parent_ )
     : QGraphicsView( parent_ )
     , displayGroupItem_( 0 )
@@ -72,6 +74,9 @@ DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
     setInteractive( true );
     setDragMode( QGraphicsView::RubberBandDrag );
     setAcceptDrops( true );
+
+    engine_.rootContext()->setContextProperty( "options", options.get( ));
+    engine_.rootContext()->setContextProperty( "dggv", this );
 }
 
 DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
@@ -102,7 +107,6 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
 
     engine_.rootContext()->setContextProperty( "displaygroup",
                                                displayGroup_.get( ));
-    engine_.rootContext()->setContextProperty( "dggv", this );
 
     QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
     displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));

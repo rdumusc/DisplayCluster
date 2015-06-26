@@ -39,10 +39,8 @@
 
 #include "MasterWindow.h"
 
-#include "Options.h"
-#include "configuration/MasterConfiguration.h"
 #include "log.h"
-#include "dc/version.h"
+#include "Options.h"
 #include "configuration/MasterConfiguration.h"
 
 #include "ContentLoader.h"
@@ -53,10 +51,13 @@
 
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
+
 #include "DisplayGroupGraphicsView.h"
 #include "DisplayGroupListWidget.h"
 #include "BackgroundWidget.h"
 #include "WebbrowserWidget.h"
+
+#include <dc/version.h>
 
 #include <QtWidgets>
 
@@ -73,7 +74,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     , options_( new Options )
     , backgroundWidget_( new BackgroundWidget( config, this ))
     , webbrowserWidget_( new WebbrowserWidget( config, this ))
-    , dggv_( new DisplayGroupGraphicsView( config, this ))
+    , dggv_( new DisplayGroupGraphicsView( config, options_, this ))
     , contentFolder_( config.getDockStartDir( ))
     , sessionFolder_( config.getDockStartDir( ))
 {
