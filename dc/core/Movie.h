@@ -83,8 +83,8 @@ private:
     void preRenderSync( WallToWallChannel& wallToWallChannel ) override;
     void postRenderSync( WallToWallChannel& wallToWallChannel ) override;
 
-    bool generateTexture();
-    void synchronizeTimestamp( WallToWallChannel& wallToWallChannel );
+    bool _generateTexture();
+    void _synchronizeTimestamp( WallToWallChannel& wallToWallChannel );
 };
 
 #endif
