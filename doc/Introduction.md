@@ -24,7 +24,7 @@ Please also take a look at the latest @ref ReleaseNotes.
 DisplayCluster uses CMake to create a platform-specific build environment.
 The following platforms and build environments are tested:
 
-* Linux: Ubuntu 14.04 and RHEL 6.5 (using a Qt4.8.6 module)
-(Makefile, i386, x64)
-* Mac OS X: 10.7, 10.8, 10.9, 10.10 (very limited testing)
-(Makefile, XCode, i386, x64)
+* Linux: Ubuntu 14.04 and RHEL 6.5 (using a Qt 5.4.1 and Boost 1.54.0 module)
+(Makefile, x64)
+* Mac OS X: 10.10 (limited testing)
+(Makefile, XCode, x64)

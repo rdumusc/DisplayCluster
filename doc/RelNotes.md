@@ -9,10 +9,12 @@ DisplayCluster 0.5 provides the following improvements:
 
 * The dcStream library has been moved to a separate project:
   [Deflect](https://github.com/BlueBrain/Deflect).
+* The project has been ported from Qt4 to Qt5
 * Compilation of external dependencies (Deflect, TUIO) has been simplified
   thanks to the "git subproject" functionality. Dependencies are cloned during
   the CMake configure step and built alongside the project.
 * Rendering of contents is done in QML for a better and simplified UI design.
+* Windows have a title bar which shows the name of the file (or the stream).
 * Windows have customizable action buttons which allow users to close / maximize
   windows and pause movies from the wall.
 * Windows have dragable borders for reszing them from the wall.
@@ -35,6 +37,7 @@ DisplayCluster 0.5 provides the following improvements:
   DoubleTapGesture).
 * Multiple refactorings and code cleanups. All global variables have been
   removed.
+* CMake cleanups, using common_library and common_application from CMake/common.
 
 ## Optimizations {#Optimizations}
 
