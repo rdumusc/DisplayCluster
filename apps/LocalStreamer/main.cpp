@@ -38,30 +38,36 @@
 /*********************************************************************/
 
 #include "Application.h"
+
+#include "log.h"
 #include "localstreamer/CommandLineOptions.h"
+
 #include <iostream>
 
 #define INVALID_STREAMER_TYPE_ERROR_CODE     1
 #define FAILED_APP_INITIALIZATION_ERROR_CODE 2
 
-int main(int argc, char * argv[])
+int main( int argc, char* argv[] )
 {
-    CommandLineOptions options(argc, argv);
+    CommandLineOptions options( argc, argv );
 
-    if (options.getHelp())
+    if( options.getHelp( ))
     {
         options.showSyntax();
         return 0;
     }
 
-    if (options.getPixelStreamerType() == PS_UNKNOWN)
+    const PixelStreamerType type = options.getPixelStreamerType();
+    if( type == PS_UNKNOWN )
     {
         std::cerr << "Invalid streamer type." << std::endl;
         return INVALID_STREAMER_TYPE_ERROR_CODE;
     }
 
-    Application app(argc, argv);
-    if (!app.initialize(options))
+    logger_id = getStreamerTypeString( type ).toStdString();
+
+    Application app( argc, argv );
+    if( !app.initialize( options ))
         return FAILED_APP_INITIALIZATION_ERROR_CODE;
 
     return app.exec();

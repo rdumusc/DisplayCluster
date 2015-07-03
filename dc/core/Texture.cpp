@@ -49,7 +49,7 @@ Texture::Texture( const QString& uri )
     const QImageReader imageReader( uri_ );
     if( !imageReader.canRead( ))
     {
-        put_flog( LOG_ERROR, "error loading %s",
+        put_flog( LOG_ERROR, "error loading: '%s'",
                   uri_.toLocal8Bit().constData( ));
         return;
     }
@@ -61,7 +61,7 @@ bool Texture::generateTexture()
     const QImage image( uri_ );
     if( image.isNull( ))
     {
-        put_flog( LOG_ERROR, "error loading %s",
+        put_flog( LOG_ERROR, "error loading: '%s'",
                   uri_.toLocal8Bit().constData( ));
         return false;
     }

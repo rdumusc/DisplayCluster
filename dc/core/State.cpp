@@ -68,7 +68,7 @@ bool State::legacyLoadXML( const QString& filename )
 
     if( !query.setFocus( QUrl( filename )))
     {
-        put_flog( LOG_DEBUG, "failed to load %s",
+        put_flog( LOG_DEBUG, "Not a valid legacy session: '%s'",
                   filename.toLocal8Bit().constData( ));
         return false;
     }
@@ -83,15 +83,13 @@ bool State::legacyLoadXML( const QString& filename )
     if( query.evaluateTo( &qstring ))
         numContentWindows = qstring.toInt();
 
-    put_flog( LOG_INFO, "%i content windows", numContentWindows );
-
     ContentWindowPtrs contentWindows;
     contentWindows.reserve( numContentWindows );
     for( int i = 1; i <= numContentWindows; ++i )
     {
         ContentPtr content = loadContent_( query, i );
         if( !content )
-            continue;
+            content = ContentFactory::getErrorContent();
 
         ContentWindowPtr contentWindow = restoreContent_( query, content, i );
         if( contentWindow )
@@ -116,16 +114,16 @@ bool State::checkVersion_( QXmlQuery& query ) const
     QString qstring;
 
     int version = -1;
-    query.setQuery("string(/state/version)");
+    query.setQuery( "string(/state/version)" );
 
-    if(query.evaluateTo(&qstring))
+    if( query.evaluateTo( &qstring ))
     {
         version = qstring.toInt();
     }
 
     if( version != LEGACY_FILE_VERSION )
     {
-        put_flog( LOG_DEBUG, "not a legacy state file. version: %i, legacy version %i",
+        put_flog( LOG_DEBUG, "not a legacy state file. version: %i, legacy: %i",
                   version, LEGACY_FILE_VERSION );
         return false;
     }
@@ -135,24 +133,15 @@ bool State::checkVersion_( QXmlQuery& query ) const
 ContentPtr State::loadContent_( QXmlQuery& query, const int index ) const
 {
     char string[1024];
-
-    QString uri;
-    sprintf(string, "string(//state/ContentWindow[%i]/URI)", index);
-    query.setQuery(string);
+    sprintf( string, "string(//state/ContentWindow[%i]/URI)", index );
+    query.setQuery( string );
 
     QString qstring;
-    if(query.evaluateTo(&qstring))
-    {
-        // remove any whitespace
-        uri = qstring.trimmed();
-
-        put_flog(LOG_DEBUG, "found content window with URI %s", uri.toLocal8Bit().constData());
-    }
-
-    if(uri.isEmpty())
+    if( !query.evaluateTo( &qstring ))
         return ContentPtr();
 
-    return ContentFactory::getContent(uri);
+    const QString uri = qstring.trimmed(); // remove any whitespace
+    return ContentFactory::getContent( uri );
 }
 
 ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,

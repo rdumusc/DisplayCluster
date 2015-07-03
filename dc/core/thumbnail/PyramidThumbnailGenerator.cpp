@@ -58,7 +58,7 @@ QImage PyramidThumbnailGenerator::generate( const QString &filename ) const
     }
     else
     {
-        put_flog( LOG_ERROR, "could not open pyramid file: %s",
+        put_flog( LOG_ERROR, "could not open pyramid file: '%s'",
                   filename.toLatin1().constData( ));
         return createErrorImage( "pyramid" );
     }

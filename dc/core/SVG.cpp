@@ -55,13 +55,13 @@ SVG::SVG( const QString& uri )
     QFile file( uri );
     if( !file.open( QIODevice::ReadOnly ))
     {
-        put_flog( LOG_WARN, "could not open file %s",
+        put_flog( LOG_WARN, "could not open file: '%s'",
                   uri.toLocal8Bit().constData( ));
         return;
     }
     if( !setImageData( file.readAll( )))
     {
-        put_flog( LOG_WARN, "could not setImageData %s",
+        put_flog( LOG_WARN, "could not setImageData: '%s'",
                   uri.toLocal8Bit().constData( ));
         return;
     }

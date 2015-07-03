@@ -44,10 +44,11 @@
 
 #include "log.h"
 
-WebServiceServer::WebServiceServer(const unsigned int port, QObject *parentObject)
-    : QThread(parentObject)
-    , server_(new dcWebservice::Server())
-    , port_(port)
+WebServiceServer::WebServiceServer( const unsigned int port,
+                                    QObject* parentObject )
+    : QThread( parentObject )
+    , server_( new dcWebservice::Server( ))
+    , port_( port )
 {}
 
 WebServiceServer::~WebServiceServer()
@@ -55,23 +56,25 @@ WebServiceServer::~WebServiceServer()
     delete server_;
 }
 
-bool WebServiceServer::addHandler(const std::string& pattern, dcWebservice::HandlerPtr handler)
+bool WebServiceServer::addHandler( const std::string& pattern,
+                                   dcWebservice::HandlerPtr handler )
 {
-    if (server_->addHandler(pattern, handler))
+    if( server_->addHandler( pattern, handler ))
         return true;
 
-    put_flog(LOG_WARN, "Invalid regex: '%s', handler could not be added", pattern.c_str());
+    put_flog( LOG_WARN, "Invalid regex: '%s', handler could not be added",
+              pattern.c_str( ));
     return false;
 }
 
 void WebServiceServer::run()
 {
-    put_flog(LOG_INFO, "Listening on port: %d", port_);
-    server_->run(port_);
+    put_flog( LOG_INFO, "Listening on port: %d", port_ );
+    server_->run( port_ );
 }
 
 bool WebServiceServer::stop()
 {
-    put_flog(LOG_INFO, "Shutting down");
+    put_flog( LOG_INFO, "Shutting down" );
     return server_->stop();
 }

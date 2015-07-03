@@ -39,7 +39,6 @@
 
 #include "FileCommandHandler.h"
 
-#include <deflect/Command.h>
 #include "DisplayGroup.h"
 #include "ContentLoader.h"
 #include "ContentFactory.h"
@@ -48,12 +47,14 @@
 #include "PixelStreamWindowManager.h"
 #include "log.h"
 
+#include <deflect/Command.h>
+
 #include <QFileInfo>
 
-FileCommandHandler::FileCommandHandler(DisplayGroupPtr displayGroup,
-                                       PixelStreamWindowManager& windowManager)
-    : displayGroup_(displayGroup)
-    , pixelStreamWindowManager_(windowManager)
+FileCommandHandler::FileCommandHandler( DisplayGroupPtr displayGroup,
+                                        PixelStreamWindowManager& windowManager)
+    : displayGroup_( displayGroup )
+    , pixelStreamWindowManager_( windowManager )
 {
 }
 
@@ -62,30 +63,32 @@ deflect::CommandType FileCommandHandler::getType() const
     return deflect::COMMAND_TYPE_FILE;
 }
 
-void FileCommandHandler::handle(const deflect::Command& command, const QString& senderUri)
+void FileCommandHandler::handle( const deflect::Command& command,
+                                 const QString& senderUri )
 {
     const QString& uri = command.getArguments();
-    const QString& extension = QFileInfo(uri).suffix().toLower();
+    const QString& extension = QFileInfo( uri ).suffix().toLower();
 
     if( extension == "dcx" )
     {
-        StateSerializationHelper(displayGroup_).load(uri);
+        StateSerializationHelper( displayGroup_ ).load( uri );
     }
-    else if ( ContentFactory::getSupportedExtensions().contains( extension ))
+    else if( ContentFactory::getSupportedExtensions().contains( extension ))
     {
-        ContentLoader loader(displayGroup_);
+        ContentLoader loader( displayGroup_ );
 
         // Center the new content where the dock is
         // TODO: DISCL-230
         QPointF position;
-        ContentWindowPtr parentWindow = pixelStreamWindowManager_.getContentWindow(senderUri);
+        ContentWindowPtr parentWindow =
+                pixelStreamWindowManager_.getContentWindow( senderUri );
         if( parentWindow )
             position = parentWindow->getCoordinates().center();
-        loader.load(uri, position);
+        loader.load( uri, position );
     }
     else
     {
-        put_flog(LOG_WARN, "Received uri with unsupported extension: '%s'",
-                 uri.toStdString().c_str());
+        put_flog( LOG_WARN, "Received uri with unsupported extension: '%s'",
+                  uri.toStdString().c_str( ));
     }
 }

@@ -139,14 +139,15 @@ void WebkitAuthenticationHelper::loginFormSubmitted()
     webView_.reload();
 }
 
-QString WebkitAuthenticationHelper::readQrcFile(const QString& filename)
+QString WebkitAuthenticationHelper::readQrcFile( const QString& filename )
 {
-    QFile file(filename);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    QFile file( filename );
+    if( file.open( QIODevice::ReadOnly | QIODevice::Text ))
     {
-        QTextStream stream(&file);
+        QTextStream stream( &file );
         return stream.readAll();
     }
-    put_flog(LOG_ERROR, "Qt Resource not found: %s", filename.toLocal8Bit().constData());
-    return "";
+    put_flog( LOG_ERROR, "Qt Resource not found: '%s'",
+              filename.toLocal8Bit().constData( ));
+    return QString();
 }

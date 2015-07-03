@@ -58,26 +58,30 @@ FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter(const AVCodecContext& video
 
     if( !avFrameRGB_ )
     {
-        put_flog(LOG_ERROR, "Error allocating frame");
+        put_flog( LOG_ERROR, "Error allocating RGB frame" );
         return;
     }
 
     // alloc buffer for avFrameRGB_
-    if (avpicture_alloc( (AVPicture *)avFrameRGB_, targetFormat,
-                         videoCodecContext.width, videoCodecContext.height ) != 0)
+    if( avpicture_alloc( (AVPicture *)avFrameRGB_, targetFormat,
+                         videoCodecContext.width,
+                         videoCodecContext.height ) != 0 )
     {
-        put_flog(LOG_ERROR, "Error allocating frame");
+        put_flog( LOG_ERROR, "Error allocating picture buffer for RGB frame" );
         return;
     }
 
     // create sws scaler context
-    swsContext_ = sws_getContext(videoCodecContext.width, videoCodecContext.height,
-                                 videoCodecContext.pix_fmt, videoCodecContext.width,
-                                 videoCodecContext.height, targetFormat, SWS_FAST_BILINEAR,
-                                 NULL, NULL, NULL);
+    swsContext_ = sws_getContext( videoCodecContext.width,
+                                  videoCodecContext.height,
+                                  videoCodecContext.pix_fmt,
+                                  videoCodecContext.width,
+                                  videoCodecContext.height,
+                                  targetFormat, SWS_FAST_BILINEAR,
+                                  NULL, NULL, NULL );
     if( !swsContext_ )
     {
-        put_flog(LOG_ERROR, "Error allocating an SwsContext");
+        put_flog( LOG_ERROR, "Error allocating SwsContext" );
         return;
     }
 }

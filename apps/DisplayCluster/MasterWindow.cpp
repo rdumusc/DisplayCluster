@@ -302,10 +302,10 @@ void MasterWindow::openContent()
 
     contentFolder_ = QFileInfo( filename ).absoluteDir().path();
 
-    if ( !ContentLoader( displayGroup_ ).load( filename ))
+    if( !ContentLoader( displayGroup_ ).load( filename ))
     {
         QMessageBox messageBox;
-        messageBox.setText( "Unsupported file format." );
+        messageBox.setText( "Unsupported file." );
         messageBox.exec();
     }
 }
@@ -357,14 +357,7 @@ void MasterWindow::addContentDirectory( const QString& directoryName,
                                 y_coord * win.height() + 0.5 * win.height( ));
 
         if( contentLoader.load( filename, position, win ))
-        {
             ++contentIndex;
-            put_flog( LOG_DEBUG, "added file %s",
-                      fileInfo.absoluteFilePath().toStdString().c_str( ));
-        }
-        else
-            put_flog( LOG_DEBUG, "ignoring unsupported file %s",
-                      fileInfo.absoluteFilePath().toStdString().c_str( ));
     }
 }
 
@@ -411,7 +404,7 @@ void MasterWindow::saveState()
     // make sure filename has .dcx extension
     if( !filename.endsWith( ".dcx" ))
     {
-        put_flog( LOG_DEBUG, "appended .dcx filename extension" );
+        put_flog( LOG_VERBOSE, "appended .dcx filename extension" );
         filename.append( ".dcx" );
     }
 
@@ -540,27 +533,20 @@ void MasterWindow::dragEnterEvent(QDragEnterEvent* dragEvent)
     }
 }
 
-void MasterWindow::dropEvent(QDropEvent* dropEvt)
+void MasterWindow::dropEvent( QDropEvent* dropEvt )
 {
-    const QStringList& pathList = extractValidContentUrls(dropEvt->mimeData());
-    foreach (QString url, pathList)
-    {
-        ContentLoader(displayGroup_).load(url);
-    }
+    const QStringList& urls = extractValidContentUrls( dropEvt->mimeData( ));
+    ContentLoader loader( displayGroup_ );
+    foreach( QString url, urls )
+        loader.load( url );
 
-    const QStringList& dirList = extractFolderUrls(dropEvt->mimeData());
-    if (dirList.size() > 0)
-    {
-        QString url = dirList[0]; // Only one directory at a time
+    const QStringList& folders = extractFolderUrls( dropEvt->mimeData( ));
+    if( !folders.isEmpty( ))
+        addContentDirectory( folders[0] ); // Only one directory at a time
 
-        addContentDirectory(url);
-    }
-
-    const QString& stateFile = extractStateFile(dropEvt->mimeData());
-    if (!stateFile.isNull())
-    {
-        loadState(stateFile);
-    }
+    const QString& stateFile = extractStateFile( dropEvt->mimeData( ));
+    if( !stateFile.isNull( ))
+        loadState( stateFile );
 
     dropEvt->acceptProposedAction();
 }

@@ -43,17 +43,17 @@
 
 #include <mpi.h>
 
-MPIContext::MPIContext(int argc, char* argv[])
-    : multithreadSupportEnabled_(true)
+MPIContext::MPIContext( int argc, char* argv[] )
+    : multithreadSupportEnabled_( true )
 {
     const int required = MPI_THREAD_MULTIPLE;
     int provided;
-    MPI_Init_thread(&argc, &argv, required, &provided);
-    if (provided < MPI_THREAD_SERIALIZED)
+    MPI_Init_thread( &argc, &argv, required, &provided );
+    if( provided < MPI_THREAD_SERIALIZED )
     {
         multithreadSupportEnabled_ = false;
-        put_flog(LOG_WARN, "MPI does not provide multithread thread support."
-                 "(Level: %d/%d)", provided, required);
+        put_flog( LOG_DEBUG, "MPI does not provide multithread thread support."
+                  "(Level: %d/%d)", provided, required );
     }
 }
 

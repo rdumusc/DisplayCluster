@@ -39,6 +39,9 @@
 #ifndef LOG_H
 #define LOG_H
 
+#include <string>
+
+#define LOG_VERBOSE 0
 #define LOG_DEBUG 1
 #define LOG_INFO 2
 #define LOG_WARN 3
@@ -46,19 +49,18 @@
 #define LOG_FATAL 5
 
 #ifdef NDEBUG
-#  define LOG_THRESHHOLD 3
+#  define LOG_THRESHOLD LOG_INFO
 #else
-#  define LOG_THRESHHOLD 1
+#  define LOG_THRESHOLD LOG_DEBUG
 #endif
 
-#define MAX_LOG_LENGTH 1024
-
-extern void put_log(int level, const char *format, ...);
+extern std::string logger_id;
+extern void put_log( int level, const char* format, ... );
 
 #ifdef _WIN32
-    #define put_flog(l, fmt, ...) put_log(l, "%s: " fmt, __FUNCTION__, ##__VA_ARGS__)
+#  define put_flog( l, fmt, ... ) put_log( l, "%s: " fmt, __FUNCTION__, ##__VA_ARGS__ )
 #else
-    #define put_flog(l, fmt, ...) put_log(l, "%s: " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__)
+#  define put_flog( l, fmt, ... ) put_log( l, "%s: " fmt, __PRETTY_FUNCTION__, ##__VA_ARGS__ )
 #endif
 
 #endif

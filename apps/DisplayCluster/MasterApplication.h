@@ -99,7 +99,7 @@ private:
 
     void init();
     bool createConfig(const QString& filename);
-    void startNetworkListener();
+    void startDeflectServer();
     void startWebservice(const int webServicePort);
     void restoreBackground();
     void initPixelStreamLauncher();

@@ -50,47 +50,46 @@
 #define FOLDER_THUMBNAIL_COUNT_X  2
 #define FOLDER_THUMBNAIL_COUNT_Y  2
 
-FolderThumbnailGenerator::FolderThumbnailGenerator(const QSize &size)
-    : ThumbnailGenerator(size)
+FolderThumbnailGenerator::FolderThumbnailGenerator( const QSize& size )
+    : ThumbnailGenerator( size )
 {
 }
 
-QImage FolderThumbnailGenerator::generate(const QString &filename) const
+QImage FolderThumbnailGenerator::generate( const QString& filename ) const
 {
-    QDir dir(filename);
+    QDir dir( filename );
+    if( dir.exists( ))
+        return createFolderImage( dir, true );
 
-    if (dir.exists())
-    {
-        return createFolderImage(dir, true);
-    }
-
-    put_flog(LOG_ERROR, "invalid directory: %s", filename.toLatin1().constData());
-    return createErrorImage("folder");
+    put_flog( LOG_ERROR, "invalid directory: %s",
+              filename.toLocal8Bit().constData( ));
+    return createErrorImage( "folder" );
 }
 
 
-QImage FolderThumbnailGenerator::generatePlaceholderImage(QDir dir) const
+QImage FolderThumbnailGenerator::generatePlaceholderImage( QDir dir ) const
 {
     QImage img = createGradientImage( Qt::black, Qt::white );
-    addMetadataToImage(img, dir.path());
+    addMetadataToImage( img, dir.path( ));
     return img;
 }
 
-QImage FolderThumbnailGenerator::generateUpFolderImage(QDir dir) const
+QImage FolderThumbnailGenerator::generateUpFolderImage( QDir dir ) const
 {
     QImage img = createGradientImage( Qt::darkGray, Qt::lightGray );
-    paintText(img, "UP");
-    addMetadataToImage(img, dir.path());
+    paintText( img, "UP" );
+    addMetadataToImage( img, dir.path( ));
     return img;
 }
 
-void FolderThumbnailGenerator::addMetadataToImage(QImage &img, const QString& url) const
+void FolderThumbnailGenerator::addMetadataToImage( QImage& img,
+                                                   const QString& url ) const
 {
     img.setText( "dir", "true" );
-    ThumbnailGenerator::addMetadataToImage(img, url);
+    ThumbnailGenerator::addMetadataToImage( img, url );
 }
 
-QVector<QRectF> FolderThumbnailGenerator::calculatePlacement(int nX, int nY, float padding, float totalWidth, float totalHeight) const
+QVector<QRectF> FolderThumbnailGenerator::calculatePlacement( int nX, int nY, float padding, float totalWidth, float totalHeight) const
 {
     const float totalPaddingWidth = padding*(nX+1);
     const float imageWidth = (1.0f-totalPaddingWidth)/(float)nX;
