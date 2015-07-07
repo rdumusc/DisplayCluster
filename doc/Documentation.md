@@ -8,9 +8,9 @@ auxilary documentation.
 
 * [CMake](https://github.com/Eyescale/CMake#readme): subdirectory
   included using git externals. See below for details.
-* src: Contains the main libraries of the project:
+* dc: Contains the main libraries of the project:
   * core: The core library.
-  * dcWebservice: Accepts external commands through the FastCGI protocol.
+  * webservice: Accepts external commands through the FastCGI protocol.
 * apps: Applications delivered with the project.
   * DisplayCluster: The main application.
   * LocalStreamer: Used by DisplayCluster to generate content from separate
