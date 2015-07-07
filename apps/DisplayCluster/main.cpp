@@ -52,45 +52,52 @@
 #include <X11/Xlib.h>
 #endif
 
-int main(int argc, char * argv[])
+int main( int argc, char* argv[] )
 {
-    MPIChannelPtr worldChannel(new MPIChannel(argc, argv));
-    if (!worldChannel->isThreadSafe())
+    MPIChannelPtr worldChannel( new MPIChannel( argc, argv ));
+    const int rank = worldChannel->getRank();
+    if( rank == 0 )
+        logger_id = "master";
+    else
+        logger_id = QString( "rank%1" ).arg( rank ).toStdString();
+
+    if( !worldChannel->isThreadSafe( ))
     {
-        put_flog(LOG_FATAL, "MPI implementation must support at least "
-                 "MPI_THREAD_SERIALIZED. (MPI_THREAD_MULTIPLE is recommended "
-                 "for better performances)");
+        put_flog( LOG_FATAL, "MPI implementation must support at least "
+                  "MPI_THREAD_SERIALIZED. (MPI_THREAD_MULTIPLE is recommended "
+                  "for better performances)" );
         return EXIT_FAILURE;
     }
 
-    const int rank = worldChannel->getRank();
-    MPIChannelPtr wallChannel(new MPIChannel(*worldChannel, rank != 0, rank));
+    MPIChannelPtr wallChannel( new MPIChannel( *worldChannel, rank > 0, rank ));
 
 #if ENABLE_TUIO_TOUCH_LISTENER
     // we need X multithreading support if we're running the
     // TouchListener thread and creating X events
-    if (rank == 0)
+    if( rank == 0 )
         XInitThreads();
 #endif
 
     boost::scoped_ptr<QApplication> app;
     try
     {
-        if (rank == 0)
-            app.reset(new MasterApplication(argc, argv, worldChannel));
+        if( rank == 0 )
+            app.reset( new MasterApplication( argc, argv, worldChannel ));
         else
-            app.reset(new WallApplication(argc, argv, worldChannel, wallChannel));
+            app.reset( new WallApplication( argc, argv, worldChannel,
+                                            wallChannel ));
     }
-    catch (const std::runtime_error& e)
+    catch( const std::runtime_error& e )
     {
-        put_flog(LOG_FATAL, "Could not initialize application. %s", e.what());
+        put_flog( LOG_FATAL, "Could not initialize application. %s", e.what( ));
         return EXIT_FAILURE;
     }
 
     app->exec(); // enter Qt event loop
 
-    put_flog(LOG_INFO, "quitting");
+    put_flog( LOG_DEBUG, "waiting for threads to finish..." );
     QThreadPool::globalInstance()->waitForDone();
+    put_flog( LOG_DEBUG, "done." );
 
     return EXIT_SUCCESS;
 }

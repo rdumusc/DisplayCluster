@@ -57,8 +57,12 @@ StateSerializationHelper::StateSerializationHelper( DisplayGroupPtr displayGroup
 {
 }
 
-bool StateSerializationHelper::save( const QString& filename, const bool generatePreview )
+bool StateSerializationHelper::save( const QString& filename,
+                                     const bool generatePreview )
 {
+    put_flog( LOG_INFO, "Saving session: '%s'",
+              filename.toStdString().c_str( ));
+
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
 
     if( generatePreview )
@@ -88,6 +92,9 @@ bool StateSerializationHelper::save( const QString& filename, const bool generat
 
 bool StateSerializationHelper::load( const QString& filename )
 {
+    put_flog( LOG_INFO, "Restoring session: '%s'",
+              filename.toStdString().c_str( ));
+
     State state;
 
     // For backward compatibility, try to load the file as a legacy state file first
@@ -104,13 +111,14 @@ bool StateSerializationHelper::load( const QString& filename )
         }
         catch( const boost::archive::archive_exception& e )
         {
-            put_flog( LOG_ERROR, "Could not restore session/state %s: %s",
+            put_flog( LOG_ERROR, "Could not restore session: '%s': %s",
                       filename.toStdString().c_str(), e.what( ));
             return false;
         }
         catch( const std::exception& e )
         {
-            put_flog( LOG_ERROR, "Could not restore state, wrong file format %s: %s",
+            put_flog( LOG_ERROR, "Could not restore state file '%s'',"
+                                 "wrong file format: %s",
                       filename.toStdString().c_str(), e.what( ));
             return false;
         }
@@ -128,7 +136,6 @@ bool StateSerializationHelper::load( const QString& filename )
     newDisplayGroup->setCoordinates( displayGroup_->getCoordinates( ));
 
     *displayGroup_ = *newDisplayGroup;
-
     return true;
 }
 
@@ -156,8 +163,8 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
     {
         if( !contentWindow->getContent( ))
         {
-            put_flog( LOG_WARN, "Window '%s' does not have a Content.",
-                      contentWindow->getID().toString().toStdString().c_str( ));
+            put_flog( LOG_WARN, "Window '%s' does not have a Content!",
+                contentWindow->getID().toString().toLocal8Bit().constData( ));
             continue;
         }
         // PixelStreams are not supported yet, don't restore them.
@@ -167,9 +174,17 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
 
         // Refresh content information, files can have been modified or removed
         // since the state was saved.
-        if ( !contentWindow->getContent()->readMetadata( ))
+        if( contentWindow->getContent()->readMetadata( ))
+        {
+            put_flog( LOG_DEBUG, "Restoring content: '%s'",
+              contentWindow->getContent()->getURI().toLocal8Bit().constData( ));
+        }
+        else
+        {
+            put_flog( LOG_WARN, "'%s' could not be restored!",
+              contentWindow->getContent()->getURI().toLocal8Bit().constData( ));
             contentWindow->setContent( ContentFactory::getErrorContent( ));
-
+        }
         validContentWindows.push_back( contentWindow );
     }
     contentWindows = validContentWindows;

@@ -45,8 +45,8 @@
 
 #define CLEARALL_COMMAND "clearall"
 
-SessionCommandHandler::SessionCommandHandler(DisplayGroup& displayGroup)
-    : displayGroup_(displayGroup)
+SessionCommandHandler::SessionCommandHandler( DisplayGroup& displayGroup )
+    : displayGroup_( displayGroup )
 {
 }
 
@@ -55,11 +55,12 @@ deflect::CommandType SessionCommandHandler::getType() const
     return deflect::COMMAND_TYPE_SESSION;
 }
 
-void SessionCommandHandler::handle(const deflect::Command& command, const QString&)
+void SessionCommandHandler::handle( const deflect::Command& command,
+                                    const QString& )
 {
     const QString& arguments = command.getArguments();
 
-    if (arguments == CLEARALL_COMMAND)
+    if( arguments == CLEARALL_COMMAND )
         displayGroup_.clear();
     else
         put_flog( LOG_ERROR, "Invalid Session command received: '%s'",

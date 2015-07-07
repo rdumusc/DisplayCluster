@@ -145,9 +145,9 @@ bool DynamicTexture::readPyramidMetadataFromFile( const QString& uri )
     std::vector<std::string> tokens;
     tokens.assign(tokenizer.begin(), tokenizer.end());
 
-    if(tokens.size() != 3)
+    if( tokens.size() != 3 )
     {
-        put_flog(LOG_ERROR, "require 3 arguments, got %i", tokens.size());
+        put_flog( LOG_ERROR, "requires 3 arguments, got %i", tokens.size( ));
         return false;
     }
 
@@ -160,8 +160,9 @@ bool DynamicTexture::readPyramidMetadataFromFile( const QString& uri )
 
     useImagePyramid_ = true;
 
-    put_flog(LOG_DEBUG, "got image pyramid path %s, imageWidth = %i, imageHeight = %i",
-             imagePyramidPath_.toLocal8Bit().constData(), imageSize_.width(), imageSize_.height());
+    put_flog( LOG_VERBOSE, "read pyramid file: '%s'', width: %i, height: %i",
+              imagePyramidPath_.toLocal8Bit().constData(), imageSize_.width(),
+              imageSize_.height( ));
 
     return true;
 }
@@ -181,13 +182,14 @@ bool DynamicTexture::determineImageExtension( const QString& imagePyramidPath )
     return true;
 }
 
-bool DynamicTexture::writeMetadataFile(const QString& pyramidFolder, const QString& filename) const
+bool DynamicTexture::writeMetadataFile( const QString& pyramidFolder,
+                                        const QString& filename ) const
 {
-    std::ofstream ofs(filename.toStdString().c_str());
-    if(!ofs.good())
+    std::ofstream ofs( filename.toStdString().c_str( ));
+    if( !ofs.good( ))
     {
-        put_flog(LOG_WARN, "could not write second metadata file %s",
-                 filename.toStdString().c_str());
+        put_flog( LOG_ERROR, "can't write second metadata file: '%s'",
+                  filename.toStdString().c_str( ));
         return false;
     }
 
@@ -230,11 +232,10 @@ QString DynamicTexture::getPyramidImageFilename() const
 
 bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
 {
-    // load this object's scaledImage_
-    loadImage();
+    loadImage(); // load this object's scaledImage_
 
     const QString filename = pyramidFolder + getPyramidImageFilename();
-    put_flog( LOG_DEBUG, "saving %s", filename.toLocal8Bit().constData( ));
+    put_flog( LOG_DEBUG, "saving: '%s'", filename.toLocal8Bit().constData( ));
 
     if( !scaledImage_.save( filename ))
         return false;
@@ -260,16 +261,16 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     return true;
 }
 
-void loadImageInThread(DynamicTexturePtr dynamicTexture)
+void loadImageInThread( DynamicTexturePtr dynamicTexture )
 {
     try
     {
         dynamicTexture->loadImage();
         dynamicTexture->decrementGlobalThreadCount();
     }
-    catch(const boost::bad_weak_ptr&)
+    catch( const boost::bad_weak_ptr& )
     {
-        put_flog(LOG_INFO, "The parent image was deleted during image loading.");
+        put_flog( LOG_DEBUG, "Parent image deleted during image loading" );
     }
 }
 
@@ -293,9 +294,10 @@ void DynamicTexture::loadImageAsync()
 
 bool DynamicTexture::loadFullResImage()
 {
-    if(!fullscaleImage_.load(uri_))
+    if( !fullscaleImage_.load( uri_ ))
     {
-        put_flog(LOG_ERROR, "error loading %s", uri_.toLocal8Bit().constData());
+        put_flog( LOG_ERROR, "error loading: '%s'",
+                  uri_.toLocal8Bit().constData( ));
         return false;
     }
     imageSize_ = fullscaleImage_.size();
@@ -337,10 +339,10 @@ void DynamicTexture::loadImage()
         }
     }
 
-    if(scaledImage_.isNull())
+    if( scaledImage_.isNull( ))
     {
-        put_flog(LOG_ERROR, "failed to load the image.");
-        return;
+        put_flog( LOG_ERROR, "loading failed in DynamicTexture: '%s'",
+                  uri_.toLocal8Bit().constData( ));
     }
 }
 
@@ -484,7 +486,7 @@ bool DynamicTexture::makeFolder( const QString& folder )
     {
         if( !QDir().mkdir( folder ))
         {
-            put_flog( LOG_ERROR, "error creating directory %s",
+            put_flog( LOG_ERROR, "error creating directory: '%s'",
                       folder.toLocal8Bit().constData( ));
             return false;
         }
@@ -568,19 +570,22 @@ QRectF DynamicTexture::getImageRegionInParentImage(const QRectF& imageRegion) co
     return parentRegion;
 }
 
-QImage DynamicTexture::getImageFromParent(const QRectF& imageRegion, DynamicTexture * start)
+QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
+                                           DynamicTexture* start )
 {
     // if we're in the starting node, we must ascend
-    if(start == this)
+    if( start == this )
     {
-        if(isRoot())
+        if( isRoot( ))
         {
-            put_flog(LOG_ERROR, "starting from root object and cannot ascend");
+            put_flog( LOG_DEBUG, "root object has no parent! In file: '%s'",
+                      uri_.toLocal8Bit().constData( ));
             return QImage();
         }
 
         DynamicTexturePtr parent = parent_.lock();
-        return parent->getImageFromParent(getImageRegionInParentImage(imageRegion), this);
+        return parent->getImageFromParent(
+                    getImageRegionInParentImage( imageRegion ), this );
     }
 
     // wait for the load image thread to complete if it's in progress

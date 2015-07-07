@@ -101,7 +101,7 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
         return;
     }
 
-    put_flog( LOG_DEBUG, "opening pixel stream window: %s",
+    put_flog( LOG_INFO, "opening pixel stream window: '%s'",
               uri.toLocal8Bit().constData( ));
 
     if( pos.isNull( ))
@@ -122,7 +122,7 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
 
 void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
 {
-    put_flog( LOG_DEBUG, "deleting pixel stream: %s",
+    put_flog( LOG_INFO, "closing pixel stream window: '%s'",
               uri.toLocal8Bit().constData( ));
 
     ContentWindowPtr contentWindow = getContentWindow( uri );

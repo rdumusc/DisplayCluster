@@ -169,7 +169,7 @@ private:
     bool findVideoStream();
 
     bool openVideoStreamDecoder();
-    void closeVideoStreamDecoder() const;
+    void closeVideoStreamDecoder();
 
     bool readVideoFrame();
     bool seekToNearestFullframe(const int64_t frameIndex);

@@ -43,10 +43,10 @@
 
 #include "log.h"
 
-#define MPI_CHECK(func) {                                   \
-    const int err = (func);                                 \
+#define MPI_CHECK( func ) {                                   \
+    const int err = ( func );                                 \
     if( err != MPI_SUCCESS )                                \
-        put_flog(LOG_ERROR, "Error detected! (%d)", err);   \
+        put_flog( LOG_ERROR, "Error detected! (%d)", err );   \
     }
 
 MPIChannel::MPIChannel(int argc, char * argv[])

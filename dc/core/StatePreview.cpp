@@ -78,9 +78,13 @@ QString StatePreview::previewFilename() const
 {
     QFileInfo fileinfo( dcxFileName_ );
 
-    if ( fileinfo.suffix().toLower() != "dcx" )
+    const QString extension = fileinfo.suffix().toLower();
+    if( extension != "dcx" )
     {
-        put_flog( LOG_WARN, "wrong state file extension (expected .dcx)" );
+        put_flog( LOG_WARN, "wrong state file extension: '%s' for session: '%s'"
+                            "(expected: .dcx)",
+                  extension.toLocal8Bit().constData( ),
+                  dcxFileName_.toLocal8Bit().constData( ));
         return QString();
     }
     return fileinfo.path() + "/" + fileinfo.completeBaseName() + getFileExtension();
@@ -127,8 +131,8 @@ bool StatePreview::saveToFile() const
 {
     const bool success = previewImage_.save( previewFilename(), "PNG" );
 
-    if ( !success )
-        put_flog( LOG_ERROR, "Saving StatePreview image failed: %s",
+    if( !success )
+        put_flog( LOG_ERROR, "Saving StatePreview image failed: '%s'",
                   previewFilename().toLocal8Bit().constData( ));
 
     return success;

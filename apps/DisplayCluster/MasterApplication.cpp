@@ -126,7 +126,7 @@ void MasterApplication::init()
                 new PixelStreamWindowManager( *displayGroup_ ));
 
     initPixelStreamLauncher();
-    startNetworkListener();
+    startDeflectServer();
     startWebservice( config_->getWebServicePort( ));
     initMPIConnection();
     restoreBackground();
@@ -150,7 +150,7 @@ bool MasterApplication::createConfig( const QString& filename )
     return true;
 }
 
-void MasterApplication::startNetworkListener()
+void MasterApplication::startDeflectServer()
 {
     if( deflectServer_ )
         return;
@@ -160,7 +160,7 @@ void MasterApplication::startNetworkListener()
     }
     catch( const std::runtime_error& e )
     {
-        put_flog( LOG_FATAL, "Could not start NetworkListener. '%s'", e.what());
+        put_flog( LOG_FATAL, "Could not start Deflect server: '%s'", e.what( ));
         return;
     }
 
@@ -217,7 +217,12 @@ void MasterApplication::restoreBackground()
 
     const QString& uri = config_->getBackgroundUri();
     if( !uri.isEmpty( ))
-        options->setBackgroundContent( ContentFactory::getContent( uri ));
+    {
+        ContentPtr content = ContentFactory::getContent( uri );
+        if( !content )
+            content = ContentFactory::getErrorContent();
+        options->setBackgroundContent( content );
+    }
 }
 
 void MasterApplication::initPixelStreamLauncher()

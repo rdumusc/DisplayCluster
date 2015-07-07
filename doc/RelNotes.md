@@ -38,6 +38,7 @@ DisplayCluster 0.5 provides the following improvements:
 * Multiple refactorings and code cleanups. All global variables have been
   removed.
 * CMake cleanups, using common_library and common_application from CMake/common.
+* Improved clarity of log messages
 
 ## Optimizations {#Optimizations}
 

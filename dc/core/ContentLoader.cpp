@@ -43,6 +43,7 @@
 #include "ContentWindow.h"
 #include "ContentFactory.h"
 #include "ContentWindowController.h"
+#include "log.h"
 
 ContentLoader::ContentLoader( DisplayGroupPtr displayGroup )
     : displayGroup_( displayGroup )
@@ -53,9 +54,15 @@ bool ContentLoader::load( const QString& filename,
                           const QPointF& windowCenterPosition,
                           const QSizeF& windowSize )
 {
+    put_flog( LOG_INFO, "opening: '%s'", filename.toLocal8Bit().constData( ));
+
     ContentPtr content = ContentFactory::getContent( filename );
     if( !content )
+    {
+        put_flog( LOG_WARN, "ignoring unsupported file: '%s'",
+                  filename.toLocal8Bit().constData( ));
         return false;
+    }
 
     ContentWindowPtr contentWindow( new ContentWindow( content ));
     ContentWindowController controller( *contentWindow, *displayGroup_ );

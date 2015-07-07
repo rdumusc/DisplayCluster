@@ -102,45 +102,38 @@ CONTENT_TYPE getContentTypeForFile(const QString& uri)
     return CONTENT_TYPE_ANY;
 }
 
-ContentPtr ContentFactory::getContent(const QString& uri)
+ContentPtr ContentFactory::getContent( const QString& uri )
 {
-    if( !QFile::exists( uri ))
-    {
-        put_flog(LOG_ERROR, "could not find file '%s'", uri.toLocal8Bit().constData());
-        return getErrorContent();
-    }
-
     ContentPtr content;
 
-    switch(getContentTypeForFile(uri))
+    switch( getContentTypeForFile( uri ))
     {
     case CONTENT_TYPE_SVG:
-        content = boost::make_shared<SVGContent>(uri);
+        content = boost::make_shared<SVGContent>( uri );
         break;
     case CONTENT_TYPE_MOVIE:
-        content = boost::make_shared<MovieContent>(uri);
+        content = boost::make_shared<MovieContent>( uri );
         break;
 #if ENABLE_PDF_SUPPORT
     case CONTENT_TYPE_PDF:
-        content = boost::make_shared<PDFContent>(uri);
+        content = boost::make_shared<PDFContent>( uri );
         break;
 #endif
     case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        content = boost::make_shared<DynamicTextureContent>(uri);
+        content = boost::make_shared<DynamicTextureContent>( uri );
         break;
     case CONTENT_TYPE_TEXTURE:
-        content = boost::make_shared<TextureContent>(uri);
+        content = boost::make_shared<TextureContent>( uri );
         break;
+    case CONTENT_TYPE_ANY:
     default:
-        put_flog(LOG_ERROR, "Unsupported or invalid file %s",
-                 uri.toLocal8Bit().constData());
         break;
     }
 
-    if (content && content->readMetadata())
+    if( content && content->readMetadata( ))
         return content;
 
-    return getErrorContent();
+    return ContentPtr();
 }
 
 ContentPtr ContentFactory::getPixelStreamContent(const QString& uri)

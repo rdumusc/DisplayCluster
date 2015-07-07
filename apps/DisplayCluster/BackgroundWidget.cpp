@@ -141,7 +141,7 @@ void BackgroundWidget::reject()
     configuration_.setBackgroundUri( previousBackgroundURI_ );
 
     ContentPtr content;
-    if ( !previousBackgroundURI_.isEmpty( ))
+    if( !previousBackgroundURI_.isEmpty( ))
         content = ContentFactory::getContent( previousBackgroundURI_ );
 
     emit backgroundContentChanged( content );
@@ -186,7 +186,7 @@ void BackgroundWidget::openBackgroundContent()
     else
     {
         QMessageBox messageBox;
-        messageBox.setText( tr( "Error: Unsupported file format" ));
+        messageBox.setText( tr( "Error: Unsupported file." ));
         messageBox.exec();
     }
 }

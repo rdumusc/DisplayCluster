@@ -89,7 +89,7 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     if( !processes_[uri]->startDetached( getLocalStreamerBin(),
                                          options.getCommandLineArguments(),
                                          QDir::currentPath( )))
-        put_flog( LOG_ERROR, "Browser process could not be started!" );
+        put_flog( LOG_ERROR, "Webbrowser process could not be started!" );
 }
 
 void PixelStreamerLauncher::openDock( const QPointF pos )

@@ -37,23 +37,34 @@
 /*********************************************************************/
 
 #include "log.h"
-#include <stdarg.h>
-#include <stdio.h>
 
-void put_log(int level, const char *format, ...)
+#include <stdarg.h>
+#include <iostream>
+#include <sstream>
+
+#define MAX_LOG_LENGTH 1024
+
+std::string logger_id = "";
+
+void put_log( const int level, const char* format, ... )
 {
-    if(level < LOG_THRESHHOLD)
+    if( level < LOG_THRESHOLD )
         return;
 
     char log_string[MAX_LOG_LENGTH];
 
-    // actual log message
     va_list ap;
-    va_start(ap, format);
-    vsnprintf(log_string, MAX_LOG_LENGTH, format, ap);
-    va_end(ap);
+    va_start( ap, format );
+    vsnprintf( log_string, MAX_LOG_LENGTH, format, ap );
+    va_end( ap );
 
-    printf("%s\n", log_string);
+    std::stringstream message;
+    if( !logger_id.empty( ))
+        message << "{" << logger_id << "} ";
+    message << log_string;
 
-    return;
+    if( level < LOG_ERROR )
+        std::cerr << message.str() << std::endl;
+    else
+        std::cout << message.str() << std::endl;
 }

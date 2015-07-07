@@ -94,15 +94,16 @@ void PDF::setPage( const int pageNumber )
     if( pageNumber == pageNumber_ || !isValid( pageNumber ))
         return;
 
-    closePage();
-
-    pdfPage_ = pdfDoc_->page( pageNumber ); // Document starts at page 0
-    if( !pdfPage_ )
+    Poppler::Page* page = pdfDoc_->page( pageNumber );
+    if( !page )
     {
-        put_flog( LOG_DEBUG, "Could not open page %d", pageNumber );
+        put_flog( LOG_WARN, "Could not open page: %d in PDF document: '%s'",
+                  pageNumber, filename_.toLocal8Bit().constData( ));
         return;
     }
 
+    closePage();
+    pdfPage_ = page;
     pageNumber_ = pageNumber;
 }
 
@@ -145,7 +146,8 @@ void PDF::updateTexture( const QSize& textureSize, const QRectF& pdfRegion )
 
     if( image.isNull( ))
     {
-        put_flog( LOG_DEBUG, "Could not render pdf to image" );
+        put_flog( LOG_ERROR, "Could not render page in PDF document: '%s'",
+                  filename_.toLocal8Bit().constData( ));
         return;
     }
 
@@ -169,8 +171,8 @@ void PDF::renderPreview()
         const QImage image = renderToImage( PREVIEW_SIZE );
         if( image.isNull( ))
         {
-            put_flog( LOG_DEBUG, "Could not render pdf to image" );
-            return;
+            put_flog( LOG_ERROR, "Could not render document preview for: '%s'",
+                      filename_.toLocal8Bit().constData( ));
         }
         texturePreview_.update( image, GL_BGRA );
     }
@@ -186,12 +188,13 @@ void PDF::openDocument( const QString& filename )
     pdfDoc_ = Poppler::Document::load( filename );
     if ( !pdfDoc_ || pdfDoc_->isLocked( ))
     {
-        put_flog( LOG_DEBUG, "Could not open document %s",
-                  filename.toLocal8Bit().constData( ));
+        put_flog( LOG_DEBUG, "Could not open document: '%s'",
+                  filename_.toLocal8Bit().constData( ));
         closeDocument();
         return;
     }
 
+    filename_ = filename;
     pdfDoc_->setRenderHint( Poppler::Document::TextAntialiasing );
 
     setPage( 0 );
@@ -204,6 +207,7 @@ void PDF::closeDocument()
         closePage();
         delete pdfDoc_;
         pdfDoc_ = 0;
+        filename_.clear();
     }
 }
 

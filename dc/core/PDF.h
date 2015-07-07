@@ -75,6 +75,7 @@ private:
     Poppler::Document* pdfDoc_;
     Poppler::Page* pdfPage_;
     int pageNumber_;
+    QString filename_;
 
     GLTexture2D texture_;
     GLTexture2D texturePreview_;

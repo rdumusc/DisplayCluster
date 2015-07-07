@@ -78,28 +78,30 @@ FFMPEGMovie::~FFMPEGMovie()
     closeVideoStreamDecoder();
     releaseAvFormatContext();
 
-    av_free(avFrame_);
+    av_free( avFrame_ );
 }
 
-bool FFMPEGMovie::open(const QString& uri)
+bool FFMPEGMovie::open( const QString& uri )
 {
-    if (!createAvFormatContext(uri))
+    if( !createAvFormatContext( uri ))
         return false;
 
-    if(!findVideoStream())
+    if( !findVideoStream( ))
         return false;
 
-    if (!openVideoStreamDecoder())
+    if( !openVideoStreamDecoder( ))
         return false;
 
     avFrame_ = avcodec_alloc_frame();
     if( !avFrame_ )
     {
-        put_flog(LOG_ERROR, "error allocating frames, can't initialize.");
+        put_flog( LOG_ERROR, "error allocating av frame for: '%s'",
+                  uri.toLocal8Bit().constData( ));
         return false;
     }
 
-    videoFrameConverter_ = new FFMPEGVideoFrameConverter(*videoCodecContext_, PIX_FMT_RGBA);
+    videoFrameConverter_ = new FFMPEGVideoFrameConverter( *videoCodecContext_,
+                                                          PIX_FMT_RGBA );
 
     if( !generateSeekingParameters( ))
         return false;
@@ -107,44 +109,51 @@ bool FFMPEGMovie::open(const QString& uri)
     return true;
 }
 
-bool FFMPEGMovie::createAvFormatContext(const QString& uri)
+bool FFMPEGMovie::createAvFormatContext( const QString& uri )
 {
     // Read movie file header information into avFormatContext_ (and allocating it if null)
-    if(avformat_open_input(&avFormatContext_, uri.toLatin1(), NULL, NULL) != 0)
+    if( avformat_open_input( &avFormatContext_, uri.toLatin1(), NULL, NULL ) != 0 )
     {
-        put_flog(LOG_ERROR, "could not open movie file %s", uri.toLocal8Bit().constData());
+        put_flog( LOG_ERROR, "error reading movie headers: '%s'",
+                  uri.toLocal8Bit().constData( ));
         return false;
     }
 
     // Read stream information into avFormatContext_->streams
-    if(avformat_find_stream_info(avFormatContext_, NULL) < 0)
+    if( avformat_find_stream_info( avFormatContext_, NULL ) < 0 )
     {
-        put_flog(LOG_ERROR, "could not find stream information");
+        put_flog( LOG_ERROR, "error reading stream information: '%s'",
+                  uri.toLocal8Bit().constData( ));
         return false;
     }
 
-    av_dump_format(avFormatContext_, 0, uri.toLatin1(), 0); // dump format information to stderr
+#if LOG_THRESHOLD <= LOG_VERBOSE
+    // print detail information about the input or output format
+    av_dump_format( avFormatContext_, 0, uri.toLatin1(), 0 );
+#endif
     return true;
 }
 
 void FFMPEGMovie::releaseAvFormatContext()
 {
-    avformat_close_input(&avFormatContext_);
+    if( avFormatContext_ )
+        avformat_close_input( &avFormatContext_ );
 }
 
 bool FFMPEGMovie::findVideoStream()
 {
-    for(unsigned int i=0; i<avFormatContext_->nb_streams; ++i)
+    for( unsigned int i = 0; i < avFormatContext_->nb_streams; ++i )
     {
-        if(avFormatContext_->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+        AVStream* stream = avFormatContext_->streams[i];
+        if( stream->codec->codec_type == AVMEDIA_TYPE_VIDEO )
         {
-            videoStream_ = avFormatContext_->streams[i]; // Shortcut pointer - don't free
+            videoStream_ = stream; // Shortcut pointer - don't free
             return true;
         }
     }
 
-    put_flog(LOG_ERROR, "could not find video stream");
-
+    put_flog( LOG_ERROR, "could not find video stream for: '%s'",
+              avFormatContext_->filename );
     return false;
 }
 
@@ -153,31 +162,37 @@ bool FFMPEGMovie::openVideoStreamDecoder()
     // Contains information about the codec that the stream is using
     videoCodecContext_ = videoStream_->codec; // Shortcut - don't free
 
-    AVCodec * codec = avcodec_find_decoder(videoCodecContext_->codec_id);
-    if(!codec)
+    AVCodec* codec = avcodec_find_decoder( videoCodecContext_->codec_id );
+    if( !codec )
     {
-        put_flog(LOG_ERROR, "unsupported codec");
+        put_flog( LOG_ERROR, "unsupported codec for file: '%s'",
+                  avFormatContext_->filename );
         return false;
     }
 
     // open codec
-    const int ret = avcodec_open2(videoCodecContext_, codec, NULL);
+    const int ret = avcodec_open2( videoCodecContext_, codec, NULL );
 
-    if(ret < 0)
+    if( ret < 0 )
     {
         char errbuf[256];
-        av_strerror(ret, errbuf, 256);
+        av_strerror( ret, errbuf, 256 );
 
-        put_flog(LOG_ERROR, "could not open codec, error code %i: %s", ret, errbuf);
+        put_flog( LOG_ERROR, "could not open codec, error code %i '%s' in '%s'",
+                  ret, errbuf, avFormatContext_->filename );
         return false;
     }
 
     return true;
 }
 
-void FFMPEGMovie::closeVideoStreamDecoder() const
+void FFMPEGMovie::closeVideoStreamDecoder()
 {
+    if( !videoCodecContext_ )
+        return;
+
     avcodec_close( videoCodecContext_ );
+    videoCodecContext_ = 0;
 }
 
 void FFMPEGMovie::initGlobalState()
@@ -253,7 +268,8 @@ bool FFMPEGMovie::jumpTo(const double timePosInSeconds)
     return true;
 }
 
-void FFMPEGMovie::update(const boost::posix_time::time_duration timestamp, const bool skipDecoding)
+void FFMPEGMovie::update(const boost::posix_time::time_duration timestamp,
+                         const bool skipDecoding)
 {
     if( isAtEOF( ))
         return;
@@ -327,12 +343,12 @@ void FFMPEGMovie::clampTimePosition()
         timePosition_ -= boost::posix_time::microseconds(duration * MICROSEC);
 }
 
-int64_t FFMPEGMovie::getTimestampForFrameIndex(const int64_t frameIndex) const
+int64_t FFMPEGMovie::getTimestampForFrameIndex( const int64_t frameIndex ) const
 {
-    if (frameIndex < 0 || (numFrames_ && frameIndex >= numFrames_))
+    if( frameIndex < 0 || ( numFrames_ && frameIndex >= numFrames_ ))
     {
-        put_flog(LOG_WARN, "Invalid index: %i - valid range: [0, %i[",
-                 frameIndex, numFrames_);
+        put_flog( LOG_WARN, "Invalid index: %i - valid range: [0, %i[ in: '%s'",
+                  frameIndex, numFrames_, avFormatContext_->filename );
     }
 
     int64_t timestamp = frameIndex * frameDuration_;
@@ -343,26 +359,29 @@ int64_t FFMPEGMovie::getTimestampForFrameIndex(const int64_t frameIndex) const
     return timestamp;
 }
 
-bool FFMPEGMovie::seekToNearestFullframe(const int64_t frameIndex)
+bool FFMPEGMovie::seekToNearestFullframe( const int64_t frameIndex )
 {
-    if (frameIndex < 0 || (numFrames_ && frameIndex >= numFrames_))
+    if( frameIndex < 0 || ( numFrames_ && frameIndex >= numFrames_ ))
     {
-        put_flog(LOG_WARN, "Invalid index: %i, seeking aborted.", frameIndex);
+        put_flog( LOG_WARN, "Invalid index: %i, seeking aborted in: '%s'",
+                  frameIndex, avFormatContext_->filename );
         return false;
     }
 
-    const int64_t desiredTimestamp = getTimestampForFrameIndex(frameIndex);
+    const int64_t desiredTimestamp = getTimestampForFrameIndex( frameIndex );
 
     // Seek to the nearest keyframe before desiredTimestamp.
-    if(avformat_seek_file(avFormatContext_, videoStream_->index, 0, desiredTimestamp,
-                          desiredTimestamp, AVSEEK_FLAG_FRAME) != 0)
+    if( avformat_seek_file( avFormatContext_, videoStream_->index, 0,
+                            desiredTimestamp, desiredTimestamp,
+                            AVSEEK_FLAG_FRAME ) != 0 )
     {
-        put_flog(LOG_ERROR, "seeking error, seeking aborted.");
+        put_flog( LOG_ERROR, "seeking error, seeking aborted in: '%s'",
+                  avFormatContext_->filename );
         return false;
     }
 
     // Always flush buffers after seeking
-    avcodec_flush_buffers(videoCodecContext_);
+    avcodec_flush_buffers( videoCodecContext_ );
 
     // Read a valid frame after seeking to get a meaningful avFrame_->pkt_dts
     return readVideoFrame();
@@ -400,33 +419,39 @@ bool FFMPEGMovie::isVideoStream(const AVPacket& packet) const
 
 void FFMPEGMovie::rewind()
 {
-    if (av_seek_frame(avFormatContext_, videoStream_->index, 0, AVSEEK_FLAG_BACKWARD) >= 0)
+    if( av_seek_frame( avFormatContext_, videoStream_->index, 0,
+                       AVSEEK_FLAG_BACKWARD ) >= 0 )
     {
-        put_flog(LOG_DEBUG, "Time: %lf", timePosition_.total_microseconds() / MICROSEC );
+        put_flog( LOG_VERBOSE, "Time: %lf",
+                  timePosition_.total_microseconds() / MICROSEC );
 
         timePosition_ = boost::posix_time::time_duration();
 
         // Always flush buffers after seeking
-        avcodec_flush_buffers(videoCodecContext_);
+        avcodec_flush_buffers( videoCodecContext_ );
 
         readVideoFrame();
     }
 }
 
-bool FFMPEGMovie::decodeVideoFrame(AVPacket& packet)
+bool FFMPEGMovie::decodeVideoFrame( AVPacket& packet )
 {
-    // decode video frame
-    int errCode = avcodec_decode_video2(videoCodecContext_, avFrame_, &frameDecodingComplete_, &packet);
-    if(errCode < 0)
+    int errCode = avcodec_decode_video2( videoCodecContext_, avFrame_,
+                                         &frameDecodingComplete_, &packet );
+    if( errCode < 0 )
     {
-        put_flog(LOG_WARN, "avcodec_decode_video2 returned error code: '%i'", errCode);
+        put_flog( LOG_ERROR, "avcodec_decode_video2 returned error code '%i' "
+                  "in '%s'", errCode, avFormatContext_->filename );
         return false;
     }
 
-    // make sure we got a full video frame and convert the frame from its native format to RGB
-    if(!frameDecodingComplete_)
+    // make sure we got a full video frame and convert the frame from its native
+    // format to RGB
+    if( !frameDecodingComplete_ )
     {
-        put_flog(LOG_DEBUG, "Frame could not be decoded entirely (may be caused by seeking).");
+        put_flog( LOG_VERBOSE, "Frame could not be decoded entirely"
+                               "(may be caused by seeking) in: '%s'",
+                               avFormatContext_->filename );
         return false;
     }
 
@@ -435,7 +460,7 @@ bool FFMPEGMovie::decodeVideoFrame(AVPacket& packet)
 
 bool FFMPEGMovie::convertVideoFrame()
 {
-    if (!videoFrameConverter_->convert(avFrame_))
+    if( !videoFrameConverter_->convert( avFrame_ ))
         return false;
 
     newFrameAvailable_ = true;
@@ -451,13 +476,17 @@ bool FFMPEGMovie::generateSeekingParameters()
         const int num = videoStream_->avg_frame_rate.num * videoStream_->time_base.num;
         if( den <= 0 || num <= 0 )
         {
-            put_flog( LOG_WARN, "cannot determine seeking paramters, file not supported." );
+            put_flog( LOG_WARN, "cannot determine seeking paramters, "
+                                "file not supported: '%s'",
+                                avFormatContext_->filename );
             return false;
         }
         numFrames_ = av_rescale( videoStream_->duration, num, den );
         if( numFrames_ == 0 )
         {
-            put_flog( LOG_WARN, "cannot determine number of frames, file not supported." );
+            put_flog( LOG_WARN, "cannot determine number of frames, "
+                                "file not supported: '%s'",
+                                avFormatContext_->filename );
             return false;
         }
     }
@@ -468,11 +497,12 @@ bool FFMPEGMovie::generateSeekingParameters()
                             (double)videoStream_->time_base.den;
     frameDurationInSeconds_ = frameDuration_ * timeBase;
 
-    put_flog( LOG_DEBUG, "seeking parameters: start_time = %i, duration_ = %i, numFrames_ = %i",
+    put_flog( LOG_VERBOSE, "seeking parameters: start_time = %i,"
+                           "duration_ = %i, numFrames_ = %i",
               videoStream_->start_time, videoStream_->duration, numFrames_ );
-    put_flog( LOG_DEBUG, "                    frame_rate = %f, time_base = %f",
+    put_flog( LOG_VERBOSE, "frame_rate = %f, time_base = %f",
               1./frameDurationInSeconds_, timeBase );
-    put_flog( LOG_DEBUG, "                    frameDurationInSeconds_ = %f",
+    put_flog( LOG_VERBOSE, "frameDurationInSeconds_ = %f",
               frameDurationInSeconds_ );
 
     return true;

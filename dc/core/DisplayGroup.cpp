@@ -63,9 +63,9 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
 {
     BOOST_FOREACH( ContentWindowPtr existingWindow, contentWindows_ )
     {
-        if ( contentWindow->getID() == existingWindow->getID( ))
+        if( contentWindow->getID() == existingWindow->getID( ))
         {
-            put_flog( LOG_WARN, "A window with the same id already exists!" );
+            put_flog( LOG_DEBUG, "A window with the same id already exists!" );
             return;
         }
     }
@@ -179,6 +179,8 @@ DisplayGroup& DisplayGroup::operator=( const DisplayGroup& displayGroup )
 
 void DisplayGroup::clear()
 {
+    put_flog( LOG_INFO, "removing %i windows", contentWindows_.size( ));
+
     while( !contentWindows_.empty( ))
         removeContentWindow( contentWindows_[0] );
 }

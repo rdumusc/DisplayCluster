@@ -47,12 +47,12 @@
 #define SIZEOF_MEGABYTE  (1024*1024)
 #define MAX_IMAGE_FILE_SIZE (100*SIZEOF_MEGABYTE)
 
-ImageThumbnailGenerator::ImageThumbnailGenerator(const QSize &size)
-    : ThumbnailGenerator(size)
+ImageThumbnailGenerator::ImageThumbnailGenerator( const QSize& size )
+    : ThumbnailGenerator( size )
 {
 }
 
-QImage ImageThumbnailGenerator::generate(const QString &filename) const
+QImage ImageThumbnailGenerator::generate( const QString& filename ) const
 {
     QImage img;
 
@@ -68,17 +68,18 @@ QImage ImageThumbnailGenerator::generate(const QString &filename) const
         {
             img = createLargeImagePlaceholder();
         }
-        addMetadataToImage(img, filename);
+        addMetadataToImage( img, filename );
         return img;
     }
 
-    put_flog(LOG_ERROR, "could not open image file: %s", filename.toLatin1().constData());
-    return createErrorImage("image");
+    put_flog( LOG_ERROR, "could not open image file: '%s'",
+              filename.toLatin1().constData( ));
+    return createErrorImage( "image" );
 }
 
 QImage ImageThumbnailGenerator::createLargeImagePlaceholder() const
 {
     QImage img = createGradientImage( Qt::darkBlue, Qt::white );
-    paintText(img, "LARGE\nIMAGE");
+    paintText( img, "LARGE\nIMAGE" );
     return img;
 }

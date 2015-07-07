@@ -286,6 +286,7 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3NoTitlesFil
 DisplayGroupPtr createTestDisplayGroup()
 {
     ContentPtr content = ContentFactory::getContent( VALID_TEXTURE_URI );
+    BOOST_REQUIRE( content );
     BOOST_REQUIRE_EQUAL( content->getDimensions(), VALID_TEXTURE_SIZE );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
     const QPointF position( 0.25 * wallSize.width(), 0.25 * wallSize.height( ));
