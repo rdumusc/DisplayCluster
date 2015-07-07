@@ -78,7 +78,7 @@ FFMPEGMovie::~FFMPEGMovie()
     closeVideoStreamDecoder();
     releaseAvFormatContext();
 
-    av_free(avFrame_);
+    av_free( avFrame_ );
 }
 
 bool FFMPEGMovie::open( const QString& uri )
@@ -136,7 +136,8 @@ bool FFMPEGMovie::createAvFormatContext( const QString& uri )
 
 void FFMPEGMovie::releaseAvFormatContext()
 {
-    avformat_close_input( &avFormatContext_ );
+    if( avFormatContext_ )
+        avformat_close_input( &avFormatContext_ );
 }
 
 bool FFMPEGMovie::findVideoStream()
@@ -185,9 +186,13 @@ bool FFMPEGMovie::openVideoStreamDecoder()
     return true;
 }
 
-void FFMPEGMovie::closeVideoStreamDecoder() const
+void FFMPEGMovie::closeVideoStreamDecoder()
 {
+    if( !videoCodecContext_ )
+        return;
+
     avcodec_close( videoCodecContext_ );
+    videoCodecContext_ = 0;
 }
 
 void FFMPEGMovie::initGlobalState()
