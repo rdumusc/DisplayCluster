@@ -42,8 +42,9 @@
 
 #include <QtCore/QFileInfo>
 
-#include <boost/serialization/export.hpp>
-BOOST_CLASS_EXPORT_GUID( MovieContent, "MovieContent" )
+BOOST_CLASS_EXPORT_IMPLEMENT( MovieContent )
+
+IMPLEMENT_SERIALIZE_FOR_XML( MovieContent )
 
 namespace
 {
@@ -116,6 +117,7 @@ void MovieContent::createActions()
     playPauseAction->setCheckable( true );
     playPauseAction->setIcon( ICON_PAUSE );
     playPauseAction->setIconChecked( ICON_PLAY );
+    playPauseAction->setChecked( controlState_ & STATE_PAUSED );
     connect( playPauseAction, SIGNAL( checked( )), this, SLOT( pause( )));
     connect( playPauseAction, SIGNAL( unchecked( )), this, SLOT( play( )));
     actions_.add( playPauseAction );

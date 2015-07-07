@@ -140,7 +140,6 @@ protected:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
-        createActions();
     }
 
     /** Saving to xml. */
@@ -149,9 +148,6 @@ protected:
     {
         serialize_members_xml( ar, version );
     }
-
-    /** Called by the base class on deserialization from xml. */
-    virtual void createActions() {}
 
     QString uri_;
     QSize size_;

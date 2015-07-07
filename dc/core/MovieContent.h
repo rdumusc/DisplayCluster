@@ -40,7 +40,9 @@
 #define MOVIE_CONTENT_H
 
 #include "Content.h"
+
 #include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
 
 enum ControlState
 {
@@ -74,25 +76,53 @@ private slots:
     void pause();
 
 private:
-    void createActions() override;
+    void createActions();
 
     friend class boost::serialization::access;
 
     // Default constructor required for boost::serialization
     MovieContent();
 
+    /** Serialize for sending to Wall applications. */
     template< class Archive >
-    void serialize( Archive & ar, const unsigned int version )
+    void serialize( Archive & ar, const unsigned int )
+    {
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
+        ar & controlState_;
+    }
+
+    /** Serialize for saving to an xml file. */
+    template< class Archive >
+    void serialize_members_xml( Archive & ar, const unsigned int version )
     {
         // serialize base class information (with NVP for xml archives)
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-        if ( version >= 2 )
+        if( version >= 2 )
             ar & boost::serialization::make_nvp( "controlState", controlState_ );
+    }
+
+    /** Loading from xml. */
+    void serialize_for_xml( boost::archive::xml_iarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
+        createActions(); // Need to be done after controlState_ is restored
+    }
+
+    /** Saving to xml. */
+    void serialize_for_xml( boost::archive::xml_oarchive& ar,
+                            const unsigned int version )
+    {
+        serialize_members_xml( ar, version );
     }
 
     ControlState controlState_;
 };
 
 BOOST_CLASS_VERSION( MovieContent, 2 )
+
+DECLARE_SERIALIZE_FOR_XML( MovieContent )
+
+BOOST_CLASS_EXPORT_KEY( MovieContent )
 
 #endif
