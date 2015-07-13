@@ -9,7 +9,6 @@
 # TEST_LIBRARIES is used by CommonCTest.cmake to link tests against them
 set(TEST_LIBRARIES dcmock ${DC_LIBRARIES} ${Boost_LIBRARIES})
 
-find_package(X11)
 if(NOT X11_FOUND)
   list(APPEND EXCLUDE_FROM_TESTS core/WebbrowserTests.cpp)
 endif()

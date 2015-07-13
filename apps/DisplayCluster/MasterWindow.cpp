@@ -57,7 +57,7 @@
 #include "BackgroundWidget.h"
 #include "WebbrowserWidget.h"
 
-#include <dc/version.h>
+#include <dc/core/version.h>
 
 #include <QtWidgets>
 
