@@ -24,11 +24,7 @@ set(DCCORE_LINK_LIBRARIES
 if(ENABLE_TUIO_TOUCH_LISTENER)
   list(APPEND DCCORE_MOC_PUBLIC_HEADERS MultiTouchListener.h)
   list(APPEND DCCORE_SOURCES MultiTouchListener.cpp)
-  list(APPEND DCCORE_LINK_LIBRARIES ${TUIO_LIBRARIES})
-
-  find_package(X11 REQUIRED)
-  include_directories(${X11_INCLUDE_DIR})
-  list(APPEND DCCORE_LINK_LIBRARIES ${X11_LIBRARIES})
+  list(APPEND DCCORE_LINK_LIBRARIES ${TUIO_LIBRARIES} ${X11_LIBRARIES})
 endif()
 
 if(ENABLE_PDF_SUPPORT)
@@ -45,7 +41,6 @@ if(ENABLE_PDF_SUPPORT)
 endif()
 
 list(APPEND DCCORE_PUBLIC_HEADERS
-  ${COMMON_INCLUDES}
   types.h
   ContentFactory.h
   ContentLoader.h
@@ -150,7 +145,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
 )
 
 list(APPEND DCCORE_SOURCES
-  ${COMMON_SOURCES}
   Content.cpp
   ContentAction.cpp
   ContentActionsModel.cpp
@@ -252,5 +246,5 @@ list(APPEND DCCORE_SOURCES
 
 set(DCCORE_RESOURCES resources/core.qrc)
 
-set(PROJECT_INCLUDE_NAME dc/core)
+set(DCCORE_INCLUDE_NAME dc/core)
 common_library(dccore)

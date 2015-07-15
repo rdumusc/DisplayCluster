@@ -16,6 +16,6 @@ set(DCMOCK_MOC_HEADERS MockTextInputDispatcher.h)
 set(DCMOCK_SOURCES MockTextInputDispatcher.cpp)
 set(DCMOCK_LINK_LIBRARIES ${DC_LIBRARIES})
 
-set(PROJECT_INCLUDE_NAME dc/mock)
-set(DCMOCK_OMIT_PROJECT_HEADER ON)
+set(DCMOCK_INCLUDE_NAME dc/mock)
+set(DCMOCK_OMIT_LIBRARY_HEADER ON)
 common_library(dcmock)
