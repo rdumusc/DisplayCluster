@@ -48,7 +48,7 @@ install(PROGRAMS startdisplaycluster DESTINATION bin COMPONENT apps)
 
 # Copy the startup script and default config to the bin folder to be able to
 # launch after building without requiring an install folder and 'make install'
-file(COPY startdisplaycluster DESTINATION ${PROJECT_BINARY_DIR}/bin)
+file(COPY startdisplaycluster DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY ${PROJECT_SOURCE_DIR}/examples/configuration.xml
-  DESTINATION ${PROJECT_BINARY_DIR}/share/DisplayCluster/examples
+  DESTINATION ${CMAKE_BINARY_DIR}/share/DisplayCluster/examples
 )
