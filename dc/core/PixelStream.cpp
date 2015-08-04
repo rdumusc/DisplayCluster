@@ -52,7 +52,7 @@
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 
-// false-positive on qt signals for Q_PROPERY notifiers
+// false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
 PixelStream::PixelStream( const QString& uri )
     : uri_( uri )

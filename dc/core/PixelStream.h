@@ -64,7 +64,7 @@ class Segment : public QObject
     Q_PROPERTY( QRect coord READ getCoord NOTIFY coordChanged )
 
 public:
-    // false-positive on qt signals for Q_PROPERY notifiers
+    // false-positive on qt signals for Q_PROPERTY notifiers
     // cppcheck-suppress uninitMemberVar
     Segment( const deflect::SegmentParameters& params )
         : rect_( params.x, params.y, params.width, params.height )
