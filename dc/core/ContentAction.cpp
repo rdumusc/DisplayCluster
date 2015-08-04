@@ -39,7 +39,7 @@
 
 #include "ContentAction.h"
 
-// false-positive on qt signals for Q_PROPERY notifiers
+// false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
 ContentAction::ContentAction( const QUuid& actionId )
     : uuid_( actionId )

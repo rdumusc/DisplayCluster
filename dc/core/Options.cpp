@@ -38,6 +38,8 @@
 
 #include "Options.h"
 
+// false-positive on qt signals for Q_PROPERTY notifiers
+// cppcheck-suppress uninitMemberVar
 Options::Options()
     : showWindowBorders_(true)
     , showTouchPoints_(true)
