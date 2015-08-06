@@ -69,6 +69,13 @@ int main( int argc, char* argv[] )
         return EXIT_FAILURE;
     }
 
+    if( worldChannel->getSize() == 1 )
+    {
+        put_flog( LOG_WARN, "MPI group size 1 detected. Use startdisplaycluster"
+                            " script or check mpi configuration." );
+        return EXIT_SUCCESS;
+    }
+
     MPIChannelPtr wallChannel( new MPIChannel( *worldChannel, rank > 0, rank ));
 
 #if ENABLE_TUIO_TOUCH_LISTENER
