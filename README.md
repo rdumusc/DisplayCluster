@@ -25,15 +25,6 @@ DisplayCluster provides the following functionality:
   make
 ```
 
-Or using Buildyard:
-
-```
-  git clone https://github.com/Eyescale/Buildyard.git
-  cd Buildyard
-  git clone https://github.com/BlueBrain/config.git config.bluebrain
-  make DisplayCluster
-```
-
 ## Original Project
 
 This version of DisplayCluster is a fork of the original project by the Texas
