@@ -37,8 +37,10 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentWindowTouchArea.h"
 #include "TouchArea.h"
+#include "TouchMouseArea.h"
+
+#define QML_MODULE "DisplayClusterApp"
 
 /**
  * Register types for use in Qml
@@ -47,8 +49,8 @@ struct QmlAppTypeRegistration
 {
     QmlAppTypeRegistration()
     {
-        qmlRegisterType<ContentWindowTouchArea>("DisplayClusterApp", 1, 0, "ContentWindowTouchArea");
-        qmlRegisterType<TouchArea>("DisplayClusterApp", 1, 0, "TouchArea");
+        qmlRegisterType<TouchArea>( QML_MODULE, 1, 0, "TouchArea" );
+        qmlRegisterType<TouchMouseArea>( QML_MODULE, 1, 0, "TouchMouseArea" );
     }
 };
 

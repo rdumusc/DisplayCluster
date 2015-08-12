@@ -42,45 +42,35 @@
 #include "ContentWindow.h"
 #include "PDFContent.h"
 
-#include <QTapGesture>
 #include <QSwipeGesture>
 
-PDFInteractionDelegate::PDFInteractionDelegate(ContentWindow& contentWindow)
-    : ZoomInteractionDelegate(contentWindow)
+PDFInteractionDelegate::PDFInteractionDelegate( ContentWindow& contentWindow )
+    : ZoomInteractionDelegate( contentWindow )
 {
-    assert(contentWindow_.getContent()->getType() == CONTENT_TYPE_PDF);
+    assert( _contentWindow.getContent()->getType() == CONTENT_TYPE_PDF );
 }
 
-
-void PDFInteractionDelegate::tap( QTapGesture *gesture )
+void PDFInteractionDelegate::tap( const QPointF position )
 {
-    if ( gesture->state() == Qt::GestureFinished )
-    {
-        const QRectF& coord = contentWindow_.getCoordinates();
+    const QRectF& coord = _contentWindow.getCoordinates();
 
-        if ( gesture->position().x() > coord.center().x( ))
-            getPDFContent()->nextPage();
-        else
-            getPDFContent()->previousPage();
-    }
+    if ( position.x() > coord.center().x( ))
+        _getPDFContent()->nextPage();
+    else
+        _getPDFContent()->previousPage();
 }
 
-PDFContent* PDFInteractionDelegate::getPDFContent()
+void PDFInteractionDelegate::swipeLeft()
 {
-    return static_cast<PDFContent*>(contentWindow_.getContent().get());
+    _getPDFContent()->previousPage();
 }
 
-
-void PDFInteractionDelegate::swipe(QSwipeGesture* gesture)
+void PDFInteractionDelegate::swipeRight()
 {
-    if (gesture->horizontalDirection() == QSwipeGesture::Left)
-    {
-        getPDFContent()->previousPage();
-    }
-    else if (gesture->horizontalDirection() == QSwipeGesture::Right)
-    {
-        getPDFContent()->nextPage();
-    }
+    _getPDFContent()->nextPage();
 }
 
-
+PDFContent* PDFInteractionDelegate::_getPDFContent()
+{
+    return static_cast<PDFContent*>( _contentWindow.getContent().get( ));
+}

@@ -60,6 +60,7 @@ namespace
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
 const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
 const int BACKGROUND_STACKING_ORDER = -1;
+const int FOCUS_STACKING_ORDER = 100;
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
@@ -100,6 +101,7 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
     int stackingOrder = BACKGROUND_STACKING_ORDER + 1;
+    int focus_stacking_order = FOCUS_STACKING_ORDER + 1;
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         const QUuid& id = window->getID();
@@ -111,7 +113,10 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         else
             createWindowQmlItem( window );
 
-        windowItems_[id]->setStackingOrder( stackingOrder++ );
+        if( window->isFocused( ))
+            windowItems_[id]->setStackingOrder( focus_stacking_order++ );
+        else
+            windowItems_[id]->setStackingOrder( stackingOrder++ );
     }
 
     // Remove old windows
@@ -190,12 +195,12 @@ void DisplayGroupRenderer::setBackground( ContentPtr content )
         return;
 
     ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
+    window->setController(
+               make_unique<ContentWindowController>( *window, *displayGroup_ ));
+    window->getController()->adjustSize( SIZE_FULLSCREEN );
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
                                                         *displayGroupItem_,
                                                         window ));
     backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
-
-    ContentWindowController controller( *window, *displayGroup_ );
-    controller.adjustSize( SIZE_FULLSCREEN );
 }

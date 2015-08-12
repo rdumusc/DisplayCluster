@@ -42,24 +42,29 @@
 
 #include "ContentInteractionDelegate.h"
 
+/**
+ * Handle user interaction with a zoomable content.
+ */
 class ZoomInteractionDelegate : public ContentInteractionDelegate
 {
 public:
+    /** Constructor */
     ZoomInteractionDelegate( ContentWindow& contentWindow );
 
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
+    /** Destructor */
+    virtual ~ZoomInteractionDelegate();
 
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event );
-    void wheelEvent( QGraphicsSceneWheelEvent* event );
-
-    static qreal adaptZoomFactor( const qreal pinchGestureScaleFactor );
+    /** @name Touch gesture handlers. */
+    //@{
+    void pan( QPointF position, QPointF delta ) override;
+    void pinch( QPointF position, qreal scaleFactor ) override;
+    //@}
 
 private:
-    void moveZoomRect_( const QPointF& sceneDelta ) const;
-    void scaleZoomRect_( const QPointF& center, const qreal zoomFactor ) const;
-    void constraintPosition_( QRectF& zoomRect ) const;
-    QPointF getNormalizedPoint_( const QPointF& point ) const;
+    void _moveZoomRect( const QPointF& sceneDelta ) const;
+    void _scaleZoomRect( const QPointF& center, qreal zoomFactor ) const;
+    void _constraintPosition( QRectF& zoomRect ) const;
+    QPointF _getNormalizedPoint( const QPointF& point ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

@@ -38,6 +38,18 @@ Rectangle {
 
     states: [
         State {
+            name: "focused"
+            extend: "selected"
+            when: contentwindow.focused
+            PropertyChanges {
+                target: windowRect
+                x: contentwindow.controller.getFocusedCoord().x
+                y: contentwindow.controller.getFocusedCoord().y
+                width: contentwindow.controller.getFocusedCoord().width
+                height: contentwindow.controller.getFocusedCoord().height
+            }
+        },
+        State {
             name: "selected"
             when: contentwindow.state === ContentWindow.SELECTED
             PropertyChanges {
@@ -70,4 +82,29 @@ Rectangle {
             }
         }
     ]
+
+//    transitions: [
+//        Transition {
+//            from: ""
+//            to: "focused"
+//            SequentialAnimation {
+//                PropertyAction {
+//                    target: contentwindow
+//                    property: "state"
+//                    value: ContentWindow.RESIZING
+//                }
+//                NumberAnimation { properties: "x,y,height,width"; duration: 500}
+//            }
+//        },
+//        Transition {
+//            from: "focused"
+//            to: ""
+//            PropertyAction {
+//                target: contentwindow
+//                property: "state"
+//                value: ContentWindow.RESIZING
+//            }
+//            NumberAnimation { properties: "x,y,height,width"; duration: 500}
+//        }
+//    ]
 }

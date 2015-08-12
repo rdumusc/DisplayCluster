@@ -46,6 +46,7 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/nvp.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
 #include <QObject>
@@ -72,6 +73,8 @@ class DisplayGroup : public Coordinates,
     Q_OBJECT
     Q_PROPERTY( bool showWindowTitles READ getShowWindowTitles
                 WRITE setShowWindowTitles NOTIFY showWindowTitlesChanged )
+    Q_PROPERTY( bool hasFocusedWindows READ hasFocusedWindows
+                NOTIFY hasFocusedWindowsChanged )
 
 public:
     /** Constructor */
@@ -115,6 +118,16 @@ public:
     /** Assignment operator. */
     DisplayGroup& operator=( const DisplayGroup& displayGroup );
 
+
+    /** Are there focused windows. */
+    bool hasFocusedWindows() const;
+
+    /** Focus a window. */
+    Q_INVOKABLE void focus( const QUuid& id );
+
+    /** Unfocus a window. */
+    Q_INVOKABLE void unfocus( const QUuid& id );
+
 public slots:
     /** Clear all ContentWindows. */
     void clear();
@@ -135,7 +148,6 @@ public slots:
     void moveContentWindowToFront( ContentWindowPtr contentWindow );
 
 signals:
-
     /** @name QProperty notifiers */
     //@{
     void showWindowTitlesChanged( bool set );
@@ -153,6 +165,9 @@ signals:
     /** Emitted when a content window is moved to the front. */
     void contentWindowMovedToFront( ContentWindowPtr contentWindow );
 
+    /** Notifier for the hasFocusedWindows property. */
+    void hasFocusedWindowsChanged();
+
 private slots:
     void sendDisplayGroup();
 
@@ -167,6 +182,7 @@ private:
     {
         ar & showWindowTitles_;
         ar & contentWindows_;
+        ar & focusedWindows_;
         ar & coordinates_;
     }
 
@@ -199,6 +215,7 @@ private:
 
     bool showWindowTitles_;
     ContentWindowPtrs contentWindows_;
+    std::set<ContentWindowPtr> focusedWindows_;
 };
 
 BOOST_CLASS_VERSION( DisplayGroup, FIRST_DISPLAYGROUP_VERSION )

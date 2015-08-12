@@ -39,9 +39,10 @@
 
 #include "QmlWindowRenderer.h"
 
-#include "ContentWindow.h"
-#include "PixelStream.h"
 #include "ContentItem.h"
+#include "ContentWindow.h"
+#include "ContentWindowController.h"
+#include "PixelStream.h"
 
 #include <QtDeclarative/QDeclarativeComponent>
 

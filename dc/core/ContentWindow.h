@@ -45,6 +45,7 @@
 #include "serializationHelpers.h"
 #include "Coordinates.h"
 #include "Content.h" // needed for serialization
+#include "ContentWindowController.h" // needed for serialization
 
 #include <QObject>
 #include <QUuid>
@@ -54,6 +55,7 @@
 // https://bugreports.qt.nokia.com/browse/QTBUG-22829: When Qt moc runs on CGAL
 // files, do not process <boost/type_traits/has_operator.hpp>
 #  include <boost/serialization/shared_ptr.hpp>
+#  include <boost/serialization/scoped_ptr.hpp>
 #endif
 
 class ContentInteractionDelegate;
@@ -69,10 +71,13 @@ class ContentWindow : public Coordinates
     Q_PROPERTY( QUuid id READ getID )
     Q_PROPERTY( WindowState state READ getState WRITE setState NOTIFY stateChanged )
     Q_PROPERTY( WindowBorder border READ getBorder WRITE setBorder NOTIFY borderChanged )
+    Q_PROPERTY( bool focused READ isFocused WRITE setFocused NOTIFY focusedChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
-    Q_PROPERTY( qreal controlsOpacity READ getControlsOpacity WRITE setControlsOpacity NOTIFY controlsOpacityChanged )
+    Q_PROPERTY( bool controlsVisible READ getControlsVisible WRITE setControlsVisible NOTIFY controlsVisibleChanged )
     Q_PROPERTY( Content* content READ getContentPtr CONSTANT )
     Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
+    Q_PROPERTY( ContentInteractionDelegate* delegate READ getInteractionDelegate CONSTANT )
+    Q_PROPERTY( ContentWindowController* controller READ getController CONSTANT )
 
 public:
     /** The current active window border used for resizing */
@@ -124,6 +129,13 @@ public:
     void setContent( ContentPtr content );
 
 
+    /** Assign a controller. */
+    ContentWindowController* getController();
+
+    /** Assign a controller. */
+    void setController( ContentWindowControllerPtr controller );
+
+
     /** Set the coordinates in pixel units. */
     void setCoordinates( const QRectF& coordinates );
 
@@ -141,6 +153,13 @@ public:
 
     /** Set the current active resize border. */
     void setBorder( const ContentWindow::WindowBorder border );
+
+    /** Is the window focused. */
+    bool isFocused() const;
+
+    /** Set the window in focused mode. */
+    void setFocused( bool value );
+
 
     /** Set the current state. */
     void setState( const ContentWindow::WindowState state );
@@ -174,8 +193,7 @@ public:
      * Get the interaction delegate.
      * @note Rank0 only.
      */
-    ContentInteractionDelegate& getInteractionDelegate();
-
+    ContentInteractionDelegate* getInteractionDelegate();
 
     /** Backup the current coordinates. */
     void backupCoordinates();
@@ -190,10 +208,10 @@ public:
     QString getLabel() const;
 
     /** Get the opacity of the window control buttons. */
-    qreal getControlsOpacity() const;
+    bool getControlsVisible() const;
 
     /** Set the opacity of the window control buttons. */
-    void setControlsOpacity( qreal value );
+    void setControlsVisible( bool value );
 
     /** Set the maximum factor for zoom and resize; value times content size */
     static void setMaxContentScale( qreal value );
@@ -217,9 +235,10 @@ signals:
     /** @name QProperty notifiers */
     //@{
     void borderChanged();
+    void focusedChanged();
     void stateChanged();
     void labelChanged();
-    void controlsOpacityChanged();
+    void controlsVisibleChanged();
     //@}
 
 private:
@@ -232,13 +251,15 @@ private:
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
+        ar & coordinates_;
         ar & uuid_;
         ar & content_;
-        ar & coordinates_;
+        ar & controller_;
         ar & zoomRect_;
         ar & windowBorder_;
+        ar & focused_;
         ar & windowState_;
-        ar & controlsOpacity_;
+        ar & controlsVisible_;
     }
 
     /** Serialize for saving to an xml file */
@@ -292,6 +313,8 @@ private:
 
     QUuid uuid_;
     ContentPtr content_;
+    // Stored as a scoped_ptr instead of unique_ptr for boost::serialization
+    boost::scoped_ptr< ContentWindowController > controller_;
 
     // coordinates in pixels, relative to the parent DisplayGroup
     QRectF coordinatesBackup_;
@@ -300,8 +323,9 @@ private:
     QRectF zoomRect_;
 
     ContentWindow::WindowBorder windowBorder_;
+    bool focused_;
     ContentWindow::WindowState windowState_;
-    qreal controlsOpacity_;
+    qreal controlsVisible_;
 
     unsigned int eventReceiversCount_;
 

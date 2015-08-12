@@ -5,6 +5,7 @@ import "qrc:/qml/core/."
 import "qrc:/qml/core/style.js" as Style
 
 BaseContentWindow {
+    objectName: "MasterContentWindow"
     color: "#80000000"
     border.width: 10
 
@@ -12,13 +13,90 @@ BaseContentWindow {
         displaygroup.removeContentWindow(contentwindow.id)
     }
 
-    ContentWindowTouchArea {
-        objectName: "ContentWindowTouchArea"
-        anchors.fill: parent
+    function toggleControlsVisibility() {
+        contentwindow.controlsVisible = !contentwindow.controlsVisible
+    }
+
+    function toggleFocusMode() {
+        if(!contentwindow.focused) {
+            displaygroup.focus(contentwindow.id)
+            //contentwindow.controller.adjustSizeFocused()
+            contentwindow.state = ContentWindow.SELECTED
+        }
+        else {
+            //contentwindow.controller.adjustSizeNormalized()
+            contentwindow.state = ContentWindow.NONE
+            displaygroup.unfocus(contentwindow.id)
+        }
+    }
+
+    TouchMouseArea {
         focus: true // to receive key events
-        onActivated: {
+        anchors.fill: parent
+        onTouchBegin: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
-            controlsFadeAnimation.restart()
+        }
+        onTap: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.tap(position)
+            else
+                toggleControlsVisibility()
+        }
+        onDoubleTap: {
+            toggleFocusMode()
+        }
+        onTapAndHold: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.tapAndHold(position)
+        }
+        onPan: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.pan(position, delta)
+            else {
+                contentwindow.state = ContentWindow.MOVING
+                contentwindow.controller.moveTo(Qt.point(contentwindow.x + delta.x,
+                                                         contentwindow.y + delta.y))
+            }
+        }
+        onPanFinished: {
+            if(contentwindow.state !== ContentWindow.SELECTED)
+                contentwindow.state = ContentWindow.NONE
+        }
+        onPinch: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.pinch(position, scaleFactor)
+            else {
+                contentwindow.state = ContentWindow.RESIZING
+                contentwindow.controller.scale(position, scaleFactor)
+            }
+        }
+        onPinchFinished: {
+            if(contentwindow.state !== ContentWindow.SELECTED)
+                contentwindow.state = ContentWindow.NONE
+        }
+        onSwipeLeft: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.swipeLeft()
+        }
+        onSwipeRight: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.swipeRight()
+        }
+        onSwipeUp: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.swipeUp()
+        }
+        onSwipeDown: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.swipeDown()
+        }
+        onKeyPress: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.keyPress(key, modifiers, text)
+        }
+        onKeyRelease: {
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.keyRelease(key, modifiers, text)
         }
     }
 
@@ -31,13 +109,11 @@ BaseContentWindow {
                 TouchArea {
                     anchors.fill: parent
                     onPan: {
-                        controlsFadeAnimation.stop()
                         contentwindow.border = parent.border
                         contentwindow.state = ContentWindow.RESIZING
-                        controller.resizeRelative(delta)
+                        contentwindow.controller.resizeRelative(delta)
                     }
                     onPanFinished: {
-                        controlsFadeAnimation.restart()
                         contentwindow.border = ContentWindow.NOBORDER
                         contentwindow.state = ContentWindow.NONE
                     }
@@ -63,8 +139,7 @@ BaseContentWindow {
                     TouchArea {
                         anchors.fill: parent
                         onTap: {
-                            controlsFadeAnimation.restart()
-                            controller.adjustSizeOneToOne()
+                            contentwindow.controller.adjustSizeOneToOne()
                         }
                     }
                 }
@@ -72,8 +147,7 @@ BaseContentWindow {
                     TouchArea {
                         anchors.fill: parent
                         onTap: {
-                            controlsFadeAnimation.restart()
-                            controller.toggleFullscreen()
+                            toggleFocusMode()
                         }
                     }
                 }
@@ -86,7 +160,6 @@ BaseContentWindow {
                 TouchArea {
                     anchors.fill: parent
                     onTap: {
-                        controlsFadeAnimation.restart()
                         action.trigger()
                     }
                 }
@@ -116,13 +189,14 @@ BaseContentWindow {
         source: "qrc:///img/master/maximize.svg"
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        mousearea.onClicked: controller.toggleFullscreen()
+        mousearea.onClicked: toggleFocusMode()
     }
 
     ContentWindowButton {
         source: "qrc:///img/master/resize.svg"
         anchors.bottom: parent.bottom
         anchors.right: parent.right
+        visible: contentwindow.state !== ContentWindow.SELECTED
 
         property variant startMousePos
         property variant startSize
@@ -134,18 +208,8 @@ BaseContentWindow {
         mousearea.onPositionChanged: {
             var newSize = Qt.size(mouse.x - startMousePos.x + startSize.width,
                                   mouse.y - startMousePos.y + startSize.height)
-            controller.resize(newSize)
+            contentwindow.controller.resize(newSize)
         }
         mousearea.onReleased: contentwindow.state = ContentWindow.NONE
-    }
-
-    NumberAnimation {
-        id: controlsFadeAnimation
-        target: contentwindow
-        property: "controlsOpacity"
-        from: 1
-        to: 0
-        duration: Style.controlsFadeOutTime
-        easing.type: Easing.InExpo
     }
 }

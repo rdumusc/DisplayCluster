@@ -40,36 +40,39 @@
 #ifndef PIXELSTREAMINTERACTIONDELEGATE_H
 #define PIXELSTREAMINTERACTIONDELEGATE_H
 
-#include "types.h"
 #include "ContentInteractionDelegate.h"
 
+/**
+ * Forward user actions to a deflect::Stream using Deflect events.
+ */
 class PixelStreamInteractionDelegate : public ContentInteractionDelegate
 {
 public:
+    /** Constructor */
     PixelStreamInteractionDelegate( ContentWindow& contentWindow );
 
-    void swipe( QSwipeGesture* gesture ) override;
-    void pan( PanGesture* gesture)  override;
-    void pinch( PinchGesture* gesture ) override;
-    void doubleTap( DoubleTapGesture* gesture ) override;
-    void tap( QTapGesture* gesture ) override;
+    /** @name Touch gesture handlers. */
+    //@{
+    void tap( QPointF position ) override;
+    void doubleTap( QPointF position ) override;
+    void tapAndHold( QPointF position ) override;
+    void pan( QPointF position, QPointF delta ) override;
+    void panFinished( QPointF position ) override;
+    void pinch( QPointF position, qreal scaleFactor ) override;
+    void swipeLeft() override;
+    void swipeRight() override;
+    void swipeUp() override;
+    void swipeDown() override;
+    //@}
 
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* wheelEvent ) override;
-    void keyPressEvent( QKeyEvent* keyEvent ) override;
-    void keyReleaseEvent( QKeyEvent* keyEvent ) override;
+    /** @name Mouse gesture handlers. */
+    //@{
+    void keyPress( int key, int modifiers, QString text ) override;
+    void keyRelease( int key, int modifiers, QString text ) override;
+    //@}
 
 private:
-    QPointF mousePressPos_;
-
-    template <typename T>
-    deflect::Event getMouseEvent( const T* qtEvent );
-
-    template <typename T>
-    deflect::Event getGestureEvent( const T* gesture );
+    deflect::Event _getNormEvent( const QPointF& position ) const;
 };
 
 #endif // PIXELSTREAMINTERACTIONDELEGATE_H

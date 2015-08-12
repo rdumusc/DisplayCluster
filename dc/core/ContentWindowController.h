@@ -45,12 +45,15 @@
 #include <QtCore/QObject>
 #include <QtCore/QRectF>
 
+#include <boost/serialization/access.hpp>
+
 /** Common window size states. */
 enum SizeState
 {
     SIZE_1TO1,
     SIZE_FULLSCREEN,
-    SIZE_NORMALIZED
+    SIZE_NORMALIZED,
+    SIZE_FOCUS
 };
 
 /** Window point, used for affine transforms of the window. */
@@ -69,18 +72,16 @@ class ContentWindowController : public QObject
 
 public:
     ContentWindowController( ContentWindow& contentWindow,
-                             const DisplayGroup& displayGroup,
-                             QObject* parent = 0 );
+                             const DisplayGroup& displayGroup );
 
     /** Resize the window. */
-    Q_INVOKABLE void resize( QSizeF size,
-                             const WindowPoint fixedPoint = TOP_LEFT );
+    Q_INVOKABLE void resize( QSizeF size, WindowPoint fixedPoint = TOP_LEFT );
 
     /** Resize the window relative to the current active window border */
-    Q_INVOKABLE void resizeRelative( const QPointF delta );
+    Q_INVOKABLE void resizeRelative( const QPointF& delta );
 
     /** Scale the window by the given factor (around the given center). */
-    void scale( const QPointF& center, const double factor );
+    Q_INVOKABLE void scale( const QPointF& center, double factor );
 
     /** Adjust the window coordinates to match the desired state. */
     void adjustSize( const SizeState state );
@@ -88,12 +89,15 @@ public:
     /** Adjust the window coordinates to match the Content dimensions. */
     Q_INVOKABLE void adjustSizeOneToOne() { adjustSize( SIZE_1TO1 ); }
 
-    /** Toggle between fullscreen and 'normalized' by keeping the position
-     *  and size after leaving fullscreen */
-    Q_INVOKABLE void toggleFullscreen();
+    /** Adjust the window coordinates for the focus mode.*/
+    Q_INVOKABLE void adjustSizeNormalized() { adjustSize( SIZE_NORMALIZED ); }
+
+    /** Adjust the window coordinates for the focus mode.*/
+    Q_INVOKABLE void adjustSizeFocused() { adjustSize( SIZE_FOCUS ); }
 
     /** Move the window to the desired position. */
-    Q_INVOKABLE void moveTo( const QPointF& position, const WindowPoint handle = TOP_LEFT );
+    Q_INVOKABLE void moveTo( const QPointF& position,
+                             WindowPoint handle = TOP_LEFT );
 
     /** Move the center of the window to the desired position. */
     inline void moveCenterTo( const QPointF& position )
@@ -108,6 +112,8 @@ public:
      *          wall size and current content zoom. */
     QSizeF getMaxSize() const;
 
+    Q_INVOKABLE QRectF getFocusedCoord() const;
+
 private:
     /**
      * Resize the window around a given center point.
@@ -118,10 +124,26 @@ private:
 
     void constrainSize_( QSizeF& windowSize ) const;
     void constrainPosition_( QRectF& window ) const;
+    void constrainFullyInside_( QRectF& window ) const;
     QRectF getCenteredCoordinates_( const QSizeF& size ) const;
+    qreal getInsideMargin() const;
 
-    ContentWindow& contentWindow_;
-    const DisplayGroup& displayGroup_;
+    friend class boost::serialization::access;
+
+    /** Serialize for sending to Wall applications. */
+    template< class Archive >
+    void serialize( Archive & ar, const unsigned int )
+    {
+        ar & contentWindow_;
+        ar & displayGroup_;
+    }
+
+    /** No-argument constructor required for serialization. */
+    ContentWindowController();
+
+    // Storing pointers because references cannot be serialized with boost
+    ContentWindow* contentWindow_;
+    const DisplayGroup* displayGroup_;
 };
 
 #endif // CONTENTWINDOWCONTROLLER_H

@@ -39,6 +39,7 @@
 #include "ContentWindow.h"
 
 #include "ContentInteractionDelegate.h"
+#include "ContentWindowController.h"
 #include <deflect/EventReceiver.h>
 
 #include "config.h"
@@ -58,8 +59,9 @@ ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
+    , focused_( false )
     , windowState_( NONE )
-    , controlsOpacity_( 0.0 )
+    , controlsVisible_( false )
     , eventReceiversCount_( 0 )
 {
 }
@@ -69,7 +71,7 @@ ContentWindow::ContentWindow( ContentPtr content )
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
     , windowState_( NONE )
-    , controlsOpacity_( 0.0 )
+    , controlsVisible_( false )
     , eventReceiversCount_( 0 )
 {
     assert( content );
@@ -108,6 +110,16 @@ void ContentWindow::setContent( ContentPtr content )
     connect( content_.get(), SIGNAL( modified( )), SIGNAL( contentModified( )));
 
     createInteractionDelegate();
+}
+
+ContentWindowController* ContentWindow::getController()
+{
+    return controller_.get();
+}
+
+void ContentWindow::setController( ContentWindowControllerPtr controller )
+{
+    controller_.reset( controller.release( ));
 }
 
 void ContentWindow::setCoordinates( const QRectF& coordinates )
@@ -155,6 +167,21 @@ void ContentWindow::setBorder( const ContentWindow::WindowBorder border )
         return;
     windowBorder_ = border;
     emit borderChanged();
+    emit modified();
+}
+
+bool ContentWindow::isFocused() const
+{
+    return focused_;
+}
+
+void ContentWindow::setFocused( const bool value )
+{
+    if( focused_ == value )
+        return;
+
+    focused_ = value;
+    emit focusedChanged();
     emit modified();
 }
 
@@ -223,9 +250,9 @@ void ContentWindow::dispatchEvent( const deflect::Event event_ )
     emit notify( event_ );
 }
 
-ContentInteractionDelegate& ContentWindow::getInteractionDelegate()
+ContentInteractionDelegate* ContentWindow::getInteractionDelegate()
 {
-    return *interactionDelegate_;
+    return interactionDelegate_.get();
 }
 
 void ContentWindow::backupCoordinates()
@@ -252,18 +279,18 @@ QString ContentWindow::getLabel() const
     return content_->getURI().section( "/", -1, -1 );
 }
 
-qreal ContentWindow::getControlsOpacity() const
+bool ContentWindow::getControlsVisible() const
 {
-    return controlsOpacity_;
+    return controlsVisible_;
 }
 
-void ContentWindow::setControlsOpacity( const qreal value )
+void ContentWindow::setControlsVisible( const bool value )
 {
-    if( value == controlsOpacity_ )
+    if( value == controlsVisible_ )
         return;
 
-    controlsOpacity_ = value;
-    emit controlsOpacityChanged();
+    controlsVisible_ = value;
+    emit controlsVisibleChanged();
     emit modified();
 }
 

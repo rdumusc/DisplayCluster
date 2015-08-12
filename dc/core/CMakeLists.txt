@@ -47,7 +47,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentFactory.h
   ContentLoader.h
   ContentType.h
-  ContentInteractionDelegate.h
   Drawable.h
   DynamicTexture.h
   DynamicTextureContent.h
@@ -111,6 +110,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   Content.h
   ContentAction.h
   ContentActionsModel.h
+  ContentInteractionDelegate.h
   ContentItem.h
   ContentWindow.h
   ContentWindowController.h

@@ -39,6 +39,7 @@
 #include "DisplayGroup.h"
 
 #include "ContentWindow.h"
+#include "ContentWindowController.h"
 
 #include "log.h"
 #include <boost/foreach.hpp>
@@ -73,6 +74,9 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
     contentWindows_.push_back( contentWindow );
     watchChanges( contentWindow );
 
+    contentWindow->setController(
+                make_unique<ContentWindowController>( *contentWindow, *this ));
+
     emit( contentWindowAdded( contentWindow ));
     sendDisplayGroup();
 }
@@ -90,6 +94,7 @@ void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
     if( it == contentWindows_.end( ))
         return;
 
+    unfocus( (*it)->getID( ));
     contentWindows_.erase( it );
 
     // disconnect any existing connections with the window
@@ -163,6 +168,8 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         addContentWindow( window );
+        if( window->isSelected( ))
+            focus( window->getID( ));
     }
 }
 
@@ -175,6 +182,38 @@ DisplayGroup& DisplayGroup::operator=( const DisplayGroup& displayGroup )
     setShowWindowTitles( displayGroup.showWindowTitles_ );
     setCoordinates( displayGroup.coordinates_ );
     return *this;
+}
+
+bool DisplayGroup::hasFocusedWindows() const
+{
+    return !focusedWindows_.empty();
+}
+
+void DisplayGroup::focus( const QUuid& id )
+{
+    auto window = getContentWindow( id );
+    if( ! window )
+        return;
+
+    window->setFocused( true );
+
+    if( focusedWindows_.insert( window ).second && focusedWindows_.size() == 1 )
+        emit hasFocusedWindowsChanged();
+
+    sendDisplayGroup();
+}
+
+void DisplayGroup::unfocus( const QUuid& id )
+{
+    auto window = getContentWindow( id );
+    if( ! window )
+        return;
+
+    window->setFocused( false );
+    if( focusedWindows_.erase( window ) && focusedWindows_.empty( ))
+        emit hasFocusedWindowsChanged();
+
+    sendDisplayGroup();
 }
 
 void DisplayGroup::clear()

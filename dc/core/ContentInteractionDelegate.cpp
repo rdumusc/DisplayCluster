@@ -39,53 +39,10 @@
 
 #include "ContentInteractionDelegate.h"
 
-#include "ContentWindow.h"
-#include "Content.h"
-#include "gestures/DoubleTapGesture.h"
-#include "gestures/DoubleTapGestureRecognizer.h"
-#include "gestures/PanGesture.h"
-#include "gestures/PanGestureRecognizer.h"
-#include "gestures/PinchGesture.h"
-#include "gestures/PinchGestureRecognizer.h"
-
-#include <QTapGesture>
-#include <QSwipeGesture>
-
 ContentInteractionDelegate::ContentInteractionDelegate( ContentWindow& contentWindow )
-    : contentWindow_( contentWindow )
+    : _contentWindow( contentWindow )
 {
 }
 
 ContentInteractionDelegate::~ContentInteractionDelegate()
 {}
-
-void ContentInteractionDelegate::gestureEvent( QGestureEvent* event )
-{
-    QGesture* gesture = 0;
-
-    if( ( gesture = event->gesture( PanGestureRecognizer::type( ))))
-    {
-        event->accept( PanGestureRecognizer::type( ));
-        pan( static_cast< PanGesture* >( gesture ));
-    }
-    else if( ( gesture = event->gesture( PinchGestureRecognizer::type( ))))
-    {
-        event->accept( PinchGestureRecognizer::type( ));
-        pinch( static_cast< PinchGesture* >( gesture ));
-    }
-    else if( ( gesture = event->gesture( DoubleTapGestureRecognizer::type( ))))
-    {
-        event->accept( DoubleTapGestureRecognizer::type( ));
-        doubleTap( static_cast< DoubleTapGesture* >( gesture ));
-    }
-    else if( ( gesture = event->gesture( Qt::TapGesture )))
-    {
-        event->accept( Qt::TapGesture );
-        tap( static_cast< QTapGesture* >( gesture ));
-    }
-    else if( ( gesture = event->gesture( Qt::SwipeGesture )))
-    {
-        event->accept( Qt::SwipeGesture );
-        swipe( static_cast< QSwipeGesture* >( gesture ));
-    }
-}

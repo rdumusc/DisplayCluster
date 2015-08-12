@@ -43,6 +43,12 @@
 #include <QtDeclarative/QDeclarativeItem>
 
 class QGestureEvent;
+class DoubleTapGesture;
+class PanGesture;
+class PinchGesture;
+class QTapGesture;
+class QSwipeGesture;
+class QTapAndHoldGesture;
 
 /**
  * A touch area for capturing touch events in QML.
@@ -54,12 +60,25 @@ class TouchArea : public QDeclarativeItem
 
 public:
     explicit TouchArea( QDeclarativeItem* parentItem = 0 );
+    virtual ~TouchArea();
 
 signals:
+    void touchBegin();
+
     void tap( QPointF position );
+    void doubleTap( QPointF position );
     void tapAndHold( QPointF position );
-    void pan( QPointF delta );
-    void panFinished();
+
+    void pan( QPointF position, QPointF delta );
+    void panFinished( QPointF position );
+
+    void pinch( QPointF position, qreal scaleFactor );
+    void pinchFinished( QPointF position );
+
+    void swipeLeft();
+    void swipeRight();
+    void swipeUp();
+    void swipeDown();
 
 protected:
     /** @name Re-implemented QGraphicsRectItem events */
@@ -69,7 +88,14 @@ protected:
 
 private:
     bool gestureEvent( QGestureEvent* event );
-    bool blockTapGesture_;
+    void tapAndHold( QTapAndHoldGesture* gesture );
+    void tap( QTapGesture* gesture );
+    void doubleTap( DoubleTapGesture* gesture );
+    void pan( PanGesture* gesture );
+    void pinch( PinchGesture* gesture );
+    void swipe( QSwipeGesture* gesture );
+
+    bool _blockTapGesture;
 };
 
 #endif // TOUCHAREA_H

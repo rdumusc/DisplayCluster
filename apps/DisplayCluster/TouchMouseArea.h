@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,34 +37,43 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "TextInputDispatcher.h"
+#ifndef TOUCH_MOUSE_AREA_H
+#define TOUCH_MOUSE_AREA_H
 
-#include "DisplayGroup.h"
-#include "ContentWindow.h"
-#include "ContentInteractionDelegate.h"
+#include "TouchArea.h"
 
-#include <QKeyEvent>
-
-TextInputDispatcher::TextInputDispatcher( DisplayGroupPtr displayGroup,
-                                          QObject* parentObject )
-    : QObject( parentObject )
-    , displayGroup_( displayGroup )
+/**
+ * Extends TouchArea by converting mouse inputs to touch events.
+ *
+ * Also captures keyboard inputs, including TAB key
+ */
+class TouchMouseArea : public TouchArea
 {
-}
+    Q_OBJECT
 
-TextInputDispatcher::~TextInputDispatcher()
-{
-}
+public:
+    /** Constructor. */
+    TouchMouseArea();
 
-void TextInputDispatcher::sendKeyEventToActiveWindow( const char key ) const
-{
-    ContentWindowPtr window = displayGroup_->getActiveWindow();
-    if ( !window )
-        return;
+signals:
+    void keyPress( int key, int modifiers, QString text );
+    void keyRelease( int key, int modifiers, QString text );
 
-    const int keyCode = keyMapper_.getQtKeyCode( key );
-    const QString keyString( key );
+protected:
+    /** @name Re-implemented QGraphicsRectItem events */
+    //@{
+    bool sceneEvent( QEvent* event ) override;
+    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
+    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
+    void keyPressEvent( QKeyEvent* keyEvent ) override;
+    void keyReleaseEvent( QKeyEvent* keyEvent ) override;
+    //@}
 
-    window->getInteractionDelegate()->keyPress( keyCode, 0, keyString );
-    window->getInteractionDelegate()->keyRelease( keyCode, 0, keyString );
-}
+private:
+    QPointF _mousePressPos;
+};
+
+#endif

@@ -44,16 +44,20 @@
 
 class PDFContent;
 
+/**
+ * Control user interaction with a PDF document.
+ */
 class PDFInteractionDelegate : public ZoomInteractionDelegate
 {
 public:
-    PDFInteractionDelegate(ContentWindow& contentWindow);
+    PDFInteractionDelegate( ContentWindow& contentWindow );
 
-    void tap(QTapGesture *gesture) override;
-    void swipe(QSwipeGesture *gesture) override;
+    void tap( QPointF position ) override;
+    void swipeLeft() override;
+    void swipeRight() override;
 
 private:
-    PDFContent* getPDFContent();
+    PDFContent* _getPDFContent();
 };
 
 #endif // PDFINTERACTIONDELEGATE_H
