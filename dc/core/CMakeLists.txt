@@ -5,26 +5,28 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(DCCORE_LINK_LIBRARIES
-  dcwebservice
-  ${DEFLECT_LIBRARIES}
-  ${Boost_LIBRARIES}
-  ${Qt5Core_LIBRARIES}
-  ${Qt5Declarative_LIBRARIES}
-  ${Qt5OpenGL_LIBRARIES}
-  ${Qt5Svg_LIBRARIES}
-  ${Qt5WebKitWidgets_LIBRARIES}
-  ${Qt5Widgets_LIBRARIES}
-  ${Qt5Xml_LIBRARIES}
-  ${Qt5XmlPatterns_LIBRARIES}
-  ${OPENGL_LIBRARIES}
-  ${FFMPEG_LIBRARIES}
-  ${MPI_CXX_LIBRARIES}
+  PUBLIC
+    Deflect
+    dcwebservice
+    Qt5::Core
+    Qt5::Declarative
+    Qt5::Widgets
+    ${Boost_LIBRARIES}
+    ${MPI_CXX_LIBRARIES}
+  PRIVATE
+    Qt5::OpenGL
+    Qt5::Svg
+    Qt5::WebKitWidgets
+    Qt5::Xml
+    Qt5::XmlPatterns
+    ${OPENGL_LIBRARIES}
+    ${FFMPEG_LIBRARIES}
 )
 
 if(ENABLE_TUIO_TOUCH_LISTENER)
   list(APPEND DCCORE_MOC_PUBLIC_HEADERS MultiTouchListener.h)
   list(APPEND DCCORE_SOURCES MultiTouchListener.cpp)
-  list(APPEND DCCORE_LINK_LIBRARIES ${TUIO_LIBRARIES} ${X11_LIBRARIES})
+  list(APPEND DCCORE_LINK_LIBRARIES PUBLIC TUIO)
 endif()
 
 if(ENABLE_PDF_SUPPORT)
@@ -37,7 +39,7 @@ if(ENABLE_PDF_SUPPORT)
     PDFInteractionDelegate.cpp
     thumbnail/PDFThumbnailGenerator.cpp
   )
-  list(APPEND DCCORE_LINK_LIBRARIES ${POPPLER_LIBRARIES})
+  list(APPEND DCCORE_LINK_LIBRARIES PRIVATE ${POPPLER_LIBRARIES})
 endif()
 
 list(APPEND DCCORE_PUBLIC_HEADERS

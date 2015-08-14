@@ -7,7 +7,8 @@
 # which runs all of them.
 
 # TEST_LIBRARIES is used by CommonCTest.cmake to link tests against them
-set(TEST_LIBRARIES dcmock ${DC_LIBRARIES} ${Boost_LIBRARIES})
+set(TEST_LIBRARIES dcmock ${DC_LIBRARIES} ${Boost_LIBRARIES} ${OPENGL_LIBRARIES}
+  Qt5::WebKitWidgets)
 
 if(NOT X11_FOUND)
   list(APPEND EXCLUDE_FROM_TESTS core/WebbrowserTests.cpp)

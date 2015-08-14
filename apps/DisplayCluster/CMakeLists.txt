@@ -41,6 +41,9 @@ set(DISPLAYCLUSTER_SOURCES
 )
 
 set(DISPLAYCLUSTER_LINK_LIBRARIES dccore dcwebservice)
+if(ENABLE_TUIO_TOUCH_LISTENER)
+  list(APPEND DISPLAYCLUSTER_LINK_LIBRARIES ${X11_LIBRARIES})
+endif()
 set(DISPLAYCLUSTER_RESOURCES resources/displaycluster.qrc)
 
 common_application(displaycluster)
