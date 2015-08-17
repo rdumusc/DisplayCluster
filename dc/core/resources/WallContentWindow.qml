@@ -10,8 +10,8 @@ BaseContentWindow {
     ContentItem {
         objectName: "ContentItem"
         anchors.bottom: parent.bottom
-        width: contentwindow.width
-        height: contentwindow.height
+        width: parent.width
+        height: parent.height - (titleBar.visible ? titleBar.height : 0)
     }
 
     ZoomContext {

@@ -101,10 +101,9 @@ void PixelStream::renderPreview()
     // PixelStreams don't support zooming and don't have previews
 }
 
-void PixelStream::preRenderUpdate( ContentWindowPtr window,
-                                   const QRect& wallArea )
+void PixelStream::preRenderUpdate( ContentWindowPtr, const QRect& wallArea )
 {
-    contentWindowRect_ = window->getCoordinates();
+    contentWindowRect_ = _qmlItem->boundingRect();
     wallArea_ = wallArea;
 }
 

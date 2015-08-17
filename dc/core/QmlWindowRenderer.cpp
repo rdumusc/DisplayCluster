@@ -72,6 +72,7 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
     ContentItem* contentItem =
        windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
     contentItem->setWallContent( wallContent_.get( ));
+    wallContent_->setQmlItem( contentItem );
 
     ContentItem* zoomContextItem =
       windowItem_->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );

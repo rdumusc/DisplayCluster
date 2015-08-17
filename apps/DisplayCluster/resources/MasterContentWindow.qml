@@ -18,13 +18,13 @@ BaseContentWindow {
     }
 
     function toggleFocusMode() {
+        if(contentwindow.label === "Dock")
+            return
         if(!contentwindow.focused) {
             displaygroup.focus(contentwindow.id)
-            //contentwindow.controller.adjustSizeFocused()
             contentwindow.state = ContentWindow.SELECTED
         }
         else {
-            //contentwindow.controller.adjustSizeNormalized()
             contentwindow.state = ContentWindow.NONE
             displaygroup.unfocus(contentwindow.id)
         }

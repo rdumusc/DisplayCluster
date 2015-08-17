@@ -54,6 +54,8 @@
 #include <QSwipeGesture>
 #include <QGestureEvent>
 
+#include <cmath>        /* std::isnan */
+
 TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
     , _blockTapGesture( false )

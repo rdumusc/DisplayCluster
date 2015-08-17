@@ -1,14 +1,15 @@
 .pragma library
 
-var controlsFadeOutTime = 2000;
+var focusTransitionTime = 500;
+var focusContextOpacity = 0.7;
 
 var borderWidth = 100
 var activeBorderColor = "red";
 var inactiveBorderColor = "#80000000";
 var borderOpacity = 0.4;
 
-var controlsColor = "#FCEE21";
-var controlsBorderColor = "#FCEE21";
+var controlsDefaultColor = "#F2F2F2";
+var controlsFocusedColor = "#FCEE21";
 var controlsBorderWidth = 3;
 var controlsRadius = 0;
 var controlsLeftMargin = 28;

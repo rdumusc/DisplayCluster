@@ -42,6 +42,8 @@
 
 #include "types.h"
 
+#include "ContentItem.h"
+
 /**
  * A content to be rendered by Wall processes.
  *
@@ -75,12 +77,17 @@ public:
         Q_UNUSED( wallToWallChannel )
     }
 
+    /** Set a reference to the Qml item using this content. */
+    void setQmlItem( ContentItem* content );
+
     /** Create an object corresponding to the given content. */
     static WallContentPtr create( const Content& content );
 
 protected:
     /** Constructor. */
     WallContent();
+
+    ContentItem* _qmlItem;
 };
 
 #endif // WALLCONTENT_H

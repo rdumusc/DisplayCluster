@@ -121,7 +121,7 @@ void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
     setPause( movie.getControlState() & STATE_PAUSED );
     setLoop( movie.getControlState() & STATE_LOOP );
 
-    setVisible( QRectF( wallArea ).intersects( window->getCoordinates( )));
+    setVisible( QRectF( wallArea ).intersects( _qmlItem->boundingRect( )));
 }
 
 void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )

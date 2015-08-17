@@ -8,17 +8,16 @@ Rectangle {
     id: rootObj
     width: buttons.width + radius + (Style.buttonsSize - Style.buttonsImageSize)
     height: buttons.height + (Style.buttonsSize - Style.buttonsImageSize)
-    color: Style.controlsColor
-    border.color: Style.controlsBorderColor
+    color: Style.controlsDefaultColor
+    border.color: Style.controlsDefaultColor
     border.width: Style.controlsBorderWidth
     radius: Style.controlsRadius
     anchors.right: parent.left
     anchors.top: parent.top
     anchors.topMargin: options.showWindowBorders ? -Style.windowBorderWidth / 2 : 0
     anchors.rightMargin: Style.controlsLeftMargin
-    visible: contentwindow.label !== "Dock"
-             && contentwindow.controlsVisible
-             && contentwindow.border === ContentWindow.NOBORDER
+    visible: contentwindow.label !== "Dock" && opacity > 0
+    opacity: 0
 
     ListView {
         id: buttons
@@ -59,6 +58,7 @@ Rectangle {
         State {
             name: "focus_mode"
             when: contentwindow.focused
+            extend: "selected"
             PropertyChanges {
                 target: buttons
                 fixed_buttons_count: 2
@@ -67,6 +67,40 @@ Rectangle {
                 target: rootObj
                 visible: true
             }
+        },
+        State {
+            name: "selected"
+            when: contentwindow.selected
+            extend: "opaque"
+            PropertyChanges {
+                target: rootObj
+                color: Style.controlsFocusedColor
+                border.color: Style.controlsFocusedColor
+            }
+        },
+        State {
+            name: "opaque"
+            when: contentwindow.controlsVisible
+                  && contentwindow.border === ContentWindow.NOBORDER
+            PropertyChanges {
+                target: rootObj
+                opacity: 1
+            }
         }
     ]
+
+    Behavior on opacity {
+        NumberAnimation {
+            target: rootObj
+            property: "opacity"
+            duration: Style.focusTransitionTime
+            easing.type: Easing.InOutQuad
+        }
+    }
+    Behavior on color {
+        ColorAnimation {}
+    }
+    Behavior on border.color {
+        ColorAnimation {}
+    }
 }

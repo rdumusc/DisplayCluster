@@ -102,14 +102,14 @@ void SVG::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
     if( window->isResizing( ))
         return;
 
-    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
+    if( !QRectF( wallArea ).intersects( _qmlItem->boundingRect( )))
         return;
 
-    const QSize& windowSize = window->getCoordinates().size().toSize();
-    if( getTextureSize() != windowSize ||
+    const QSize& renderSize = _qmlItem->boundingRect().size().toSize();
+    if( getTextureSize() != renderSize ||
         getTextureRegion() != window->getZoomRect( ))
     {
-        updateTexture( windowSize, window->getZoomRect( ));
+        updateTexture( renderSize, window->getZoomRect( ));
     }
 }
 

@@ -42,6 +42,8 @@
 #include <QEvent>
 #include <QGraphicsSceneMouseEvent>
 
+#include <math.h>       /* fabs */
+
 #define WHEEL_EVENT_FACTOR 1440.0
 
 TouchMouseArea::TouchMouseArea()
