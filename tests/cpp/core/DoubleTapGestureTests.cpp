@@ -80,6 +80,30 @@ BOOST_AUTO_TEST_CASE( testValidDoubleTap )
     delete release;
 }
 
+BOOST_AUTO_TEST_CASE( testIgnoreDoubleTapOnTouchpads )
+{
+    DoubleTapGestureRecognizer recognizer;
+    const QPointF position( .6, .6 );
+    QEvent* press = createTouchEvent( 0, QEvent::TouchBegin,
+                                      Qt::TouchPointPressed, position,
+                                      QTouchDevice::TouchPad );
+    QEvent* release = createTouchEvent( 0, QEvent::TouchEnd,
+                                        Qt::TouchPointReleased, position,
+                                        QTouchDevice::TouchPad );
+
+    DoubleTapGesture result;
+    BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, press ),
+                       QGestureRecognizer::Ignore );
+    BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, release ),
+                       QGestureRecognizer::Ignore );
+    BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, press ),
+                       QGestureRecognizer::Ignore );
+    BOOST_CHECK_EQUAL( recognizer.recognize( &result, 0, release ),
+                       QGestureRecognizer::Ignore );
+    delete press;
+    delete release;
+}
+
 BOOST_AUTO_TEST_CASE( testMultipleDoubleTaps )
 {
     DoubleTapGestureRecognizer recognizer;

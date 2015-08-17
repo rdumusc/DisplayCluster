@@ -77,10 +77,13 @@ QGestureRecognizer::Result PanGestureRecognizer::recognize( QGesture* state,
                                                             QObject*,
                                                             QEvent* event )
 {
-    PanGesture* gesture = static_cast<PanGesture *>( state );
-    const QTouchEvent* touchEvent = static_cast< const QTouchEvent* >( event );
+    const QTouchEvent* touchEvent = dynamic_cast< const QTouchEvent* >( event );
+    // Don't consider touchpad event as gestures (e.g. on OSX laptops)
+    if( !touchEvent || touchEvent->device()->type() == QTouchDevice::TouchPad )
+        return QGestureRecognizer::Ignore;
 
     QGestureRecognizer::Result result;
+    PanGesture* gesture = static_cast< PanGesture* >( state );
 
     switch( event->type( ))
     {
