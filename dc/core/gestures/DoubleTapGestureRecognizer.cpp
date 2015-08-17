@@ -88,7 +88,8 @@ DoubleTapGestureRecognizer::recognize( QGesture* state, QObject* /*watched*/,
         return QGestureRecognizer::Ignore;
 
     const QTouchEvent* touchEvent = dynamic_cast< const QTouchEvent* >( event );
-    if( !touchEvent )
+    // Don't consider touchpad event as gestures (e.g. on OSX laptops)
+    if( !touchEvent || touchEvent->device()->type() == QTouchDevice::TouchPad )
         return QGestureRecognizer::Ignore;
 
     DoubleTapGesture* gesture = static_cast< DoubleTapGesture* >( state );

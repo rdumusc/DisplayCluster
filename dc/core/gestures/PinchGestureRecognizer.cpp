@@ -75,10 +75,12 @@ QGestureRecognizer::Result PinchGestureRecognizer::recognize( QGesture* state,
                                                               QObject*,
                                                               QEvent* event )
 {
-    PinchGesture* gesture = static_cast<PinchGesture *>( state );
+    const QTouchEvent* ev = dynamic_cast <const QTouchEvent* >( event );
+    // Don't consider touchpad event as gestures (e.g. on OSX laptops)
+    if( !ev || ev->device()->type() == QTouchDevice::TouchPad )
+        return QGestureRecognizer::Ignore;
 
-    const QTouchEvent *ev = static_cast<const QTouchEvent *>(event);
-
+    PinchGesture* gesture = static_cast<PinchGesture*>( state );
     QGestureRecognizer::Result result;
 
     switch (event->type()) {
