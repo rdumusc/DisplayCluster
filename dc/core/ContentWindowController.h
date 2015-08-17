@@ -51,9 +51,7 @@
 enum SizeState
 {
     SIZE_1TO1,
-    SIZE_FULLSCREEN,
-    SIZE_NORMALIZED,
-    SIZE_FOCUS
+    SIZE_FULLSCREEN
 };
 
 /** Window point, used for affine transforms of the window. */
@@ -89,12 +87,6 @@ public:
     /** Adjust the window coordinates to match the Content dimensions. */
     Q_INVOKABLE void adjustSizeOneToOne() { adjustSize( SIZE_1TO1 ); }
 
-    /** Adjust the window coordinates for the focus mode.*/
-    Q_INVOKABLE void adjustSizeNormalized() { adjustSize( SIZE_NORMALIZED ); }
-
-    /** Adjust the window coordinates for the focus mode.*/
-    Q_INVOKABLE void adjustSizeFocused() { adjustSize( SIZE_FOCUS ); }
-
     /** Move the window to the desired position. */
     Q_INVOKABLE void moveTo( const QPointF& position,
                              WindowPoint handle = TOP_LEFT );
@@ -112,6 +104,7 @@ public:
      *          wall size and current content zoom. */
     QSizeF getMaxSize() const;
 
+    /** Get the focused coodinates for the window. */
     Q_INVOKABLE QRectF getFocusedCoord() const;
 
 private:
@@ -126,7 +119,7 @@ private:
     void constrainPosition_( QRectF& window ) const;
     void constrainFullyInside_( QRectF& window ) const;
     QRectF getCenteredCoordinates_( const QSizeF& size ) const;
-    qreal getInsideMargin() const;
+    qreal getInsideMargin_() const;
 
     friend class boost::serialization::access;
 

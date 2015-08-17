@@ -256,25 +256,6 @@ ContentInteractionDelegate* ContentWindow::getInteractionDelegate()
     return interactionDelegate_.get();
 }
 
-void ContentWindow::backupCoordinates()
-{
-    coordinatesBackup_ = coordinates_;
-}
-
-bool ContentWindow::hasBackupCoordinates() const
-{
-    return coordinatesBackup_.isValid();
-}
-
-void ContentWindow::restoreCoordinates()
-{
-    if( !hasBackupCoordinates( ))
-        return;
-
-    setCoordinates( coordinatesBackup_ );
-    coordinatesBackup_ = QRectF();
-}
-
 QString ContentWindow::getLabel() const
 {
     return content_->getURI().section( "/", -1, -1 );

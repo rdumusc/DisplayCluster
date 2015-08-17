@@ -195,15 +195,6 @@ public:
      */
     ContentInteractionDelegate* getInteractionDelegate();
 
-    /** Backup the current coordinates. */
-    void backupCoordinates();
-
-    /** Check if there are coordinates which can be restored. */
-    bool hasBackupCoordinates() const;
-
-    /** Restore and clear the backed-up coordinates. */
-    void restoreCoordinates();
-
     /** Get the label for the window */
     QString getLabel() const;
 
@@ -274,12 +265,18 @@ private:
             ar & boost::serialization::make_nvp( "contentHeight", contentHeight );
         }
         ar & boost::serialization::make_nvp( "coordinates", coordinates_ );
-        ar & boost::serialization::make_nvp( "coordinatesBackup", coordinatesBackup_ );
+        if( version < 3 )
+        {
+            QRectF backup;
+            ar & boost::serialization::make_nvp( "coordinatesBackup", backup );
+        }
         QPointF zoomCenter = zoomRect_.center();
         qreal zoom = 1.0/zoomRect_.width();
         ar & boost::serialization::make_nvp( "centerX", zoomCenter.rx( ));
         ar & boost::serialization::make_nvp( "centerY", zoomCenter.ry( ));
         ar & boost::serialization::make_nvp( "zoom", zoom );
+        if( version >= 3 )
+            ar & boost::serialization::make_nvp( "focused", focused_ );
         QRectF zoomRect;
         zoomRect.setSize( QSizeF( 1.0/zoom, 1.0/zoom ));
         zoomRect.moveCenter( zoomCenter );
@@ -315,17 +312,11 @@ private:
     ContentPtr content_;
     // Stored as a scoped_ptr instead of unique_ptr for boost::serialization
     boost::scoped_ptr< ContentWindowController > controller_;
-
-    // coordinates in pixels, relative to the parent DisplayGroup
-    QRectF coordinatesBackup_;
-
-    // zooming
     QRectF zoomRect_;
-
     ContentWindow::WindowBorder windowBorder_;
     bool focused_;
     ContentWindow::WindowState windowState_;
-    qreal controlsVisible_;
+    bool controlsVisible_;
 
     unsigned int eventReceiversCount_;
 
@@ -334,7 +325,7 @@ private:
     static qreal maxContentScale_;
 };
 
-BOOST_CLASS_VERSION( ContentWindow, 2 )
+BOOST_CLASS_VERSION( ContentWindow, 3 )
 
 DECLARE_SERIALIZE_FOR_XML( ContentWindow )
 

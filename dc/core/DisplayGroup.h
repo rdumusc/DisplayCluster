@@ -48,6 +48,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/foreach.hpp>
 
 #include <QObject>
 #include <QUuid>
@@ -202,6 +203,11 @@ private:
                             const unsigned int version)
     {
         serialize_members_xml( ar, version );
+        BOOST_FOREACH( ContentWindowPtr window, contentWindows_ )
+        {
+            if( window->isFocused( ))
+                focusedWindows_.insert( window );
+        }
     }
 
     /** Saving to xml. */

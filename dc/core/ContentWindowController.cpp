@@ -157,50 +157,17 @@ void ContentWindowController::adjustSize( const SizeState state )
 {
     switch( state )
     {
+    case SIZE_1TO1:
+        resize( contentWindow_->getContent()->getDimensions(), CENTER );
+        break;
+
     case SIZE_FULLSCREEN:
     {
-        contentWindow_->backupCoordinates();
-
         QSizeF size = contentWindow_->getContent()->getDimensions();
         size.scale( displayGroup_->getCoordinates().size(),
                     Qt::KeepAspectRatio );
         constrainSize_( size );
         contentWindow_->setCoordinates( getCenteredCoordinates_( size ));
-    } break;
-
-    case SIZE_FOCUS:
-    {
-        contentWindow_->backupCoordinates();
-
-        const qreal margin = 2.0 * getInsideMargin();
-        const QSizeF& dg = displayGroup_->getCoordinates().size();
-        const QSizeF maxSize = dg.boundedTo( dg - QSizeF( margin, margin ));
-
-        QSizeF size = contentWindow_->getContent()->getDimensions();
-        size.scale( maxSize, Qt::KeepAspectRatio );
-        constrainSize_( size );
-
-        const qreal x = contentWindow_->getCoordinates().center().x();
-        QRectF coord( QPointF(), size );
-        coord.moveCenter( QPointF( x, dg.height() * 0.5 ));
-        constrainFullyInside_( coord );
-        contentWindow_->setCoordinates( coord );
-    } break;
-
-    case SIZE_1TO1:
-        resize( contentWindow_->getContent()->getDimensions(), CENTER );
-        break;
-
-    case SIZE_NORMALIZED:
-    {
-        contentWindow_->restoreCoordinates();
-
-        // we allow zoom in fullscreen mode, so we need to constrain the backup
-        // coordinates accordingly
-        QRectF coordinates = contentWindow_->getCoordinates();
-        QSizeF size = coordinates.size();
-        constrainSize_( size );
-        resize( size, CENTER );
     } break;
 
     default:
@@ -250,7 +217,7 @@ QSizeF ContentWindowController::getMaxSize() const
 
 QRectF ContentWindowController::getFocusedCoord() const
 {
-    const qreal margin = 2.0 * getInsideMargin();
+    const qreal margin = 2.0 * getInsideMargin_();
     const QSizeF& dg = displayGroup_->getCoordinates().size();
     const QSizeF maxSize = dg.boundedTo( dg - QSizeF( margin, margin ));
 
@@ -299,7 +266,7 @@ void ContentWindowController::constrainFullyInside_( QRectF& window ) const
 {
     const QRectF& group = displayGroup_->getCoordinates();
 
-    const qreal margin = getInsideMargin();
+    const qreal margin = getInsideMargin_();
     const qreal minX = margin;
     const qreal minY = margin;
     const qreal maxX = group.width() - window.width() - margin;
@@ -323,7 +290,7 @@ ContentWindowController::getCenteredCoordinates_( const QSizeF& size ) const
                    size.width(), size.height( ));
 }
 
-qreal ContentWindowController::getInsideMargin() const
+qreal ContentWindowController::getInsideMargin_() const
 {
     return displayGroup_->getCoordinates().height() * INSIDE_MARGIN;
 }

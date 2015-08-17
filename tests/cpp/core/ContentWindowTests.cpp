@@ -192,27 +192,6 @@ BOOST_AUTO_TEST_CASE( testEventReceiver )
     BOOST_CHECK( receiver.success_ );
 }
 
-BOOST_AUTO_TEST_CASE( testBackupCoordinates )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-    const QRectF& coords = window.getCoordinates();
-
-    const QRectF coord1( 100.0, 200.0, 300.0, 400.0 );
-    const QRectF coord2( 432.0, 523.0, 123.0, 98.0 );
-
-    window.setCoordinates( coord1 );
-    window.backupCoordinates();
-    BOOST_CHECK_EQUAL( coords, coord1 );
-
-    window.setCoordinates( coord2 );
-    BOOST_CHECK_EQUAL( coords, coord2 );
-
-    window.restoreCoordinates();
-    BOOST_CHECK_EQUAL( coords, coord1 );
-}
-
 BOOST_AUTO_TEST_CASE( testToggleSelectedState )
 {
     ContentPtr content( new DummyContent );
