@@ -11,6 +11,6 @@ set(LOCALSTREAMER_SOURCES
   Application.cpp
 )
 
-set(LOCALSTREAMER_LINK_LIBRARIES dccore ${DEFLECT_LIBRARIES})
+set(LOCALSTREAMER_LINK_LIBRARIES dccore Deflect)
 
 common_application(localstreamer)

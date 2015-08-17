@@ -36,7 +36,7 @@ common_package(Qt5Widgets REQUIRED)
 common_package(Qt5XmlPatterns REQUIRED)
 common_package(Qt5Xml REQUIRED)
 
-common_package(TUIO 1.4)
+common_package(TUIO 1.4 SYSTEM)
 if(TUIO_FOUND)
   option(ENABLE_TUIO_TOUCH_LISTENER "Enable TUIO touch listener for multi-touch events" ON)
 endif()
@@ -65,7 +65,7 @@ add_subdirectory(tests)
 # Documentation
 set(COMMON_PROJECT_DOMAIN ch.epfl.bluebrain)
 include(DoxygenRule)
-include(PackageConfig)
+include(CommonPackageConfig)
 
 # Install example files
 install(DIRECTORY examples DESTINATION share/DisplayCluster COMPONENT examples)
