@@ -90,6 +90,16 @@ ContentItem::Role ContentItem::getRole() const
     return role_;
 }
 
+QRectF ContentItem::getSceneRect() const
+{
+    return mapRectToScene( boundingRect( ));
+}
+
+bool ContentItem::isAnimating() const
+{
+    return property("animating").toBool();
+}
+
 void ContentItem::setRole( const Role arg )
 {
     if( role_ == arg )

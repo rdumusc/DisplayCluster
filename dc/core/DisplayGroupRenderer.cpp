@@ -60,7 +60,6 @@ namespace
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
 const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
 const int BACKGROUND_STACKING_ORDER = -1;
-const int FOCUS_STACKING_ORDER = 100;
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
@@ -101,7 +100,6 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
     int stackingOrder = BACKGROUND_STACKING_ORDER + 1;
-    int focus_stacking_order = FOCUS_STACKING_ORDER + 1;
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         const QUuid& id = window->getID();
@@ -113,10 +111,7 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         else
             createWindowQmlItem( window );
 
-        if( window->isFocused( ))
-            windowItems_[id]->setStackingOrder( focus_stacking_order++ );
-        else
-            windowItems_[id]->setStackingOrder( stackingOrder++ );
+        windowItems_[id]->setStackingOrder( stackingOrder++ );
     }
 
     // Remove old windows

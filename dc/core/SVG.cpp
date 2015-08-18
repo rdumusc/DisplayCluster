@@ -99,13 +99,13 @@ void SVG::renderPreview()
 
 void SVG::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 {
-    if( window->isResizing( ))
+    if( window->isResizing() || _qmlItem->isAnimating( ))
         return;
 
-    if( !QRectF( wallArea ).intersects( _qmlItem->boundingRect( )))
+    if( !QRectF( wallArea ).intersects( _qmlItem->getSceneRect( )))
         return;
 
-    const QSize& renderSize = _qmlItem->boundingRect().size().toSize();
+    const QSize& renderSize = _qmlItem->getSceneRect().size().toSize();
     if( getTextureSize() != renderSize ||
         getTextureRegion() != window->getZoomRect( ))
     {

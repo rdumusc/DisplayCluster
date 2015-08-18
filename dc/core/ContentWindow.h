@@ -162,7 +162,7 @@ public:
 
 
     /** Set the current state. */
-    void setState( const ContentWindow::WindowState state );
+    bool setState( const ContentWindow::WindowState state );
 
     /** Toggle the state (selected / unselected). */
     Q_INVOKABLE void toggleSelectedState();

@@ -8,6 +8,7 @@ BaseContentWindow {
     color: options.alphaBlending ? "transparent" : "black"
 
     ContentItem {
+        property bool animating: parent.animating
         objectName: "ContentItem"
         anchors.bottom: parent.bottom
         width: parent.width

@@ -135,7 +135,7 @@ private:
     // For each segment, object for image parameters, decoding and rendering
     std::vector<PixelStreamSegmentRendererPtr> segmentRenderers_;
 
-    QRectF contentWindowRect_;
+    QRectF sceneRect_;
     QRectF wallArea_;
 
     FpsCounter fpsCounter_;

@@ -103,7 +103,7 @@ void PixelStream::renderPreview()
 
 void PixelStream::preRenderUpdate( ContentWindowPtr, const QRect& wallArea )
 {
-    contentWindowRect_ = _qmlItem->boundingRect();
+    sceneRect_ = _qmlItem->getSceneRect();
     wallArea_ = wallArea;
 }
 
@@ -287,10 +287,10 @@ QRectF PixelStream::getSceneCoordinates( const QRect& segment ) const
     const qreal normHeight = (qreal)segment.height() / (qreal)height_;
 
     // coordinates of segment in global tiled display space
-    return QRectF( contentWindowRect_.x() + normX * contentWindowRect_.width(),
-                   contentWindowRect_.y() + normY * contentWindowRect_.height(),
-                   normWidth * contentWindowRect_.width(),
-                   normHeight * contentWindowRect_.height( ));
+    return QRectF( sceneRect_.x() + normX * sceneRect_.width(),
+                   sceneRect_.y() + normY * sceneRect_.height(),
+                   normWidth * sceneRect_.width(),
+                   normHeight * sceneRect_.height( ));
 }
 
 bool PixelStream::isVisible( const QRect& segment ) const

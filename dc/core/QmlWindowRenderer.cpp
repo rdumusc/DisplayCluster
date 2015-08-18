@@ -98,7 +98,7 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
 
 void QmlWindowRenderer::setStackingOrder( const int value )
 {
-    windowItem_->setProperty( "z", value );
+    windowItem_->setProperty( "stackingOrder", value );
 }
 
 void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,

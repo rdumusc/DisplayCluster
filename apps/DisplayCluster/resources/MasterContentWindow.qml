@@ -20,14 +20,10 @@ BaseContentWindow {
     function toggleFocusMode() {
         if(contentwindow.label === "Dock")
             return
-        if(!contentwindow.focused) {
-            displaygroup.focus(contentwindow.id)
-            contentwindow.state = ContentWindow.SELECTED
-        }
-        else {
-            contentwindow.state = ContentWindow.NONE
+        if(contentwindow.focused)
             displaygroup.unfocus(contentwindow.id)
-        }
+        else
+            displaygroup.focus(contentwindow.id)
     }
 
     TouchMouseArea {

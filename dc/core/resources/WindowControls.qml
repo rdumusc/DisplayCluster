@@ -16,7 +16,7 @@ Rectangle {
     anchors.top: parent.top
     anchors.topMargin: options.showWindowBorders ? -Style.windowBorderWidth / 2 : 0
     anchors.rightMargin: Style.controlsLeftMargin
-    visible: contentwindow.label !== "Dock" && opacity > 0
+    visible: opacity > 0 && contentwindow.label !== "Dock"
     opacity: 0
 
     ListView {
@@ -63,10 +63,6 @@ Rectangle {
                 target: buttons
                 fixed_buttons_count: 2
             }
-            PropertyChanges {
-                target: rootObj
-                visible: true
-            }
         },
         State {
             name: "selected"
@@ -89,18 +85,16 @@ Rectangle {
         }
     ]
 
-    Behavior on opacity {
-        NumberAnimation {
-            target: rootObj
-            property: "opacity"
-            duration: Style.focusTransitionTime
-            easing.type: Easing.InOutQuad
+    transitions: [
+        Transition {
+            NumberAnimation {
+                target: rootObj
+                property: "opacity"
+                duration: Style.focusTransitionTime
+                easing.type: Easing.InOutQuad
+            }
+            ColorAnimation { duration: Style.focusTransitionTime }
+            ColorAnimation { target: border; duration: Style.focusTransitionTime }
         }
-    }
-    Behavior on color {
-        ColorAnimation {}
-    }
-    Behavior on border.color {
-        ColorAnimation {}
-    }
+    ]
 }

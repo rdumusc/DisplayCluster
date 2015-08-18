@@ -229,7 +229,7 @@ bool PDF::isValid( const int pageNumber ) const
 
 void PDF::preRenderUpdate( ContentWindowPtr window, const QRect& /*wallArea*/ )
 {
-    if( window->isResizing( ))
+    if( window->isResizing() || _qmlItem->isAnimating( ))
         return;
 
     PDFContent& content = static_cast<PDFContent&>( *window->getContent( ));
@@ -237,11 +237,11 @@ void PDF::preRenderUpdate( ContentWindowPtr window, const QRect& /*wallArea*/ )
     const bool pageHasChanged = (pageNumber_ != content.getPage( ));
     setPage( content.getPage( ));
 
-    const QSize& windowSize = window->getCoordinates().size().toSize();
-    if( pageHasChanged || texture_.getSize() != windowSize ||
+    const QSize& renderSize = _qmlItem->getSceneRect().size().toSize();
+    if( pageHasChanged || texture_.getSize() != renderSize ||
         textureRect_ != window->getZoomRect( ) )
     {
-        updateTexture( windowSize, window->getZoomRect( ));
+        updateTexture( renderSize, window->getZoomRect( ));
     }
 }
 

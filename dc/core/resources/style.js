@@ -2,6 +2,7 @@
 
 var focusTransitionTime = 500;
 var focusContextOpacity = 0.7;
+var focusZorder = 100;
 
 var borderWidth = 100
 var activeBorderColor = "red";

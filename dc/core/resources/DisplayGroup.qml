@@ -16,7 +16,7 @@ Item {
         color: "black"
         opacity: 0
         visible: opacity > 0
-        z: 100
+        z: Style.focusZorder
         states: [
             State {
                 name: "focused"

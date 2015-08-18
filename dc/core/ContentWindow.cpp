@@ -182,25 +182,30 @@ void ContentWindow::setFocused( const bool value )
         return;
 
     focused_ = value;
+
     emit focusedChanged();
-    emit modified();
+
+    // Only emit modified once, in setState() or here
+    if( !setState( focused_ ? SELECTED : NONE ))
+        emit modified();
 }
 
-void ContentWindow::setState( const ContentWindow::WindowState state )
+bool ContentWindow::setState( const ContentWindow::WindowState state )
 {
     if( windowState_ == state )
-        return;
+        return false;
 
     if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM &&
         state == SELECTED && !hasEventReceivers( ))
     {
-        return;
+        return false;
     }
 
     windowState_ = state;
 
     emit stateChanged();
     emit modified();
+    return true;
 }
 
 void ContentWindow::toggleSelectedState()
