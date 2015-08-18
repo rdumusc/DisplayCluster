@@ -94,7 +94,7 @@ void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
     if( it == contentWindows_.end( ))
         return;
 
-    unfocus( (*it)->getID( ));
+    removeFocusedWindow( *it );
     contentWindows_.erase( it );
 
     // disconnect any existing connections with the window
@@ -168,8 +168,8 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
     BOOST_FOREACH( ContentWindowPtr window, contentWindows )
     {
         addContentWindow( window );
-        if( window->isSelected( ))
-            focus( window->getID( ));
+        if( window->isFocused( ))
+            focusedWindows_.insert( window );
     }
 }
 
@@ -206,13 +206,11 @@ void DisplayGroup::focus( const QUuid& id )
 void DisplayGroup::unfocus( const QUuid& id )
 {
     auto window = getContentWindow( id );
-    if( ! window )
+    if( !window )
         return;
 
     window->setFocused( false );
-    if( focusedWindows_.erase( window ) && focusedWindows_.empty( ))
-        emit hasFocusedWindowsChanged();
-
+    removeFocusedWindow( window );
     sendDisplayGroup();
 }
 
@@ -246,4 +244,10 @@ void DisplayGroup::watchChanges( ContentWindowPtr contentWindow )
              this, SLOT( sendDisplayGroup( )));
     connect( contentWindow.get(), SIGNAL( contentModified( )),
              this, SLOT( sendDisplayGroup( )));
+}
+
+void DisplayGroup::removeFocusedWindow( ContentWindowPtr window )
+{
+    if( focusedWindows_.erase( window ) && focusedWindows_.empty( ))
+        emit hasFocusedWindowsChanged();
 }

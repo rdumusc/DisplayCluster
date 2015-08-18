@@ -51,6 +51,7 @@
 enum SizeState
 {
     SIZE_1TO1,
+    SIZE_LARGE,
     SIZE_FULLSCREEN
 };
 

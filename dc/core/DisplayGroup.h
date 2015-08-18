@@ -218,6 +218,7 @@ private:
     }
 
     void watchChanges( ContentWindowPtr contentWindow );
+    void removeFocusedWindow( ContentWindowPtr window );
 
     bool showWindowTitles_;
     ContentWindowPtrs contentWindows_;

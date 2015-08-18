@@ -305,7 +305,8 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion4File )
     BOOST_REQUIRE( success );
     BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
     BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), true );
-    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( QPointF( 0, 0 ), wallSize ));
+    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(),
+                       QRectF( QPointF( 0, 0 ), wallSize ));
     BOOST_CHECK_EQUAL( displayGroup->hasFocusedWindows(), true );
 
     checkWindowVersion4( displayGroup->getContentWindows()[0] );

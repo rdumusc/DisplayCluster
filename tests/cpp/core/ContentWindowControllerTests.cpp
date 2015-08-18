@@ -41,6 +41,8 @@
 #include <boost/test/unit_test.hpp>
 namespace ut = boost::unit_test;
 
+#include <boost/make_shared.hpp>
+
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "ContentWindowController.h"
@@ -54,6 +56,8 @@ namespace
 {
 const QSizeF wallSize( 1000, 1000 );
 const QSize CONTENT_SIZE( 800, 600 );
+const QSize BIG_CONTENT_SIZE( CONTENT_SIZE * 4 );
+const QSize SMALL_CONTENT_SIZE( CONTENT_SIZE / 4 );
 const qreal CONTENT_AR = qreal(CONTENT_SIZE.width()) /
                          qreal(CONTENT_SIZE.height());
 }
@@ -95,27 +99,89 @@ BOOST_AUTO_TEST_CASE( testResizeAndMove )
     BOOST_CHECK_CLOSE( coords.height(), centeredSize.height(), 0.00001 );
 }
 
-BOOST_AUTO_TEST_CASE( testOneToOneSize )
+ContentWindowPtr makeDummyWindow()
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( CONTENT_SIZE );
-    ContentWindow window( content );
+    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
+    window->setCoordinates( QRectF( 610, 220, 30, 40 ));
 
-    window.setCoordinates( QRectF( 610, 220, 30, 40 ));
-
-    const QRectF& coords = window.getCoordinates();
-
+    const QRectF& coords = window->getCoordinates();
     BOOST_REQUIRE_EQUAL( coords.topLeft(), QPointF( 610, 220 ));
     BOOST_REQUIRE_EQUAL( coords.center(), QPointF( 625, 240 ));
 
+    return window;
+}
+
+BOOST_AUTO_TEST_CASE( testOneToOneSize )
+{
+    ContentWindowPtr window = makeDummyWindow();
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    ContentWindowController controller( window, *displayGroup );
+    ContentWindowController controller( *window, *displayGroup );
+    const QRectF& coords = window->getCoordinates();
 
     controller.adjustSize( SIZE_1TO1 );
 
     // 1:1 size restored around existing window center
     BOOST_CHECK_EQUAL( coords.size(), CONTENT_SIZE );
     BOOST_CHECK_EQUAL( coords.center(), QPointF( 625, 240 ));
+}
+
+BOOST_AUTO_TEST_CASE( testSizeLimitsBigContent )
+{
+    ContentWindowPtr window = makeDummyWindow();
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( *window, *displayGroup );
+
+    // Make a large content and validate it
+    ContentPtr content = window->getContent();
+    content->setDimensions( BIG_CONTENT_SIZE );
+    BOOST_REQUIRE_EQUAL( content->getMaxDimensions(), BIG_CONTENT_SIZE );
+    BOOST_REQUIRE_EQUAL( ContentWindow::getMaxContentScale(), 2.0 );
+
+    // Test controller and zoom limits
+    BOOST_CHECK_EQUAL( controller.getMinSize(), QSize( 300, 300 ));
+    BOOST_CHECK_EQUAL( controller.getMaxSize(), 2.0 * BIG_CONTENT_SIZE );
+
+    const QSizeF normalMaxSize = controller.getMaxSize();
+    window->setZoomRect( QRectF( QPointF( 0.3, 0.1 ), QSizeF( 0.25, 0.25 )));
+    BOOST_CHECK_EQUAL( controller.getMaxSize(), 0.25 * normalMaxSize );
+}
+
+BOOST_AUTO_TEST_CASE( testSizeLimitsSmallContent )
+{
+    ContentWindowPtr window = makeDummyWindow();
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( *window, *displayGroup );
+
+    // Make a small content and validate it
+    ContentPtr content = window->getContent();
+    content->setDimensions( SMALL_CONTENT_SIZE );
+    BOOST_REQUIRE_EQUAL( content->getMaxDimensions(), SMALL_CONTENT_SIZE );
+    BOOST_REQUIRE_EQUAL( ContentWindow::getMaxContentScale(), 2.0 );
+
+    // Test controller and zoom limits
+    BOOST_CHECK_EQUAL( controller.getMinSize(), QSize( 300, 300 ));
+    BOOST_CHECK_EQUAL( controller.getMaxSize(), 2.0 * SMALL_CONTENT_SIZE );
+
+    const QSizeF normalMaxSize = controller.getMaxSize();
+    window->setZoomRect( QRectF( QPointF( 0.3, 0.1 ), QSizeF( 0.25, 0.25 )));
+    BOOST_CHECK_EQUAL( controller.getMaxSize(), 0.25 * normalMaxSize );
+}
+
+BOOST_AUTO_TEST_CASE( testLargeSize )
+{
+    ContentWindowPtr window = makeDummyWindow();
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( *window, *displayGroup );
+    const QRectF& coords = window->getCoordinates();
+
+    controller.adjustSize( SIZE_LARGE );
+
+    // 75% of the screen, resized around window center
+    BOOST_CHECK_EQUAL( coords.center(), QPointF( 625, 240 ));
+    BOOST_CHECK_EQUAL( coords.width(), 0.75 * wallSize.width( ));
+    BOOST_CHECK_EQUAL( coords.height(), 0.75 * wallSize.width() / CONTENT_AR );
 }
 
 BOOST_AUTO_TEST_CASE( testFullScreenSize )
@@ -178,7 +244,7 @@ BOOST_AUTO_TEST_CASE( testFocusModeCoordinates )
     const QRectF& coords = controller.getFocusedCoord();
 
     // focus mode, vertically centered on wall and repects inner margin
-    BOOST_CHECK_EQUAL( coords.x(), 50 );
+    BOOST_CHECK_EQUAL( coords.x(), 225 );
     BOOST_CHECK_EQUAL( coords.y(), 162.5 );
     BOOST_CHECK_EQUAL( coords.width(), 900 );
     BOOST_CHECK_EQUAL( coords.height(), 675 );

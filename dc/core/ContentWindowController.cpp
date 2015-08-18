@@ -49,6 +49,8 @@ namespace
 const qreal MIN_SIZE = 0.05;
 const qreal MIN_VISIBLE_AREA_PX = 300.0;
 const qreal INSIDE_MARGIN = 0.05;
+const qreal LARGE_SIZE_SCALE = 0.75;
+const qreal WINDOW_CONTROLS_MARGIN_PX = 175.0;
 }
 
 ContentWindowController::ContentWindowController()
@@ -161,6 +163,12 @@ void ContentWindowController::adjustSize( const SizeState state )
         resize( contentWindow_->getContent()->getDimensions(), CENTER );
         break;
 
+    case SIZE_LARGE:
+    {
+        const QSizeF wallSize = displayGroup_->getCoordinates().size();
+        resize( LARGE_SIZE_SCALE * wallSize, CENTER );
+    } break;
+
     case SIZE_FULLSCREEN:
     {
         QSizeF size = contentWindow_->getContent()->getDimensions();
@@ -208,7 +216,6 @@ QSizeF ContentWindowController::getMaxSize() const
     QSizeF maxSize = contentWindow_->getContent()->getMaxDimensions();
     if( maxSize.isEmpty() || maxSize == UNDEFINED_SIZE )
         maxSize = displayGroup_->getCoordinates().size();
-    maxSize = std::max( maxSize, getMinSize( ));
     maxSize *= ContentWindow::getMaxContentScale();
     maxSize.rwidth() *= contentWindow_->getZoomRect().size().width();
     maxSize.rheight() *= contentWindow_->getZoomRect().size().height();
@@ -267,7 +274,7 @@ void ContentWindowController::constrainFullyInside_( QRectF& window ) const
     const QRectF& group = displayGroup_->getCoordinates();
 
     const qreal margin = getInsideMargin_();
-    const qreal minX = margin;
+    const qreal minX = margin + WINDOW_CONTROLS_MARGIN_PX;
     const qreal minY = margin;
     const qreal maxX = group.width() - window.width() - margin;
     const qreal maxY = group.height() - window.height() - margin;
