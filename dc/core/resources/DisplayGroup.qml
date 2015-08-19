@@ -13,7 +13,7 @@ Item {
     Rectangle {
         id: focuscontext
         anchors.fill: parent
-        color: "black"
+        color: Style.focusContextColor
         opacity: 0
         visible: opacity > 0
         z: Style.focusZorder

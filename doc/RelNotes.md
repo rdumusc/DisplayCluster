@@ -9,7 +9,7 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 
 * Double tapping a window bring it in focus mode, replacing the old confusing
   switch to and from interaction mode with a tap and hold.
-* Animated transitions to and form the focus mode.
+* Animated transitions to and from the focus mode.
 
 ## Enhancements {#Enhancements}
 

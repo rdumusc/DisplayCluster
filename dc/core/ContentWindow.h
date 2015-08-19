@@ -128,7 +128,9 @@ public:
     void setContent( ContentPtr content );
 
 
-    /** Assign a controller. */
+    /** @return the controller for this window, or 0 if the window has not been
+     *          added to a DisplayGroup.
+     */
     ContentWindowController* getController();
 
     /** Assign a controller. */

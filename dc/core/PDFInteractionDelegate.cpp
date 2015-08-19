@@ -55,22 +55,22 @@ void PDFInteractionDelegate::tap( const QPointF position )
     const QRectF& coord = _contentWindow.getCoordinates();
 
     if ( position.x() > coord.center().x( ))
-        _getPDFContent()->nextPage();
+        _getPDFContent().nextPage();
     else
-        _getPDFContent()->previousPage();
+        _getPDFContent().previousPage();
 }
 
 void PDFInteractionDelegate::swipeLeft()
 {
-    _getPDFContent()->previousPage();
+    _getPDFContent().previousPage();
 }
 
 void PDFInteractionDelegate::swipeRight()
 {
-    _getPDFContent()->nextPage();
+    _getPDFContent().nextPage();
 }
 
-PDFContent* PDFInteractionDelegate::_getPDFContent()
+PDFContent& PDFInteractionDelegate::_getPDFContent()
 {
-    return static_cast<PDFContent*>( _contentWindow.getContent().get( ));
+    return static_cast<PDFContent&>( *_contentWindow.getContent( ));
 }

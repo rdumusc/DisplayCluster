@@ -231,8 +231,9 @@ QSizeF ContentWindowController::getMaxContentSize() const
 QRectF ContentWindowController::getFocusedCoord() const
 {
     const qreal margin = 2.0 * getInsideMargin_();
-    const QSizeF& dg = displayGroup_->getCoordinates().size();
-    const QSizeF maxSize = dg.boundedTo( dg - QSizeF( margin, margin ));
+    const QSizeF& wallSize = displayGroup_->getCoordinates().size();
+    const QSizeF maxSize = wallSize.boundedTo( wallSize -
+                                               QSizeF( margin, margin ));
 
     QSizeF size = contentWindow_->getContent()->getDimensions();
     size.scale( maxSize, Qt::KeepAspectRatio );
@@ -240,7 +241,7 @@ QRectF ContentWindowController::getFocusedCoord() const
 
     const qreal x = contentWindow_->getCoordinates().center().x();
     QRectF coord( QPointF(), size );
-    coord.moveCenter( QPointF( x, dg.height() * 0.5 ));
+    coord.moveCenter( QPointF( x, wallSize.height() * 0.5 ));
     constrainFullyInside_( coord );
     return coord;
 }

@@ -50,10 +50,10 @@ ContentInteractionDelegate::~ContentInteractionDelegate() {}
 
 QRectF ContentInteractionDelegate::getWindowCoord() const
 {
-    if( _contentWindow.isFocused( ))
+    if( _contentWindow.isFocused( ) && _contentWindow.getController( ))
         return _contentWindow.getController()->getFocusedCoord();
-    else
-        return _contentWindow.getCoordinates();
+
+    return _contentWindow.getCoordinates();
 }
 
 QPointF

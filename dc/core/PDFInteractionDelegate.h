@@ -57,7 +57,7 @@ public:
     void swipeRight() override;
 
 private:
-    PDFContent* _getPDFContent();
+    PDFContent& _getPDFContent();
 };
 
 #endif // PDFINTERACTIONDELEGATE_H

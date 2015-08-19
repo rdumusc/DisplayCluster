@@ -119,9 +119,16 @@ void ZoomInteractionDelegate::_constraintPosition( QRectF& zoomRect ) const
         zoomRect.moveBottom( 1.0 );
 }
 
+QSizeF getMaxContentSize( ContentWindow& window )
+{
+    if( window.getController( ))
+        return window.getController()->getMaxContentSize();
+    return window.getContent()->getMaxDimensions();
+}
+
 QSizeF ZoomInteractionDelegate::_getMaxZoom() const
 {
-    const QSizeF content( _contentWindow.getController()->getMaxContentSize( ));
+    const QSizeF content( getMaxContentSize( _contentWindow ));
     const QSizeF window( getWindowCoord().size( ));
     const qreal maxScaleFactor = ContentWindow::getMaxContentScale();
 

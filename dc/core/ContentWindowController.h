@@ -108,7 +108,7 @@ public:
     /** @return the maximum size of the content, considering wall size. */
     QSizeF getMaxContentSize() const;
 
-    /** Get the focused coodinates for the window. */
+    /** @return the focused coordinates for the window. */
     Q_INVOKABLE QRectF getFocusedCoord() const;
 
 private:
