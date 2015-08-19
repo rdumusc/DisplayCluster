@@ -13,9 +13,9 @@ BaseContentWindow {
         anchors.bottom: parent.bottom
         width: parent.width
         height: parent.height - (titleBar.visible ? titleBar.height : 0)
-    }
 
-    ZoomContext {
+        ZoomContext {
+        }
     }
 
     WindowControls {

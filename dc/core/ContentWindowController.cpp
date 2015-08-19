@@ -213,13 +213,19 @@ QSizeF ContentWindowController::getMinSize() const
 
 QSizeF ContentWindowController::getMaxSize() const
 {
-    QSizeF maxSize = contentWindow_->getContent()->getMaxDimensions();
-    if( maxSize.isEmpty() || maxSize == UNDEFINED_SIZE )
-        maxSize = displayGroup_->getCoordinates().size();
+    QSizeF maxSize = getMaxContentSize();
     maxSize *= ContentWindow::getMaxContentScale();
     maxSize.rwidth() *= contentWindow_->getZoomRect().size().width();
     maxSize.rheight() *= contentWindow_->getZoomRect().size().height();
     return maxSize;
+}
+
+QSizeF ContentWindowController::getMaxContentSize() const
+{
+    QSizeF maxContentSize = contentWindow_->getContent()->getMaxDimensions();
+    if( maxContentSize.isEmpty() || maxContentSize == UNDEFINED_SIZE )
+        maxContentSize = displayGroup_->getCoordinates().size();
+    return maxContentSize;
 }
 
 QRectF ContentWindowController::getFocusedCoord() const
@@ -288,13 +294,12 @@ void ContentWindowController::constrainFullyInside_( QRectF& window ) const
 QRectF
 ContentWindowController::getCenteredCoordinates_( const QSizeF& size ) const
 {
-    const qreal totalWidth = displayGroup_->getCoordinates().width();
-    const qreal totalHeight = displayGroup_->getCoordinates().height();
+    const QRectF& group = displayGroup_->getCoordinates();
 
     // centered coordinates on the display group
-    return QRectF( (totalWidth - size.width()) * 0.5,
-                   (totalHeight - size.height()) * 0.5,
-                   size.width(), size.height( ));
+    QRectF coord( QPointF(), size );
+    coord.moveCenter( group.center( ));
+    return coord;
 }
 
 qreal ContentWindowController::getInsideMargin_() const

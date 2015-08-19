@@ -81,8 +81,9 @@ void PixelStreamInteractionDelegate::pan( const QPointF position,
     else
         deflectEvent.type = deflect::Event::EVT_MOVE;
 
-    deflectEvent.dx = delta.x() / _contentWindow.getCoordinates().width();
-    deflectEvent.dy = delta.y() / _contentWindow.getCoordinates().height();
+    const QPointF normDelta = getNormalizedPoint( delta );
+    deflectEvent.dx = normDelta.x();
+    deflectEvent.dy = normDelta.y();
 
     _contentWindow.dispatchEvent( deflectEvent );
 }
@@ -173,7 +174,7 @@ deflect::Event PixelStreamInteractionDelegate::_getNormEvent( const QPointF&
     // Should also work for the same reason as QTapGesture, but untested:
     // QTapAndHoldGesture, QPanGesture
 
-    const QRectF& win = _contentWindow.getCoordinates();
+    const QRectF& win = getWindowCoord();
 
     deflect::Event deflectEvent;
     deflectEvent.mouseLeft = true;

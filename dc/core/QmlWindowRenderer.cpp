@@ -75,7 +75,7 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
     wallContent_->setQmlItem( contentItem );
 
     ContentItem* zoomContextItem =
-      windowItem_->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
+      contentItem->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
     zoomContextItem->setWallContent( wallContent_.get( ));
 
     if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )

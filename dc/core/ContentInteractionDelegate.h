@@ -89,6 +89,9 @@ public:
 
 protected:
     ContentWindow& _contentWindow;
+
+    QRectF getWindowCoord() const;
+    QPointF getNormalizedPoint( const QPointF& point ) const;
 };
 
 #endif // CONTENTINTERACTIONDELEGATE_H

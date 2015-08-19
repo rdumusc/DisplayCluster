@@ -105,6 +105,9 @@ public:
      *          wall size and current content zoom. */
     QSizeF getMaxSize() const;
 
+    /** @return the maximum size of the content, considering wall size. */
+    QSizeF getMaxContentSize() const;
+
     /** Get the focused coodinates for the window. */
     Q_INVOKABLE QRectF getFocusedCoord() const;
 

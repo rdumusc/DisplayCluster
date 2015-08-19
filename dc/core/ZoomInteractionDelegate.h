@@ -64,7 +64,7 @@ private:
     void _moveZoomRect( const QPointF& sceneDelta ) const;
     void _scaleZoomRect( const QPointF& center, qreal zoomFactor ) const;
     void _constraintPosition( QRectF& zoomRect ) const;
-    QPointF _getNormalizedPoint( const QPointF& point ) const;
+    QSizeF _getMaxZoom() const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

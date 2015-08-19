@@ -39,10 +39,27 @@
 
 #include "ContentInteractionDelegate.h"
 
+#include "ContentWindow.h"
+
 ContentInteractionDelegate::ContentInteractionDelegate( ContentWindow& contentWindow )
     : _contentWindow( contentWindow )
 {
 }
 
-ContentInteractionDelegate::~ContentInteractionDelegate()
-{}
+ContentInteractionDelegate::~ContentInteractionDelegate() {}
+
+QRectF ContentInteractionDelegate::getWindowCoord() const
+{
+    if( _contentWindow.isFocused( ))
+        return _contentWindow.getController()->getFocusedCoord();
+    else
+        return _contentWindow.getCoordinates();
+}
+
+QPointF
+ContentInteractionDelegate::getNormalizedPoint( const QPointF& point ) const
+{
+    const QRectF& window = getWindowCoord();
+    return QPointF( point.x() / window.width(),
+                    point.y() / window.height( ));
+}

@@ -191,7 +191,7 @@ bool DisplayGroup::hasFocusedWindows() const
 
 void DisplayGroup::focus( const QUuid& id )
 {
-    auto window = getContentWindow( id );
+    ContentWindowPtr window = getContentWindow( id );
     if( ! window )
         return;
 
@@ -205,12 +205,14 @@ void DisplayGroup::focus( const QUuid& id )
 
 void DisplayGroup::unfocus( const QUuid& id )
 {
-    auto window = getContentWindow( id );
+    ContentWindowPtr window = getContentWindow( id );
     if( !window )
         return;
 
     window->setFocused( false );
     removeFocusedWindow( window );
+    // Make sure the window dimensions are re-adjusted to the new zoom level
+    window->getController()->scale( window->getCoordinates().center(), 1.0 );
     sendDisplayGroup();
 }
 
