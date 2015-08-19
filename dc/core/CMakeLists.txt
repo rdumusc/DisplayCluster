@@ -71,7 +71,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   MPIChannel.h
   MPIContext.h
   PixelStreamContent.h
-  PixelStreamInteractionDelegate.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
   Renderable.h
@@ -124,6 +123,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MovieContent.h
   Options.h
   PixelStream.h
+  PixelStreamInteractionDelegate.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
   RenderController.h

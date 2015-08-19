@@ -45,6 +45,7 @@
 #include "DisplayGroup.h"
 #include "localstreamer/DockPixelStreamer.h"
 #include "log.h"
+#include "PixelStreamInteractionDelegate.h"
 
 #include <deflect/Frame.h>
 
@@ -81,9 +82,15 @@ void PixelStreamWindowManager::showWindow( const QString& uri )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
-        contentWindow->setState( contentWindow->hasEventReceivers() ?
+    {
+        PixelStreamInteractionDelegate* delegate =
+                static_cast<PixelStreamInteractionDelegate*>(
+                    contentWindow->getInteractionDelegate( ));
+
+        contentWindow->setState( delegate->hasEventReceivers() ?
                                      ContentWindow::SELECTED :
                                      ContentWindow::NONE );
+    }
 }
 
 void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
@@ -132,7 +139,8 @@ void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
 
 void PixelStreamWindowManager::registerEventReceiver( const QString uri,
                                                       const bool exclusive,
-                                                      deflect::EventReceiver* receiver )
+                                                      deflect::EventReceiver*
+                                                      receiver )
 {
     bool success = false;
 
@@ -147,9 +155,12 @@ void PixelStreamWindowManager::registerEventReceiver( const QString uri,
 
     // If a receiver is already registered, don't register this one if
     // "exclusive" was requested
-    if( !exclusive || !contentWindow->hasEventReceivers( ))
+    PixelStreamInteractionDelegate* delegate =
+            static_cast<PixelStreamInteractionDelegate*>(
+                contentWindow->getInteractionDelegate( ));
+    if( !exclusive || !delegate->hasEventReceivers( ))
     {
-        success = contentWindow->registerEventReceiver( receiver );
+        success = delegate->registerEventReceiver( receiver );
 
         if( success )
             contentWindow->setState( ContentWindow::SELECTED );

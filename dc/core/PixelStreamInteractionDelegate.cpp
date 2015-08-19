@@ -41,10 +41,17 @@
 
 #include "ContentWindow.h"
 
+#include <deflect/EventReceiver.h>
+
 PixelStreamInteractionDelegate::PixelStreamInteractionDelegate( ContentWindow&
                                                                 contentWindow )
     : ContentInteractionDelegate( contentWindow )
+    , _eventReceiversCount( 0 )
 {
+    connect( &contentWindow, SIGNAL( coordinatesChanged( )),
+             this, SLOT( _sendSizeChangedEvent( )));
+    connect( &contentWindow, SIGNAL( focusedChanged( )),
+             this, SLOT( _sendSizeChangedEvent( )));
 }
 
 void PixelStreamInteractionDelegate::tap( const QPointF position )
@@ -52,7 +59,7 @@ void PixelStreamInteractionDelegate::tap( const QPointF position )
     deflect::Event deflectEvent = _getNormEvent( position );
     deflectEvent.type = deflect::Event::EVT_CLICK;
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 void PixelStreamInteractionDelegate::doubleTap( const QPointF position )
@@ -60,7 +67,7 @@ void PixelStreamInteractionDelegate::doubleTap( const QPointF position )
     deflect::Event deflectEvent = _getNormEvent( position );
     deflectEvent.type = deflect::Event::EVT_DOUBLECLICK;
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 void PixelStreamInteractionDelegate::tapAndHold( const QPointF position )
@@ -68,7 +75,7 @@ void PixelStreamInteractionDelegate::tapAndHold( const QPointF position )
     deflect::Event deflectEvent = _getNormEvent( position );
     deflectEvent.type = deflect::Event::EVT_TAP_AND_HOLD;
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 void PixelStreamInteractionDelegate::pan( const QPointF position,
@@ -85,7 +92,7 @@ void PixelStreamInteractionDelegate::pan( const QPointF position,
     deflectEvent.dx = normDelta.x();
     deflectEvent.dy = normDelta.y();
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 void PixelStreamInteractionDelegate::panFinished( const QPointF position )
@@ -93,7 +100,7 @@ void PixelStreamInteractionDelegate::panFinished( const QPointF position )
     deflect::Event deflectEvent = _getNormEvent( position );
     deflectEvent.type = deflect::Event::EVT_RELEASE;
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 void PixelStreamInteractionDelegate::pinch( const QPointF position,
@@ -104,7 +111,7 @@ void PixelStreamInteractionDelegate::pinch( const QPointF position,
     deflectEvent.mouseLeft = false;
     deflectEvent.dy = scaleFactor - 1.0;
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 deflect::Event swipeEvent( deflect::Event::EventType type )
@@ -116,22 +123,22 @@ deflect::Event swipeEvent( deflect::Event::EventType type )
 
 void PixelStreamInteractionDelegate::swipeLeft()
 {
-    _contentWindow.dispatchEvent( swipeEvent( deflect::Event::EVT_SWIPE_LEFT ));
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_LEFT ));
 }
 
 void PixelStreamInteractionDelegate::swipeRight()
 {
-    _contentWindow.dispatchEvent( swipeEvent( deflect::Event::EVT_SWIPE_RIGHT));
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_RIGHT));
 }
 
 void PixelStreamInteractionDelegate::swipeUp()
 {
-    _contentWindow.dispatchEvent( swipeEvent( deflect::Event::EVT_SWIPE_UP ));
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_UP ));
 }
 
 void PixelStreamInteractionDelegate::swipeDown()
 {
-    _contentWindow.dispatchEvent( swipeEvent( deflect::Event::EVT_SWIPE_DOWN ));
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_DOWN ));
 }
 
 void PixelStreamInteractionDelegate::keyPress( const int key,
@@ -145,7 +152,7 @@ void PixelStreamInteractionDelegate::keyPress( const int key,
     strncpy( deflectEvent.text, text.toStdString().c_str(),
              sizeof( deflectEvent.text ));
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
 }
 
 void PixelStreamInteractionDelegate::keyRelease( const int key,
@@ -159,7 +166,36 @@ void PixelStreamInteractionDelegate::keyRelease( const int key,
     strncpy( deflectEvent.text, text.toStdString().c_str(),
              sizeof( deflectEvent.text ));
 
-    _contentWindow.dispatchEvent( deflectEvent );
+    emit notify( deflectEvent );
+}
+
+bool PixelStreamInteractionDelegate::registerEventReceiver(
+                                              deflect::EventReceiver* receiver )
+{
+    const bool success = connect( this, SIGNAL( notify( deflect::Event )),
+                                  receiver,
+                                  SLOT( processEvent( deflect::Event )));
+    if( success )
+        ++_eventReceiversCount;
+
+    return success;
+}
+
+bool PixelStreamInteractionDelegate::hasEventReceivers() const
+{
+    return _eventReceiversCount > 0;
+}
+
+void PixelStreamInteractionDelegate::_sendSizeChangedEvent()
+{
+    const QRectF& win = getWindowCoord();
+
+    deflect::Event deflectEvent;
+    deflectEvent.type = deflect::Event::EVT_VIEW_SIZE_CHANGED;
+    deflectEvent.dx = win.width();
+    deflectEvent.dy = win.height();
+
+    emit notify( deflectEvent );
 }
 
 deflect::Event PixelStreamInteractionDelegate::_getNormEvent( const QPointF&

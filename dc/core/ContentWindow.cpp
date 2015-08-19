@@ -40,7 +40,6 @@
 
 #include "ContentInteractionDelegate.h"
 #include "ContentWindowController.h"
-#include <deflect/EventReceiver.h>
 
 #include "config.h"
 #include "log.h"
@@ -62,7 +61,6 @@ ContentWindow::ContentWindow()
     , focused_( false )
     , windowState_( NONE )
     , controlsVisible_( false )
-    , eventReceiversCount_( 0 )
 {
 }
 
@@ -73,7 +71,6 @@ ContentWindow::ContentWindow( ContentPtr content )
     , focused_( false )
     , windowState_( NONE )
     , controlsVisible_( false )
-    , eventReceiversCount_( 0 )
 {
     assert( content );
     setContent( content );
@@ -133,9 +130,9 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
     setWidth( coordinates.width( ));
     setHeight( coordinates.height( ));
 
-    emit modified();
+    emit coordinatesChanged();
 
-    sendSizeChangedEvent();
+    emit modified();
 }
 
 const QRectF& ContentWindow::getZoomRect() const
@@ -195,10 +192,13 @@ bool ContentWindow::setState( const ContentWindow::WindowState state )
     if( windowState_ == state )
         return false;
 
-    if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM &&
-        state == SELECTED && !hasEventReceivers( ))
+    if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM && state == SELECTED )
     {
-        return false;
+        PixelStreamInteractionDelegate* delegate =
+                static_cast<PixelStreamInteractionDelegate*>(
+                    interactionDelegate_.get( ));
+        if( !delegate->hasEventReceivers( ))
+            return false;
     }
 
     windowState_ = state;
@@ -234,26 +234,6 @@ bool ContentWindow::isResizing() const
 bool ContentWindow::isHidden() const
 {
     return windowState_ == HIDDEN;
-}
-
-bool ContentWindow::registerEventReceiver( deflect::EventReceiver* receiver )
-{
-    const bool success = connect( this, SIGNAL( notify( deflect::Event )),
-                                  receiver, SLOT( processEvent( deflect::Event )));
-    if ( success )
-        ++eventReceiversCount_;
-
-    return success;
-}
-
-bool ContentWindow::hasEventReceivers() const
-{
-    return eventReceiversCount_ > 0;
-}
-
-void ContentWindow::dispatchEvent( const deflect::Event event_ )
-{
-    emit notify( event_ );
 }
 
 ContentInteractionDelegate* ContentWindow::getInteractionDelegate()
@@ -310,14 +290,4 @@ void ContentWindow::createInteractionDelegate()
         interactionDelegate_.reset( new ZoomInteractionDelegate( *this ));
         break;
     }
-}
-
-void ContentWindow::sendSizeChangedEvent()
-{
-    deflect::Event state;
-    state.type = deflect::Event::EVT_VIEW_SIZE_CHANGED;
-    state.dx = coordinates_.width();
-    state.dy = coordinates_.height();
-
-    emit notify( state );
 }

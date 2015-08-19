@@ -42,11 +42,15 @@
 
 #include "ContentInteractionDelegate.h"
 
+#include <deflect/Event.h>
+
 /**
  * Forward user actions to a deflect::Stream using Deflect events.
  */
 class PixelStreamInteractionDelegate : public ContentInteractionDelegate
 {
+    Q_OBJECT
+
 public:
     /** Constructor */
     PixelStreamInteractionDelegate( ContentWindow& contentWindow );
@@ -71,8 +75,23 @@ public:
     void keyRelease( int key, int modifiers, QString text ) override;
     //@}
 
+    /** Register to receive events on this content. */
+    bool registerEventReceiver( deflect::EventReceiver* receiver );
+
+    /** Does this delegate already have registered EventReceiver(s) */
+    bool hasEventReceivers() const;
+
+signals:
+    /** @internal Notify registered EventReceivers that an Event occured. */
+    void notify( deflect::Event event );
+
+private slots:
+    void _sendSizeChangedEvent();
+
 private:
     deflect::Event _getNormEvent( const QPointF& position ) const;
+
+    unsigned int _eventReceiversCount;
 };
 
 #endif // PIXELSTREAMINTERACTIONDELEGATE_H

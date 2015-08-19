@@ -49,19 +49,6 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 #include "DummyContent.h"
 
-#include <deflect/EventReceiver.h>
-
-class DummyEventReceiver : public deflect::EventReceiver
-{
-public:
-    DummyEventReceiver() : success_( false ) {}
-    virtual void processEvent( deflect::Event /*event*/ )
-    {
-        success_ = true;
-    }
-    bool success_;
-};
-
 namespace
 {
 const QSize wallSize( 1000, 1000 );
@@ -169,27 +156,6 @@ BOOST_AUTO_TEST_CASE( testWindowState )
     window.setState( ContentWindow::HIDDEN );
     BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
     BOOST_CHECK( window.isHidden( ));
-}
-
-BOOST_AUTO_TEST_CASE( testEventReceiver )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-
-    BOOST_REQUIRE( !window.hasEventReceivers() );
-
-    DummyEventReceiver receiver;
-    BOOST_REQUIRE( !receiver.success_ );
-
-    window.dispatchEvent( deflect::Event( ));
-    BOOST_CHECK( !receiver.success_ );
-
-    BOOST_CHECK( window.registerEventReceiver( &receiver ));
-    BOOST_CHECK( window.hasEventReceivers() );
-    BOOST_CHECK( !receiver.success_ );
-    window.dispatchEvent( deflect::Event( ));
-    BOOST_CHECK( receiver.success_ );
 }
 
 BOOST_AUTO_TEST_CASE( testToggleSelectedState )

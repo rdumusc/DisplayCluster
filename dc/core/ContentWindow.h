@@ -39,13 +39,12 @@
 #ifndef CONTENT_WINDOW_H
 #define CONTENT_WINDOW_H
 
-#include <deflect/Event.h>
 #include "types.h"
 
-#include "serializationHelpers.h"
 #include "Coordinates.h"
 #include "Content.h" // needed for serialization
 #include "ContentWindowController.h" // needed for serialization
+#include "serializationHelpers.h"
 
 #include <QObject>
 #include <QUuid>
@@ -180,15 +179,6 @@ public:
     bool isHidden() const;
 
 
-    /** Register an object to receive this window's Events. */
-    bool registerEventReceiver( deflect::EventReceiver* receiver );
-
-    /** Does this window already have registered Event receiver(s) */
-    bool hasEventReceivers() const;
-
-    /** Used by InteractionDelegate to emit notify( Event ). */
-    void dispatchEvent( const deflect::Event event );
-
     /**
      * Get the interaction delegate.
      * @note Rank0 only.
@@ -220,8 +210,8 @@ signals:
      */
     void modified();
 
-    /** @internal Notify registered EventReceivers that an Event occured. */
-    void notify( deflect::Event event );
+    /** Emitted when setCoordinates has been called. */
+    void coordinatesChanged();
 
     /** @name QProperty notifiers */
     //@{
@@ -306,7 +296,6 @@ private:
     }
 
     void createInteractionDelegate();
-    void sendSizeChangedEvent();
 
     QUuid uuid_;
     ContentPtr content_;
@@ -317,8 +306,6 @@ private:
     bool focused_;
     ContentWindow::WindowState windowState_;
     bool controlsVisible_;
-
-    unsigned int eventReceiversCount_;
 
     boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
 
