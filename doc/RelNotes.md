@@ -3,6 +3,27 @@ Release Notes {#ReleaseNotes}
 
 # New in this release {#New}
 
+DisplayCluster 0.6 introduces a new focus mode for windows.
+
+## New Features {#NewFeatures}
+
+* Double tapping a window bring it in focus mode, replacing the old confusing
+  switch to and from interaction mode with a tap and hold.
+* Animated transitions to and form the focus mode.
+
+## Enhancements {#Enhancements}
+
+* The handling of mouse and touch gestures has been unified and simplified.
+* Improved automatic placement of windows.
+
+## Bug Fixes {#Fixes}
+
+* Touchpads no longer generate undesired gestures on laptops.
+
+- - -
+
+# New in DisplayCluster 0.5
+
 DisplayCluster 0.5 provides the following improvements:
 
 ## New Features {#NewFeatures}
@@ -23,7 +44,7 @@ DisplayCluster 0.5 provides the following improvements:
 * Image pyramids keep the format of the source image file instead of using jpg.
 * Alpha blending (transparency) for SVGs and appropriate image types.
 
-## Enhancements {#Enhancements}
+## Enhancements
 
 * The startdisplaycluster script has been greatly improved and handles more MPI
   implementations (OpenMpi, MVAPICH, MPICH2, MPICH v3).
@@ -40,18 +61,18 @@ DisplayCluster 0.5 provides the following improvements:
 * CMake cleanups, using common_library and common_application from CMake/common.
 * Improved clarity of log messages
 
-## Optimizations {#Optimizations}
+## Optimizations
 
 * PDFs and SVGs have been optimized to move and resize much faster.
 * PDFs and SVGs don't redraw constantly in zoomed mode or in settings with
   mutliple windows per node.
 
-## Documentation {#Documentation}
+## Documentation
 
 * Added a short user guide.
 * Removed obsolete manual.pdf.
 
-## Bug Fixes {#Fixes}
+## Bug Fixes
 
 * The Webbrowser widget uses the correct webpage from the configuration.
 * Improved support for decoding Movies.

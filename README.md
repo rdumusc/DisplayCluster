@@ -24,10 +24,3 @@ DisplayCluster provides the following functionality:
   cmake ..
   make
 ```
-
-## Original Project
-
-This version of DisplayCluster is a fork of the original project by the Texas
-Advanced Computing Center, Austin:
-
-https://github.com/TACC/DisplayCluster
