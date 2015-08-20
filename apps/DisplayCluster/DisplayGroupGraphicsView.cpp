@@ -38,18 +38,13 @@
 
 #include "DisplayGroupGraphicsView.h"
 
+#include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "DisplayGroupGraphicsScene.h"
-#include "ContentWindowTouchArea.h"
-#include "ContentWindow.h"
 #include "Options.h"
 
-#include "gestures/PanGesture.h"
-#include "gestures/PanGestureRecognizer.h"
-#include "gestures/PinchGesture.h"
-#include "gestures/PinchGestureRecognizer.h"
-
 #include <boost/foreach.hpp>
+#include <QGraphicsObject>
 #include <QtDeclarative/QDeclarativeComponent>
 #include <QtDeclarative/QDeclarativeContext>
 
@@ -57,7 +52,7 @@
 
 namespace
 {
-const QString TOUCH_AREA_OBJECT_NAME( "ContentWindowTouchArea" );
+const QString MASTER_WINDOW_OBJECT_NAME( "MasterContentWindow" );
 const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/MasterContentWindow.qml" );
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
 }
@@ -180,19 +175,11 @@ void DisplayGroupGraphicsView::add( ContentWindowPtr contentWindow )
     // New Context for the window, ownership retained by the windowItem
     QDeclarativeContext* rootContext = engine_.rootContext();
     QDeclarativeContext* windowContext = new QDeclarativeContext( rootContext );
-    ContentWindowController* controller =
-            new ContentWindowController( *contentWindow, *displayGroup_,
-                                         windowContext );
-    windowContext->setContextProperty( "controller", controller );
     windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
 
     QDeclarativeComponent component( &engine_, QML_CONTENTWINDOW_URL );
     QObject* windowItem = component.create( windowContext );
     windowContext->setParent( windowItem );
-
-    ContentWindowTouchArea* touchArea =
-       windowItem->findChild<ContentWindowTouchArea*>( TOUCH_AREA_OBJECT_NAME );
-    touchArea->init( contentWindow, controller );
 
     // Store a reference to the window and add it to the scene
     const QUuid& id = contentWindow->getID();
@@ -224,10 +211,7 @@ void DisplayGroupGraphicsView::moveToFront( ContentWindowPtr contentWindow )
     foreach( QGraphicsItem* item, windows )
     {
         QGraphicsObject* obj = item->toGraphicsObject();
-        if( !obj )
-            continue;
-
-        if( obj->findChild<ContentWindowTouchArea*>( TOUCH_AREA_OBJECT_NAME ))
+        if( obj && obj->objectName() == MASTER_WINDOW_OBJECT_NAME )
             item->stackBefore( itemToRaise );
     }
 }

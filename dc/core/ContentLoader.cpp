@@ -70,13 +70,7 @@ bool ContentLoader::load( const QString& filename,
     if( windowSize.isValid( ))
         controller.resize( windowSize );
     else
-    {
-        const QSizeF wallSize = displayGroup_->getCoordinates().size();
-        QSizeF size = content->getDimensions();
-        size = std::max( size, controller.getMinSize( ));
-        size = std::min( size, std::min( wallSize, controller.getMaxSize( )));
-        controller.resize( size );
-    }
+        controller.adjustSize( SIZE_LARGE );
 
     if( windowCenterPosition.isNull( ))
         controller.moveCenterTo( displayGroup_->getCoordinates().center( ));

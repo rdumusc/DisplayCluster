@@ -39,9 +39,10 @@
 
 #include "QmlWindowRenderer.h"
 
-#include "ContentWindow.h"
-#include "PixelStream.h"
 #include "ContentItem.h"
+#include "ContentWindow.h"
+#include "ContentWindowController.h"
+#include "PixelStream.h"
 
 #include <QtDeclarative/QDeclarativeComponent>
 
@@ -71,9 +72,10 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
     ContentItem* contentItem =
        windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
     contentItem->setWallContent( wallContent_.get( ));
+    wallContent_->setQmlItem( contentItem );
 
     ContentItem* zoomContextItem =
-      windowItem_->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
+      contentItem->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
     zoomContextItem->setWallContent( wallContent_.get( ));
 
     if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
@@ -96,7 +98,7 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
 
 void QmlWindowRenderer::setStackingOrder( const int value )
 {
-    windowItem_->setProperty( "z", value );
+    windowItem_->setProperty( "stackingOrder", value );
 }
 
 void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,

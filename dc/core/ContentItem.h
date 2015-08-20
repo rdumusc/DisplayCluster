@@ -73,6 +73,12 @@ public:
     /** Get the role of this item. */
     Role getRole() const;
 
+    /** Get the scene coordinates of the item. */
+    QRectF getSceneRect() const;
+
+    /** Check if the item's size or position is being animated from QML. */
+    bool isAnimating() const;
+
 public slots:
     void setRole( Role arg );
 

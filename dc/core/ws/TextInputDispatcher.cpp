@@ -62,11 +62,9 @@ void TextInputDispatcher::sendKeyEventToActiveWindow( const char key ) const
     if ( !window )
         return;
 
-    QKeyEvent pressEvent( QEvent::KeyPress, keyMapper_.getQtKeyCode( key ),
-                          0, QString( key ));
-    QKeyEvent releaseEvent( QEvent::KeyRelease, keyMapper_.getQtKeyCode( key ),
-                            0, QString( key ));
+    const int keyCode = keyMapper_.getQtKeyCode( key );
+    const QString keyString( key );
 
-    window->getInteractionDelegate().keyPressEvent( &pressEvent );
-    window->getInteractionDelegate().keyReleaseEvent( &releaseEvent );
+    window->getInteractionDelegate()->keyPress( keyCode, 0, keyString );
+    window->getInteractionDelegate()->keyRelease( keyCode, 0, keyString );
 }

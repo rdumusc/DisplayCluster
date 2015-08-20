@@ -42,25 +42,11 @@
 namespace ut = boost::unit_test;
 
 #include "ContentWindow.h"
-#include "DisplayGroup.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
 
 #include "DummyContent.h"
-
-#include <deflect/EventReceiver.h>
-
-class DummyEventReceiver : public deflect::EventReceiver
-{
-public:
-    DummyEventReceiver() : success_( false ) {}
-    virtual void processEvent( deflect::Event /*event*/ )
-    {
-        success_ = true;
-    }
-    bool success_;
-};
 
 namespace
 {
@@ -169,48 +155,6 @@ BOOST_AUTO_TEST_CASE( testWindowState )
     window.setState( ContentWindow::HIDDEN );
     BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
     BOOST_CHECK( window.isHidden( ));
-}
-
-BOOST_AUTO_TEST_CASE( testEventReceiver )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-
-    BOOST_REQUIRE( !window.hasEventReceivers() );
-
-    DummyEventReceiver receiver;
-    BOOST_REQUIRE( !receiver.success_ );
-
-    window.dispatchEvent( deflect::Event( ));
-    BOOST_CHECK( !receiver.success_ );
-
-    BOOST_CHECK( window.registerEventReceiver( &receiver ));
-    BOOST_CHECK( window.hasEventReceivers() );
-    BOOST_CHECK( !receiver.success_ );
-    window.dispatchEvent( deflect::Event( ));
-    BOOST_CHECK( receiver.success_ );
-}
-
-BOOST_AUTO_TEST_CASE( testBackupCoordinates )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( QSize( WIDTH, HEIGHT ));
-    ContentWindow window( content );
-    const QRectF& coords = window.getCoordinates();
-
-    const QRectF coord1( 100.0, 200.0, 300.0, 400.0 );
-    const QRectF coord2( 432.0, 523.0, 123.0, 98.0 );
-
-    window.setCoordinates( coord1 );
-    window.backupCoordinates();
-    BOOST_CHECK_EQUAL( coords, coord1 );
-
-    window.setCoordinates( coord2 );
-    BOOST_CHECK_EQUAL( coords, coord2 );
-
-    window.restoreCoordinates();
-    BOOST_CHECK_EQUAL( coords, coord1 );
 }
 
 BOOST_AUTO_TEST_CASE( testToggleSelectedState )

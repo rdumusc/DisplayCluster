@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,69 +37,78 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENT_WINDOW_TOUCH_AREA_H
-#define CONTENT_WINDOW_TOUCH_AREA_H
+#include "TouchMouseArea.h"
 
-#include "types.h"
+#include <QEvent>
+#include <QGraphicsSceneMouseEvent>
 
-#include "ContentWindowController.h"
+#include <math.h>       /* fabs */
 
-#include <QtDeclarative/QDeclarativeItem>
+#define WHEEL_EVENT_FACTOR 1440.0
 
-class QGestureEvent;
-class DoubleTapGesture;
-class PanGesture;
-class PinchGesture;
-class QTapGesture;
-class QSwipeGesture;
-class QTapAndHoldGesture;
-
-/**
- * Handle ContentWindow interactions in a QML View.
- */
-class ContentWindowTouchArea : public QDeclarativeItem
+TouchMouseArea::TouchMouseArea()
 {
-    Q_OBJECT
+    setFlag( QGraphicsItem::ItemIsSelectable, true );
+    setFlag( QGraphicsItem::ItemIsFocusable, true ); // to get key events
+    setAcceptedMouseButtons( Qt::LeftButton );
+}
 
-public:
-    /** Constructor. */
-    ContentWindowTouchArea();
+bool TouchMouseArea::sceneEvent( QEvent* event_ )
+{
+    switch( event_->type( ))
+    {
+    case QEvent::KeyPress:
+        // Override default behaviour to process TAB key events
+        keyPressEvent( static_cast< QKeyEvent* >( event_ ));
+        return true;
+    default:
+        return TouchArea::sceneEvent( event_ );
+    }
+}
 
-    /** Destructor. */
-    virtual ~ContentWindowTouchArea();
+void TouchMouseArea::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
+{
+    _mousePressPos = event_->scenePos();
+    emit touchBegin();
+}
 
-    /** Init must be separate from the constructor for instantiation in QML. */
-    void init( ContentWindowPtr contentWindow,
-               ContentWindowController* controller );
+void TouchMouseArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
+{
+    const QPointF delta = event_->scenePos() - event_->lastScenePos();
+    emit pan( event_->scenePos(), delta );
+}
 
-signals:
-    /** Emitted whenever the user interacts with the touch area. */
-    void activated();
+void TouchMouseArea::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
+{
+    emit panFinished( event_->scenePos( ));
 
-protected:
-    /** @name Re-implemented QGraphicsRectItem events */
-    //@{
-    bool sceneEvent( QEvent* event ) override;
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
-    void keyPressEvent( QKeyEvent* event ) override;
-    void keyReleaseEvent( QKeyEvent* event ) override;
-    //@}
+    // Also generate a tap event if releasing the button in place
+    const QPointF delta = _mousePressPos - event_->scenePos();
+    const double epsilon = std::numeric_limits< double >::epsilon();
+    if( fabs( delta.x( )) < epsilon && fabs( delta.y( )) < epsilon )
+        emit tap( event_->scenePos( ));
+}
 
-private:
-    void gestureEvent( QGestureEvent* event );
-    void doubleTap( DoubleTapGesture* gesture );
-    void pan( PanGesture* gesture );
-    void pinch( PinchGesture* gesture );
-    void tapAndHold( QTapAndHoldGesture* gesture );
+void TouchMouseArea::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event_ )
+{
+    emit doubleTap( event_->scenePos( ));
+}
 
-    bool blockTapGesture_;
+void TouchMouseArea::wheelEvent( QGraphicsSceneWheelEvent* event_ )
+{
+    // change zoom based on wheel delta.
+    // deltas are counted in 1/8 degrees, so scale based on 180 degrees =>
+    // delta = 180*8 = 1440
+    const qreal scaleFactor = 1.0 + event_->delta() / WHEEL_EVENT_FACTOR;
+    emit pinch( event_->scenePos(), scaleFactor );
+}
 
-    ContentWindowPtr contentWindow_;
-    ContentWindowController* controller_;
-};
+void TouchMouseArea::keyPressEvent( QKeyEvent* keyEvent )
+{
+    emit keyPress( keyEvent->key(), keyEvent->modifiers(), keyEvent->text( ));
+}
 
-#endif
+void TouchMouseArea::keyReleaseEvent( QKeyEvent* keyEvent )
+{
+    emit keyPress( keyEvent->key(), keyEvent->modifiers(), keyEvent->text( ));
+}

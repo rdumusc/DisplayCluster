@@ -8,13 +8,14 @@ BaseContentWindow {
     color: options.alphaBlending ? "transparent" : "black"
 
     ContentItem {
+        property bool animating: parent.animating
         objectName: "ContentItem"
         anchors.bottom: parent.bottom
-        width: contentwindow.width
-        height: contentwindow.height
-    }
+        width: parent.width
+        height: parent.height - (titleBar.visible ? titleBar.height : 0)
 
-    ZoomContext {
+        ZoomContext {
+        }
     }
 
     WindowControls {

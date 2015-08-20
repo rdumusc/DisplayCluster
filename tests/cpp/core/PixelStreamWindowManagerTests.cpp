@@ -42,11 +42,13 @@
 namespace ut = boost::unit_test;
 
 #include <deflect/Frame.h>
+#include <deflect/EventReceiver.h>
 
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "Options.h"
 #include "PixelStreamWindowManager.h"
+#include "PixelStreamInteractionDelegate.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
@@ -73,6 +75,17 @@ deflect::FramePtr createTestFrame( const QSize& size )
     return frame;
 }
 
+class DummyEventReceiver : public deflect::EventReceiver
+{
+public:
+    DummyEventReceiver() : success_( false ) {}
+    virtual void processEvent( deflect::Event /*event*/ )
+    {
+        success_ = true;
+    }
+    bool success_;
+};
+
 BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 {
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
@@ -94,6 +107,35 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
 
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
+}
+
+BOOST_AUTO_TEST_CASE( testEventReceiver )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    PixelStreamWindowManager windowManager( *displayGroup );
+    windowManager.openPixelStreamWindow( CONTENT_URI, testWindowPos,
+                                         testWindowSize );
+    ContentWindowPtr window = windowManager.getContentWindow( CONTENT_URI );
+    BOOST_REQUIRE( window );
+
+    PixelStreamInteractionDelegate* delegate =
+            dynamic_cast<PixelStreamInteractionDelegate*>(
+                window->getInteractionDelegate( ));
+    BOOST_REQUIRE( delegate );
+
+    BOOST_REQUIRE( !delegate->hasEventReceivers() );
+
+    DummyEventReceiver receiver;
+    BOOST_REQUIRE( !receiver.success_ );
+
+    delegate->notify( deflect::Event( ));
+    BOOST_CHECK( !receiver.success_ );
+
+    BOOST_CHECK( delegate->registerEventReceiver( &receiver ));
+    BOOST_CHECK( delegate->hasEventReceivers() );
+    BOOST_CHECK( !receiver.success_ );
+    delegate->notify( deflect::Event( ));
+    BOOST_CHECK( receiver.success_ );
 }
 
 BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )

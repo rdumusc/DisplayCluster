@@ -190,12 +190,12 @@ void DisplayGroupRenderer::setBackground( ContentPtr content )
         return;
 
     ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
+    window->setController(
+               make_unique<ContentWindowController>( *window, *displayGroup_ ));
+    window->getController()->adjustSize( SIZE_FULLSCREEN );
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
                                                         *displayGroupItem_,
                                                         window ));
     backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
-
-    ContentWindowController controller( *window, *displayGroup_ );
-    controller.adjustSize( SIZE_FULLSCREEN );
 }

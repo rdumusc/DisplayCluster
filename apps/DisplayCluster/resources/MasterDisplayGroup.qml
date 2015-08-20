@@ -4,6 +4,7 @@ import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
 
 DisplayGroup {
+    showFocusContext: false
     TouchArea {
         anchors.fill: parent
         onTap: {

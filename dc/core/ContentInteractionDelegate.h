@@ -40,18 +40,8 @@
 #ifndef CONTENTINTERACTIONDELEGATE_H
 #define CONTENTINTERACTIONDELEGATE_H
 
-#include <QGraphicsSceneMouseEvent>
-#include <QKeyEvent>
+#include "types.h"
 #include <QObject>
-
-class ContentWindow;
-class DoubleTapGesture;
-class PanGesture;
-class PinchGesture;
-class QGestureEvent;
-class QTapGesture;
-class QSwipeGesture;
-class QTapAndHoldGesture;
 
 /**
  * Handle user interaction with the Content of a ContentWindow.
@@ -59,41 +49,49 @@ class QTapAndHoldGesture;
  * This class is abstract and should be reimplemented for the
  * different Content type.
  */
-class ContentInteractionDelegate
+class ContentInteractionDelegate : public QObject
 {
+    Q_OBJECT
+
 public:
     ContentInteractionDelegate( ContentWindow& contentWindow );
     virtual ~ContentInteractionDelegate();
 
-    /**
-     * Process a touch gesture event.
-     * This function will call the appropriate touch gesture handler function.
-     * @param event The event to process
-     */
-    void gestureEvent( QGestureEvent* event );
-
     /** @name Touch gesture handlers. */
     //@{
-    virtual void tap( QTapGesture* gesture ) { Q_UNUSED( gesture ) }
-    virtual void doubleTap( DoubleTapGesture* gesture ) { Q_UNUSED( gesture ) }
-    virtual void pan( PanGesture* gesture ) { Q_UNUSED( gesture ) }
-    virtual void swipe( QSwipeGesture* gesture ) { Q_UNUSED( gesture ) }
-    virtual void pinch( PinchGesture* gesture ) { Q_UNUSED( gesture ) }
+    Q_INVOKABLE virtual void tap( QPointF position )
+    { Q_UNUSED( position ) }
+    Q_INVOKABLE virtual void doubleTap( QPointF position )
+    { Q_UNUSED( position ) }
+    Q_INVOKABLE virtual void tapAndHold( QPointF position )
+    { Q_UNUSED( position ) }
+    Q_INVOKABLE virtual void pan( QPointF position, QPointF delta )
+    { Q_UNUSED( position ) Q_UNUSED( delta ) }
+    Q_INVOKABLE virtual void panFinished( QPointF position )
+    { Q_UNUSED( position ) }
+    Q_INVOKABLE virtual void pinch( QPointF position, qreal scaleFactor )
+    { Q_UNUSED( position ) Q_UNUSED( scaleFactor ) }
+    Q_INVOKABLE virtual void pinchFinished( QPointF position )
+    { Q_UNUSED( position ) }
+    Q_INVOKABLE virtual void swipeLeft() {}
+    Q_INVOKABLE virtual void swipeRight() {}
+    Q_INVOKABLE virtual void swipeUp() {}
+    Q_INVOKABLE virtual void swipeDown() {}
     //@}
 
-    /** @name Mouse and keyboard event handlers. */
+    /** @name Keyboard event handlers. */
     //@{
-    virtual void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
-    virtual void mousePressEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
-    virtual void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
-    virtual void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) { Q_UNUSED( event ) }
-    virtual void wheelEvent( QGraphicsSceneWheelEvent* event ) { Q_UNUSED( event ) }
-    virtual void keyPressEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
-    virtual void keyReleaseEvent( QKeyEvent* event ) { Q_UNUSED( event ) }
+    Q_INVOKABLE virtual void keyPress( int key, int modifiers, QString text )
+    { Q_UNUSED( key ) Q_UNUSED( modifiers ) Q_UNUSED( text ) }
+    Q_INVOKABLE virtual void keyRelease( int key, int modifiers, QString text )
+    { Q_UNUSED( key ) Q_UNUSED( modifiers ) Q_UNUSED( text ) }
     //@}
 
 protected:
-    ContentWindow& contentWindow_;
+    ContentWindow& _contentWindow;
+
+    QRectF getWindowCoord() const;
+    QPointF getNormalizedPoint( const QPointF& point ) const;
 };
 
 #endif // CONTENTINTERACTIONDELEGATE_H

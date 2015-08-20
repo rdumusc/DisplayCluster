@@ -39,22 +39,36 @@
 
 #include "TouchArea.h"
 
+#include "ZoomInteractionDelegate.h"
+
+#include "gestures/DoubleTapGesture.h"
+#include "gestures/DoubleTapGestureRecognizer.h"
 #include "gestures/PanGesture.h"
 #include "gestures/PanGestureRecognizer.h"
+#include "gestures/PinchGesture.h"
+#include "gestures/PinchGestureRecognizer.h"
 
 #include <QEvent>
 #include <QTapGesture>
 #include <QTapAndHoldGesture>
+#include <QSwipeGesture>
 #include <QGestureEvent>
+
+#include <cmath>        /* std::isnan */
 
 TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
-    , blockTapGesture_( false )
+    , _blockTapGesture( false )
 {
     grabGesture( Qt::TapGesture );
+    grabGesture( DoubleTapGestureRecognizer::type( ));
     grabGesture( Qt::TapAndHoldGesture );
     grabGesture( PanGestureRecognizer::type( ));
+    grabGesture( PinchGestureRecognizer::type( ));
+    grabGesture( Qt::SwipeGesture );
 }
+
+TouchArea::~TouchArea() {}
 
 bool TouchArea::sceneEvent( QEvent* event_ )
 {
@@ -71,52 +85,124 @@ bool TouchArea::gestureEvent( QGestureEvent* event_ )
 {
     QGesture* gesture = 0;
 
-    if(( gesture = event_->gesture( Qt::TapAndHoldGesture )))
+    if( ( gesture = event_->gesture( Qt::TapAndHoldGesture )))
     {
         event_->accept( Qt::TapAndHoldGesture );
-        if( gesture->state() == Qt::GestureFinished )
-        {
-            blockTapGesture_ = true;
-            QTapAndHoldGesture* tapAndHoldGesture =
-                    static_cast<QTapAndHoldGesture*>( gesture );
-            emit tapAndHold( tapAndHoldGesture->position( ));
-        }
-        return true;
-    }
-    if(( gesture = event_->gesture( Qt::TapGesture )))
-    {
+        tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
+
         // Qt does not allow canceling Tap gestures after a TapAndHold has been
-        // accepted, so blockTapGesture_ is here to prevent the Tap at the end
+        // accepted, so _blockTapGesture is here to prevent the Tap at the end
         // of the following sequence:
         // *Tap begin* ----- *TapAndHold begin* - *TapAndHold end* -- *Tap end*
-        if( gesture->state() == Qt::GestureStarted )
-            blockTapGesture_ = false;
-        // Only block tap gesture, but let other gestures (like pan) continue
-        // In some cases, they may have been in progress before the tapAndHold
-        // happend
-        if( !blockTapGesture_ )
-        {
-            event_->accept( Qt::TapGesture );
-            if( gesture->state() == Qt::GestureFinished )
-            {
-                QTapGesture* tapGesture = static_cast<QTapGesture*>( gesture );
-                emit tap( tapGesture->position( ));
-            }
-            return true;
-        }
-    }
-    if(( gesture = event_->gesture( PanGestureRecognizer::type( ))))
-    {
-        event_->accept( PanGestureRecognizer::type( ));
-        PanGesture* panGesture = static_cast<PanGesture*>( gesture );
-        if( panGesture->state() == Qt::GestureCanceled ||
-            panGesture->state() == Qt::GestureFinished )
-        {
-            emit panFinished();
-            return true;
-        }
-        emit pan( panGesture->delta( ));
+        if( gesture->state() == Qt::GestureFinished )
+            _blockTapGesture = true;
+
         return true;
     }
+    if( ( gesture = event_->gesture( DoubleTapGestureRecognizer::type( ))))
+    {
+        event_->accept( DoubleTapGestureRecognizer::type( ));
+        doubleTap( static_cast< DoubleTapGesture* >( gesture ));
+        return true;
+    }
+    if( ( gesture = event_->gesture( PanGestureRecognizer::type( ))))
+    {
+        event_->accept( PanGestureRecognizer::type( ));
+        pan( static_cast< PanGesture* >( gesture ));
+        return true;
+    }
+    if( ( gesture = event_->gesture( PinchGestureRecognizer::type( ))))
+    {
+        event_->accept( PinchGestureRecognizer::type( ));
+        pinch( static_cast< PinchGesture* >( gesture ));
+        return true;
+    }
+    if( ( gesture = event_->gesture( Qt::SwipeGesture )))
+    {
+        event_->accept( Qt::SwipeGesture );
+        swipe( static_cast< QSwipeGesture* >( gesture ));
+        return true;
+    }
+    if( ( gesture = event_->gesture( Qt::TapGesture )))
+    {
+        if( gesture->state() == Qt::GestureStarted )
+            _blockTapGesture = false;
+
+        if( !_blockTapGesture )
+        {
+            event_->accept( Qt::TapGesture );
+            tap( static_cast< QTapGesture* >( gesture ));
+            return true;
+        }
+    }
     return false;
+}
+
+void TouchArea::tap( QTapGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureStarted )
+        emit touchBegin();
+
+    if( gesture->state() == Qt::GestureFinished )
+        emit tap( gesture->position( ));
+}
+
+void TouchArea::doubleTap( DoubleTapGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureFinished )
+        emit doubleTap( gesture->position( ));
+}
+
+void TouchArea::tapAndHold( QTapAndHoldGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureFinished )
+        emit tapAndHold( gesture->position( ));
+}
+
+void TouchArea::pan( PanGesture* panGesture )
+{
+    if( panGesture->state() == Qt::GestureCanceled ||
+        panGesture->state() == Qt::GestureFinished )
+    {
+        emit panFinished( panGesture->position( ));
+    }
+    else
+        emit pan( panGesture->position(), panGesture->delta( ));
+}
+
+void TouchArea::pinch( PinchGesture* gesture )
+{
+
+    if( gesture->state() == Qt::GestureCanceled ||
+        gesture->state() == Qt::GestureFinished )
+    {
+        emit pinchFinished( gesture->position( ));
+    }
+    else
+    {
+        const qreal factor = gesture->scaleFactor();
+
+        if( std::isnan( factor ) || std::isinf( factor ))
+            return;
+
+        emit pinch( gesture->position(), factor );
+    }
+}
+
+void TouchArea::swipe( QSwipeGesture* gesture )
+{
+    if( gesture->state() == Qt::GestureFinished )
+    {
+        if( gesture->horizontalDirection() == QSwipeGesture::Left )
+            emit swipeLeft();
+
+        else if( gesture->horizontalDirection() == QSwipeGesture::Right )
+            emit swipeRight();
+
+        else if( gesture->verticalDirection() == QSwipeGesture::Up )
+            emit swipeUp();
+
+        else if( gesture->verticalDirection() == QSwipeGesture::Down )
+            emit swipeDown();
+    }
 }

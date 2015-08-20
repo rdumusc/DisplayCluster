@@ -49,6 +49,7 @@
 class Configuration;
 class Content;
 class ContentWindow;
+class ContentWindowController;
 class DisplayGroup;
 class DisplayGroupAdapter;
 class DisplayGroupRenderer;
@@ -74,6 +75,7 @@ class WallToWallChannel;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef boost::shared_ptr< ContentWindow > ContentWindowPtr;
+typedef std::unique_ptr<ContentWindowController> ContentWindowControllerPtr;
 typedef boost::shared_ptr< DisplayGroupAdapter > DisplayGroupAdapterPtr;
 typedef boost::shared_ptr< DisplayGroup > DisplayGroupPtr;
 typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
@@ -124,6 +126,14 @@ inline std::ostream& operator << ( std::ostream& str, const QRectF& r )
 {
     str << r.x() << ',' << r.y() << ' ' << r.width() << 'x' << r.height();
     return str;
+}
+
+// missing make_unique() implementation in C++11 standard
+// source: http://herbsutter.com/gotw/_102/
+template<typename T, typename ...Args>
+std::unique_ptr<T> make_unique( Args&& ...args )
+{
+    return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
 }
 
 #endif

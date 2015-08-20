@@ -114,14 +114,14 @@ void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
     // Stop decoding when the window is moving.
     // This is to avoid saccades when reaching a new GLWindow.
     // The decoding resumes when the movement is finished.
-    suspended_ = window->isMoving() || window->isResizing();
+    suspended_ = window->isMoving() || window->isResizing() ||
+                 _qmlItem->isAnimating();
 
     MovieContent& movie = static_cast<MovieContent&>( *window->getContent( ));
-
     setPause( movie.getControlState() & STATE_PAUSED );
     setLoop( movie.getControlState() & STATE_LOOP );
 
-    setVisible( QRectF( wallArea ).intersects( window->getCoordinates( )));
+    setVisible( QRectF( wallArea ).intersects( _qmlItem->getSceneRect( )));
 }
 
 void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )

@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
-/*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,94 +36,44 @@
 /* interpreted as representing official policies, either expressed   */
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
-#ifndef STATE_H
-#define STATE_H
 
-#include "types.h"
+#ifndef TOUCH_MOUSE_AREA_H
+#define TOUCH_MOUSE_AREA_H
 
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/vector.hpp>
-
-#include "ContentWindow.h"
-#include "DisplayGroup.h"
-
-class QString;
-class QXmlQuery;
+#include "TouchArea.h"
 
 /**
- * The different versions of the xml State files.
+ * Extends TouchArea by converting mouse inputs to touch events.
+ *
+ * Also captures keyboard inputs, including TAB key
  */
-enum StateVersion
+class TouchMouseArea : public TouchArea
 {
-    INVALID_FILE_VERSION = -1,
-    FIRST_BOOST_FILE_VERSION = 0,
-    LEGACY_FILE_VERSION = 1,
-    FIRST_PIXEL_COORDINATES_FILE_VERSION = 2,
-    WINDOW_TITLES_VERSION = 3,
-    FOCUS_MODE_VERSION = 4
-};
+    Q_OBJECT
 
-/**
- * A state is the collection of opened contents which can be saved and
- * restored using this class. It will save positions and dimensions of each
- * content and also content-specific information which is required to restore
- * a previous state saved by the user.
- */
-class State
-{
 public:
-    /** Default constructor */
-    State();
-    /**
-     * Constructor
-     * @param displayGroup the DisplayGroup to serialize
-     */
-    State( DisplayGroupPtr displayGroup );
+    /** Constructor. */
+    TouchMouseArea();
 
-    /**
-     * Load content windows stored in the given XML file.
-     * @return success if the legacy state file could be loaded
-     */
-    bool legacyLoadXML( const QString& filename );
+signals:
+    void keyPress( int key, int modifiers, QString text );
+    void keyRelease( int key, int modifiers, QString text );
 
-    /** Get the version that was last used for loading or saving. */
-    StateVersion getVersion() const;
-
-    /** Get the DisplayGroup. */
-    DisplayGroupPtr getDisplayGroup();
+protected:
+    /** @name Re-implemented QGraphicsRectItem events */
+    //@{
+    bool sceneEvent( QEvent* event ) override;
+    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
+    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
+    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
+    void keyPressEvent( QKeyEvent* keyEvent ) override;
+    void keyReleaseEvent( QKeyEvent* keyEvent ) override;
+    //@}
 
 private:
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize( Archive & ar, const unsigned int version )
-    {
-        version_ = static_cast< StateVersion >( version );
-        if( version < WINDOW_TITLES_VERSION )
-        {
-            ContentWindowPtrs contentWindows;
-            ar & boost::serialization::make_nvp( "contentWindows",
-            contentWindows );
-            displayGroup_->setContentWindows( contentWindows );
-            displayGroup_->setShowWindowTitles( false );
-        }
-        else
-        {
-            ar & boost::serialization::make_nvp( "displayGroup", displayGroup_ );
-        }
-    }
-
-    /** Legacy methods. @deprecated */
-    bool checkVersion_( QXmlQuery& query ) const;
-    ContentPtr loadContent_( QXmlQuery& query, const int index ) const;
-    ContentWindowPtr restoreContent_( QXmlQuery& query, ContentPtr content,
-                                      const int index ) const;
-
-    DisplayGroupPtr displayGroup_;
-    StateVersion version_;
+    QPointF _mousePressPos;
 };
-
-BOOST_CLASS_VERSION( State, FOCUS_MODE_VERSION )
 
 #endif

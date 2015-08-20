@@ -3,15 +3,19 @@ import DisplayCluster 1.0
 import "style.js" as Style
 
 Rectangle {
-    property alias titleBar: titleBar
-
     id: windowRect
-    border.color: Style.windowBorderDefaultColor
+
+    property alias titleBar: titleBar
+    property int stackingOrder: 0
+    property bool animating: false
+    property real yOffset: titleBar.visible ? titleBar.height : 0
 
     x: contentwindow.x
-    y: contentwindow.y - (titleBar.visible ? titleBar.height : 0)
+    y: contentwindow.y - 0.5 * yOffset
+    z: stackingOrder
     width: contentwindow.width
-    height: contentwindow.height + (titleBar.visible ? titleBar.height : 0)
+    height: contentwindow.height + yOffset
+    border.color: Style.windowBorderDefaultColor
 
     Rectangle
     {
@@ -37,6 +41,19 @@ Rectangle {
     }
 
     states: [
+        State {
+            name: "focused"
+            when: contentwindow.focused
+            PropertyChanges {
+                target: windowRect
+                x: contentwindow.controller.getFocusedCoord().x
+                y: contentwindow.controller.getFocusedCoord().y - 0.5 * yOffset
+                width: contentwindow.controller.getFocusedCoord().width
+                height: contentwindow.controller.getFocusedCoord().height + yOffset
+                border.color: Style.windowBorderSelectedColor
+                z: stackingOrder + Style.focusZorder
+            }
+        },
         State {
             name: "selected"
             when: contentwindow.state === ContentWindow.SELECTED
@@ -67,6 +84,32 @@ Rectangle {
             PropertyChanges {
                 target: windowRect
                 visible: false
+            }
+        }
+    ]
+
+    function startAnimating() { animating = state == "focused" }
+    function stopAnimating() { animating = state != "focused" }
+
+    transitions: [
+        Transition {
+            to: "focused"
+            reversible: true
+            // onRunningChanged does not work, only work around is to change
+            // animating property at the beginning and end of a sequence.
+            SequentialAnimation {
+                ScriptAction { script: startAnimating(); }
+                PropertyAction { property: "z" } // Immediately set the z value
+                NumberAnimation {
+                    properties: "x,y,height,width"
+                    duration: Style.focusTransitionTime
+                    easing.type: Easing.InOutQuad
+                }
+                ScriptAction { script: stopAnimating(); }
+            }
+            ColorAnimation {
+                properties: "border.color"
+                duration: Style.focusTransitionTime
             }
         }
     ]

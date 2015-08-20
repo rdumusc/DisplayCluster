@@ -79,6 +79,7 @@ const QString STATE_V0_PREVIEW_FILE = "state_v0.dcxpreview";
 const QString STATE_V0_BROKEN_URI = "state_v0_broken.dcx";
 const QString STATE_V3_URI = "state_v3.dcx";
 const QString STATE_V3_NOTITLES_URI = "state_v3_noTitles.dcx";
+const QString STATE_V4_URI = "state_v4.dcx";
 const QString TEST_DIR = "tmp";
 const QSize VALID_TEXTURE_SIZE( 256, 128 );
 }
@@ -200,6 +201,16 @@ void checkWindowVersion3( ContentWindowPtr window )
 {
     BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0 );
     BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 486, 170, 600, 300 ));
+    BOOST_CHECK( !window->isFocused( ));
+
+    checkContent( window->getContent( ));
+}
+
+void checkWindowVersion4( ContentWindowPtr window )
+{
+    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0 );
+    BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 486, 170, 600, 300 ));
+    BOOST_CHECK( window->isFocused( ));
 
     checkContent( window->getContent( ));
 }
@@ -281,6 +292,24 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion3NoTitlesFil
     BOOST_CHECK_EQUAL( displayGroup->getCoordinates(), QRectF( QPointF( 0, 0 ), wallSize ));
 
     checkWindowVersion3( displayGroup->getContentWindows()[0] );
+}
+
+BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion4File )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    StateSerializationHelper helper( displayGroup );
+    BOOST_CHECK_EQUAL( displayGroup->hasFocusedWindows(), false );
+
+    bool success( false );
+    BOOST_REQUIRE_NO_THROW( success = helper.load( STATE_V4_URI ));
+    BOOST_REQUIRE( success );
+    BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
+    BOOST_CHECK_EQUAL( displayGroup->getShowWindowTitles(), true );
+    BOOST_CHECK_EQUAL( displayGroup->getCoordinates(),
+                       QRectF( QPointF( 0, 0 ), wallSize ));
+    BOOST_CHECK_EQUAL( displayGroup->hasFocusedWindows(), true );
+
+    checkWindowVersion4( displayGroup->getContentWindows()[0] );
 }
 
 DisplayGroupPtr createTestDisplayGroup()

@@ -390,7 +390,7 @@ void DynamicTexture::preRenderUpdate( ContentWindowPtr window,
 {
     assert( isRoot( ));
 
-    if( !QRectF( wallArea ).intersects( window->getCoordinates( )))
+    if( !QRectF( wallArea ).intersects( _qmlItem->getSceneRect( )))
         return;
 
     // Root needs to always have a texture for renderInParent()

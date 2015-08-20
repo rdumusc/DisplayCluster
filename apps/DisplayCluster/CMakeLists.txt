@@ -13,12 +13,12 @@ endif()
 
 set(DISPLAYCLUSTER_MOC_HEADERS
   BackgroundWidget.h
-  ContentWindowTouchArea.h
   DisplayGroupGraphicsView.h
   DisplayGroupListWidget.h
   MasterApplication.h
   MasterWindow.h
   TouchArea.h
+  TouchMouseArea.h
   WallApplication.h
   WebbrowserWidget.h
 )
@@ -27,7 +27,6 @@ set(DISPLAYCLUSTER_SOURCES
   main.cpp
   BackgroundWidget.cpp
   CommandLineParameters.cpp
-  ContentWindowTouchArea.cpp
   ContentWindowListWidgetItem.cpp
   DisplayGroupGraphicsScene.cpp
   DisplayGroupGraphicsView.cpp
@@ -36,6 +35,7 @@ set(DISPLAYCLUSTER_SOURCES
   MasterWindow.cpp
   QmlTypeRegistration.cpp
   TouchArea.cpp
+  TouchMouseArea.cpp
   WallApplication.cpp
   WebbrowserWidget.cpp
 )

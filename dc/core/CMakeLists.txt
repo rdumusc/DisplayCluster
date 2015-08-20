@@ -47,7 +47,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentFactory.h
   ContentLoader.h
   ContentType.h
-  ContentInteractionDelegate.h
   Drawable.h
   DynamicTexture.h
   DynamicTextureContent.h
@@ -72,7 +71,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   MPIChannel.h
   MPIContext.h
   PixelStreamContent.h
-  PixelStreamInteractionDelegate.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
   Renderable.h
@@ -111,6 +109,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   Content.h
   ContentAction.h
   ContentActionsModel.h
+  ContentInteractionDelegate.h
   ContentItem.h
   ContentWindow.h
   ContentWindowController.h
@@ -124,6 +123,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MovieContent.h
   Options.h
   PixelStream.h
+  PixelStreamInteractionDelegate.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
   RenderController.h

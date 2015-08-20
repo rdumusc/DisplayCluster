@@ -39,8 +39,6 @@
 
 #include "ZoomInteractionDelegate.h"
 #include "ContentWindow.h"
-#include "gestures/PanGesture.h"
-#include "gestures/PinchGesture.h"
 
 #include <QTransform>
 
@@ -51,59 +49,38 @@ ZoomInteractionDelegate::ZoomInteractionDelegate( ContentWindow& contentWindow )
 {
 }
 
-void ZoomInteractionDelegate::pan( PanGesture* gesture )
+ZoomInteractionDelegate::~ZoomInteractionDelegate()
 {
-    moveZoomRect_( gesture->delta( ));
 }
 
-void ZoomInteractionDelegate::pinch( PinchGesture* gesture )
+void ZoomInteractionDelegate::pan( const QPointF position, const QPointF delta )
 {
-    const qreal zoomFactor = adaptZoomFactor( gesture->scaleFactor( ));
-    if( zoomFactor == 0.0 )
-        return;
-
-    const QPointF pos = gesture->position() - contentWindow_.getCoordinates().topLeft();
-    scaleZoomRect_( getNormalizedPoint_( pos ), 1.0/zoomFactor );
+    Q_UNUSED( position );
+    _moveZoomRect( delta );
 }
 
-void ZoomInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
+void ZoomInteractionDelegate::pinch( const QPointF position,
+                                     const qreal scaleFactor )
 {
-    const QPointF mouseDelta = event->scenePos() - event->lastScenePos();
-
-    if( event->buttons().testFlag( Qt::RightButton ))
-    {
-        const qreal zoomFactor = 1.0 + getNormalizedPoint_( mouseDelta ).y();
-        scaleZoomRect_( contentWindow_.getZoomRect().center(), zoomFactor );
-    }
-    else if( event->buttons().testFlag( Qt::LeftButton ))
-        moveZoomRect_( mouseDelta );
+    const QPointF pos = position - getWindowCoord().topLeft();
+    _scaleZoomRect( getNormalizedPoint( pos ), 1.0 / scaleFactor );
 }
 
-void ZoomInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* event )
+void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
 {
-    // change zoom based on wheel delta.
-    // deltas are counted in 1/8 degrees, so scale based on 180 degrees =>
-    // delta = 180*8 = 1440
-    const qreal zoomFactor = 1.0 - (qreal)event->delta() / 1440.0;
-    const QPointF pos = event->scenePos() - contentWindow_.getCoordinates().topLeft();
-    scaleZoomRect_( getNormalizedPoint_( pos ), zoomFactor );
-}
-
-void ZoomInteractionDelegate::moveZoomRect_( const QPointF& sceneDelta ) const
-{
-    QRectF zoomRect = contentWindow_.getZoomRect();
+    QRectF zoomRect = _contentWindow.getZoomRect();
     const qreal zoom = zoomRect.width();
-    const QPointF normalizedDelta = getNormalizedPoint_( sceneDelta ) * zoom;
+    const QPointF normalizedDelta = getNormalizedPoint( sceneDelta ) * zoom;
     zoomRect.translate( -normalizedDelta );
 
-    constraintPosition_( zoomRect );
-    contentWindow_.setZoomRect( zoomRect );
+    _constraintPosition( zoomRect );
+    _contentWindow.setZoomRect( zoomRect );
 }
 
-void ZoomInteractionDelegate::scaleZoomRect_( const QPointF& center,
+void ZoomInteractionDelegate::_scaleZoomRect( const QPointF& center,
                                               const qreal zoomFactor ) const
 {
-    QRectF zoomRect = contentWindow_.getZoomRect();
+    QRectF zoomRect = _contentWindow.getZoomRect();
 
     QTransform current;
     current.translate( zoomRect.x(), zoomRect.y( ));
@@ -116,26 +93,21 @@ void ZoomInteractionDelegate::scaleZoomRect_( const QPointF& center,
     transform.translate( -point.x(), -point.y( ));
     zoomRect = transform.mapRect( zoomRect );
 
-    const QSizeF contentSize( contentWindow_.getContent()->getDimensions( ));
-    const QSizeF windowSize( contentWindow_.getCoordinates().size( ));
-    const qreal deltaW = contentSize.width() / windowSize.width();
-    const qreal deltaH = contentSize.height() / windowSize.height();
-    const qreal maxZoomW = 1.0 / ContentWindow::getMaxContentScale() / deltaW;
-    const qreal maxZoomH = 1.0 / ContentWindow::getMaxContentScale() / deltaH;
+    const QSizeF maxZoom = _getMaxZoom();
 
     // constrain max zoom
-    if( zoomRect.width() < maxZoomW || zoomRect.height() < maxZoomH )
-        zoomRect = contentWindow_.getZoomRect();
+    if( zoomRect.width() < maxZoom.width() || zoomRect.height() < maxZoom.height( ))
+        zoomRect = _contentWindow.getZoomRect();
 
     // constrain min zoom
     if( zoomRect.width() > MIN_ZOOM || zoomRect.height() > MIN_ZOOM )
         zoomRect = UNIT_RECTF;
     else
-        constraintPosition_( zoomRect );
-    contentWindow_.setZoomRect( zoomRect );
+        _constraintPosition( zoomRect );
+    _contentWindow.setZoomRect( zoomRect );
 }
 
-void ZoomInteractionDelegate::constraintPosition_( QRectF& zoomRect ) const
+void ZoomInteractionDelegate::_constraintPosition( QRectF& zoomRect ) const
 {
     if( zoomRect.left() < 0.0 )
         zoomRect.moveLeft( 0.0 );
@@ -147,19 +119,19 @@ void ZoomInteractionDelegate::constraintPosition_( QRectF& zoomRect ) const
         zoomRect.moveBottom( 1.0 );
 }
 
-QPointF
-ZoomInteractionDelegate::getNormalizedPoint_( const QPointF& point ) const
+QSizeF getMaxContentSize( ContentWindow& window )
 {
-    const QRectF& window = contentWindow_.getCoordinates();
-    return QPointF ( point.x() / window.width(),
-                     point.y() / window.height( ));
+    if( window.getController( ))
+        return window.getController()->getMaxContentSize();
+    return window.getContent()->getMaxDimensions();
 }
 
-qreal
-ZoomInteractionDelegate::adaptZoomFactor( const qreal pinchGestureScaleFactor )
+QSizeF ZoomInteractionDelegate::_getMaxZoom() const
 {
-    const qreal factor = ( pinchGestureScaleFactor - 1.0 ) * 0.2 + 1.0;
-    if( std::isnan( factor ) || std::isinf( factor ))
-        return 0.0;
-    return factor;
+    const QSizeF content( getMaxContentSize( _contentWindow ));
+    const QSizeF window( getWindowCoord().size( ));
+    const qreal maxScaleFactor = ContentWindow::getMaxContentScale();
+
+    return QSizeF( window.width() / maxScaleFactor / content.width(),
+                   window.height() / maxScaleFactor / content.height( ));
 }

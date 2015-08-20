@@ -40,36 +40,58 @@
 #ifndef PIXELSTREAMINTERACTIONDELEGATE_H
 #define PIXELSTREAMINTERACTIONDELEGATE_H
 
-#include "types.h"
 #include "ContentInteractionDelegate.h"
 
+#include <deflect/Event.h>
+
+/**
+ * Forward user actions to a deflect::Stream using Deflect events.
+ */
 class PixelStreamInteractionDelegate : public ContentInteractionDelegate
 {
+    Q_OBJECT
+
 public:
+    /** Constructor */
     PixelStreamInteractionDelegate( ContentWindow& contentWindow );
 
-    void swipe( QSwipeGesture* gesture ) override;
-    void pan( PanGesture* gesture)  override;
-    void pinch( PinchGesture* gesture ) override;
-    void doubleTap( DoubleTapGesture* gesture ) override;
-    void tap( QTapGesture* gesture ) override;
+    /** @name Touch gesture handlers. */
+    //@{
+    void tap( QPointF position ) override;
+    void doubleTap( QPointF position ) override;
+    void tapAndHold( QPointF position ) override;
+    void pan( QPointF position, QPointF delta ) override;
+    void panFinished( QPointF position ) override;
+    void pinch( QPointF position, qreal scaleFactor ) override;
+    void swipeLeft() override;
+    void swipeRight() override;
+    void swipeUp() override;
+    void swipeDown() override;
+    //@}
 
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* wheelEvent ) override;
-    void keyPressEvent( QKeyEvent* keyEvent ) override;
-    void keyReleaseEvent( QKeyEvent* keyEvent ) override;
+    /** @name Mouse gesture handlers. */
+    //@{
+    void keyPress( int key, int modifiers, QString text ) override;
+    void keyRelease( int key, int modifiers, QString text ) override;
+    //@}
+
+    /** Register to receive events on this content. */
+    bool registerEventReceiver( deflect::EventReceiver* receiver );
+
+    /** Does this delegate already have registered EventReceiver(s) */
+    bool hasEventReceivers() const;
+
+signals:
+    /** @internal Notify registered EventReceivers that an Event occured. */
+    void notify( deflect::Event event );
+
+private slots:
+    void _sendSizeChangedEvent();
 
 private:
-    QPointF mousePressPos_;
+    deflect::Event _getNormEvent( const QPointF& position ) const;
 
-    template <typename T>
-    deflect::Event getMouseEvent( const T* qtEvent );
-
-    template <typename T>
-    deflect::Event getGestureEvent( const T* gesture );
+    unsigned int _eventReceiversCount;
 };
 
 #endif // PIXELSTREAMINTERACTIONDELEGATE_H

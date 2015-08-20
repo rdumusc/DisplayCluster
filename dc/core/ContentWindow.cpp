@@ -39,7 +39,7 @@
 #include "ContentWindow.h"
 
 #include "ContentInteractionDelegate.h"
-#include <deflect/EventReceiver.h>
+#include "ContentWindowController.h"
 
 #include "config.h"
 #include "log.h"
@@ -58,9 +58,9 @@ ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
+    , focused_( false )
     , windowState_( NONE )
-    , controlsOpacity_( 0.0 )
-    , eventReceiversCount_( 0 )
+    , controlsVisible_( false )
 {
 }
 
@@ -68,9 +68,9 @@ ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
+    , focused_( false )
     , windowState_( NONE )
-    , controlsOpacity_( 0.0 )
-    , eventReceiversCount_( 0 )
+    , controlsVisible_( false )
 {
     assert( content );
     setContent( content );
@@ -110,6 +110,16 @@ void ContentWindow::setContent( ContentPtr content )
     createInteractionDelegate();
 }
 
+ContentWindowController* ContentWindow::getController()
+{
+    return controller_.get();
+}
+
+void ContentWindow::setController( ContentWindowControllerPtr controller )
+{
+    controller_.reset( controller.release( ));
+}
+
 void ContentWindow::setCoordinates( const QRectF& coordinates )
 {
     if( coordinates == coordinates_ )
@@ -120,9 +130,9 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
     setWidth( coordinates.width( ));
     setHeight( coordinates.height( ));
 
-    emit modified();
+    emit coordinatesChanged();
 
-    sendSizeChangedEvent();
+    emit modified();
 }
 
 const QRectF& ContentWindow::getZoomRect() const
@@ -158,21 +168,44 @@ void ContentWindow::setBorder( const ContentWindow::WindowBorder border )
     emit modified();
 }
 
-void ContentWindow::setState( const ContentWindow::WindowState state )
+bool ContentWindow::isFocused() const
 {
-    if( windowState_ == state )
+    return focused_;
+}
+
+void ContentWindow::setFocused( const bool value )
+{
+    if( focused_ == value )
         return;
 
-    if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM &&
-        state == SELECTED && !hasEventReceivers( ))
+    focused_ = value;
+
+    emit focusedChanged();
+
+    // Only emit modified once, in setState() or here
+    if( !setState( focused_ ? SELECTED : NONE ))
+        emit modified();
+}
+
+bool ContentWindow::setState( const ContentWindow::WindowState state )
+{
+    if( windowState_ == state )
+        return false;
+
+    if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM && state == SELECTED )
     {
-        return;
+        PixelStreamInteractionDelegate* delegate =
+                static_cast<PixelStreamInteractionDelegate*>(
+                    interactionDelegate_.get( ));
+        if( !delegate->hasEventReceivers( ))
+            return false;
     }
 
     windowState_ = state;
 
     emit stateChanged();
     emit modified();
+    return true;
 }
 
 void ContentWindow::toggleSelectedState()
@@ -203,48 +236,9 @@ bool ContentWindow::isHidden() const
     return windowState_ == HIDDEN;
 }
 
-bool ContentWindow::registerEventReceiver( deflect::EventReceiver* receiver )
+ContentInteractionDelegate* ContentWindow::getInteractionDelegate()
 {
-    const bool success = connect( this, SIGNAL( notify( deflect::Event )),
-                                  receiver, SLOT( processEvent( deflect::Event )));
-    if ( success )
-        ++eventReceiversCount_;
-
-    return success;
-}
-
-bool ContentWindow::hasEventReceivers() const
-{
-    return eventReceiversCount_ > 0;
-}
-
-void ContentWindow::dispatchEvent( const deflect::Event event_ )
-{
-    emit notify( event_ );
-}
-
-ContentInteractionDelegate& ContentWindow::getInteractionDelegate()
-{
-    return *interactionDelegate_;
-}
-
-void ContentWindow::backupCoordinates()
-{
-    coordinatesBackup_ = coordinates_;
-}
-
-bool ContentWindow::hasBackupCoordinates() const
-{
-    return coordinatesBackup_.isValid();
-}
-
-void ContentWindow::restoreCoordinates()
-{
-    if( !hasBackupCoordinates( ))
-        return;
-
-    setCoordinates( coordinatesBackup_ );
-    coordinatesBackup_ = QRectF();
+    return interactionDelegate_.get();
 }
 
 QString ContentWindow::getLabel() const
@@ -252,18 +246,18 @@ QString ContentWindow::getLabel() const
     return content_->getURI().section( "/", -1, -1 );
 }
 
-qreal ContentWindow::getControlsOpacity() const
+bool ContentWindow::getControlsVisible() const
 {
-    return controlsOpacity_;
+    return controlsVisible_;
 }
 
-void ContentWindow::setControlsOpacity( const qreal value )
+void ContentWindow::setControlsVisible( const bool value )
 {
-    if( value == controlsOpacity_ )
+    if( value == controlsVisible_ )
         return;
 
-    controlsOpacity_ = value;
-    emit controlsOpacityChanged();
+    controlsVisible_ = value;
+    emit controlsVisibleChanged();
     emit modified();
 }
 
@@ -296,14 +290,4 @@ void ContentWindow::createInteractionDelegate()
         interactionDelegate_.reset( new ZoomInteractionDelegate( *this ));
         break;
     }
-}
-
-void ContentWindow::sendSizeChangedEvent()
-{
-    deflect::Event state;
-    state.type = deflect::Event::EVT_VIEW_SIZE_CHANGED;
-    state.dx = coordinates_.width();
-    state.dy = coordinates_.height();
-
-    emit notify( state );
 }

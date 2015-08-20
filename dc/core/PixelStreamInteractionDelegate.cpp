@@ -41,205 +41,165 @@
 
 #include "ContentWindow.h"
 
-#include "gestures/DoubleTapGesture.h"
-#include "gestures/PanGesture.h"
-#include "gestures/PinchGesture.h"
+#include <deflect/EventReceiver.h>
 
-#define WHEEL_EVENT_FACTOR 1440.0
-
-PixelStreamInteractionDelegate::PixelStreamInteractionDelegate( ContentWindow& contentWindow )
+PixelStreamInteractionDelegate::PixelStreamInteractionDelegate( ContentWindow&
+                                                                contentWindow )
     : ContentInteractionDelegate( contentWindow )
+    , _eventReceiversCount( 0 )
 {
+    connect( &contentWindow, SIGNAL( coordinatesChanged( )),
+             this, SLOT( _sendSizeChangedEvent( )));
+    connect( &contentWindow, SIGNAL( focusedChanged( )),
+             this, SLOT( _sendSizeChangedEvent( )));
 }
 
-void PixelStreamInteractionDelegate::tap( QTapGesture* gesture )
+void PixelStreamInteractionDelegate::tap( const QPointF position )
 {
-    if ( gesture->state() != Qt::GestureFinished )
-        return;
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_CLICK;
 
-    deflect::Event event = getGestureEvent( gesture );
-    event.type = deflect::Event::EVT_CLICK;
-
-    contentWindow_.dispatchEvent( event );
+    emit notify( deflectEvent );
 }
 
-void PixelStreamInteractionDelegate::doubleTap( DoubleTapGesture* gesture )
+void PixelStreamInteractionDelegate::doubleTap( const QPointF position )
 {
-    deflect::Event event = getGestureEvent( gesture );
-    event.type = deflect::Event::EVT_DOUBLECLICK;
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_DOUBLECLICK;
 
-    contentWindow_.dispatchEvent( event );
+    emit notify( deflectEvent );
 }
 
-void PixelStreamInteractionDelegate::pan( PanGesture* gesture )
+void PixelStreamInteractionDelegate::tapAndHold( const QPointF position )
 {
-    deflect::Event event = getGestureEvent( gesture );
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_TAP_AND_HOLD;
 
-    switch( gesture->state( ))
-    {
-    case Qt::GestureStarted:
-        event.type = deflect::Event::EVT_PRESS;
-        break;
-    case Qt::GestureUpdated:
-        event.type = deflect::Event::EVT_MOVE;
-        event.dx = gesture->delta().x() / contentWindow_.getCoordinates().width();
-        event.dy = gesture->delta().y() / contentWindow_.getCoordinates().height();
-        break;
-    case Qt::GestureFinished:
-        event.type = deflect::Event::EVT_RELEASE;
-        break;
-    case Qt::NoGesture:
-    case Qt::GestureCanceled:
-    default:
-        event.type = deflect::Event::EVT_NONE;
-        break;
-    }
-
-    contentWindow_.dispatchEvent( event );
+    emit notify( deflectEvent );
 }
 
-void PixelStreamInteractionDelegate::swipe( QSwipeGesture* gesture )
+void PixelStreamInteractionDelegate::pan( const QPointF position,
+                                          const QPointF delta )
 {
-    deflect::Event event;
+    deflect::Event deflectEvent = _getNormEvent( position );
 
-    if( gesture->horizontalDirection() == QSwipeGesture::Left )
-        event.type = deflect::Event::EVT_SWIPE_LEFT;
-
-    else if( gesture->horizontalDirection() == QSwipeGesture::Right )
-        event.type = deflect::Event::EVT_SWIPE_LEFT;
-
-    else if( gesture->verticalDirection() == QSwipeGesture::Up )
-        event.type = deflect::Event::EVT_SWIPE_UP;
-
-    else if( gesture->verticalDirection() == QSwipeGesture::Down )
-        event.type = deflect::Event::EVT_SWIPE_DOWN;
-
-    if( event.type != deflect::Event::EVT_NONE )
-        contentWindow_.dispatchEvent( event );
-}
-
-void PixelStreamInteractionDelegate::pinch( PinchGesture* gesture )
-{
-    const qreal factor = ( gesture->scaleFactor() - 1.0 ) * 0.2;
-    if( std::isnan( factor ) || std::isinf( factor ))
-        return;
-
-    deflect::Event event = getGestureEvent( gesture );
-    event.type = deflect::Event::EVT_WHEEL;
-    event.mouseLeft = false;
-    event.dy = factor;
-
-    contentWindow_.dispatchEvent( event );
-}
-
-void PixelStreamInteractionDelegate::mouseMoveEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    deflect::Event event = getMouseEvent( mouseEvent );
-    event.type = deflect::Event::EVT_MOVE;
-
-    const QPointF delta = mouseEvent->pos() - mouseEvent->lastPos();
-    event.dx = delta.x() / contentWindow_.getCoordinates().width();
-    event.dy = delta.y() / contentWindow_.getCoordinates().height();
-
-    contentWindow_.dispatchEvent( event );
-}
-
-void PixelStreamInteractionDelegate::mousePressEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    deflect::Event event = getMouseEvent( mouseEvent );
-    event.type = deflect::Event::EVT_PRESS;
-
-    mousePressPos_ = mouseEvent->pos();
-
-    contentWindow_.dispatchEvent( event );
-}
-
-void PixelStreamInteractionDelegate::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    deflect::Event event = getMouseEvent( mouseEvent );
-    event.type = deflect::Event::EVT_DOUBLECLICK;
-
-    contentWindow_.dispatchEvent( event );
-}
-
-void PixelStreamInteractionDelegate::mouseReleaseEvent( QGraphicsSceneMouseEvent* mouseEvent )
-{
-    deflect::Event event = getMouseEvent( mouseEvent );
-    event.type = deflect::Event::EVT_RELEASE;
-
-    contentWindow_.dispatchEvent( event );
-
-    // Also generate a click event if releasing the button in place
-    const QPointF delta = mousePressPos_ - mouseEvent->pos();
-    const double epsilon = std::numeric_limits< double >::epsilon();
-    if( fabs( delta.x( )) < epsilon && fabs( delta.y( )) < epsilon )
-    {
-        event.type = deflect::Event::EVT_CLICK;
-        contentWindow_.dispatchEvent( event );
-    }
-}
-
-void PixelStreamInteractionDelegate::wheelEvent( QGraphicsSceneWheelEvent* evt )
-{
-    deflect::Event event = getMouseEvent( evt );
-    event.type = deflect::Event::EVT_WHEEL;
-
-    if( evt->orientation() == Qt::Vertical )
-    {
-        event.dx = 0.0;
-        event.dy = (double)evt->delta() / WHEEL_EVENT_FACTOR;
-    }
+    if( delta.isNull( ))
+        deflectEvent.type = deflect::Event::EVT_PRESS;
     else
-    {
-        event.dx = (double)evt->delta() / WHEEL_EVENT_FACTOR;
-        event.dy = 0.0;
-    }
+        deflectEvent.type = deflect::Event::EVT_MOVE;
 
-    contentWindow_.dispatchEvent( event );
+    const QPointF normDelta = getNormalizedPoint( delta );
+    deflectEvent.dx = normDelta.x();
+    deflectEvent.dy = normDelta.y();
+
+    emit notify( deflectEvent );
 }
 
-void PixelStreamInteractionDelegate::keyPressEvent( QKeyEvent* keyEvent )
+void PixelStreamInteractionDelegate::panFinished( const QPointF position )
 {
-    deflect::Event event;
-    event.type = deflect::Event::EVT_KEY_PRESS;
-    event.key = keyEvent->key();
-    event.modifiers = keyEvent->modifiers();
-    strncpy( event.text, keyEvent->text().toStdString().c_str(),
-             sizeof( event.text ));
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_RELEASE;
 
-    contentWindow_.dispatchEvent( event );
+    emit notify( deflectEvent );
 }
 
-void PixelStreamInteractionDelegate::keyReleaseEvent( QKeyEvent* keyEvent )
+void PixelStreamInteractionDelegate::pinch( const QPointF position,
+                                            const qreal scaleFactor )
 {
-    deflect::Event event;
-    event.type = deflect::Event::EVT_KEY_RELEASE;
-    event.key = keyEvent->key();
-    event.modifiers = keyEvent->modifiers();
-    strncpy( event.text, keyEvent->text().toStdString().c_str(),
-             sizeof( event.text ));
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_WHEEL;
+    deflectEvent.mouseLeft = false;
+    deflectEvent.dy = scaleFactor - 1.0;
 
-    contentWindow_.dispatchEvent( event );
+    emit notify( deflectEvent );
 }
 
-template <typename T>
-deflect::Event PixelStreamInteractionDelegate::getMouseEvent( const T* qtEvent )
+deflect::Event swipeEvent( deflect::Event::EventType type )
 {
-    const QRectF& window = contentWindow_.getCoordinates();
-
     deflect::Event event;
-    event.mouseX = ( qtEvent->scenePos().x() - window.x( )) / window.width();
-    event.mouseY = ( qtEvent->scenePos().y() - window.y( )) / window.height();
-
-    event.mouseLeft = qtEvent->buttons().testFlag( Qt::LeftButton );
-    event.mouseMiddle = qtEvent->buttons().testFlag( Qt::MidButton );
-    event.mouseRight = qtEvent->buttons().testFlag( Qt::RightButton );
-
+    event.type = type;
     return event;
 }
 
-template <typename T>
-deflect::Event PixelStreamInteractionDelegate::getGestureEvent( const T* gesture )
+void PixelStreamInteractionDelegate::swipeLeft()
+{
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_LEFT ));
+}
+
+void PixelStreamInteractionDelegate::swipeRight()
+{
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_RIGHT));
+}
+
+void PixelStreamInteractionDelegate::swipeUp()
+{
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_UP ));
+}
+
+void PixelStreamInteractionDelegate::swipeDown()
+{
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_DOWN ));
+}
+
+void PixelStreamInteractionDelegate::keyPress( const int key,
+                                               const int modifiers,
+                                               const QString text )
+{
+    deflect::Event deflectEvent;
+    deflectEvent.type = deflect::Event::EVT_KEY_PRESS;
+    deflectEvent.key = key;
+    deflectEvent.modifiers = modifiers;
+    strncpy( deflectEvent.text, text.toStdString().c_str(),
+             sizeof( deflectEvent.text ));
+
+    emit notify( deflectEvent );
+}
+
+void PixelStreamInteractionDelegate::keyRelease( const int key,
+                                                 const int modifiers,
+                                                 const QString text )
+{
+    deflect::Event deflectEvent;
+    deflectEvent.type = deflect::Event::EVT_KEY_RELEASE;
+    deflectEvent.key = key;
+    deflectEvent.modifiers = modifiers;
+    strncpy( deflectEvent.text, text.toStdString().c_str(),
+             sizeof( deflectEvent.text ));
+
+    emit notify( deflectEvent );
+}
+
+bool PixelStreamInteractionDelegate::registerEventReceiver(
+                                              deflect::EventReceiver* receiver )
+{
+    const bool success = connect( this, SIGNAL( notify( deflect::Event )),
+                                  receiver,
+                                  SLOT( processEvent( deflect::Event )));
+    if( success )
+        ++_eventReceiversCount;
+
+    return success;
+}
+
+bool PixelStreamInteractionDelegate::hasEventReceivers() const
+{
+    return _eventReceiversCount > 0;
+}
+
+void PixelStreamInteractionDelegate::_sendSizeChangedEvent()
+{
+    const QRectF& win = getWindowCoord();
+
+    deflect::Event deflectEvent;
+    deflectEvent.type = deflect::Event::EVT_VIEW_SIZE_CHANGED;
+    deflectEvent.dx = win.width();
+    deflectEvent.dy = win.height();
+
+    emit notify( deflectEvent );
+}
+
+deflect::Event PixelStreamInteractionDelegate::_getNormEvent( const QPointF&
+                                                              position ) const
 {
     // For some QGestures, position() is a screen position (Qt global).
     // However, QTapGesture has a scene position because it uses touchPoint.pos,
@@ -250,11 +210,11 @@ deflect::Event PixelStreamInteractionDelegate::getGestureEvent( const T* gesture
     // Should also work for the same reason as QTapGesture, but untested:
     // QTapAndHoldGesture, QPanGesture
 
-    const QRectF& win = contentWindow_.getCoordinates();
+    const QRectF& win = getWindowCoord();
 
-    deflect::Event event;
-    event.mouseLeft = true;
-    event.mouseX = ( gesture->position().x() - win.x( )) / win.width();
-    event.mouseY = ( gesture->position().y() - win.y( )) / win.height();
-    return event;
+    deflect::Event deflectEvent;
+    deflectEvent.mouseLeft = true;
+    deflectEvent.mouseX = ( position.x() - win.x( )) / win.width();
+    deflectEvent.mouseY = ( position.y() - win.y( )) / win.height();
+    return deflectEvent;
 }

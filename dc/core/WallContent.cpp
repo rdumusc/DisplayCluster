@@ -52,6 +52,7 @@
 #include <boost/make_shared.hpp>
 
 WallContent::WallContent()
+    : _qmlItem( 0 )
 {
 }
 
@@ -80,4 +81,9 @@ WallContentPtr WallContent::create( const Content& content )
     default:
         return WallContentPtr();
     }
+}
+
+void WallContent::setQmlItem( ContentItem* qmlItem )
+{
+    _qmlItem = qmlItem;
 }

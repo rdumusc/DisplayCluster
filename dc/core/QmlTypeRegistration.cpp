@@ -40,20 +40,40 @@
 #include <QtDeclarative>
 
 #include "ContentWindow.h"
+#include "ContentWindowController.h"
 #include "ContentActionsModel.h"
 #include "ContentItem.h"
+#include "ContentInteractionDelegate.h"
+
+#define QML_MODULE "DisplayCluster"
 
 /**
  * Register types for use in Qml
  */
 struct QmlTypeRegistration
 {
+
     QmlTypeRegistration()
     {
-        qmlRegisterType<ContentActionsModel>("DisplayCluster", 1, 0, "ContentActionsModel");
-        qmlRegisterType<ContentItem>("DisplayCluster", 1, 0, "ContentItem");
-        qmlRegisterUncreatableType<Content>("DisplayCluster", 1, 0, "Content", "Content is linked to a ContentWindow and read-only in QML");
-        qmlRegisterUncreatableType<ContentWindow>("DisplayCluster", 1, 0, "ContentWindow", "This exports enums to QML");
+        qmlRegisterType<ContentActionsModel>(
+                    QML_MODULE, 1, 0, "ContentActionsModel");
+        qmlRegisterType<ContentItem>(
+                    QML_MODULE, 1, 0, "ContentItem");
+
+        qmlRegisterUncreatableType<Content>(
+                    QML_MODULE, 1, 0, "Content",
+                    "Content is linked to a ContentWindow and read-only in QML");
+        qmlRegisterUncreatableType<ContentWindow>(
+                    QML_MODULE, 1, 0, "ContentWindow",
+                    "This exports enums to QML");
+        qmlRegisterUncreatableType<ContentWindowController>(
+                    QML_MODULE, 1, 0, "ContentWindowController",
+                    "ContentWindowController is linked to a ContentWindow "
+                    "and read-only in QML");
+        qmlRegisterUncreatableType<ContentInteractionDelegate>(
+                    QML_MODULE, 1, 0, "ContentInteractionDelegate",
+                    "ContentInteractionDelegate is linked to a ContentWindow "
+                    "and read-only in QML");
     }
 };
 
