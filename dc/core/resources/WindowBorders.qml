@@ -10,8 +10,9 @@ Rectangle {
     property alias borderDelegate: repeater.delegate
 
     visible: contentwindow.label !== "Dock"
+             && contentwindow.controlsVisible
              && contentwindow.state !== ContentWindow.SELECTED
-    opacity: contentwindow.controlsOpacity * baseOpacity
+    opacity: baseOpacity
 
     Repeater {
         id: repeater
