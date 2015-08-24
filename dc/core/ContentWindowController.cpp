@@ -231,9 +231,9 @@ QSizeF ContentWindowController::getMaxContentSize() const
 QRectF ContentWindowController::getFocusedCoord() const
 {
     const qreal margin = 2.0 * getInsideMargin_();
+    const QSizeF margins( margin + WINDOW_CONTROLS_MARGIN_PX, margin );
     const QSizeF& wallSize = displayGroup_->getCoordinates().size();
-    const QSizeF maxSize = wallSize.boundedTo( wallSize -
-                                               QSizeF( margin, margin ));
+    const QSizeF maxSize = wallSize.boundedTo( wallSize - margins );
 
     QSizeF size = contentWindow_->getContent()->getDimensions();
     size.scale( maxSize, Qt::KeepAspectRatio );

@@ -104,11 +104,15 @@ ControlState MovieContent::getControlState() const
 void MovieContent::play()
 {
     controlState_ = (ControlState)(controlState_ & ~STATE_PAUSED);
+
+    emit modified();
 }
 
 void MovieContent::pause()
 {
     controlState_ = (ControlState)(controlState_ | STATE_PAUSED);
+
+    emit modified();
 }
 
 void MovieContent::createActions()

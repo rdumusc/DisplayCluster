@@ -35,17 +35,7 @@ Rectangle {
                 }
                 OneToOneControlButton {
                 }
-                FullscreenControlButton {
-                }
-            }
-        }
-        Component {
-            id: fixedButtonsFocusDelegate
-            Column {
-                id: column
-                CloseControlButton {
-                }
-                FullscreenControlButton {
+                FocusControlButton {
                 }
             }
         }

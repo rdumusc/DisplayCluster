@@ -257,9 +257,17 @@ BOOST_AUTO_TEST_CASE( testFocusModeCoordinates )
 
     const QRectF& coords = controller.getFocusedCoord();
 
+    const qreal expectedPadding = 0.05 * wallSize.width();
+    const qreal expectedXOffset = 175.0; // window controls width
+
+    const qreal totalExpectedMargin = 2.0 * expectedPadding + expectedXOffset;
+    const qreal expectedWidth = wallSize.width() - totalExpectedMargin;
+    const qreal expectedHeight = expectedWidth / content->getAspectRatio();
+    const qreal expectedY = ( wallSize.height() - expectedHeight ) / 2.0;
+
     // focus mode, vertically centered on wall and repects inner margin
-    BOOST_CHECK_EQUAL( coords.x(), 225 );
-    BOOST_CHECK_EQUAL( coords.y(), 162.5 );
-    BOOST_CHECK_EQUAL( coords.width(), 900 );
-    BOOST_CHECK_EQUAL( coords.height(), 675 );
+    BOOST_CHECK_EQUAL( coords.x(), expectedPadding + expectedXOffset );
+    BOOST_CHECK_EQUAL( coords.y(), expectedY );
+    BOOST_CHECK_EQUAL( coords.width(), expectedWidth );
+    BOOST_CHECK_EQUAL( coords.height(), expectedHeight );
 }

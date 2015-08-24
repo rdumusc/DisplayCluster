@@ -83,13 +83,9 @@ void PixelStreamWindowManager::showWindow( const QString& uri )
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
     {
-        PixelStreamInteractionDelegate* delegate =
-                static_cast<PixelStreamInteractionDelegate*>(
-                    contentWindow->getInteractionDelegate( ));
-
-        contentWindow->setState( delegate->hasEventReceivers() ?
-                                     ContentWindow::SELECTED :
-                                     ContentWindow::NONE );
+        const bool isDock = uri == DockPixelStreamer::getUniqueURI();
+        contentWindow->setState( isDock ? ContentWindow::SELECTED :
+                                          ContentWindow::NONE );
     }
 }
 
@@ -159,12 +155,7 @@ void PixelStreamWindowManager::registerEventReceiver( const QString uri,
             static_cast<PixelStreamInteractionDelegate*>(
                 contentWindow->getInteractionDelegate( ));
     if( !exclusive || !delegate->hasEventReceivers( ))
-    {
         success = delegate->registerEventReceiver( receiver );
-
-        if( success )
-            contentWindow->setState( ContentWindow::SELECTED );
-    }
 
     emit eventRegistrationReply( uri, success );
 }
