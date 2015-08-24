@@ -13,6 +13,7 @@
         <file>pause.svg</file>
         <file>play.svg</file>
         <file>oneToOne.svg</file>
+        <file>focus.svg</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>Gotham-Book.otf</file>
@@ -38,5 +39,6 @@
         <file>ZoomContext.qml</file>
         <file>BaseContentWindow.qml</file>
         <file>OneToOneControlButton.qml</file>
+        <file>FocusControlButton.qml</file>
     </qresource>
 </RCC>

@@ -139,7 +139,7 @@ BaseContentWindow {
                         }
                     }
                 }
-                FullscreenControlButton {
+                FocusControlButton {
                     TouchArea {
                         anchors.fill: parent
                         onTap: {
