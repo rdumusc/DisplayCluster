@@ -157,6 +157,9 @@ void PixelStreamWindowManager::registerEventReceiver( const QString uri,
     if( !exclusive || !delegate->hasEventReceivers( ))
         success = delegate->registerEventReceiver( receiver );
 
+    if( uri == DockPixelStreamer::getUniqueURI( ))
+        contentWindow->setState( ContentWindow::SELECTED );
+
     emit eventRegistrationReply( uri, success );
 }
 

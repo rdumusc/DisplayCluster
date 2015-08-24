@@ -206,7 +206,12 @@ private:
         BOOST_FOREACH( ContentWindowPtr window, contentWindows_ )
         {
             if( window->isFocused( ))
+            {
+                window->setState( ContentWindow::SELECTED );
                 focusedWindows_.insert( window );
+            }
+            else
+                window->setState( ContentWindow::NONE );
         }
     }
 
