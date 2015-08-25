@@ -54,18 +54,9 @@ IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
 qreal ContentWindow::maxContentScale_ = 2.0;
 
-ContentWindow::ContentWindow()
-    : uuid_( QUuid::createUuid( ))
-    , zoomRect_( UNIT_RECTF )
-    , windowBorder_( NOBORDER )
-    , focused_( false )
-    , windowState_( NONE )
-    , controlsVisible_( false )
-{
-}
-
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
+    , content_( content )
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
     , focused_( false )
@@ -73,9 +64,18 @@ ContentWindow::ContentWindow( ContentPtr content )
     , controlsVisible_( false )
 {
     assert( content );
-    setContent( content );
+    init();
     coordinates_.setSize( content_->getDimensions( ));
 }
+
+ContentWindow::ContentWindow()
+    : uuid_( QUuid::createUuid( ))
+    , zoomRect_( UNIT_RECTF )
+    , windowBorder_( NOBORDER )
+    , focused_( false )
+    , windowState_( NONE )
+    , controlsVisible_( false )
+{}
 
 ContentWindow::~ContentWindow()
 {
@@ -104,10 +104,7 @@ void ContentWindow::setContent( ContentPtr content )
         content_->disconnect( this, SIGNAL( contentModified( )));
 
     content_ = content;
-
-    connect( content_.get(), SIGNAL( modified( )), SIGNAL( contentModified( )));
-
-    createInteractionDelegate();
+    init();
 }
 
 ContentWindowController* ContentWindow::getController()
@@ -270,6 +267,12 @@ void ContentWindow::setMaxContentScale( const qreal value )
 qreal ContentWindow::getMaxContentScale()
 {
     return maxContentScale_;
+}
+
+void ContentWindow::init()
+{
+    connect( content_.get(), SIGNAL( modified( )), SIGNAL( contentModified( )));
+    createInteractionDelegate();
 }
 
 void ContentWindow::createInteractionDelegate()

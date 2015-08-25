@@ -44,14 +44,26 @@
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
 
-BOOST_CLASS_EXPORT_GUID(PDFContent, "PDFContent")
+BOOST_CLASS_EXPORT_GUID( PDFContent, "PDFContent" )
 
-PDFContent::PDFContent(const QString& uri)
-    : Content(uri)
-    , pageNumber_(0)
-    , pageCount_(0)
+PDFContent::PDFContent( const QString& uri )
+    : Content( uri )
+    , _pageNumber( 0 )
+    , _pageCount( 0 )
 {
-    connect(this, SIGNAL(pageChanged()), this, SIGNAL(modified()));
+    _init();
+}
+
+PDFContent::PDFContent()
+    : _pageNumber( 0 )
+    , _pageCount( 0 )
+{
+    _init();
+}
+
+void PDFContent::_init()
+{
+    connect( this, SIGNAL( pageChanged( )), this, SIGNAL( modified( )));
 }
 
 CONTENT_TYPE PDFContent::getType() const
@@ -66,8 +78,8 @@ bool PDFContent::readMetadata()
         return false;
 
     size_ = pdf.getSize();
-    pageCount_ = pdf.getPageCount();
-    pageNumber_ = std::min( pageNumber_, pageCount_ - 1 );
+    _pageCount = pdf.getPageCount();
+    _pageNumber = std::min( _pageNumber, _pageCount - 1 );
 
     return true;
 }
@@ -87,23 +99,23 @@ const QStringList& PDFContent::getSupportedExtensions()
 
 void PDFContent::nextPage()
 {
-    if( pageNumber_ < pageCount_-1 )
+    if( _pageNumber < _pageCount - 1 )
     {
-        ++pageNumber_;
-        emit(pageChanged());
+        ++_pageNumber;
+        emit pageChanged();
     }
 }
 
 void PDFContent::previousPage()
 {
-    if (pageNumber_ > 0 )
+    if( _pageNumber > 0 )
     {
-        --pageNumber_;
-        emit(pageChanged());
+        --_pageNumber;
+        emit pageChanged();
     }
 }
 
 int PDFContent::getPage() const
 {
-    return pageNumber_;
+    return _pageNumber;
 }

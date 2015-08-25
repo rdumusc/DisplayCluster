@@ -190,10 +190,10 @@ public:
     /** Get the label for the window */
     QString getLabel() const;
 
-    /** Get the opacity of the window control buttons. */
+    /** Get the visibility of the window control buttons. */
     bool getControlsVisible() const;
 
-    /** Set the opacity of the window control buttons. */
+    /** Set the visibility of the window control buttons. */
     void setControlsVisible( bool value );
 
     /** Set the maximum factor for zoom and resize; value times content size */
@@ -286,8 +286,7 @@ private:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
-        // The InteractionDelegate is not serialized and must be recreated
-        createInteractionDelegate();
+        init();
     }
 
     /** Saving to xml. */
@@ -297,6 +296,7 @@ private:
         serialize_members_xml( ar, version );
     }
 
+    void init();
     void createInteractionDelegate();
 
     QUuid uuid_;
