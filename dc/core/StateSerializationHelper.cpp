@@ -130,12 +130,10 @@ bool StateSerializationHelper::load( const QString& filename )
     ContentWindowPtrs contentWindows = newDisplayGroup->getContentWindows();
     if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )
         scaleToDisplayGroup( contentWindows );
-
     validate( contentWindows );
-    newDisplayGroup->setContentWindows( contentWindows );
-    newDisplayGroup->setCoordinates( displayGroup_->getCoordinates( ));
 
-    *displayGroup_ = *newDisplayGroup;
+    displayGroup_->setShowWindowTitles( newDisplayGroup->getShowWindowTitles( ));
+    displayGroup_->setContentWindows( contentWindows );
     return true;
 }
 

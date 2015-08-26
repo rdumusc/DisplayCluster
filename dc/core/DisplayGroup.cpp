@@ -171,17 +171,7 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
         if( window->isFocused( ))
             focusedWindows_.insert( window );
     }
-}
-
-DisplayGroup& DisplayGroup::operator=( const DisplayGroup& displayGroup )
-{
-    if( this == &displayGroup )
-        return *this;
-
-    setContentWindows( displayGroup.contentWindows_ );
-    setShowWindowTitles( displayGroup.showWindowTitles_ );
-    setCoordinates( displayGroup.coordinates_ );
-    return *this;
+    sendDisplayGroup();
 }
 
 bool DisplayGroup::hasFocusedWindows() const
@@ -218,6 +208,9 @@ void DisplayGroup::unfocus( const QUuid& id )
 
 void DisplayGroup::clear()
 {
+    if( contentWindows_.empty( ))
+        return;
+
     put_flog( LOG_INFO, "removing %i windows", contentWindows_.size( ));
 
     while( !contentWindows_.empty( ))
