@@ -197,7 +197,7 @@ void DisplayGroupGraphicsView::remove( ContentWindowPtr contentWindow )
         return;
 
     QGraphicsItem* itemToRemove = uuidToWindowMap_[id];
-    uuidToWindowMap_.remove( contentWindow->getID( ));
+    uuidToWindowMap_.remove( id );
 
     scene()->removeItem( itemToRemove );
     delete itemToRemove;

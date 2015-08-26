@@ -81,9 +81,12 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
     sendDisplayGroup();
 }
 
-void DisplayGroup::removeContentWindow( const QUuid id )
+void DisplayGroup::removeWindowLater( const QUuid windowId )
 {
-    removeContentWindow( getContentWindow( id ));
+    auto window = getContentWindow( windowId );
+    QMetaObject::invokeMethod( this, "removeContentWindow",
+                               Qt::QueuedConnection,
+                               Q_ARG( ContentWindowPtr, window ));
 }
 
 void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
