@@ -152,9 +152,6 @@ void WebkitPixelStreamer::processClickEvent(const deflect::Event &clickEvent)
         return;
     }
 
-    processPressEvent(clickEvent);
-    processReleaseEvent(clickEvent);
-
     const QWebHitTestResult& hitResult = performHitTest( clickEvent );
     if( !hitResult.isNull() && !hitResult.linkUrl().isEmpty( ))
         webView_.load( hitResult.linkUrl( ));

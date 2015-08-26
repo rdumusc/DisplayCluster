@@ -59,6 +59,10 @@ public:
 
     /** @name Touch gesture handlers. */
     //@{
+    Q_INVOKABLE virtual void touchBegin( QPointF position )
+    { Q_UNUSED( position ) }
+    Q_INVOKABLE virtual void touchEnd( QPointF position )
+    { Q_UNUSED( position ) }
     Q_INVOKABLE virtual void tap( QPointF position )
     { Q_UNUSED( position ) }
     Q_INVOKABLE virtual void doubleTap( QPointF position )
@@ -67,12 +71,8 @@ public:
     { Q_UNUSED( position ) }
     Q_INVOKABLE virtual void pan( QPointF position, QPointF delta )
     { Q_UNUSED( position ) Q_UNUSED( delta ) }
-    Q_INVOKABLE virtual void panFinished( QPointF position )
-    { Q_UNUSED( position ) }
     Q_INVOKABLE virtual void pinch( QPointF position, qreal scaleFactor )
     { Q_UNUSED( position ) Q_UNUSED( scaleFactor ) }
-    Q_INVOKABLE virtual void pinchFinished( QPointF position )
-    { Q_UNUSED( position ) }
     Q_INVOKABLE virtual void swipeLeft() {}
     Q_INVOKABLE virtual void swipeRight() {}
     Q_INVOKABLE virtual void swipeUp() {}

@@ -54,6 +54,22 @@ PixelStreamInteractionDelegate::PixelStreamInteractionDelegate( ContentWindow&
              this, SLOT( _sendSizeChangedEvent( )));
 }
 
+void PixelStreamInteractionDelegate::touchBegin( const QPointF position )
+{
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_PRESS;
+
+    emit notify( deflectEvent );
+}
+
+void PixelStreamInteractionDelegate::touchEnd( const QPointF position )
+{
+    deflect::Event deflectEvent = _getNormEvent( position );
+    deflectEvent.type = deflect::Event::EVT_RELEASE;
+
+    emit notify( deflectEvent );
+}
+
 void PixelStreamInteractionDelegate::tap( const QPointF position )
 {
     deflect::Event deflectEvent = _getNormEvent( position );
@@ -82,11 +98,7 @@ void PixelStreamInteractionDelegate::pan( const QPointF position,
                                           const QPointF delta )
 {
     deflect::Event deflectEvent = _getNormEvent( position );
-
-    if( delta.isNull( ))
-        deflectEvent.type = deflect::Event::EVT_PRESS;
-    else
-        deflectEvent.type = deflect::Event::EVT_MOVE;
+    deflectEvent.type = deflect::Event::EVT_MOVE;
 
     const QPointF normDelta = getNormalizedPoint( delta );
     deflectEvent.dx = normDelta.x();
@@ -95,13 +107,6 @@ void PixelStreamInteractionDelegate::pan( const QPointF position,
     emit notify( deflectEvent );
 }
 
-void PixelStreamInteractionDelegate::panFinished( const QPointF position )
-{
-    deflect::Event deflectEvent = _getNormEvent( position );
-    deflectEvent.type = deflect::Event::EVT_RELEASE;
-
-    emit notify( deflectEvent );
-}
 
 void PixelStreamInteractionDelegate::pinch( const QPointF position,
                                             const qreal scaleFactor )

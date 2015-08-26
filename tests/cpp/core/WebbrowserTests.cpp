@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE( test_webgl_interaction )
     delete streamer;
 }
 
-BOOST_AUTO_TEST_CASE( test_webgl_click )
+BOOST_AUTO_TEST_CASE( test_webgl_press_release )
 {
     if( !hasGLXDisplay() || !glVersionGreaterEqual( GL_REQ_VERSION ))
         return;
@@ -181,17 +181,20 @@ BOOST_AUTO_TEST_CASE( test_webgl_click )
     BOOST_REQUIRE( frame );
 
     // Normalized mouse coordinates
-    deflect::Event clickState;
-    clickState.mouseX = 0.1;
-    clickState.mouseY = 0.1;
-    clickState.mouseLeft = true;
-    clickState.type = deflect::Event::EVT_CLICK;
+    deflect::Event pressReleaseEvent;
+    pressReleaseEvent.mouseX = 0.1;
+    pressReleaseEvent.mouseY = 0.1;
+    pressReleaseEvent.mouseLeft = true;
 
-    streamer->processEvent(clickState);
+    pressReleaseEvent.type = deflect::Event::EVT_PRESS;
+    streamer->processEvent(pressReleaseEvent);
 
-    const int expectedPosX = clickState.mouseX * streamer->size().width() /
+    pressReleaseEvent.type = deflect::Event::EVT_RELEASE;
+    streamer->processEvent(pressReleaseEvent);
+
+    const int expectedPosX = pressReleaseEvent.mouseX * streamer->size().width() /
                              streamer->getView()->zoomFactor();
-    const int expectedPosY = clickState.mouseY * streamer->size().height() /
+    const int expectedPosY = pressReleaseEvent.mouseY * streamer->size().height() /
                              streamer->getView()->zoomFactor();
 
     QString jsX = QString("lastMouseX == %1;").arg(expectedPosX);

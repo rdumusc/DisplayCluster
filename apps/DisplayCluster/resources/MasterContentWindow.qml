@@ -31,6 +31,14 @@ BaseContentWindow {
         anchors.fill: parent
         onTouchBegin: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
+            if(contentwindow.state === ContentWindow.SELECTED)
+                contentwindow.delegate.touchBegin(position)
+        }
+        onTouchEnd: {
+            if(contentwindow.state !== ContentWindow.SELECTED)
+                contentwindow.state = ContentWindow.NONE
+            else
+                contentwindow.delegate.touchEnd(position)
         }
         onTap: {
             if(contentwindow.state === ContentWindow.SELECTED)
@@ -54,10 +62,7 @@ BaseContentWindow {
                                                          contentwindow.y + delta.y))
             }
         }
-        onPanFinished: {
-            if(contentwindow.state !== ContentWindow.SELECTED)
-                contentwindow.state = ContentWindow.NONE
-        }
+
         onPinch: {
             if(contentwindow.state === ContentWindow.SELECTED)
                 contentwindow.delegate.pinch(position, scaleFactor)
@@ -65,10 +70,6 @@ BaseContentWindow {
                 contentwindow.state = ContentWindow.RESIZING
                 contentwindow.controller.scale(position, scaleFactor)
             }
-        }
-        onPinchFinished: {
-            if(contentwindow.state !== ContentWindow.SELECTED)
-                contentwindow.state = ContentWindow.NONE
         }
         onSwipeLeft: {
             if(contentwindow.state === ContentWindow.SELECTED)
@@ -104,12 +105,14 @@ BaseContentWindow {
             BorderRectangle {
                 TouchArea {
                     anchors.fill: parent
-                    onPan: {
+                    onTouchBegin: {
                         contentwindow.border = parent.border
                         contentwindow.state = ContentWindow.RESIZING
+                    }
+                    onPan: {
                         contentwindow.controller.resizeRelative(delta)
                     }
-                    onPanFinished: {
+                    onTouchEnd: {
                         contentwindow.border = ContentWindow.NOBORDER
                         contentwindow.state = ContentWindow.NONE
                     }

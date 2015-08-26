@@ -57,11 +57,12 @@ public:
 
     /** @name Touch gesture handlers. */
     //@{
+    void touchBegin( QPointF position ) override;
+    void touchEnd( QPointF position ) override;
     void tap( QPointF position ) override;
     void doubleTap( QPointF position ) override;
     void tapAndHold( QPointF position ) override;
     void pan( QPointF position, QPointF delta ) override;
-    void panFinished( QPointF position ) override;
     void pinch( QPointF position, qreal scaleFactor ) override;
     void swipeLeft() override;
     void swipeRight() override;
