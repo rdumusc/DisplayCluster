@@ -133,14 +133,14 @@ public slots:
     /** Enable/Disable the visibility of window titles. */
     void setShowWindowTitles( bool set );
 
-    /** Remove a content window. */
-    void removeContentWindow( const QUuid id );
+    /** Remove a content window later (using a Qt::QueuedConnection). */
+    void removeWindowLater( QUuid windowId );
 
     /** Remove a content window. */
     void removeContentWindow( ContentWindowPtr contentWindow );
 
     /** Remove a content window. */
-    void moveContentWindowToFront( const QUuid id );
+    void moveContentWindowToFront( QUuid id );
 
     /** Move a content window to the front. */
     void moveContentWindowToFront( ContentWindowPtr contentWindow );

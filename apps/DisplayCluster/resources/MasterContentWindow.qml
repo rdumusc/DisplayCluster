@@ -10,7 +10,7 @@ BaseContentWindow {
     border.width: 10
 
     function closeWindow() {
-        displaygroup.removeContentWindow(contentwindow.id)
+        displaygroup.removeWindowLater(contentwindow.id)
     }
 
     function toggleControlsVisibility() {
