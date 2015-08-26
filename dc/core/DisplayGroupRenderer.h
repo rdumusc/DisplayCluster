@@ -76,21 +76,23 @@ signals:
     void windowRemoved( QmlWindowPtr qmlWindow );
 
 private:
-    RenderContextPtr renderContext_;
-    DisplayGroupPtr displayGroup_;
-    QDeclarativeItem* displayGroupItem_;
+    Q_DISABLE_COPY( DisplayGroupRenderer )
+
+    RenderContextPtr _renderContext;
+    DisplayGroupPtr _displayGroup;
+    QDeclarativeItem* _displayGroupItem;
 
     typedef QMap<QUuid,QmlWindowPtr> QmlWindows;
-    QmlWindows windowItems_;
-    QmlWindowPtr backgroundWindowItem_;
+    QmlWindows _windowItems;
+    QmlWindowPtr _backgroundWindowItem;
 
-    OptionsPtr options_;
+    OptionsPtr _options;
 
-    void createDisplayGroupQmlItem();
-    void createWindowQmlItem( ContentWindowPtr window );
-    bool hasBackgroundChanged( const QString& newUri ) const;
-    void setBackground( ContentPtr backgroundContent );
-    void adjustBackgroundTo( const DisplayGroup& displayGroup );
+    void _createDisplayGroupQmlItem();
+    void _createWindowQmlItem( ContentWindowPtr window );
+    bool _hasBackgroundChanged( const QString& newUri ) const;
+    void _setBackground( ContentPtr backgroundContent );
+    void _adjustBackgroundTo( const DisplayGroup& displayGroup );
 };
 
 #endif // DISPLAYGROUPRENDERER_H

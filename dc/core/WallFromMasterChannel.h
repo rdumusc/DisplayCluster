@@ -54,7 +54,7 @@ class WallFromMasterChannel : public QObject
 
 public:
     /** Constructor */
-    WallFromMasterChannel(MPIChannelPtr mpiChannel);
+    WallFromMasterChannel( MPIChannelPtr mpiChannel );
 
     /** Check if a message is available from the Master process. */
     bool isMessageAvailable();
@@ -78,28 +78,28 @@ signals:
      * @see receiveMessage()
      * @param displayGroup The DisplayGroup that was received
      */
-    void received(DisplayGroupPtr displayGroup);
+    void received( DisplayGroupPtr displayGroup );
 
     /**
      * Emitted when new Options were recieved
      * @see receiveMessage()
      * @param options The options that were received
      */
-    void received(OptionsPtr options);
+    void received( OptionsPtr options );
 
     /**
      * Emitted when new Markers were recieved
      * @see receiveMessage()
      * @param markers The markers that were received
      */
-    void received(MarkersPtr markers);
+    void received( MarkersPtr markers );
 
     /**
      * Emitted when a new PixelStream frame was recieved
      * @see receiveMessage()
      * @param frame The frame that was received
      */
-    void received(deflect::FramePtr frame);
+    void received( deflect::FramePtr frame );
 
     /**
      * Emitted when the quit message was recieved
@@ -108,12 +108,14 @@ signals:
     void receivedQuit();
 
 private:
-    MPIChannelPtr mpiChannel_;
-    SerializeBuffer buffer_;
-    bool processMessages_;
+    Q_DISABLE_COPY( WallFromMasterChannel )
+
+    MPIChannelPtr _mpiChannel;
+    SerializeBuffer _buffer;
+    bool _processMessages;
 
     template <typename T>
-    T receiveBroadcast(const size_t messageSize);
+    T receiveBroadcast( const size_t messageSize );
 };
 
 #endif // WALLFROMMASTERCHANNEL_H

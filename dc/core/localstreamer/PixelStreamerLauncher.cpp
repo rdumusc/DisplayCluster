@@ -61,10 +61,10 @@
 
 PixelStreamerLauncher::PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
                                               const MasterConfiguration& config )
-    : windowManager_( windowManager )
-    , config_( config )
+    : _windowManager( windowManager )
+    , _config( config )
 {
-    connect( &windowManager_, SIGNAL( pixelStreamWindowClosed( QString )),
+    connect( &_windowManager, SIGNAL( pixelStreamWindowClosed( QString )),
              this, SLOT( dereferenceLocalStreamer( QString )),
              Qt::QueuedConnection );
 }
@@ -76,7 +76,7 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     const QString& uri = QString( "WebBrowser_%1" ).arg( webbrowserCounter++ );
 
     const QSize viewportSize = !size.isEmpty() ? size : WEBBROWSER_DEFAULT_SIZE;
-    windowManager_.openPixelStreamWindow( uri, pos, viewportSize );
+    _windowManager.openPixelStreamWindow( uri, pos, viewportSize );
 
     CommandLineOptions options;
     options.setPixelStreamerType( PS_WEBKIT );
@@ -85,8 +85,8 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     options.setWidth( viewportSize.width( ));
     options.setHeight( viewportSize.height( ));
 
-    processes_[uri] = new QProcess( this );
-    if( !processes_[uri]->startDetached( getLocalStreamerBin(),
+    _processes[uri] = new QProcess( this );
+    if( !_processes[uri]->startDetached( _getLocalStreamerBin(),
                                          options.getCommandLineArguments(),
                                          QDir::currentPath( )))
         put_flog( LOG_ERROR, "Webbrowser process could not be started!" );
@@ -94,12 +94,12 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
 
 void PixelStreamerLauncher::openDock( const QPointF pos )
 {
-    const unsigned int dockWidth = config_.getTotalWidth() *
+    const unsigned int dockWidth = _config.getTotalWidth() *
                                    DOCK_WIDTH_RELATIVE_TO_WALL;
     const unsigned int dockHeight = dockWidth *
                                     DockPixelStreamer::getDefaultAspectRatio();
 
-    openDock( pos, QSize( dockWidth, dockHeight ), config_.getDockStartDir( ));
+    openDock( pos, QSize( dockWidth, dockHeight ), _config.getDockStartDir( ));
 }
 
 void PixelStreamerLauncher::openDock( const QPointF pos, const QSize size,
@@ -108,32 +108,32 @@ void PixelStreamerLauncher::openDock( const QPointF pos, const QSize size,
     const QString& dockUri = DockPixelStreamer::getUniqueURI();
     const QSize& dockSize = DockPixelStreamer::constrainSize( size );
 
-    windowManager_.openPixelStreamWindow( dockUri, pos, dockSize );
-    windowManager_.showWindow( dockUri );
+    _windowManager.openPixelStreamWindow( dockUri, pos, dockSize );
+    _windowManager.showWindow( dockUri );
 
-    if( !processes_.count( dockUri ))
+    if( !_processes.count( dockUri ))
     {
-        if( !createDock( dockSize, rootDir ))
+        if( !_createDock( dockSize, rootDir ))
             put_flog( LOG_ERROR, "Dock process could not be started!" );
     }
 }
 
 void PixelStreamerLauncher::hideDock()
 {
-    windowManager_.hideWindow( DockPixelStreamer::getUniqueURI( ));
+    _windowManager.hideWindow( DockPixelStreamer::getUniqueURI( ));
 }
 
 void PixelStreamerLauncher::dereferenceLocalStreamer( const QString uri )
 {
-    processes_.erase( uri );
+    _processes.erase( uri );
 }
 
-bool PixelStreamerLauncher::createDock( const QSize& size,
+bool PixelStreamerLauncher::_createDock( const QSize& size,
                                         const QString& rootDir )
 {
     const QString& uri = DockPixelStreamer::getUniqueURI();
 
-    assert( !processes_.count( uri ));
+    assert( !_processes.count( uri ));
 
     CommandLineOptions options;
     options.setPixelStreamerType( PS_DOCK );
@@ -142,13 +142,13 @@ bool PixelStreamerLauncher::createDock( const QSize& size,
     options.setWidth( size.width( ));
     options.setHeight( size.height( ));
 
-    processes_[uri] = new QProcess( this );
-    return processes_[uri]->startDetached( getLocalStreamerBin(),
+    _processes[uri] = new QProcess( this );
+    return _processes[uri]->startDetached( _getLocalStreamerBin(),
                                            options.getCommandLineArguments(),
                                            QDir::currentPath( ));
 }
 
-QString PixelStreamerLauncher::getLocalStreamerBin() const
+QString PixelStreamerLauncher::_getLocalStreamerBin() const
 {
     const QString& appDir = QCoreApplication::applicationDirPath();
     return QString( "%1/%2" ).arg( appDir, LOCALSTREAMER_BIN );

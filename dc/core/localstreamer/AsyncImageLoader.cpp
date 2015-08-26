@@ -49,42 +49,44 @@
 #define CACHE_MAX_SIZE 100
 #define MODIFICATION_DATE_KEY "lastModificationDate"
 
-AsyncImageLoader::AsyncImageLoader(const QSize& defaultSize)
-    : defaultSize_(defaultSize)
+AsyncImageLoader::AsyncImageLoader( const QSize& defaultSize )
+    : _defaultSize( defaultSize )
 {
-    cache_.setMaxCost(CACHE_MAX_SIZE);
+    _cache.setMaxCost( CACHE_MAX_SIZE );
 }
 
 void AsyncImageLoader::loadImage( const QString& filename, const int index )
 {
 #ifdef USE_CACHE
-    if (imageInCache(filename))
+    if( imageInCache( filename ))
     {
-        emit imageLoaded(index, *cache_[filename]);
+        emit imageLoaded( index, *_cache[filename] );
         return;
     }
 #endif
 
-    QImage image = ThumbnailGeneratorFactory::getGenerator(filename, defaultSize_)->generate(filename);
-    if (!image.isNull())
+    QImage image = ThumbnailGeneratorFactory::getGenerator( filename, _defaultSize )->generate( filename );
+    if( !image.isNull( ))
     {
 #ifdef USE_CACHE
         // QCache requires a <T>* and takes ownership, so we have to create new QImage
-        QImage* cacheImage = new QImage(image);
-        cacheImage->setText(MODIFICATION_DATE_KEY, QFileInfo(filename).lastModified().toString());
-        cache_.insert(filename, cacheImage);
+        QImage* cacheImage = new QImage( image );
+        cacheImage->setText( MODIFICATION_DATE_KEY,
+                             QFileInfo( filename ).lastModified().toString( ));
+        _cache.insert( filename, cacheImage );
 #endif
-        emit imageLoaded(index, image);
+        emit imageLoaded( index, image );
     }
 
     emit imageLoadingFinished();
 }
 
-bool AsyncImageLoader::imageInCache(const QString& filename) const
+bool AsyncImageLoader::imageInCache( const QString& filename ) const
 {
-    if (!cache_.contains(filename))
+    if( !_cache.contains( filename ))
         return false;
 
-    const QFileInfo info(filename);
-    return info.lastModified().toString() == cache_.object(filename)->text(MODIFICATION_DATE_KEY);
+    const QFileInfo info( filename );
+    return info.lastModified().toString() ==
+            _cache.object( filename )->text( MODIFICATION_DATE_KEY );
 }

@@ -72,6 +72,8 @@ public slots:
     void sendKeyEventToActiveWindow( char key ) const;
 
 private:
+    Q_DISABLE_COPY( TextInputDispatcher )
+
     DisplayGroupPtr displayGroup_;
     AsciiToQtKeyCodeMapper keyMapper_;
 };

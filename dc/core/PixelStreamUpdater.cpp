@@ -54,12 +54,12 @@ PixelStreamUpdater::PixelStreamUpdater()
 void PixelStreamUpdater::synchronizeFramesSwap( const SyncFunction&
                                                 versionCheckFunc )
 {
-    PixelStreamMap::const_iterator streamIt = pixelStreamMap_.begin();
-    for( ; streamIt != pixelStreamMap_.end(); ++streamIt )
+    PixelStreamMap::const_iterator streamIt = _pixelStreamMap.begin();
+    for( ; streamIt != _pixelStreamMap.end(); ++streamIt )
     {
         const QString& uri = streamIt.key();
 
-        SwapSyncFrame& swapSyncFrame = swapSyncFrames_[uri];
+        SwapSyncFrame& swapSyncFrame = _swapSyncFrames[uri];
         if( swapSyncFrame.sync( versionCheckFunc ))
         {
             streamIt.value()->setNewFrame( swapSyncFrame.get( ));
@@ -70,7 +70,7 @@ void PixelStreamUpdater::synchronizeFramesSwap( const SyncFunction&
 
 void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 {
-    swapSyncFrames_[frame->uri].update( frame );
+    _swapSyncFrames[frame->uri].update( frame );
 }
 
 void PixelStreamUpdater::onWindowAdded( QmlWindowPtr qmlWindow )
@@ -82,7 +82,7 @@ void PixelStreamUpdater::onWindowAdded( QmlWindowPtr qmlWindow )
     WallContentPtr stream = qmlWindow->getWallContent();
 
     const QString& uri = window->getContent()->getURI();
-    pixelStreamMap_[uri] = boost::static_pointer_cast<PixelStream>( stream );
+    _pixelStreamMap[uri] = boost::static_pointer_cast<PixelStream>( stream );
 }
 
 void PixelStreamUpdater::onWindowRemoved( QmlWindowPtr qmlWindow )
@@ -92,7 +92,7 @@ void PixelStreamUpdater::onWindowRemoved( QmlWindowPtr qmlWindow )
         return;
 
     const QString& uri = window->getContent()->getURI();
-    disconnect( pixelStreamMap_[uri].get( ));
-    pixelStreamMap_.remove( uri );
-    swapSyncFrames_.remove( uri );
+    disconnect( _pixelStreamMap[uri].get( ));
+    _pixelStreamMap.remove( uri );
+    _swapSyncFrames.remove( uri );
 }

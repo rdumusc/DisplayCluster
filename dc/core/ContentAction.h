@@ -105,24 +105,26 @@ signals:
     //@}
 
 private:
+    Q_DISABLE_COPY( ContentAction )
+
     friend class boost::serialization::access;
 
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
-        ar & boost::serialization::make_nvp( "icon", icon_ );
-        ar & boost::serialization::make_nvp( "iconChecked", iconChecked_ );
-        ar & boost::serialization::make_nvp( "checkable", checkable_ );
-        ar & boost::serialization::make_nvp( "checked", checked_ );
-        ar & boost::serialization::make_nvp( "enabled", enabled_ );
+        ar & boost::serialization::make_nvp( "icon", _icon );
+        ar & boost::serialization::make_nvp( "iconChecked", _iconChecked );
+        ar & boost::serialization::make_nvp( "checkable", _checkable );
+        ar & boost::serialization::make_nvp( "checked", _checked );
+        ar & boost::serialization::make_nvp( "enabled", _enabled );
     }
 
-    QUuid uuid_;
-    QString icon_;
-    QString iconChecked_;
-    bool checkable_;
-    bool checked_;
-    bool enabled_;
+    QUuid _uuid;
+    QString _icon;
+    QString _iconChecked;
+    bool _checkable;
+    bool _checked;
+    bool _enabled;
 };
 
 #endif // CONTENTACTION_H

@@ -148,10 +148,12 @@ private slots:
     void onContentWindowRemoved( ContentWindowPtr window );
 
 private:
-    DisplayGroup& displayGroup_;
+    Q_DISABLE_COPY( PixelStreamWindowManager )
+
+    DisplayGroup& _displayGroup;
 
     typedef std::map< QString, QUuid > ContentWindowMap;
-    ContentWindowMap streamerWindows_;
+    ContentWindowMap _streamerWindows;
 };
 
 #endif

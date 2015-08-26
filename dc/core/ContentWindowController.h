@@ -112,35 +112,37 @@ public:
     Q_INVOKABLE QRectF getFocusedCoord() const;
 
 private:
-    /**
-     * Resize the window around a given center point.
-     * @param center the center of scaling
-     * @param size the new desired size
-     */
-    void resize_( const QPointF& center, QSizeF size );
-
-    void constrainSize_( QSizeF& windowSize ) const;
-    void constrainPosition_( QRectF& window ) const;
-    void constrainFullyInside_( QRectF& window ) const;
-    QRectF getCenteredCoordinates_( const QSizeF& size ) const;
-    qreal getInsideMargin_() const;
+    Q_DISABLE_COPY( ContentWindowController )
 
     friend class boost::serialization::access;
+
+    /** No-argument constructor required for serialization. */
+    ContentWindowController();
 
     /** Serialize for sending to Wall applications. */
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
-        ar & contentWindow_;
-        ar & displayGroup_;
+        ar & _contentWindow;
+        ar & _displayGroup;
     }
 
-    /** No-argument constructor required for serialization. */
-    ContentWindowController();
+    /**
+     * Resize the window around a given center point.
+     * @param center the center of scaling
+     * @param size the new desired size
+     */
+    void _resize( const QPointF& center, QSizeF size );
+
+    void _constrainSize( QSizeF& windowSize ) const;
+    void _constrainPosition( QRectF& window ) const;
+    void _constrainFullyInside( QRectF& window ) const;
+    QRectF _getCenteredCoordinates( const QSizeF& size ) const;
+    qreal _getInsideMargin() const;
 
     // Storing pointers because references cannot be serialized with boost
-    ContentWindow* contentWindow_;
-    const DisplayGroup* displayGroup_;
+    ContentWindow* _contentWindow;
+    const DisplayGroup* _displayGroup;
 };
 
 #endif // CONTENTWINDOWCONTROLLER_H

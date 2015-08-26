@@ -43,93 +43,93 @@
 #include <QWebFrame>
 #include <QFile>
 
-// The SelectBoxIt scripts are developed and released by Greg Franko under MIT license
-// Project page: http://gregfranko.com/jquery.selectBoxIt.js/
+// The SelectBoxIt scripts are developed and released by Greg Franko under
+// MIT license. Project page: http://gregfranko.com/jquery.selectBoxIt.js/
 #define JQUERY_RESOURCE_FILE           ":/selectboxit/jquery.min.js"
 #define JQUERY_UI_RESOURCE_FILE        ":/selectboxit/jquery-ui.min.js"
 #define SELECTBOXIT_JS_RESOURCE_FILE   ":/selectboxit/jquery.selectBoxIt.min.js"
 #define SELECTBOXIT_CSS_RESOURCE_FILE  ":/selectboxit/selectboxit.css"
 
-WebkitHtmlSelectReplacer::WebkitHtmlSelectReplacer(QWebView& webView)
-    : webView_(webView)
+WebkitHtmlSelectReplacer::WebkitHtmlSelectReplacer( QWebView& webView )
+    : _webView( webView )
 {
-    connect(&webView_, SIGNAL(loadFinished(bool)), this, SLOT(pageLoaded(bool)));
+    connect( &_webView, SIGNAL( loadFinished( bool )),
+             this, SLOT( pageLoaded( bool )));
 }
 
-void WebkitHtmlSelectReplacer::pageLoaded(bool success)
+void WebkitHtmlSelectReplacer::pageLoaded( const bool success )
 {
-    if(!success)
+    if( !success )
         return;
 
-    loadScripts();
+    _loadScripts();
 
     replaceAllSelectElements();
 }
 
-void WebkitHtmlSelectReplacer::loadScripts()
-{
-    if (!hasJQuery())
-        loadJavascript(JQUERY_RESOURCE_FILE);
-
-    if (!hasJQueryUi())
-        loadJavascript(JQUERY_UI_RESOURCE_FILE);
-
-    loadJavascript(SELECTBOXIT_JS_RESOURCE_FILE);
-    loadCssUsingJQuery(SELECTBOXIT_CSS_RESOURCE_FILE);
-}
-
 void WebkitHtmlSelectReplacer::replaceAllSelectElements()
 {
-    QString js("var selectBox = $(\"select\").selectBoxIt();");
+    const QString js( "var selectBox = $(\"select\").selectBoxIt();" );
 
-    webView_.page()->mainFrame()->evaluateJavaScript(js);
+    _webView.page()->mainFrame()->evaluateJavaScript( js );
 }
 
-bool WebkitHtmlSelectReplacer::hasJQuery()
+void WebkitHtmlSelectReplacer::_loadScripts()
 {
-    QString js("var hasJquery = false;"
-               "if( window.jQuery ) {"
-               "  hasJquery = true;"
-               "}");
+    if( !_hasJQuery( ))
+        _loadJavascript( JQUERY_RESOURCE_FILE );
 
-    return webView_.page()->mainFrame()->evaluateJavaScript(js).toBool();
+    if( !_hasJQueryUi( ))
+        _loadJavascript( JQUERY_UI_RESOURCE_FILE );
+
+    _loadJavascript( SELECTBOXIT_JS_RESOURCE_FILE );
+    _loadCssUsingJQuery( SELECTBOXIT_CSS_RESOURCE_FILE );
 }
 
-bool WebkitHtmlSelectReplacer::hasJQueryUi()
+bool WebkitHtmlSelectReplacer::_hasJQuery()
 {
-    QString js("var hasJqueryUi = false;"
-               "if( window.jQuery.ui ) {"
-               "  hasJqueryUi = true;"
-               "}");
+    const QString js( "var hasJquery = false;"
+                      "if( window.jQuery ) {"
+                      "  hasJquery = true;"
+                      "}" );
 
-    return webView_.page()->mainFrame()->evaluateJavaScript(js).toBool();
+    return _webView.page()->mainFrame()->evaluateJavaScript( js ).toBool();
 }
 
-void WebkitHtmlSelectReplacer::loadJavascript(const QString& jsFile)
+bool WebkitHtmlSelectReplacer::_hasJQueryUi()
 {
-    QFile file(jsFile);
-    file.open(QIODevice::ReadOnly);
+    const QString js( "var hasJqueryUi = false;"
+                      "if( window.jQuery.ui ) {"
+                      "  hasJqueryUi = true;"
+                      "}" );
+
+    return _webView.page()->mainFrame()->evaluateJavaScript( js ).toBool();
+}
+
+void WebkitHtmlSelectReplacer::_loadJavascript( const QString& jsFile )
+{
+    QFile file( jsFile );
+    file.open( QIODevice::ReadOnly );
     QString jQuery = file.readAll();
     file.close();
 
-    webView_.page()->mainFrame()->evaluateJavaScript(jQuery);
+    _webView.page()->mainFrame()->evaluateJavaScript( jQuery );
 }
 
-void WebkitHtmlSelectReplacer::loadCssUsingJQuery(const QString& cssFile)
+void WebkitHtmlSelectReplacer::_loadCssUsingJQuery( const QString& cssFile )
 {
-    QFile file(cssFile);
-    file.open(QIODevice::ReadOnly);
+    QFile file( cssFile );
+    file.open( QIODevice::ReadOnly );
     QString cssStyle = file.readAll();
     file.close();
 
-    cssStyle.remove(QRegExp("[\\n\\t\\r]"));
+    cssStyle.remove( QRegExp( "[\\n\\t\\r]" ));
 
-    QString js = QString("loadCSS = function(href) {"
-                         "  var cssStyle = $(\"<style> %1 </style>\");"
-                         "  $(\"head\").append(cssStyle);"
-                         "};"
-                         "loadCSS();"
-                         ).arg(cssStyle);
+    const QString js = QString( "loadCSS = function(href) {"
+                                "  var cssStyle = $(\"<style> %1 </style>\");"
+                                "  $(\"head\").append(cssStyle);"
+                                "};"
+                                "loadCSS();" ).arg( cssStyle );
 
-    webView_.page()->mainFrame()->evaluateJavaScript(js);
+    _webView.page()->mainFrame()->evaluateJavaScript( js );
 }

@@ -92,6 +92,9 @@ protected:
 
     QRectF getWindowCoord() const;
     QPointF getNormalizedPoint( const QPointF& point ) const;
+
+private:
+    Q_DISABLE_COPY( ContentInteractionDelegate )
 };
 
 #endif // CONTENTINTERACTIONDELEGATE_H

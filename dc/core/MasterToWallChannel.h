@@ -102,9 +102,11 @@ public slots:
     void sendQuit();
 
 private:
-    MPIChannelPtr mpiChannel_;
-    SerializeBuffer buffer_;
-    SerializeBuffer asyncBuffer_;
+    Q_DISABLE_COPY( MasterToWallChannel )
+
+    MPIChannelPtr _mpiChannel;
+    SerializeBuffer _buffer;
+    SerializeBuffer _asyncBuffer;
 
     template< typename T >
     void broadcast( const T& object, const MPIMessageType type );
@@ -112,8 +114,7 @@ private:
     void broadcastAsync( const T& object, const MPIMessageType type );
 
 private slots:
-    // cppcheck-suppress passedByValue
-    void broadcast( const MPIMessageType type, const std::string data );
+    void _broadcast( MPIMessageType type, std::string data );
 };
 
 #endif // MASTERTOWALLCHANNEL_H

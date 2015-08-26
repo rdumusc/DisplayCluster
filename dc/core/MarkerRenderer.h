@@ -70,12 +70,14 @@ public slots:
     void setMarkers( MarkersPtr markers );
 
 private:
-    GLTexture2D texture_;
-    GLQuad quad_;
-    MarkersPtr markers_;
+    Q_DISABLE_COPY( MarkerRenderer )
 
-    bool generateTexture();
-    void render( const Marker& marker );
+    GLTexture2D _texture;
+    GLQuad _quad;
+    MarkersPtr _markers;
+
+    bool _generateTexture();
+    void _render( const Marker& marker );
 };
 
 #endif // MARKERRENDERER_H

@@ -53,14 +53,14 @@ class WallToMasterChannel : public QObject
 
 public:
     /** Constructor */
-    WallToMasterChannel(MPIChannelPtr mpiChannel);
+    WallToMasterChannel( MPIChannelPtr mpiChannel );
 
 public slots:
     /**
      * Send a request frame message for the given pixel stream
      * @param uri The URI of the pixel stream
      */
-    void sendRequestFrame(const QString uri);
+    void sendRequestFrame( QString uri );
 
     /**
      * Send quit message to the master application to stop the receiver.
@@ -68,7 +68,9 @@ public slots:
     void sendQuit();
 
 private:
-    MPIChannelPtr mpiChannel_;
+    Q_DISABLE_COPY( WallToMasterChannel )
+
+    MPIChannelPtr _mpiChannel;
 };
 
 #endif // WALLTOMASTERCHANNEL_H

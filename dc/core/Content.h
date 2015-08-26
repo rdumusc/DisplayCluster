@@ -105,6 +105,8 @@ signals:
     void modified();
 
 protected:
+    Q_DISABLE_COPY( Content )
+
     friend class boost::serialization::access;
 
     // Default constructor required for boost::serialization
@@ -114,19 +116,19 @@ protected:
     template< class Archive >
     void serialize( Archive & ar, const unsigned int /*version*/ )
     {
-        ar & uri_;
-        ar & size_.rwidth();
-        ar & size_.rheight();
-        ar & actions_;
+        ar & _uri;
+        ar & _size.rwidth();
+        ar & _size.rheight();
+        ar & _actions;
     }
 
     /** Serialize for saving to an xml file */
     template< class Archive >
     void serialize_members_xml( Archive & ar, const unsigned int version )
     {
-        ar & boost::serialization::make_nvp( "uri", uri_ );
-        ar & boost::serialization::make_nvp( "width", size_.rwidth( ));
-        ar & boost::serialization::make_nvp( "height", size_.rheight( ));
+        ar & boost::serialization::make_nvp( "uri", _uri );
+        ar & boost::serialization::make_nvp( "width", _size.rwidth( ));
+        ar & boost::serialization::make_nvp( "height", _size.rheight( ));
 
         if( version < 2 )
         {
@@ -149,9 +151,9 @@ protected:
         serialize_members_xml( ar, version );
     }
 
-    QString uri_;
-    QSize size_;
-    ContentActionsModel actions_;
+    QString _uri;
+    QSize _size;
+    ContentActionsModel _actions;
 };
 
 BOOST_CLASS_VERSION( Content, 2 )

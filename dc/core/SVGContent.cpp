@@ -66,7 +66,7 @@ bool SVGContent::readMetadata()
     if( !svg.isValid( ))
         return false;
 
-    size_ = svg.getSize();
+    _size = svg.getSize();
     return true;
 }
 

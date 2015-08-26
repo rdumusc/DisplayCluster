@@ -58,9 +58,9 @@ class WebbrowserCommandHandler : public QObject, public deflect::AbstractCommand
 
 public:
     /** Constructor */
-    WebbrowserCommandHandler(PixelStreamWindowManager& windowManager,
-                             PixelStreamerLauncher& pixelStreamLauncher,
-                             const QString& defaultURL);
+    WebbrowserCommandHandler( PixelStreamWindowManager& windowManager,
+                              PixelStreamerLauncher& pixelStreamLauncher,
+                              const QString& defaultURL );
 
     /** Get the type of commands handled by the implementation. */
     deflect::CommandType getType() const override;
@@ -74,15 +74,18 @@ public:
      * @param command The Command to handle.
      * @param senderUri The identifier of the sender (optional).
      */
-    void handle(const deflect::Command& command, const QString& senderUri = QString()) override;
+    void handle( const deflect::Command& command,
+                 const QString& senderUri = QString( )) override;
 
 signals:
     /** Signal the PixelStreamLauncher to open a Webbrowser */
-    void openWebBrowser(QPointF pos, QSize size, QString url);
+    void openWebBrowser( QPointF pos, QSize size, QString url );
 
 private:
-    PixelStreamWindowManager& windowManager_;
-    const QString defaultURL_;
+    Q_DISABLE_COPY( WebbrowserCommandHandler )
+
+    PixelStreamWindowManager& _windowManager;
+    const QString _defaultURL;
 };
 
 #endif // WEBBROWSERCOMMANDHANDLER_H

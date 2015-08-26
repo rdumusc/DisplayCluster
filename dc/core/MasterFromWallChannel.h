@@ -55,7 +55,7 @@ class MasterFromWallChannel : public QObject
 
 public:
     /** Constructor */
-    MasterFromWallChannel(MPIChannelPtr mpiChannel);
+    MasterFromWallChannel( MPIChannelPtr mpiChannel );
 
 public slots:
     /**
@@ -68,9 +68,11 @@ signals:
      * Emitted when the given pixel stream was requested to send the next frame
      * @param uri The URI of the pixel stream
      */
-    void receivedRequestFrame(const QString uri);
+    void receivedRequestFrame( QString uri );
 
 private:
+    Q_DISABLE_COPY( MasterFromWallChannel )
+
     MPIChannelPtr mpiChannel_;
     SerializeBuffer buffer_;
     bool processMessages_;

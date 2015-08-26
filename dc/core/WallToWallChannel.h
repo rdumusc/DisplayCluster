@@ -55,7 +55,7 @@ class WallToWallChannel : public QObject
 
 public:
     /** Constructor */
-    WallToWallChannel(MPIChannelPtr mpiChannel);
+    WallToWallChannel( MPIChannelPtr mpiChannel );
 
     /** @return The rank of this process. */
     int getRank() const;
@@ -65,10 +65,10 @@ public:
      * @param localValue The value to sum
      * @return the sum of the localValues
      */
-    int globalSum(const int localValue) const;
+    int globalSum( int localValue ) const;
 
     /** Check if all processes are ready to perform a common action. */
-    bool allReady(const bool isReady) const;
+    bool allReady( bool isReady ) const;
 
     /** Get the current timestamp, synchronized accross processes. */
     boost::posix_time::ptime getTime() const;
@@ -80,31 +80,33 @@ public:
     void globalBarrier() const;
 
     /** Check that all processes have the same version of an object. */
-    bool checkVersion(const uint64_t version) const;
+    bool checkVersion( uint64_t version ) const;
 
     /**
      * Elect a leader amongst wall processes.
      * @param isCandidate Is this process a candidate.
      * @return the rank of the leader, or -1 if no leader could be elected.
      */
-    int electLeader(const bool isCandidate);
+    int electLeader( bool isCandidate );
 
     /**
      * Broadcast a timestamp.
      * All other processes must recieve it with receiveTimestampBroadcast().
      */
-    void broadcast(boost::posix_time::time_duration timestamp);
+    void broadcast( boost::posix_time::time_duration timestamp );
 
     /** Receive a timestamp broadcasted by broadcast(timestamp). */
-    boost::posix_time::time_duration receiveTimestampBroadcast(const int src);
+    boost::posix_time::time_duration receiveTimestampBroadcast( int src );
 
 private:
-    MPIChannelPtr mpiChannel_;
-    boost::posix_time::ptime timestamp_;
-    SerializeBuffer buffer_;
+    Q_DISABLE_COPY( WallToWallChannel )
 
-    void sendClock();
-    void receiveClock();
+    MPIChannelPtr _mpiChannel;
+    boost::posix_time::ptime _timestamp;
+    SerializeBuffer _buffer;
+
+    void _sendClock();
+    void _receiveClock();
 };
 
 #endif // WALLTOWALLCHANNEL_H

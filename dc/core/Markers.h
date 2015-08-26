@@ -70,24 +70,26 @@ public:
     const MarkersMap& getMarkers() const;
 
 public slots:
-    void addMarker(const int id, const QPointF position);
-    void updateMarker(const int id, const QPointF position);
-    void removeMarker(const int id);
+    void addMarker( int id, QPointF position );
+    void updateMarker( int id, QPointF position );
+    void removeMarker( int id );
     void clearOldMarkers();
 
 signals:
-    void updated(MarkersPtr markers);
+    void updated( MarkersPtr markers );
 
 private:
+    Q_DISABLE_COPY( Markers )
+
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
-        ar & markers_;
+        ar & _markers;
     }
 
-    MarkersMap markers_;
+    MarkersMap _markers;
 };
 
 #endif // MARKERS_H

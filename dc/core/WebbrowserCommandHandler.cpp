@@ -45,14 +45,15 @@
 #include "ContentWindow.h"
 #include "PixelStreamWindowManager.h"
 
-WebbrowserCommandHandler::WebbrowserCommandHandler(PixelStreamWindowManager& windowManager,
-                                                   PixelStreamerLauncher& pixelStreamLauncher,
-                                                   const QString& defaultURL)
-    : windowManager_(windowManager)
-    , defaultURL_(defaultURL)
+WebbrowserCommandHandler::WebbrowserCommandHandler( PixelStreamWindowManager& windowManager,
+                                                    PixelStreamerLauncher& pixelStreamLauncher,
+                                                    const QString& defaultURL )
+    : _windowManager( windowManager )
+    , _defaultURL( defaultURL )
 {
-    connect(this, SIGNAL(openWebBrowser(QPointF,QSize,QString)),
-            &pixelStreamLauncher, SLOT(openWebBrowser(QPointF,QSize,QString)));
+    connect( this, SIGNAL( openWebBrowser( QPointF, QSize, QString )),
+             &pixelStreamLauncher,
+             SLOT( openWebBrowser( QPointF, QSize, QString )));
 }
 
 deflect::CommandType WebbrowserCommandHandler::getType() const
@@ -60,19 +61,20 @@ deflect::CommandType WebbrowserCommandHandler::getType() const
     return deflect::COMMAND_TYPE_WEBBROWSER;
 }
 
-void WebbrowserCommandHandler::handle(const deflect::Command& command, const QString& senderUri)
+void WebbrowserCommandHandler::handle( const deflect::Command& command,
+                                       const QString& senderUri )
 {
     QString url = command.getArguments();
-    if (url.isEmpty())
-        url = defaultURL_;
+    if( url.isEmpty( ))
+        url = _defaultURL;
 
     QPointF position;
 
     // Center the new content where the dock is
     // TODO: DISCL-230
-    ContentWindowPtr parentWindow = windowManager_.getContentWindow(senderUri);
-    if (parentWindow)
+    ContentWindowPtr parentWindow = _windowManager.getContentWindow(senderUri);
+    if( parentWindow )
         position = parentWindow->getCoordinates().center();
 
-    emit openWebBrowser(position, QSize(), url);
+    emit openWebBrowser( position, QSize(), url );
 }

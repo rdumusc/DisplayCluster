@@ -80,6 +80,8 @@ public slots:
     void updateMarkers( MarkersPtr markers );
 
 private:
+    Q_DISABLE_COPY( RenderController )
+
     RenderContextPtr renderContext_;
 
     DisplayGroupRendererPtr displayGroupRenderer_;

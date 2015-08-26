@@ -76,6 +76,8 @@ signals:
     void touchPointRemoved( int id );
 
 private:
+    Q_DISABLE_COPY( MultiTouchListener )
+
     QPointF getScenePos( TUIO::TuioCursor* tcur ) const;
     void fillBegin( QTouchEvent::TouchPoint& touchPoint ) const;
     void fill( QTouchEvent::TouchPoint& touchPoint,

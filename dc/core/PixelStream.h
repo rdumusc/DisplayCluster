@@ -92,6 +92,8 @@ signals:
     void coordChanged();
 
 private:
+    Q_DISABLE_COPY( Segment )
+
     QRect rect_;
 };
 
@@ -118,6 +120,8 @@ signals:
     void segmentsChanged();
 
 private:
+    Q_DISABLE_COPY( PixelStream )
+
     QString uri_;
     unsigned int width_;
     unsigned int height_;
