@@ -127,7 +127,10 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
 void DisplayGroupGraphicsView::clearScene()
 {
     foreach( QGraphicsItem* itemToRemove, uuidToWindowMap_ )
+    {
         scene()->removeItem( itemToRemove );
+        delete itemToRemove;
+    }
 
     uuidToWindowMap_.clear();
 }
@@ -197,6 +200,7 @@ void DisplayGroupGraphicsView::remove( ContentWindowPtr contentWindow )
     uuidToWindowMap_.remove( contentWindow->getID( ));
 
     scene()->removeItem( itemToRemove );
+    delete itemToRemove;
 }
 
 void DisplayGroupGraphicsView::moveToFront( ContentWindowPtr contentWindow )

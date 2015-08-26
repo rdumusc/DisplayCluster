@@ -116,9 +116,6 @@ public:
      */
     void setContentWindows( ContentWindowPtrs contentWindows );
 
-    /** Assignment operator. */
-    DisplayGroup& operator=( const DisplayGroup& displayGroup );
-
 
     /** Are there focused windows. */
     bool hasFocusedWindows() const;
@@ -173,6 +170,8 @@ private slots:
     void sendDisplayGroup();
 
 private:
+    Q_DISABLE_COPY( DisplayGroup )
+
     friend class boost::serialization::access;
 
     /** No-argument constructor required for serialization. */

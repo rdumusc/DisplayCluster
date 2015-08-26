@@ -126,25 +126,21 @@ BaseContentWindow {
             id: fixedButtonsDelegate
             Column {
                 CloseControlButton {
-                    TouchArea {
+                    TouchMouseArea {
                         anchors.fill: parent
                         onTap: closeWindow()
                     }
                 }
                 OneToOneControlButton {
-                    TouchArea {
+                    TouchMouseArea {
                         anchors.fill: parent
-                        onTap: {
-                            contentwindow.controller.adjustSizeOneToOne()
-                        }
+                        onTap: contentwindow.controller.adjustSizeOneToOne()
                     }
                 }
                 FocusControlButton {
-                    TouchArea {
+                    TouchMouseArea {
                         anchors.fill: parent
-                        onTap: {
-                            toggleFocusMode()
-                        }
+                        onTap: toggleFocusMode()
                     }
                 }
             }
@@ -153,11 +149,9 @@ BaseContentWindow {
         Component {
             id: buttonDelegate
             WindowControlsDelegate {
-                TouchArea {
+                TouchMouseArea {
                     anchors.fill: parent
-                    onTap: {
-                        action.trigger()
-                    }
+                    onTap: action.trigger()
                 }
             }
         }

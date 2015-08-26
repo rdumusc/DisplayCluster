@@ -52,7 +52,7 @@ public:
      * Constructor.
      * @param uri The uri of the pdf document.
      */
-    explicit PDFContent(const QString& uri);
+    explicit PDFContent( const QString& uri );
 
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
@@ -85,18 +85,19 @@ private:
     friend class boost::serialization::access;
 
     // Default constructor required for boost::serialization
-    PDFContent() {}
+    PDFContent();
+    void _init();
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
+    void serialize( Archive & ar, const unsigned int )
     {
         // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(Content);
-        ar & boost::serialization::make_nvp("pageNumber", pageNumber_);
+        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
+        ar & boost::serialization::make_nvp( "pageNumber", _pageNumber );
     }
 
-    int pageNumber_;
-    int pageCount_;
+    int _pageNumber;
+    int _pageCount;
 };
 
 #endif // PDFCONTENT_H
