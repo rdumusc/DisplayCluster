@@ -58,7 +58,8 @@ const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 
 QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
                                       QDeclarativeItem& parentItem,
-                                      ContentWindowPtr contentWindow )
+                                      ContentWindowPtr contentWindow,
+                                      const bool isBackground )
     : contentWindow_( contentWindow )
     , windowContext_( new QDeclarativeContext( engine.rootContext( )))
     , windowItem_( 0 )
@@ -80,6 +81,8 @@ QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
 
     if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
         setupPixelStreamItem();
+
+    windowItem_->setProperty( "isBackground", isBackground );
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()

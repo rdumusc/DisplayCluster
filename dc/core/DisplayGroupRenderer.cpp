@@ -196,6 +196,6 @@ void DisplayGroupRenderer::setBackground( ContentPtr content )
     QDeclarativeEngine& engine = renderContext_->getQmlEngine();
     backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
                                                         *displayGroupItem_,
-                                                        window ));
+                                                        window, true ));
     backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
 }

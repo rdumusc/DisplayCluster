@@ -60,7 +60,8 @@ public:
     /** Constructor. */
     QmlWindowRenderer( QDeclarativeEngine& engine,
                        QDeclarativeItem& parentItem,
-                       ContentWindowPtr contentWindow );
+                       ContentWindowPtr contentWindow,
+                       bool isBackground = false );
     /** Destructor. */
     ~QmlWindowRenderer();
 
