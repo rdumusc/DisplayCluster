@@ -69,7 +69,7 @@ class MasterConfiguration;
  */
 class PixelStreamerLauncher : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     /**
@@ -90,8 +90,7 @@ public slots:
      * @param size The initial size of the viewport of the webbrowser in pixels.
      * @param url The webpage to open.
      */
-    void openWebBrowser( const QPointF pos, const QSize size,
-                         const QString url );
+    void openWebBrowser( QPointF pos, QSize size, QString url );
 
     /**
      * Open the Dock using default parameters.
@@ -100,7 +99,7 @@ public slots:
      * Dock instance is moved to the given position.
      * @param pos The position of the center of the Dock
      */
-    void openDock( const QPointF pos );
+    void openDock( QPointF pos );
 
     /**
      * Open the Dock.
@@ -111,23 +110,25 @@ public slots:
      * @param size The initial size of the Dock in pixels.
      * @param rootDir The initial root directory of the Dock.
      */
-    void openDock( const QPointF pos, const QSize size, const QString rootDir );
+    void openDock( QPointF pos, QSize size, QString rootDir );
 
     /** Hide the Dock. */
     void hideDock();
 
 private slots:
-    void dereferenceLocalStreamer( const QString uri );
+    void dereferenceLocalStreamer( QString uri );
 
 private:
+    Q_DISABLE_COPY( PixelStreamerLauncher )
+
     typedef std::map< QString, QProcess* > Streamers;
-    Streamers processes_;
+    Streamers _processes;
 
-    PixelStreamWindowManager& windowManager_;
-    const MasterConfiguration& config_;
+    PixelStreamWindowManager& _windowManager;
+    const MasterConfiguration& _config;
 
-    bool createDock( const QSize& size, const QString& rootDir );
-    QString getLocalStreamerBin() const;
+    bool _createDock( const QSize& size, const QString& rootDir );
+    QString _getLocalStreamerBin() const;
 };
 
 #endif // PIXELSTREAMERLAUNCHER_H

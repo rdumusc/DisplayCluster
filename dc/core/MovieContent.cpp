@@ -79,7 +79,7 @@ bool MovieContent::readMetadata()
     if( !movie.isValid( ))
         return false;
 
-    size_ = QSize( movie.getWidth(), movie.getHeight( ));
+    _size = QSize( movie.getWidth(), movie.getHeight( ));
     return true;
 }
 
@@ -124,5 +124,5 @@ void MovieContent::createActions()
     playPauseAction->setChecked( controlState_ & STATE_PAUSED );
     connect( playPauseAction, SIGNAL( checked( )), this, SLOT( pause( )));
     connect( playPauseAction, SIGNAL( unchecked( )), this, SLOT( play( )));
-    actions_.add( playPauseAction );
+    _actions.add( playPauseAction );
 }

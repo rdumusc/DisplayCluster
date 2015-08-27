@@ -60,7 +60,7 @@ public:
      * Constructor.
      * @param webView The QWebView on which to operate.
      */
-    WebkitHtmlSelectReplacer(QWebView& webView);
+    WebkitHtmlSelectReplacer( QWebView& webView );
 
     /**
      * Replace all \<select\> elements by Html equivalents.
@@ -71,18 +71,20 @@ public:
     void replaceAllSelectElements();
 
 private slots:
-    void pageLoaded(bool success);
+    void pageLoaded( bool success );
 
 private:
-    QWebView& webView_;
+    Q_DISABLE_COPY( WebkitHtmlSelectReplacer )
 
-    void loadScripts();
+    QWebView& _webView;
 
-    bool hasJQuery();
-    bool hasJQueryUi();
+    void _loadScripts();
 
-    void loadJavascript(const QString& jsFile);
-    void loadCssUsingJQuery(const QString& cssFile);
+    bool _hasJQuery();
+    bool _hasJQueryUi();
+
+    void _loadJavascript( const QString& jsFile );
+    void _loadCssUsingJQuery( const QString& cssFile );
 };
 
 #endif // WEBKITHTMLSELECTREPLACER_H

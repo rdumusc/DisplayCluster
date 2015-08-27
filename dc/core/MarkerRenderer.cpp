@@ -48,25 +48,25 @@
 #define MARKER_SIZE_PIXELS 30
 
 MarkerRenderer::MarkerRenderer()
-    : markers_( new Markers )
+    : _markers( new Markers )
 {
 }
 
 void MarkerRenderer::render()
 {
-    const MarkersMap& map = markers_->getMarkers();
+    const MarkersMap& map = _markers->getMarkers();
     for( MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it )
-        render( it->second );
+        _render( it->second );
 }
 
 void MarkerRenderer::setMarkers( MarkersPtr markers )
 {
-    markers_ = markers;
+    _markers = markers;
 }
 
-void MarkerRenderer::render( const Marker& marker )
+void MarkerRenderer::_render( const Marker& marker )
 {
-    if ( !texture_.isValid() && !generateTexture( ))
+    if ( !_texture.isValid() && !_generateTexture( ))
         return;
 
     const QPointF pos = marker.getPosition();
@@ -83,15 +83,15 @@ void MarkerRenderer::render( const Marker& marker )
     glScalef( MARKER_SIZE_PIXELS, MARKER_SIZE_PIXELS, 1.f );
     glTranslatef( -0.5f, -0.5f, 0.f ); // Center unit quad
 
-    quad_.setTexture( texture_.getTextureId( ));
-    quad_.render();
+    _quad.setTexture( _texture.getTextureId( ));
+    _quad.render();
 
     glPopMatrix();
 
     glPopAttrib();
 }
 
-bool MarkerRenderer::generateTexture()
+bool MarkerRenderer::_generateTexture()
 {
     const QImage image( MARKER_IMAGE_FILENAME );
 
@@ -102,5 +102,5 @@ bool MarkerRenderer::generateTexture()
         return false;
     }
 
-    return texture_.init( image, GL_BGRA );
+    return _texture.init( image, GL_BGRA );
 }

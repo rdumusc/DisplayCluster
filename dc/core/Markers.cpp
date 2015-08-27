@@ -47,52 +47,53 @@ Markers::Markers()
 
 const MarkersMap& Markers::getMarkers() const
 {
-    return markers_;
+    return _markers;
 }
 
-void Markers::addMarker(const int id, const QPointF position)
+void Markers::addMarker( const int id, const QPointF position )
 {
-    if (markers_.count(id))
+    if( _markers.count( id ))
         return;
 
-    markers_[id].setPosition(position);
-    emit(updated(shared_from_this()));
+    _markers[id].setPosition( position );
+    emit( updated( shared_from_this( )));
 }
 
-void Markers::updateMarker(const int id, const QPointF position)
+void Markers::updateMarker( const int id, const QPointF position )
 {
-    if (!markers_.count(id))
+    if( !_markers.count( id ))
         return;
 
-    markers_[id].setPosition(position);
-    emit(updated(shared_from_this()));
+    _markers[id].setPosition( position );
+    emit( updated( shared_from_this( )));
 }
 
-void Markers::removeMarker(const int id)
+void Markers::removeMarker( const int id )
 {
-    if (!markers_.count(id))
+    if( !_markers.count( id ))
         return;
 
-    markers_.erase(id);
-    emit(updated(shared_from_this()));
+    _markers.erase( id );
+    emit( updated( shared_from_this( )));
 }
 
 void Markers::clearOldMarkers()
 {
-    const size_t initialSize = markers_.size();
+    const size_t initialSize = _markers.size();
 
-    const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
+    const boost::posix_time::ptime now =
+            boost::posix_time::microsec_clock::universal_time();
 
-    MarkersMap::iterator it = markers_.begin();
+    MarkersMap::iterator it = _markers.begin();
 
-    while(it != markers_.end())
+    while( it != _markers.end( ))
     {
-        if(!it->second.isActive(now))
-            markers_.erase(it++);  // note the post increment; increments the iterator but returns original value for erase
+        if( !it->second.isActive( now ))
+            _markers.erase( it++ );  // note the post increment; increments the iterator but returns original value for erase
         else
             ++it;
     }
 
-    if (initialSize != markers_.size())
-        emit(updated(shared_from_this()));
+    if( initialSize != _markers.size( ))
+        emit( updated( shared_from_this( )));
 }

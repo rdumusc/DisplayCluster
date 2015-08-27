@@ -60,7 +60,7 @@ public:
      *
      * @param defaultSize The desired size for the thumbnails.
      */
-    AsyncImageLoader(const QSize &defaultSize);
+    AsyncImageLoader( const QSize& defaultSize );
 
 public slots:
     /**
@@ -69,10 +69,10 @@ public slots:
      * This method is blocking; it designed to be call via a QSignal after the
      * AsyncImageLoader has been moved to a worker thread.
      * @param filename The path to the content file.
-     * @param index A user-defined index that will be passed back with imageLoaded().
-     *        Used by DockPixelStreamer.
+     * @param index A user-defined index that will be passed back with
+     *        imageLoaded(). Used by DockPixelStreamer.
      */
-    void loadImage( const QString& filename, const int index );
+    void loadImage( const QString& filename, int index );
 
 signals:
     /**
@@ -81,16 +81,18 @@ signals:
      * @param index The user-defined index passed in loadImage().
      * @param image The thumbnail image.
      */
-    void imageLoaded(int index, QImage image);
+    void imageLoaded( int index, QImage image );
 
     /** Emitted whenever loadImage() has finished (successful or not). */
     void imageLoadingFinished();
 
 private:
-    QSize defaultSize_;
-    QCache<QString, QImage> cache_;
+    Q_DISABLE_COPY( AsyncImageLoader )
 
-    bool imageInCache(const QString& filename) const;
+    QSize _defaultSize;
+    QCache<QString, QImage> _cache;
+
+    bool imageInCache( const QString& filename ) const;
 };
 
 

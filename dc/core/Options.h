@@ -109,6 +109,8 @@ signals:
     //@}
 
 private:
+    Q_DISABLE_COPY( Options )
+
     friend class boost::serialization::access;
 
     template<class Archive>

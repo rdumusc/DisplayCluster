@@ -49,37 +49,37 @@
 
 #define RANK0 0
 
-WallFromMasterChannel::WallFromMasterChannel(MPIChannelPtr mpiChannel)
-    : mpiChannel_(mpiChannel)
-    , processMessages_(true)
+WallFromMasterChannel::WallFromMasterChannel( MPIChannelPtr mpiChannel )
+    : _mpiChannel( mpiChannel )
+    , _processMessages( true )
 {
 }
 
 bool WallFromMasterChannel::isMessageAvailable()
 {
-    return mpiChannel_->isMessageAvailable(RANK0);
+    return _mpiChannel->isMessageAvailable( RANK0 );
 }
 
 void WallFromMasterChannel::receiveMessage()
 {
-    MPIHeader mh = mpiChannel_->receiveHeader(RANK0);
+    MPIHeader mh = _mpiChannel->receiveHeader( RANK0 );
 
-    switch (mh.type)
+    switch( mh.type )
     {
     case MPI_MESSAGE_TYPE_DISPLAYGROUP:
-        emit received(receiveBroadcast<DisplayGroupPtr>(mh.size));
+        emit received( receiveBroadcast<DisplayGroupPtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_OPTIONS:
-        emit received(receiveBroadcast<OptionsPtr>(mh.size));
+        emit received( receiveBroadcast<OptionsPtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_MARKERS:
-        emit received(receiveBroadcast<MarkersPtr>(mh.size));
+        emit received( receiveBroadcast<MarkersPtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_PIXELSTREAM:
-        emit received(receiveBroadcast<deflect::FramePtr>(mh.size));
+        emit received( receiveBroadcast<deflect::FramePtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_QUIT:
-        processMessages_ = false;
+        _processMessages = false;
         emit receivedQuit();
         break;
     default:
@@ -89,18 +89,18 @@ void WallFromMasterChannel::receiveMessage()
 
 void WallFromMasterChannel::processMessages()
 {
-    while(processMessages_)
+    while( _processMessages )
         receiveMessage();
 }
 
 template <typename T>
-T WallFromMasterChannel::receiveBroadcast(const size_t messageSize)
+T WallFromMasterChannel::receiveBroadcast( const size_t messageSize )
 {
     T object;
 
-    buffer_.setSize(messageSize);
-    mpiChannel_->receiveBroadcast(buffer_.data(), messageSize, RANK0);
-    buffer_.deserialize(object);
+    _buffer.setSize( messageSize );
+    _mpiChannel->receiveBroadcast( _buffer.data(), messageSize, RANK0 );
+    _buffer.deserialize( object );
 
     return object;
 }

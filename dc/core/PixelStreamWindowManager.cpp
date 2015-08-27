@@ -56,7 +56,7 @@ const QSize EMPTY_STREAM_SIZE( 640, 480 );
 
 PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
-    , displayGroup_( displayGroup )
+    , _displayGroup( displayGroup )
 {
     connect( &displayGroup, SIGNAL( contentWindowRemoved( ContentWindowPtr )),
              this, SLOT( onContentWindowRemoved( ContentWindowPtr )));
@@ -65,9 +65,9 @@ PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
 ContentWindowPtr
 PixelStreamWindowManager::getContentWindow( const QString& uri ) const
 {
-    ContentWindowMap::const_iterator it = streamerWindows_.find( uri );
-    return it != streamerWindows_.end() ?
-                     displayGroup_.getContentWindow( it->second ) :
+    ContentWindowMap::const_iterator it = _streamerWindows.find( uri );
+    return it != _streamerWindows.end() ?
+                     _displayGroup.getContentWindow( it->second ) :
                      ContentWindowPtr();
 }
 
@@ -98,7 +98,7 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
         if( uri == DockPixelStreamer::getUniqueURI( ) && !pos.isNull( ))
         {
             ContentWindowPtr window = getContentWindow( uri );
-            ContentWindowController controller( *window, displayGroup_ );
+            ContentWindowController controller( *window, _displayGroup );
             controller.moveCenterTo( pos );
         }
         return;
@@ -108,19 +108,19 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
               uri.toLocal8Bit().constData( ));
 
     if( pos.isNull( ))
-        pos = displayGroup_.getCoordinates().center();
+        pos = _displayGroup.getCoordinates().center();
 
     ContentPtr content = ContentFactory::getPixelStreamContent( uri );
     if( size.isValid( ))
         content->setDimensions( size );
     ContentWindowPtr contentWindow( new ContentWindow( content ));
 
-    ContentWindowController controller( *contentWindow, displayGroup_ );
+    ContentWindowController controller( *contentWindow, _displayGroup );
     controller.resize( size.isValid() ? size : EMPTY_STREAM_SIZE );
     controller.moveCenterTo( pos );
 
-    streamerWindows_[ uri ] = contentWindow->getID();
-    displayGroup_.addContentWindow( contentWindow );
+    _streamerWindows[ uri ] = contentWindow->getID();
+    _displayGroup.addContentWindow( contentWindow );
 }
 
 void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
@@ -130,7 +130,7 @@ void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
 
     ContentWindowPtr contentWindow = getContentWindow( uri );
     if( contentWindow )
-        displayGroup_.removeContentWindow( contentWindow );
+        _displayGroup.removeContentWindow( contentWindow );
 }
 
 void PixelStreamWindowManager::registerEventReceiver( const QString uri,
@@ -169,7 +169,7 @@ void PixelStreamWindowManager::onContentWindowRemoved( ContentWindowPtr window )
         return;
 
     const QString& uri = window->getContent()->getURI();
-    streamerWindows_.erase( uri );
+    _streamerWindows.erase( uri );
     emit pixelStreamWindowClosed( uri );
 }
 
@@ -184,7 +184,7 @@ void PixelStreamWindowManager::updateStreamDimensions( deflect::FramePtr frame )
     // External streamers don't have an initial size
     if( contentWindow->getContent()->getDimensions().isEmpty( ))
     {
-        ContentWindowController controller( *contentWindow, displayGroup_ );
+        ContentWindowController controller( *contentWindow, _displayGroup );
         controller.resize( size, CENTER );
     }
     contentWindow->getContent()->setDimensions( size );

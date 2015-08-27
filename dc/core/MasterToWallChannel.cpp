@@ -48,7 +48,7 @@
 #include <deflect/Frame.h>
 
 MasterToWallChannel::MasterToWallChannel( MPIChannelPtr mpiChannel )
-    : mpiChannel_( mpiChannel )
+    : _mpiChannel( mpiChannel )
 {
 }
 
@@ -56,18 +56,18 @@ template< typename T >
 void MasterToWallChannel::broadcast( const T& object,
                                      const MPIMessageType type )
 {
-    const std::string& serializedString = buffer_.serialize( object );
+    const std::string& serializedString = _buffer.serialize( object );
 
-    mpiChannel_->broadcast( type, serializedString );
+    _mpiChannel->broadcast( type, serializedString );
 }
 
 template< typename T >
 void MasterToWallChannel::broadcastAsync( const T& object,
                                           const MPIMessageType type )
 {
-    const std::string serializedStringCopy = asyncBuffer_.serialize( object );
+    const std::string serializedStringCopy = _asyncBuffer.serialize( object );
 
-    QMetaObject::invokeMethod( this, "broadcast", Qt::QueuedConnection,
+    QMetaObject::invokeMethod( this, "_broadcast", Qt::QueuedConnection,
                                Q_ARG( MPIMessageType, type ),
                                Q_ARG( std::string, serializedStringCopy ));
 }
@@ -95,11 +95,12 @@ void MasterToWallChannel::send( deflect::FramePtr frame )
 
 void MasterToWallChannel::sendQuit()
 {
-    mpiChannel_->sendAll( MPI_MESSAGE_TYPE_QUIT );
+    _mpiChannel->sendAll( MPI_MESSAGE_TYPE_QUIT );
 }
 
 // cppcheck-suppress passedByValue
-void MasterToWallChannel::broadcast( const MPIMessageType type, const std::string data )
+void MasterToWallChannel::_broadcast( const MPIMessageType type,
+                                      const std::string data )
 {
-    mpiChannel_->broadcast( type, data );
+    _mpiChannel->broadcast( type, data );
 }

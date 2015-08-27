@@ -76,12 +76,14 @@ signals:
     void requestFrame( QString uri );
 
 private:
+    Q_DISABLE_COPY( PixelStreamUpdater )
+
     typedef QMap<QString,PixelStreamPtr> PixelStreamMap;
-    PixelStreamMap pixelStreamMap_;
+    PixelStreamMap _pixelStreamMap;
 
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     typedef QMap<QString,SwapSyncFrame> SwapSyncFramesMap;
-    SwapSyncFramesMap swapSyncFrames_;
+    SwapSyncFramesMap _swapSyncFrames;
 };
 
 #endif // PIXELSTREAMUPDATER_H

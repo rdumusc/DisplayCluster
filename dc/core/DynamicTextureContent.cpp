@@ -63,7 +63,7 @@ bool DynamicTextureContent::readMetadata()
         return false;
 
     const DynamicTexture dynamicTexture( getURI( ));
-    size_ = dynamicTexture.getSize();
+    _size = dynamicTexture.getSize();
     return true;
 }
 

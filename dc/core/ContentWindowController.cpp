@@ -54,22 +54,22 @@ const qreal WINDOW_CONTROLS_MARGIN_PX = 175.0;
 }
 
 ContentWindowController::ContentWindowController()
-    : contentWindow_( 0 )
-    , displayGroup_( 0 )
+    : _contentWindow( 0 )
+    , _displayGroup( 0 )
 {
 }
 
 ContentWindowController::ContentWindowController( ContentWindow& contentWindow,
                                                   const DisplayGroup& displayGroup )
-    : contentWindow_( &contentWindow )
-    , displayGroup_( &displayGroup )
+    : _contentWindow( &contentWindow )
+    , _displayGroup( &displayGroup )
 {
 }
 
 void ContentWindowController::resize( const QSizeF size,
                                       const WindowPoint fixedPoint )
 {
-    QSizeF newSize( contentWindow_->getContent()->getDimensions( ));
+    QSizeF newSize( _contentWindow->getContent()->getDimensions( ));
     if( newSize.isEmpty( ))
         newSize = size;
     else
@@ -78,18 +78,18 @@ void ContentWindowController::resize( const QSizeF size,
     switch( fixedPoint )
     {
     case CENTER:
-        resize_( contentWindow_->getCoordinates().center(), newSize );
+        _resize( _contentWindow->getCoordinates().center(), newSize );
         break;
     case TOP_LEFT:
     default:
-        resize_( contentWindow_->getCoordinates().topLeft(), newSize );
+        _resize( _contentWindow->getCoordinates().topLeft(), newSize );
     }
 }
 
 void ContentWindowController::resizeRelative( const QPointF& delta )
 {
-    QRectF coordinates( contentWindow_->getCoordinates( ));
-    switch( contentWindow_->getBorder( ))
+    QRectF coordinates( _contentWindow->getCoordinates( ));
+    switch( _contentWindow->getBorder( ))
     {
     case ContentWindow::TOP:
         coordinates.adjust( 0, delta.y(), 0, 0 );
@@ -104,19 +104,19 @@ void ContentWindowController::resizeRelative( const QPointF& delta )
         coordinates.adjust( delta.x(), 0, 0, 0 );
         break;
     case ContentWindow::TOP_LEFT:
-        resize_( coordinates.bottomRight(),
+        _resize( coordinates.bottomRight(),
                  coordinates.size() - QSizeF( delta.x(), delta.y( )));
         return;
     case ContentWindow::BOTTOM_LEFT:
-        resize_( coordinates.topRight(),
+        _resize( coordinates.topRight(),
                  coordinates.size() - QSizeF( delta.x(), -delta.y( )));
         return;
     case ContentWindow::TOP_RIGHT:
-        resize_( coordinates.bottomLeft(),
+        _resize( coordinates.bottomLeft(),
                  coordinates.size() - QSizeF( -delta.x(), delta.y( )));
         return;
     case ContentWindow::BOTTOM_RIGHT:
-        resize_( coordinates.topLeft(),
+        _resize( coordinates.topLeft(),
                  coordinates.size() + QSizeF( delta.x(), delta.y( )));
         return;
     case ContentWindow::NOBORDER:
@@ -124,18 +124,18 @@ void ContentWindowController::resizeRelative( const QPointF& delta )
         return;
     }
     QSizeF newSize( coordinates.size( ));
-    constrainSize_( newSize );
+    _constrainSize( newSize );
     coordinates.setSize( newSize );
 
-    constrainPosition_( coordinates );
-    contentWindow_->setCoordinates( coordinates );
+    _constrainPosition( coordinates );
+    _contentWindow->setCoordinates( coordinates );
 }
 
-void ContentWindowController::resize_( const QPointF& center, QSizeF size )
+void ContentWindowController::_resize( const QPointF& center, QSizeF size )
 {
-    constrainSize_( size );
+    _constrainSize( size );
 
-    QRectF coordinates( contentWindow_->getCoordinates( ));
+    QRectF coordinates( _contentWindow->getCoordinates( ));
     QTransform transform;
     transform.translate( center.x(), center.y( ));
     transform.scale( size.width()/coordinates.width(),
@@ -143,8 +143,8 @@ void ContentWindowController::resize_( const QPointF& center, QSizeF size )
     transform.translate( -center.x(), -center.y( ));
 
     coordinates = transform.mapRect( coordinates );
-    constrainPosition_( coordinates );
-    contentWindow_->setCoordinates( coordinates );
+    _constrainPosition( coordinates );
+    _contentWindow->setCoordinates( coordinates );
 }
 
 void ContentWindowController::scale( const QPointF& center, const double factor)
@@ -152,7 +152,7 @@ void ContentWindowController::scale( const QPointF& center, const double factor)
     if( factor <= 0.0 )
         return;
 
-    resize_( center, contentWindow_->getCoordinates().size() * factor );
+    _resize( center, _contentWindow->getCoordinates().size() * factor );
 }
 
 void ContentWindowController::adjustSize( const SizeState state )
@@ -160,22 +160,22 @@ void ContentWindowController::adjustSize( const SizeState state )
     switch( state )
     {
     case SIZE_1TO1:
-        resize( contentWindow_->getContent()->getDimensions(), CENTER );
+        resize( _contentWindow->getContent()->getDimensions(), CENTER );
         break;
 
     case SIZE_LARGE:
     {
-        const QSizeF wallSize = displayGroup_->getCoordinates().size();
+        const QSizeF wallSize = _displayGroup->getCoordinates().size();
         resize( LARGE_SIZE_SCALE * wallSize, CENTER );
     } break;
 
     case SIZE_FULLSCREEN:
     {
-        QSizeF size = contentWindow_->getContent()->getDimensions();
-        size.scale( displayGroup_->getCoordinates().size(),
+        QSizeF size = _contentWindow->getContent()->getDimensions();
+        size.scale( _displayGroup->getCoordinates().size(),
                     Qt::KeepAspectRatio );
-        constrainSize_( size );
-        contentWindow_->setCoordinates( getCenteredCoordinates_( size ));
+        _constrainSize( size );
+        _contentWindow->setCoordinates( _getCenteredCoordinates( size ));
     } break;
 
     default:
@@ -186,7 +186,7 @@ void ContentWindowController::adjustSize( const SizeState state )
 void ContentWindowController::moveTo( const QPointF& position,
                                       const WindowPoint handle )
 {
-    QRectF coordinates( contentWindow_->getCoordinates( ));
+    QRectF coordinates( _contentWindow->getCoordinates( ));
     switch( handle )
     {
     case TOP_LEFT:
@@ -198,14 +198,14 @@ void ContentWindowController::moveTo( const QPointF& position,
     default:
         return;
     }
-    constrainPosition_( coordinates );
+    _constrainPosition( coordinates );
 
-    contentWindow_->setCoordinates( coordinates );
+    _contentWindow->setCoordinates( coordinates );
 }
 
 QSizeF ContentWindowController::getMinSize() const
 {
-    const QSizeF& wallSize = displayGroup_->getCoordinates().size();
+    const QSizeF& wallSize = _displayGroup->getCoordinates().size();
     return QSizeF( std::max( MIN_SIZE * wallSize.width(), MIN_VISIBLE_AREA_PX ),
                    std::max( MIN_SIZE * wallSize.height(),
                              MIN_VISIBLE_AREA_PX ));
@@ -215,38 +215,38 @@ QSizeF ContentWindowController::getMaxSize() const
 {
     QSizeF maxSize = getMaxContentSize();
     maxSize *= ContentWindow::getMaxContentScale();
-    maxSize.rwidth() *= contentWindow_->getZoomRect().size().width();
-    maxSize.rheight() *= contentWindow_->getZoomRect().size().height();
+    maxSize.rwidth() *= _contentWindow->getZoomRect().size().width();
+    maxSize.rheight() *= _contentWindow->getZoomRect().size().height();
     return maxSize;
 }
 
 QSizeF ContentWindowController::getMaxContentSize() const
 {
-    QSizeF maxContentSize = contentWindow_->getContent()->getMaxDimensions();
+    QSizeF maxContentSize = _contentWindow->getContent()->getMaxDimensions();
     if( maxContentSize.isEmpty() || maxContentSize == UNDEFINED_SIZE )
-        maxContentSize = displayGroup_->getCoordinates().size();
+        maxContentSize = _displayGroup->getCoordinates().size();
     return maxContentSize;
 }
 
 QRectF ContentWindowController::getFocusedCoord() const
 {
-    const qreal margin = 2.0 * getInsideMargin_();
+    const qreal margin = 2.0 * _getInsideMargin();
     const QSizeF margins( margin + WINDOW_CONTROLS_MARGIN_PX, margin );
-    const QSizeF& wallSize = displayGroup_->getCoordinates().size();
+    const QSizeF& wallSize = _displayGroup->getCoordinates().size();
     const QSizeF maxSize = wallSize.boundedTo( wallSize - margins );
 
-    QSizeF size = contentWindow_->getContent()->getDimensions();
+    QSizeF size = _contentWindow->getContent()->getDimensions();
     size.scale( maxSize, Qt::KeepAspectRatio );
-    constrainSize_( size );
+    _constrainSize( size );
 
-    const qreal x = contentWindow_->getCoordinates().center().x();
+    const qreal x = _contentWindow->getCoordinates().center().x();
     QRectF coord( QPointF(), size );
     coord.moveCenter( QPointF( x, wallSize.height() * 0.5 ));
-    constrainFullyInside_( coord );
+    _constrainFullyInside( coord );
     return coord;
 }
 
-void ContentWindowController::constrainSize_( QSizeF& windowSize ) const
+void ContentWindowController::_constrainSize( QSizeF& windowSize ) const
 {
     const QSizeF& maxSize = getMaxSize();
     if( windowSize > maxSize )
@@ -257,12 +257,12 @@ void ContentWindowController::constrainSize_( QSizeF& windowSize ) const
 
     const QSizeF& minSize = getMinSize();
     if( windowSize < minSize )
-        windowSize = contentWindow_->getCoordinates().size();
+        windowSize = _contentWindow->getCoordinates().size();
 }
 
-void ContentWindowController::constrainPosition_( QRectF& window ) const
+void ContentWindowController::_constrainPosition( QRectF& window ) const
 {
-    const QRectF& group = displayGroup_->getCoordinates();
+    const QRectF& group = _displayGroup->getCoordinates();
 
     const qreal minX = MIN_VISIBLE_AREA_PX - window.width();
     const qreal minY = MIN_VISIBLE_AREA_PX - window.height();
@@ -276,11 +276,11 @@ void ContentWindowController::constrainPosition_( QRectF& window ) const
     window.moveTopLeft( position );
 }
 
-void ContentWindowController::constrainFullyInside_( QRectF& window ) const
+void ContentWindowController::_constrainFullyInside( QRectF& window ) const
 {
-    const QRectF& group = displayGroup_->getCoordinates();
+    const QRectF& group = _displayGroup->getCoordinates();
 
-    const qreal margin = getInsideMargin_();
+    const qreal margin = _getInsideMargin();
     const qreal minX = margin + WINDOW_CONTROLS_MARGIN_PX;
     const qreal minY = margin;
     const qreal maxX = group.width() - window.width() - margin;
@@ -293,9 +293,9 @@ void ContentWindowController::constrainFullyInside_( QRectF& window ) const
 }
 
 QRectF
-ContentWindowController::getCenteredCoordinates_( const QSizeF& size ) const
+ContentWindowController::_getCenteredCoordinates( const QSizeF& size ) const
 {
-    const QRectF& group = displayGroup_->getCoordinates();
+    const QRectF& group = _displayGroup->getCoordinates();
 
     // centered coordinates on the display group
     QRectF coord( QPointF(), size );
@@ -303,7 +303,7 @@ ContentWindowController::getCenteredCoordinates_( const QSizeF& size ) const
     return coord;
 }
 
-qreal ContentWindowController::getInsideMargin_() const
+qreal ContentWindowController::_getInsideMargin() const
 {
-    return displayGroup_->getCoordinates().height() * INSIDE_MARGIN;
+    return _displayGroup->getCoordinates().height() * INSIDE_MARGIN;
 }

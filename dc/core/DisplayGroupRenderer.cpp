@@ -63,37 +63,37 @@ const int BACKGROUND_STACKING_ORDER = -1;
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
-    : renderContext_( renderContext )
-    , displayGroup_( new DisplayGroup(
+    : _renderContext( renderContext )
+    , _displayGroup( new DisplayGroup(
                         renderContext->getScene().sceneRect().size().toSize( )))
-    , displayGroupItem_( 0 )
-    , options_( new Options )
+    , _displayGroupItem( 0 )
+    , _options( new Options )
 {
-    setDisplayGroup( displayGroup_ );
-    setRenderingOptions( options_ );
+    setDisplayGroup( _displayGroup );
+    setRenderingOptions( _options );
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
-    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
     engine.rootContext()->setContextProperty( "options", options.get( ));
 
-    setBackground( options->getBackgroundContent( ));
+    _setBackground( options->getBackgroundContent( ));
 
     // Retain the new Options
-    options_ = options;
+    _options = options;
 }
 
 void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
-    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
 
     // Update the scene with the new information
     engine.rootContext()->setContextProperty( "displaygroup",
                                               displayGroup.get( ));
 
-    if( !displayGroupItem_ )
-        createDisplayGroupQmlItem();
+    if( !_displayGroupItem )
+        _createDisplayGroupQmlItem();
 
     ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
 
@@ -106,96 +106,96 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 
         updatedWindows.insert( id );
 
-        if( windowItems_.contains( id ))
-            windowItems_[id]->update( window );
+        if( _windowItems.contains( id ))
+            _windowItems[id]->update( window );
         else
-            createWindowQmlItem( window );
+            _createWindowQmlItem( window );
 
-        windowItems_[id]->setStackingOrder( stackingOrder++ );
+        _windowItems[id]->setStackingOrder( stackingOrder++ );
     }
 
     // Remove old windows
-    QmlWindows::iterator it = windowItems_.begin();
-    while( it != windowItems_.end( ))
+    QmlWindows::iterator it = _windowItems.begin();
+    while( it != _windowItems.end( ))
     {
         if( updatedWindows.contains( it.key( )))
             ++it;
         else
         {
             emit windowRemoved( *it );
-            it = windowItems_.erase( it );
+            it = _windowItems.erase( it );
         }
     }
 
     // Retain the new DisplayGroup
-    displayGroup_ = displayGroup;
+    _displayGroup = displayGroup;
 }
 
 void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )
 {
-    const QRect& visibleWallArea = renderContext_->getVisibleWallArea();
-    foreach( QmlWindowPtr window, windowItems_ )
+    const QRect& visibleWallArea = _renderContext->getVisibleWallArea();
+    foreach( QmlWindowPtr window, _windowItems )
     {
         window->preRenderUpdate( wallChannel, visibleWallArea );
     }
-    if( backgroundWindowItem_ )
-        backgroundWindowItem_->preRenderUpdate( wallChannel, visibleWallArea );
+    if( _backgroundWindowItem )
+        _backgroundWindowItem->preRenderUpdate( wallChannel, visibleWallArea );
 }
 
 void DisplayGroupRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
 {
-    foreach( QmlWindowPtr window, windowItems_ )
+    foreach( QmlWindowPtr window, _windowItems )
     {
         window->postRenderUpdate( wallChannel );
     }
-    if( backgroundWindowItem_ )
-        backgroundWindowItem_->postRenderUpdate( wallChannel );
+    if( _backgroundWindowItem )
+        _backgroundWindowItem->postRenderUpdate( wallChannel );
 }
 
-void DisplayGroupRenderer::createDisplayGroupQmlItem()
+void DisplayGroupRenderer::_createDisplayGroupQmlItem()
 {
-    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
 
     QDeclarativeComponent component( &engine, QML_DISPLAYGROUP_URL );
-    displayGroupItem_ = qobject_cast<QDeclarativeItem*>( component.create( ));
-    renderContext_->getScene().addItem( displayGroupItem_ );
+    _displayGroupItem = qobject_cast<QDeclarativeItem*>( component.create( ));
+    _renderContext->getScene().addItem( _displayGroupItem );
 }
 
-void DisplayGroupRenderer::createWindowQmlItem( ContentWindowPtr window )
+void DisplayGroupRenderer::_createWindowQmlItem( ContentWindowPtr window )
 {
-    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
+    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
 
     const QUuid& id = window->getID();
-    windowItems_[id].reset( new QmlWindowRenderer( engine, *displayGroupItem_,
+    _windowItems[id].reset( new QmlWindowRenderer( engine, *_displayGroupItem,
                                                    window ));
-    emit windowAdded( windowItems_[id] );
+    emit windowAdded( _windowItems[id] );
 }
 
-bool DisplayGroupRenderer::hasBackgroundChanged( const QString& newUri ) const
+bool DisplayGroupRenderer::_hasBackgroundChanged( const QString& newUri ) const
 {
-    ContentPtr prevContent = options_->getBackgroundContent();
+    ContentPtr prevContent = _options->getBackgroundContent();
     const QString& prevUri = prevContent ? prevContent->getURI() : QString();
     return newUri != prevUri;
 }
 
-void DisplayGroupRenderer::setBackground( ContentPtr content )
+void DisplayGroupRenderer::_setBackground( ContentPtr content )
 {
     if( !content )
     {
-        backgroundWindowItem_.reset();
+        _backgroundWindowItem.reset();
         return;
     }
 
-    if( !hasBackgroundChanged( content->getURI( )))
+    if( !_hasBackgroundChanged( content->getURI( )))
         return;
 
     ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
     window->setController(
-               make_unique<ContentWindowController>( *window, *displayGroup_ ));
+               make_unique<ContentWindowController>( *window, *_displayGroup ));
     window->getController()->adjustSize( SIZE_FULLSCREEN );
-    QDeclarativeEngine& engine = renderContext_->getQmlEngine();
-    backgroundWindowItem_.reset( new QmlWindowRenderer( engine,
-                                                        *displayGroupItem_,
+    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
+    _backgroundWindowItem.reset( new QmlWindowRenderer( engine,
+                                                        *_displayGroupItem,
                                                         window, true ));
-    backgroundWindowItem_->setStackingOrder( BACKGROUND_STACKING_ORDER );
+    _backgroundWindowItem->setStackingOrder( BACKGROUND_STACKING_ORDER );
 }

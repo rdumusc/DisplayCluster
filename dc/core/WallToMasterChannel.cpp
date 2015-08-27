@@ -44,18 +44,18 @@
 #include "serializationHelpers.h"
 
 
-WallToMasterChannel::WallToMasterChannel(MPIChannelPtr mpiChannel)
-    : mpiChannel_(mpiChannel)
+WallToMasterChannel::WallToMasterChannel( MPIChannelPtr mpiChannel )
+    : _mpiChannel( mpiChannel )
 {
 }
 
-void WallToMasterChannel::sendRequestFrame(const QString uri)
+void WallToMasterChannel::sendRequestFrame( const QString uri )
 {
-    const std::string& data = SerializeBuffer::serialize(uri);
-    mpiChannel_->send(MPI_MESSAGE_TYPE_REQUEST_FRAME, data, 0);
+    const std::string& data = SerializeBuffer::serialize( uri );
+    _mpiChannel->send( MPI_MESSAGE_TYPE_REQUEST_FRAME, data, 0 );
 }
 
 void WallToMasterChannel::sendQuit()
 {
-    mpiChannel_->send(MPI_MESSAGE_TYPE_QUIT, "", 0);
+    _mpiChannel->send( MPI_MESSAGE_TYPE_QUIT, "", 0 );
 }

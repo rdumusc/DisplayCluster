@@ -81,6 +81,9 @@ signals:
 
 protected:
     QRectF coordinates_;
+
+private:
+    Q_DISABLE_COPY( Coordinates )
 };
 
 #endif // COORDINATES_H

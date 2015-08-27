@@ -42,84 +42,84 @@
 // false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
 ContentAction::ContentAction( const QUuid& actionId )
-    : uuid_( actionId )
-    , checkable_( false )
-    , checked_( false )
-    , enabled_( true )
+    : _uuid( actionId )
+    , _checkable( false )
+    , _checked( false )
+    , _enabled( true )
 {
 }
 
 const QString& ContentAction::getIcon() const
 {
-    return icon_;
+    return _icon;
 }
 
 const QString& ContentAction::getIconChecked() const
 {
-    return iconChecked_;
+    return _iconChecked;
 }
 
 bool ContentAction::isCheckable() const
 {
-    return checkable_;
+    return _checkable;
 }
 
 bool ContentAction::isChecked() const
 {
-    return checked_;
+    return _checked;
 }
 
 bool ContentAction::isEnabled() const
 {
-    return enabled_;
+    return _enabled;
 }
 
 void ContentAction::setIcon( const QString icon )
 {
-    if( icon == icon_ )
+    if( icon == _icon )
         return;
 
-    icon_ = icon;
+    _icon = icon;
     emit iconChanged();
 }
 
 void ContentAction::setIconChecked( const QString icon )
 {
-    if( icon == iconChecked_ )
+    if( icon == _iconChecked )
         return;
 
-    iconChecked_ = icon;
+    _iconChecked = icon;
     emit iconCheckedChanged();
 }
 
 void ContentAction::setCheckable( const bool value )
 {
-    if( checkable_ == value )
+    if( _checkable == value )
         return;
 
-    checkable_ = value;
+    _checkable = value;
     emit checkableChanged();
 }
 
 void ContentAction::setEnabled( const bool value )
 
 {
-    if( enabled_ == value )
+    if( _enabled == value )
         return;
 
-    enabled_ = value;
+    _enabled = value;
     emit enabledChanged();
 }
 
 void ContentAction::setChecked( const bool value )
 {
-    if( !checkable_ || checked_ == value )
+    if( !_checkable || _checked == value )
         return;
 
-    checked_ = value;
+    _checked = value;
     emit checkedChanged();
 
-    if( checked_ )
+    if( _checked )
         emit checked();
     else
         emit unchecked();
@@ -127,11 +127,11 @@ void ContentAction::setChecked( const bool value )
 
 void ContentAction::trigger()
 {
-    if( !enabled_ )
+    if( !_enabled )
         return;
 
-    if( checkable_ )
-        setChecked( !checked_ );
+    if( _checkable )
+        setChecked( !_checked );
 
-    emit triggered( uuid_, checked_ );
+    emit triggered( _uuid, _checked );
 }

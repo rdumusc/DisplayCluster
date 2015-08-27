@@ -63,7 +63,7 @@ public:
      * @param displayGroupAdapter An adapter over the displayGroup, used for
      *        unit testing. If provided, the class takes ownership of it.
      */
-    TextInputHandler(DisplayGroupAdapterPtr displayGroupAdapter);
+    TextInputHandler( DisplayGroupAdapterPtr displayGroupAdapter );
 
     /** Destructor */
     virtual ~TextInputHandler();
@@ -73,16 +73,19 @@ public:
      * @param request A valid dcWebservice::Request object.
      * @return A valid Response object.
      */
-    dcWebservice::ConstResponsePtr handle(const dcWebservice::Request& request) const override;
+    dcWebservice::ConstResponsePtr
+    handle( const dcWebservice::Request& request ) const override;
 
 signals:
     /**
      * Emitted whenever a request is successfully handled.
      * @param key The key code received in the Request.
      */
-    void receivedKeyInput(char key) const;
+    void receivedKeyInput( char key ) const;
 
 private:
+    Q_DISABLE_COPY( TextInputHandler )
+
     DisplayGroupAdapterPtr displayGroupAdapter_;
 };
 

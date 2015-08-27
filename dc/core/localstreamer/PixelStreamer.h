@@ -66,14 +66,17 @@ public:
 
 public slots:
     /** Process an Event. */
-    virtual void processEvent(deflect::Event event) = 0;
+    virtual void processEvent( deflect::Event event ) = 0;
 
 signals:
     /** Emit this signal after a new image has been generated. */
-    void imageUpdated(QImage image);
+    void imageUpdated( QImage image );
 
     /** Emit this signal to send a command to the receiver. */
-    void sendCommand(QString uri);
+    void sendCommand( QString uri );
+
+private:
+    Q_DISABLE_COPY( PixelStreamer )
 };
 
 #endif // PIXELSTREAMER_H

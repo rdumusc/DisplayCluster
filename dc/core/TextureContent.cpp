@@ -55,11 +55,11 @@ CONTENT_TYPE TextureContent::getType() const
 
 bool TextureContent::readMetadata()
 {
-    const QImageReader imageReader( uri_ );
+    const QImageReader imageReader( _uri );
     if( !imageReader.canRead( ))
         return false;
 
-    size_ = imageReader.size();
+    _size = imageReader.size();
     return true;
 }
 

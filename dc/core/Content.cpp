@@ -41,18 +41,18 @@
 IMPLEMENT_SERIALIZE_FOR_XML( Content )
 
 Content::Content( const QString& uri )
-    : uri_( uri )
+    : _uri( uri )
 {
 }
 
 const QString& Content::getURI() const
 {
-    return uri_;
+    return _uri;
 }
 
 QSize Content::getDimensions() const
 {
-    return size_;
+    return _size;
 }
 
 QSize Content::getMaxDimensions() const
@@ -62,22 +62,22 @@ QSize Content::getMaxDimensions() const
 
 void Content::setDimensions( const QSize& dimensions )
 {
-    if( size_ == dimensions )
+    if( _size == dimensions )
         return;
 
-    size_ = dimensions;
+    _size = dimensions;
 
     emit( modified( ));
 }
 
 qreal Content::getAspectRatio() const
 {
-    if( size_.height() == 0 )
+    if( _size.height() == 0 )
         return 0.f;
-    return (qreal)size_.width() / (qreal)size_.height();
+    return (qreal)_size.width() / (qreal)_size.height();
 }
 
 ContentActionsModel* Content::getActions()
 {
-    return &actions_;
+    return &_actions;
 }
