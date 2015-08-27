@@ -69,7 +69,7 @@ bool TouchMouseArea::sceneEvent( QEvent* event_ )
 void TouchMouseArea::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
 {
     _mousePressPos = event_->scenePos();
-    emit touchBegin();
+    emit touchBegin( event_->scenePos( ));
 }
 
 void TouchMouseArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
@@ -80,7 +80,7 @@ void TouchMouseArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
 
 void TouchMouseArea::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
 {
-    emit panFinished( event_->scenePos( ));
+    emit touchEnd( event_->scenePos( ));
 
     // Also generate a tap event if releasing the button in place
     const QPointF delta = _mousePressPos - event_->scenePos();
@@ -110,5 +110,5 @@ void TouchMouseArea::keyPressEvent( QKeyEvent* keyEvent )
 
 void TouchMouseArea::keyReleaseEvent( QKeyEvent* keyEvent )
 {
-    emit keyPress( keyEvent->key(), keyEvent->modifiers(), keyEvent->text( ));
+    emit keyRelease( keyEvent->key(), keyEvent->modifiers(), keyEvent->text( ));
 }

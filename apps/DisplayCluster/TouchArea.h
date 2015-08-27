@@ -63,17 +63,16 @@ public:
     virtual ~TouchArea();
 
 signals:
-    void touchBegin();
+    void touchBegin( QPointF position );
+    void touchEnd( QPointF position );
 
     void tap( QPointF position );
     void doubleTap( QPointF position );
     void tapAndHold( QPointF position );
 
     void pan( QPointF position, QPointF delta );
-    void panFinished( QPointF position );
 
     void pinch( QPointF position, qreal scaleFactor );
-    void pinchFinished( QPointF position );
 
     void swipeLeft();
     void swipeRight();

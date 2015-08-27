@@ -141,7 +141,13 @@ bool TouchArea::gestureEvent( QGestureEvent* event_ )
 void TouchArea::tap( QTapGesture* gesture )
 {
     if( gesture->state() == Qt::GestureStarted )
-        emit touchBegin();
+        emit touchBegin( gesture->position( ));
+
+    if( gesture->state() == Qt::GestureCanceled ||
+        gesture->state() == Qt::GestureFinished )
+    {
+        emit touchEnd( gesture->position( ));
+    }
 
     if( gesture->state() == Qt::GestureFinished )
         emit tap( gesture->position( ));
@@ -161,24 +167,19 @@ void TouchArea::tapAndHold( QTapAndHoldGesture* gesture )
 
 void TouchArea::pan( PanGesture* panGesture )
 {
-    if( panGesture->state() == Qt::GestureCanceled ||
-        panGesture->state() == Qt::GestureFinished )
+    if( panGesture->state() == Qt::GestureStarted ||
+        panGesture->state() == Qt::GestureUpdated )
     {
-        emit panFinished( panGesture->position( ));
+        emit pan( panGesture->position(), panGesture->delta( ));
     }
     else
-        emit pan( panGesture->position(), panGesture->delta( ));
+        emit touchEnd( panGesture->position( ));
 }
 
 void TouchArea::pinch( PinchGesture* gesture )
 {
-
-    if( gesture->state() == Qt::GestureCanceled ||
-        gesture->state() == Qt::GestureFinished )
-    {
-        emit pinchFinished( gesture->position( ));
-    }
-    else
+    if( gesture->state() == Qt::GestureStarted ||
+        gesture->state() == Qt::GestureUpdated )
     {
         const qreal factor = gesture->scaleFactor();
 
@@ -187,6 +188,8 @@ void TouchArea::pinch( PinchGesture* gesture )
 
         emit pinch( gesture->position(), factor );
     }
+    else
+        emit touchEnd( gesture->position( ));
 }
 
 void TouchArea::swipe( QSwipeGesture* gesture )
