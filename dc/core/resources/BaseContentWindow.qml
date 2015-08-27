@@ -7,6 +7,7 @@ Rectangle {
 
     property alias titleBar: titleBar
     property int stackingOrder: 0
+    property bool isBackground: false
     property bool animating: false
     property real yOffset: titleBar.visible ? titleBar.height : 0
 
@@ -20,7 +21,7 @@ Rectangle {
     Rectangle
     {
         id: titleBar
-        visible: displaygroup.showWindowTitles && contentwindow.label !== "Dock"
+        visible: displaygroup.showWindowTitles && !windowRect.isBackground && contentwindow.label !== "Dock"
         width: parent.width
         height: Style.windowTitleHeight
         color: parent.border.color
