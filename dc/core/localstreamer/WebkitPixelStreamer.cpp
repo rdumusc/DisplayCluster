@@ -152,6 +152,9 @@ void WebkitPixelStreamer::processClickEvent(const deflect::Event &clickEvent)
         return;
     }
 
+    processPressEvent(clickEvent);
+    processReleaseEvent(clickEvent);
+
     const QWebHitTestResult& hitResult = performHitTest( clickEvent );
     if( !hitResult.isNull() && !hitResult.linkUrl().isEmpty( ))
         webView_.load( hitResult.linkUrl( ));
@@ -220,7 +223,8 @@ void WebkitPixelStreamer::processWheelEvent(const deflect::Event &wheelEvent)
 
     if(!hitResult.isNull() && isWebGLElement(hitResult.element()))
     {
-        QWheelEvent myEvent(hitResult.pos(), (int)wheelEvent.dy, Qt::NoButton,
+        const int delta = wheelEvent.dy * webView_.page()->viewportSize().height();
+        QWheelEvent myEvent(hitResult.pos(), delta, Qt::NoButton,
                             (Qt::KeyboardModifiers)wheelEvent.modifiers,
                             Qt::Vertical);
 
