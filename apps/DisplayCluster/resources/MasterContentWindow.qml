@@ -27,74 +27,52 @@ BaseContentWindow {
     }
 
     TouchMouseArea {
-        focus: true // to receive key events
+        id: windowMoveAndResizeArea
+
+        visible: !contentInteractionArea.visible
         anchors.fill: parent
+
+        onDoubleTap: toggleFocusMode()
+        onTouchBegin: displaygroup.moveContentWindowToFront(contentwindow.id)
+        onTouchEnd: contentwindow.state = ContentWindow.NONE
+        onTap: toggleControlsVisibility()
+        onPan: {
+            contentwindow.state = ContentWindow.MOVING
+            contentwindow.controller.moveTo(Qt.point(contentwindow.x + delta.x,
+                                                     contentwindow.y + delta.y))
+        }
+        onPinch: {
+            contentwindow.state = ContentWindow.RESIZING
+            contentwindow.controller.scale(position, scaleFactor)
+        }
+    }
+
+    TouchMouseArea {
+        id: contentInteractionArea
+
+        visible: contentwindow.state === ContentWindow.SELECTED
+        focus: true // to receive key events
+
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: parent.height - (titleBar.visible ? titleBar.height : 0)
+
+        onDoubleTap: toggleFocusMode()
         onTouchBegin: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.touchBegin(position)
+            contentwindow.delegate.touchBegin(position)
         }
-        onTouchEnd: {
-            if(contentwindow.state !== ContentWindow.SELECTED)
-                contentwindow.state = ContentWindow.NONE
-            else
-                contentwindow.delegate.touchEnd(position)
-        }
-        onTap: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.tap(position)
-            else
-                toggleControlsVisibility()
-        }
-        onDoubleTap: {
-            toggleFocusMode()
-        }
-        onTapAndHold: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.tapAndHold(position)
-        }
-        onPan: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.pan(position, delta)
-            else {
-                contentwindow.state = ContentWindow.MOVING
-                contentwindow.controller.moveTo(Qt.point(contentwindow.x + delta.x,
-                                                         contentwindow.y + delta.y))
-            }
-        }
-
-        onPinch: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.pinch(position, scaleFactor)
-            else {
-                contentwindow.state = ContentWindow.RESIZING
-                contentwindow.controller.scale(position, scaleFactor)
-            }
-        }
-        onSwipeLeft: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.swipeLeft()
-        }
-        onSwipeRight: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.swipeRight()
-        }
-        onSwipeUp: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.swipeUp()
-        }
-        onSwipeDown: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.swipeDown()
-        }
-        onKeyPress: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.keyPress(key, modifiers, text)
-        }
-        onKeyRelease: {
-            if(contentwindow.state === ContentWindow.SELECTED)
-                contentwindow.delegate.keyRelease(key, modifiers, text)
-        }
+        onTouchEnd: contentwindow.delegate.touchEnd(position)
+        onTap: contentwindow.delegate.tap(position)
+        onTapAndHold: contentwindow.delegate.tapAndHold(position)
+        onPan: contentwindow.delegate.pan(position, delta)
+        onPinch: contentwindow.delegate.pinch(position, scaleFactor)
+        onSwipeLeft:contentwindow.delegate.swipeLeft()
+        onSwipeRight: contentwindow.delegate.swipeRight()
+        onSwipeUp: contentwindow.delegate.swipeUp()
+        onSwipeDown: contentwindow.delegate.swipeDown()
+        onKeyPress: contentwindow.delegate.keyPress(key, modifiers, text)
+        onKeyRelease: contentwindow.delegate.keyRelease(key, modifiers, text)
     }
 
     WindowBorders {
