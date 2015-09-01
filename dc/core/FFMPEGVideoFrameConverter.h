@@ -55,10 +55,11 @@
 
 extern "C"
 {
-    #include <libavcodec/avcodec.h>
     #include <libavutil/mem.h>
     #include <libswscale/swscale.h>
 }
+
+#include "FFMPEGFrame.h"
 
 /**
  * Converts FFMPEG's AVFrame format to a data buffer of user-defined format
@@ -71,28 +72,21 @@ public:
      * @param videoCodecContext The FFMPEG context to allocate resources
      * @param targetFormat The desired data output format (e.g. PIX_FMT_RGBA)
      */
-    FFMPEGVideoFrameConverter(const AVCodecContext& videoCodecContext,
-                              const PixelFormat targetFormat);
+    FFMPEGVideoFrameConverter( const AVCodecContext& videoCodecContext,
+                               PixelFormat targetFormat );
     /** Desturctor */
     ~FFMPEGVideoFrameConverter();
 
     /**
      * Convert an AVFrame to the target data format
      * @param srcFrame The source frame
+     * @param dstFrame The destination picture
      * @return true on success
-     * @see getData()
      */
-    bool convert(const AVFrame* srcFrame);
-
-    /**
-     * Get the converted data in the target format
-     * @see convert()
-     */
-    const uint8_t* getData() const;
+    bool convert( const FFMPEGFrame& srcFrame, FFMPEGPicture& dstFrame );
 
 private:
-    SwsContext * swsContext_;           // Scaling context
-    AVFrame * avFrameRGB_;
+    SwsContext* swsContext_;           // Scaling context
 };
 
 #endif // FFMPEGVIDEOFRAMECONVERTER_H

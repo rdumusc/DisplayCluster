@@ -45,7 +45,7 @@
 #include "GLQuad.h"
 #include "ElapsedTimer.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <future>
 
 class FFMPEGMovie;
 
@@ -55,36 +55,37 @@ public:
     Movie( const QString& uri );
     ~Movie();
 
-    void setVisible( const bool isVisible );
+    void setVisible( bool isVisible );
 
-    void setPause( const bool pause );
-    void setLoop( const bool loop );
+    void setPause( bool pause );
+    void setLoop( bool loop );
 
 private:
-    FFMPEGMovie* ffmpegMovie_;
+    std::unique_ptr<FFMPEGMovie> _ffmpegMovie;
 
-    QString uri_;
-    GLTexture2D texture_;
-    GLQuad quad_;
-    GLQuad previewQuad_;
-    ElapsedTimer elapsedTimer_;
+    GLTexture2D _texture;
+    GLQuad _quad;
+    GLQuad _previewQuad;
 
-    bool paused_;
-    bool suspended_;
+    bool _paused;
+    bool _loop;
+    bool _isVisible;
 
-    bool isVisible_;
-    bool skippedLastFrame_;
-    boost::posix_time::time_duration timestamp_;
+    ElapsedTimer _timer;
+    double _sharedTimestamp;
+    std::future<PicturePtr> _futurePicture;
 
     void render() override;
     void renderPreview() override;
     void preRenderUpdate( ContentWindowPtr window,
                           const QRect& wallArea ) override;
     void preRenderSync( WallToWallChannel& wallToWallChannel ) override;
-    void postRenderSync( WallToWallChannel& wallToWallChannel ) override;
 
     bool _generateTexture();
+
+    void _updateTimestamp( WallToWallChannel& wallToWallChannel );
     void _synchronizeTimestamp( WallToWallChannel& wallToWallChannel );
+    void _rewind();
 };
 
 #endif

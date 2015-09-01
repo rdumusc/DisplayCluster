@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,8 +37,8 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef FFMPEGMOVIE_H
-#define FFMPEGMOVIE_H
+#ifndef FFMPEGVIDEOSTREAM_H
+#define FFMPEGVIDEOSTREAM_H
 
 // required for FFMPEG includes below, specifically for the Linux build
 #ifdef __cplusplus
@@ -62,113 +62,80 @@ extern "C"
 }
 
 #include "types.h"
-#include "MTQueue.h"
 
-#include <QString>
-
-#include <atomic>
-#include <future>
-#include <thread>
-
-/**
- * Read and play movies using the FFMPEG library.
- */
-class FFMPEGMovie
+/** A video stream from an FFMPEG file. */
+class FFMPEGVideoStream
 {
 public:
     /**
      * Constructor.
-     * @param uri: the movie file to open.
+     * @param avFormatContext The FFMPEG context.
+     * @throw std::runtime_error if an error occured during initialization
      */
-    FFMPEGMovie( const QString& uri );
+    FFMPEGVideoStream( AVFormatContext& avFormatContext );
 
-    /** Destructor */
-    ~FFMPEGMovie();
+    /** Destructor. */
+    ~FFMPEGVideoStream();
 
-    /** Is the movie valid. */
-    bool isValid() const;
+    /** Decode a video packet. */
+    PicturePtr decode( AVPacket& packet );
 
-    /** Get the frame width. */
+    /**
+     * Partially decode a video packet to get its timestamp.
+     * @return the packet timestamp, or -1 on error.
+     */
+    int64_t decodeTimestamp( AVPacket& packet );
+
+    /** Get the width of the video stream. */
     unsigned int getWidth() const;
 
-    /** Get the frame height. */
+    /** Get the height of the video stream. */
     unsigned int getHeight() const;
 
-    /** Get the current time position in seconds. */
-    double getPosition() const;
-
-    /** True when the EOF was reached and no more frames can be obtained. */
-    bool isAtEOF() const;
-
-    /** Get the movie duration in seconds. May be unavailable for some movies. */
+    /**
+     * Get the video stream duration in seconds.
+     * May not always be available, in which case 0 is returned.
+     */
     double getDuration() const;
 
     /** Get the duration of a frame in seconds. */
     double getFrameDuration() const;
 
-    /** Start decoding the movie from the given position. */
-    void startDecoding();
+    /** Get the timestamp corresponding to the given time in seconds. */
+    int64_t getTimestamp( double timePositionInSec ) const;
 
-    /** Stop decoding the movie. */
-    void stopDecoding();
+    /** Get the timestamp corresponding to the given frameIndex. */
+    int64_t getTimestamp( int64_t frameIndex ) const;
 
-    /** Check if the movie is currently decoding. */
-    bool isDecoding() const;
+    /** Get the frameIndex corresponding to the given timestamp. */
+    int64_t getFrameIndex( int64_t timestamp ) const ;
 
-    /**
-     * Get a frame at the given position in seconds.
-     *
-     * If the movie is decoding, any pending future returned by a previous call
-     * to this method will be invalidated. If the movie is not decoding, the
-     * user is responsible to wait on the completion of the returned future
-     * before calling this method again.
-     */
-    std::future<PicturePtr> getFrame( double posInSeconds );
+    /** Convert a timestamp to a time in seconds */
+    double getPositionInSec( int64_t timestamp ) const;
+
+    /** Seek to the nearest full frame in the video. */
+    bool seekToNearestFullframe( int64_t frameIndex );
 
 private:
-    AVFormatContext* _avFormatContext;
-    std::unique_ptr<FFMPEGVideoStream> _videoStream;
+    AVFormatContext& _avFormatContext;
 
-    double _ptsPosition;
-    double _streamPosition;
-    bool _isValid;
-    std::atomic<bool> _isAtEOF;
+    AVCodecContext* _videoCodecContext;
+    AVStream* _videoStream;
 
-    MTQueue<PicturePtr> _queue;
-    std::promise<PicturePtr> _promise;
+    std::unique_ptr<FFMPEGFrame> _frame;
+    std::unique_ptr<FFMPEGVideoFrameConverter> _frameConverter;
 
-    std::thread _decodeThread;
-    std::atomic<bool> _stopDecoding;
+    // used for seeking
+    int64_t _numFrames;
+    double _frameDuration;
+    double _frameDurationInSeconds;
 
-    std::thread _consumeThread;
-    std::atomic<bool> _stopConsuming;
+    void _findVideoStream();
+    void _openVideoStreamDecoder();
+    void _generateSeekingParameters();
 
-    std::mutex _seekMutex;
-    bool _seek;
-    double _seekPosition;
-    std::condition_variable _seekRequested;
-    std::condition_variable _seekFinished;
-
-    std::mutex _targetMutex;
-    double _targetTimestamp;
-    std::condition_variable _targetChanged;
-
-    /** Init the global FFMPEG context. */
-    static void initGlobalState();
-
-    bool _open( const QString& uri );
-    bool _createAvFormatContext( const QString& uri );
-    void _releaseAvFormatContext();
-
-    void _decode();
-    void _decodeOneFrame();
-
-    void _consume();
-    bool _seekTo( double timePosInSeconds );
-
-    bool _readVideoFrame();
-    bool _seekFileTo( double timePosInSeconds );
-    PicturePtr _grabSingleFrame( const double posInSeconds );
+    bool _isVideoPacket( const AVPacket& packet ) const;
+    bool _decodeToAvFrame( AVPacket& packet );
 };
 
-#endif // FFMPEGMOVIE_H
+#endif

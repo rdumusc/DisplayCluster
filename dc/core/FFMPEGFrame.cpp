@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,33 +37,59 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ElapsedTimer.h"
+#include "FFMPEGFrame.h"
 
-#define MICROSEC 1000000.0
+#include "log.h"
 
-ElapsedTimer::ElapsedTimer() {}
-
-void ElapsedTimer::setCurrentTime( boost::posix_time::ptime time )
+FFMPEGFrame::FFMPEGFrame()
+#if(LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,0))
+    : _avFrame( avcodec_alloc_frame( ))
+#else
+    : _avFrame( av_frame_alloc( ))
+#endif
 {
-    previousTime_ = currentTime_;
-    currentTime_ = time;
+    if( !_avFrame )
+        put_flog( LOG_ERROR, "Error allocating RGB frame" );
 }
 
-boost::posix_time::time_duration ElapsedTimer::getElapsedTime() const
+FFMPEGFrame::~FFMPEGFrame()
 {
-    if (previousTime_.is_not_a_date_time() || currentTime_.is_not_a_date_time())
-        return boost::posix_time::time_duration(); // duration == 0
-
-    return currentTime_ - previousTime_;
+    av_free( _avFrame );
 }
 
-double ElapsedTimer::toSeconds( const boost::posix_time::time_duration time )
+int64_t FFMPEGFrame::getTimestamp() const
 {
-    return time.total_microseconds() / MICROSEC;
+    return _avFrame->pkt_dts;
 }
 
-boost::posix_time::time_duration
-ElapsedTimer::toTimeDuration( const double seconds )
+AVFrame& FFMPEGFrame::getAVFrame()
 {
-    return boost::posix_time::microseconds( seconds * MICROSEC );
+    return *_avFrame;
+}
+
+const AVFrame& FFMPEGFrame::getAVFrame() const
+{
+    return *_avFrame;
+}
+
+const uint8_t* FFMPEGFrame::getData() const
+{
+    return _avFrame->data[0];
+}
+
+
+FFMPEGPicture::FFMPEGPicture( const unsigned int width,
+                              const unsigned int height,
+                              const PixelFormat format )
+{
+    if( avpicture_alloc( (AVPicture*)_avFrame, format, width, height ) != 0 )
+    {
+        put_flog( LOG_ERROR, "Error allocating picture buffer for AV frame" );
+        return;
+    }
+}
+
+FFMPEGPicture::~FFMPEGPicture()
+{
+    avpicture_free( (AVPicture*)_avFrame );
 }

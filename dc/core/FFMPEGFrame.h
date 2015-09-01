@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,33 +37,63 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ElapsedTimer.h"
+#ifndef FFMPEGFRAME_H
+#define FFMPEGFRAME_H
 
-#define MICROSEC 1000000.0
+// required for FFMPEG includes below, specifically for the Linux build
+#ifdef __cplusplus
+    #ifndef __STDC_CONSTANT_MACROS
+        #define __STDC_CONSTANT_MACROS
+    #endif
 
-ElapsedTimer::ElapsedTimer() {}
+    #ifdef _STDINT_H
+        #undef _STDINT_H
+    #endif
 
-void ElapsedTimer::setCurrentTime( boost::posix_time::ptime time )
+    #include <stdint.h>
+#endif
+
+extern "C"
 {
-    previousTime_ = currentTime_;
-    currentTime_ = time;
+    #include <libavcodec/avcodec.h>
+    #include <libavutil/mem.h>
 }
 
-boost::posix_time::time_duration ElapsedTimer::getElapsedTime() const
+/** A frame of an FFMPEG movie. */
+class FFMPEGFrame
 {
-    if (previousTime_.is_not_a_date_time() || currentTime_.is_not_a_date_time())
-        return boost::posix_time::time_duration(); // duration == 0
+public:
+    /** Constructor. */
+    FFMPEGFrame();
 
-    return currentTime_ - previousTime_;
-}
+    /** Destructor. */
+    ~FFMPEGFrame();
 
-double ElapsedTimer::toSeconds( const boost::posix_time::time_duration time )
+    /** @return the timestamp of the frame. */
+    int64_t getTimestamp() const;
+
+    /** @return the frame raw data. */
+    const uint8_t* getData() const;
+
+    /** Get the FFMPEG frame. */
+    AVFrame& getAVFrame();
+    const AVFrame& getAVFrame() const;
+
+protected:
+    AVFrame* _avFrame;
+};
+
+
+/** A frame of an FFMPEG movie with picture data allocated. */
+class FFMPEGPicture : public FFMPEGFrame
 {
-    return time.total_microseconds() / MICROSEC;
-}
+public:
+    /** Constructor. */
+    FFMPEGPicture( unsigned int width, unsigned int height,
+                   PixelFormat format );
 
-boost::posix_time::time_duration
-ElapsedTimer::toTimeDuration( const double seconds )
-{
-    return boost::posix_time::microseconds( seconds * MICROSEC );
-}
+    /** Destructor. */
+    ~FFMPEGPicture();
+};
+
+#endif // FFMPEGFRAME_H

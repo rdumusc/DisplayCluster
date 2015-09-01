@@ -39,80 +39,63 @@
 
 #include "FFMPEGMovie.h"
 
-#include "FFMPEGVideoFrameConverter.h"
+#include "FFMPEGFrame.h"
+#include "FFMPEGVideoStream.h"
 #include "log.h"
 
-#define INVALID_STREAM_INDEX -1
-
-#define MICROSEC 1000000.0
+#define MIN_SEEK_DELTA_SEC  0.5
+#define VIDEO_QUEUE_SIZE    4
 
 #pragma clang diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-FFMPEGMovie::FFMPEGMovie(const QString& uri)
-    : avFormatContext_(0)
-    , videoCodecContext_(0)
-    , avFrame_(0)
-    , videoStream_(0)
-    , videoFrameConverter_(0)
-    // Seeking parameters
-    , numFrames_(0)
-    , frameDuration_(0)
-    , frameDurationInSeconds_(0)
-    // Internal
-    , loop_(false)
-    , frameDecodingComplete_(0)
-    , isValid_(false)
-    , skippedFrames_(false)
-    // Public status
-    , newFrameAvailable_(false)
-    , isAtEOF_(false)
+FFMPEGMovie::FFMPEGMovie( const QString& uri )
+    : _avFormatContext( 0 )
+    , _ptsPosition( 0.0 )
+    , _streamPosition( 0.0 )
+    , _isValid( false )
+    , _isAtEOF( false )
+    , _queue( VIDEO_QUEUE_SIZE )
+    , _stopDecoding( true )
+    , _stopConsuming( false )
+    , _seek( false )
+    , _seekPosition( 0.0 )
+    , _targetTimestamp( 0.0 )
 {
     FFMPEGMovie::initGlobalState();
-
-    isValid_ = open(uri);
+    _isValid = _open( uri );
 }
 
 FFMPEGMovie::~FFMPEGMovie()
 {
-    closeVideoStreamDecoder();
-    releaseAvFormatContext();
-
-    av_free( avFrame_ );
+    stopDecoding();
+    _videoStream.reset();
+    _releaseAvFormatContext();
 }
 
-bool FFMPEGMovie::open( const QString& uri )
+bool FFMPEGMovie::_open( const QString& uri )
 {
-    if( !createAvFormatContext( uri ))
+    if( !_createAvFormatContext( uri ))
         return false;
 
-    if( !findVideoStream( ))
-        return false;
-
-    if( !openVideoStreamDecoder( ))
-        return false;
-
-    avFrame_ = avcodec_alloc_frame();
-    if( !avFrame_ )
+    try
     {
-        put_flog( LOG_ERROR, "error allocating av frame for: '%s'",
-                  uri.toLocal8Bit().constData( ));
+        _videoStream.reset( new FFMPEGVideoStream( *_avFormatContext ));
+    }
+    catch( const std::runtime_error& e )
+    {
+        put_flog( LOG_FATAL, "Error opening file %s : '%s'",
+                  uri.toLocal8Bit().constData(), e.what( ));
         return false;
     }
-
-    videoFrameConverter_ = new FFMPEGVideoFrameConverter( *videoCodecContext_,
-                                                          PIX_FMT_RGBA );
-
-    if( !generateSeekingParameters( ))
-        return false;
 
     return true;
 }
 
-bool FFMPEGMovie::createAvFormatContext( const QString& uri )
+bool FFMPEGMovie::_createAvFormatContext( const QString& uri )
 {
-    // Read movie file header information into avFormatContext_ (and allocating it if null)
-    if( avformat_open_input( &avFormatContext_, uri.toLatin1(), NULL, NULL ) != 0 )
+    // Read movie header information into _avFormatContext and allocate it
+    if( avformat_open_input( &_avFormatContext, uri.toLatin1(), 0, 0 ) != 0 )
     {
         put_flog( LOG_ERROR, "error reading movie headers: '%s'",
                   uri.toLocal8Bit().constData( ));
@@ -120,7 +103,7 @@ bool FFMPEGMovie::createAvFormatContext( const QString& uri )
     }
 
     // Read stream information into avFormatContext_->streams
-    if( avformat_find_stream_info( avFormatContext_, NULL ) < 0 )
+    if( avformat_find_stream_info( _avFormatContext, NULL ) < 0 )
     {
         put_flog( LOG_ERROR, "error reading stream information: '%s'",
                   uri.toLocal8Bit().constData( ));
@@ -134,72 +117,17 @@ bool FFMPEGMovie::createAvFormatContext( const QString& uri )
     return true;
 }
 
-void FFMPEGMovie::releaseAvFormatContext()
+void FFMPEGMovie::_releaseAvFormatContext()
 {
-    if( avFormatContext_ )
-        avformat_close_input( &avFormatContext_ );
-}
-
-bool FFMPEGMovie::findVideoStream()
-{
-    for( unsigned int i = 0; i < avFormatContext_->nb_streams; ++i )
-    {
-        AVStream* stream = avFormatContext_->streams[i];
-        if( stream->codec->codec_type == AVMEDIA_TYPE_VIDEO )
-        {
-            videoStream_ = stream; // Shortcut pointer - don't free
-            return true;
-        }
-    }
-
-    put_flog( LOG_ERROR, "could not find video stream for: '%s'",
-              avFormatContext_->filename );
-    return false;
-}
-
-bool FFMPEGMovie::openVideoStreamDecoder()
-{
-    // Contains information about the codec that the stream is using
-    videoCodecContext_ = videoStream_->codec; // Shortcut - don't free
-
-    AVCodec* codec = avcodec_find_decoder( videoCodecContext_->codec_id );
-    if( !codec )
-    {
-        put_flog( LOG_ERROR, "unsupported codec for file: '%s'",
-                  avFormatContext_->filename );
-        return false;
-    }
-
-    // open codec
-    const int ret = avcodec_open2( videoCodecContext_, codec, NULL );
-
-    if( ret < 0 )
-    {
-        char errbuf[256];
-        av_strerror( ret, errbuf, 256 );
-
-        put_flog( LOG_ERROR, "could not open codec, error code %i '%s' in '%s'",
-                  ret, errbuf, avFormatContext_->filename );
-        return false;
-    }
-
-    return true;
-}
-
-void FFMPEGMovie::closeVideoStreamDecoder()
-{
-    if( !videoCodecContext_ )
-        return;
-
-    avcodec_close( videoCodecContext_ );
-    videoCodecContext_ = 0;
+    if( _avFormatContext )
+        avformat_close_input( &_avFormatContext );
 }
 
 void FFMPEGMovie::initGlobalState()
 {
     static bool initialized = false;
 
-    if (!initialized)
+    if( !initialized )
     {
         av_register_all();
         initialized = true;
@@ -208,302 +136,238 @@ void FFMPEGMovie::initGlobalState()
 
 bool FFMPEGMovie::isValid() const
 {
-    return isValid_;
+    return _isValid;
 }
 
 unsigned int FFMPEGMovie::getWidth() const
 {
-    return videoCodecContext_->width;
+    return _videoStream->getWidth();
 }
 
 unsigned int FFMPEGMovie::getHeight() const
 {
-    return videoCodecContext_->height;
+    return _videoStream->getHeight();
 }
 
-const void* FFMPEGMovie::getData() const
+double FFMPEGMovie::getPosition() const
 {
-    return videoFrameConverter_->getData();
-}
-
-void FFMPEGMovie::setLoop(const bool loop)
-{
-    loop_ = loop;
-}
-
-double FFMPEGMovie::getDuration() const
-{
-    const double duration = (double)videoStream_->duration *
-            (double)videoStream_->time_base.num / (double)videoStream_->time_base.den;
-    return std::max(duration, 0.0);
-}
-
-boost::posix_time::time_duration FFMPEGMovie::getTimestamp() const
-{
-    return timePosition_;
+    return _ptsPosition;
 }
 
 bool FFMPEGMovie::isAtEOF() const
 {
-    return isAtEOF_;
+    return _isAtEOF && _queue.empty();
 }
 
-bool FFMPEGMovie::jumpTo(const double timePosInSeconds)
+double FFMPEGMovie::getDuration() const
 {
-    newFrameAvailable_ = false;
+    return _videoStream->getDuration();
+}
 
-    const int64_t frameIndex = timePosInSeconds / frameDurationInSeconds_;
-    if (!seekToNearestFullframe(frameIndex))
+double FFMPEGMovie::getFrameDuration() const
+{
+    return _videoStream->getFrameDuration();
+}
+
+void FFMPEGMovie::startDecoding()
+{
+    stopDecoding();
+    _stopDecoding = false;
+    _stopConsuming = false;
+    _consumeThread = std::thread( &FFMPEGMovie::_consume, this );
+    _decodeThread = std::thread( &FFMPEGMovie::_decode, this );
+}
+
+void FFMPEGMovie::stopDecoding()
+{
+    _stopDecoding = true;
+    _stopConsuming = true;
+    _queue.clear();
+    if( _isAtEOF )
+        _seekRequested.notify_one();
+    if( _decodeThread.joinable( ))
+        _decodeThread.join();
+    if( _consumeThread.joinable( ))
+    {
+        _queue.enqueue( std::make_shared<FFMPEGPicture>( 1, 1, PIX_FMT_RGBA ));
+        _targetChanged.notify_one();
+        _consumeThread.join();
+    }
+    _queue.clear();
+}
+
+bool FFMPEGMovie::isDecoding() const
+{
+    return !_stopDecoding;
+}
+
+std::future<PicturePtr> FFMPEGMovie::getFrame( const double posInSeconds )
+{
+    if( !isDecoding( ))
+        return std::async( std::launch::async, &FFMPEGMovie::_grabSingleFrame,
+                           this, posInSeconds );
+
+    std::lock_guard<std::mutex> lock( _targetMutex );
+    _promise = std::promise<PicturePtr>();
+    _targetTimestamp = posInSeconds;
+    _targetChanged.notify_one();
+    return _promise.get_future();
+}
+
+void FFMPEGMovie::_decode()
+{
+    while( !_stopDecoding )
+        _decodeOneFrame();
+}
+
+void FFMPEGMovie::_decodeOneFrame()
+{
+    {
+        std::unique_lock<std::mutex> lock( _seekMutex );
+        if( _seek )
+        {
+            _seekFileTo( _seekPosition );
+            _seekPosition = 0.0;
+            _seek = false;
+            _seekFinished.notify_one();
+            return;
+        }
+        if( _isAtEOF && isDecoding( ))
+        {
+            _seekRequested.wait( lock );
+            return;
+        }
+    }
+    _readVideoFrame();
+}
+
+void FFMPEGMovie::_consume()
+{
+    while( true )
+    {
+        std::unique_lock<std::mutex> lock( _targetMutex );
+        _targetChanged.wait( lock );
+        if( _stopConsuming )
+            return;
+
+        double ptsDelta = _targetTimestamp - getPosition();
+
+        // If we seek, we have to consume at least one frame.
+        if( _seekTo( _targetTimestamp ))
+            ptsDelta = getFrameDuration();
+
+        PicturePtr frame;
+        while( !_stopConsuming && ptsDelta >= getFrameDuration() && !isAtEOF( ))
+        {
+            frame = _queue.dequeue();
+            _ptsPosition = _videoStream->getPositionInSec( frame->getTimestamp( ));
+            ptsDelta = _targetTimestamp - getPosition();
+        }
+
+        if( !frame )
+        {
+            auto exception = std::runtime_error( "Frame unavailable error" );
+            _promise.set_exception( std::make_exception_ptr( exception ));
+        }
+        else
+            _promise.set_value( frame );
+    }
+}
+
+bool FFMPEGMovie::_seekTo( double posInSeconds )
+{
+    if( _seek )
         return false;
 
-    do {
-        if(!readVideoFrame())
-            return false;
-    }
-    while( !frameDecodingComplete_ );
+    posInSeconds = std::max( 0.0, std::min( posInSeconds, getDuration( )));
 
-    timePosition_ = boost::posix_time::microseconds(timePosInSeconds * MICROSEC);
+    const double ptsDelta = posInSeconds - getPosition();
+    const double streamDelta = fabs( posInSeconds - _streamPosition );
 
-    convertVideoFrame();
+    // Don't seek forward if the delta is small. Always seek backwards.
+    if( ptsDelta >= 0.0 && streamDelta < MIN_SEEK_DELTA_SEC )
+        return false;
+
+    _queue.clear();
+    std::unique_lock<std::mutex> lock( _seekMutex );
+    _seekPosition = posInSeconds;
+    _seek = true;
+    _seekRequested.notify_one();
+    _seekFinished.wait( lock );
     return true;
 }
 
-void FFMPEGMovie::update(const boost::posix_time::time_duration timestamp,
-                         const bool skipDecoding)
-{
-    if( isAtEOF( ))
-        return;
-
-    newFrameAvailable_ = false;
-
-    // If decoding is slower than frame rate, slow down decoding speed
-    const boost::posix_time::time_duration timeSinceLastFrame = timestamp - timePosition_;
-    const double timeIncrementInSec = timeSinceLastFrame.total_microseconds() / MICROSEC;
-    if (timeIncrementInSec < frameDurationInSeconds_)
-        timePosition_ = timestamp;
-    else
-    {
-        const double factor = frameDurationInSeconds_ / timeIncrementInSec;
-        const double increment = factor * frameDurationInSeconds_;
-        timePosition_ += boost::posix_time::microseconds(increment * MICROSEC);
-    }
-
-    if (skipDecoding)
-    {
-        skippedFrames_ = true;
-        return;
-    }
-
-    if (skippedFrames_)
-        clampTimePosition();
-
-    const double timePositionInSec = timePosition_.total_microseconds() / MICROSEC;
-    const int64_t index = timePositionInSec / frameDurationInSeconds_;
-
-    bool readNewVideoFrame = false;
-
-    // Catch up on missed frames
-    if( skippedFrames_ )
-    {
-        readNewVideoFrame = seekToNearestFullframe( index );
-        skippedFrames_ = false;
-    }
-
-    // Read frames until we reach the correct timestamp
-    while( avFrame_->pkt_dts < getTimestampForFrameIndex( index ))
-    {
-        // Read one frame and return to start if EOF reached
-        if( readVideoFrame( ))
-            readNewVideoFrame = true;
-        else
-        {
-            if( loop_ )
-                rewind();
-            break;
-        }
-    }
-
-    if( readNewVideoFrame )
-        convertVideoFrame();
-}
-
-bool FFMPEGMovie::isNewFrameAvailable() const
-{
-    return newFrameAvailable_;
-}
-
-void FFMPEGMovie::clampTimePosition()
-{
-    const double duration = getDuration();
-
-    if(duration <= 0.0)
-        return;
-
-    while (timePosition_.total_microseconds() / MICROSEC > duration)
-        timePosition_ -= boost::posix_time::microseconds(duration * MICROSEC);
-}
-
-int64_t FFMPEGMovie::getTimestampForFrameIndex( const int64_t frameIndex ) const
-{
-    if( frameIndex < 0 || ( numFrames_ && frameIndex >= numFrames_ ))
-    {
-        put_flog( LOG_WARN, "Invalid index: %i - valid range: [0, %i[ in: '%s'",
-                  frameIndex, numFrames_, avFormatContext_->filename );
-    }
-
-    int64_t timestamp = frameIndex * frameDuration_;
-
-    if (videoStream_->start_time != (int64_t)AV_NOPTS_VALUE)
-        timestamp += videoStream_->start_time;
-
-    return timestamp;
-}
-
-bool FFMPEGMovie::seekToNearestFullframe( const int64_t frameIndex )
-{
-    if( frameIndex < 0 || ( numFrames_ && frameIndex >= numFrames_ ))
-    {
-        put_flog( LOG_WARN, "Invalid index: %i, seeking aborted in: '%s'",
-                  frameIndex, avFormatContext_->filename );
-        return false;
-    }
-
-    const int64_t desiredTimestamp = getTimestampForFrameIndex( frameIndex );
-
-    // Seek to the nearest keyframe before desiredTimestamp.
-    if( avformat_seek_file( avFormatContext_, videoStream_->index, 0,
-                            desiredTimestamp, desiredTimestamp,
-                            AVSEEK_FLAG_FRAME ) != 0 )
-    {
-        put_flog( LOG_ERROR, "seeking error, seeking aborted in: '%s'",
-                  avFormatContext_->filename );
-        return false;
-    }
-
-    // Always flush buffers after seeking
-    avcodec_flush_buffers( videoCodecContext_ );
-
-    // Read a valid frame after seeking to get a meaningful avFrame_->pkt_dts
-    return readVideoFrame();
-}
-
-bool FFMPEGMovie::readVideoFrame()
+bool FFMPEGMovie::_readVideoFrame()
 {
     int avReadStatus = 0;
 
     AVPacket packet;
-    av_init_packet(&packet);
+    av_init_packet( &packet );
 
     // keep reading frames until we decode a valid video frame
-    while((avReadStatus = av_read_frame(avFormatContext_, &packet)) >= 0)
+    while( (avReadStatus = av_read_frame( _avFormatContext, &packet )) >= 0 )
     {
-        if(isVideoStream(packet) && decodeVideoFrame(packet))
+        auto picture = _videoStream->decode( packet );
+        if( picture )
         {
+            _queue.enqueue( picture );
+            _streamPosition = _videoStream->getPositionInSec( picture->getTimestamp( ));
+
             // free the packet that was allocated by av_read_frame
-            av_free_packet(&packet);
+            av_free_packet( &packet );
             break;
         }
         // free the packet that was allocated by av_read_frame
-        av_free_packet(&packet);
+        av_free_packet( &packet );
     }
 
     // False if file read error or EOF reached
-    isAtEOF_ = (avReadStatus < 0);
-    return !isAtEOF_;
+    _isAtEOF = (avReadStatus < 0);
+    return !_isAtEOF;
 }
 
-bool FFMPEGMovie::isVideoStream(const AVPacket& packet) const
+bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
 {
-    return packet.stream_index == videoStream_->index;
-}
+    const double frameDuration = _videoStream->getFrameDuration();
+    const int64_t frameIndex = timePosInSeconds / frameDuration;
 
-void FFMPEGMovie::rewind()
-{
-    if( av_seek_frame( avFormatContext_, videoStream_->index, 0,
-                       AVSEEK_FLAG_BACKWARD ) >= 0 )
-    {
-        put_flog( LOG_VERBOSE, "Time: %lf",
-                  timePosition_.total_microseconds() / MICROSEC );
-
-        timePosition_ = boost::posix_time::time_duration();
-
-        // Always flush buffers after seeking
-        avcodec_flush_buffers( videoCodecContext_ );
-
-        readVideoFrame();
-    }
-}
-
-bool FFMPEGMovie::decodeVideoFrame( AVPacket& packet )
-{
-    int errCode = avcodec_decode_video2( videoCodecContext_, avFrame_,
-                                         &frameDecodingComplete_, &packet );
-    if( errCode < 0 )
-    {
-        put_flog( LOG_ERROR, "avcodec_decode_video2 returned error code '%i' "
-                  "in '%s'", errCode, avFormatContext_->filename );
-        return false;
-    }
-
-    // make sure we got a full video frame and convert the frame from its native
-    // format to RGB
-    if( !frameDecodingComplete_ )
-    {
-        put_flog( LOG_VERBOSE, "Frame could not be decoded entirely"
-                               "(may be caused by seeking) in: '%s'",
-                               avFormatContext_->filename );
-        return false;
-    }
-
-    return true;
-}
-
-bool FFMPEGMovie::convertVideoFrame()
-{
-    if( !videoFrameConverter_->convert( avFrame_ ))
+    if( !_videoStream->seekToNearestFullframe( frameIndex ))
         return false;
 
-    newFrameAvailable_ = true;
-    return true;
-}
+    // Read frames until we reach the correct timestamp
+    int avReadStatus = 0;
 
-bool FFMPEGMovie::generateSeekingParameters()
-{
-    numFrames_ = videoStream_->nb_frames;
-    if( numFrames_ == 0 )
+    AVPacket packet;
+    av_init_packet( &packet );
+
+    const double target = std::max( 0.0, timePosInSeconds - frameDuration );
+    const int64_t targetTimestamp = _videoStream->getTimestamp( target );
+
+    while( (avReadStatus = av_read_frame( _avFormatContext, &packet )) >= 0 )
     {
-        const int den = videoStream_->avg_frame_rate.den * videoStream_->time_base.den;
-        const int num = videoStream_->avg_frame_rate.num * videoStream_->time_base.num;
-        if( den <= 0 || num <= 0 )
+        const int64_t timestamp = _videoStream->decodeTimestamp( packet );
+        if( timestamp >= targetTimestamp )
         {
-            put_flog( LOG_WARN, "cannot determine seeking paramters, "
-                                "file not supported: '%s'",
-                                avFormatContext_->filename );
-            return false;
+            _streamPosition = _videoStream->getPositionInSec( timestamp );
+            _queue.clear();
+            _queue.enqueue( _videoStream->decode( packet ));
+
+            // free the packet that was allocated by av_read_frame
+            av_free_packet( &packet );
+            break;
         }
-        numFrames_ = av_rescale( videoStream_->duration, num, den );
-        if( numFrames_ == 0 )
-        {
-            put_flog( LOG_WARN, "cannot determine number of frames, "
-                                "file not supported: '%s'",
-                                avFormatContext_->filename );
-            return false;
-        }
+        // free the packet that was allocated by av_read_frame
+        av_free_packet( &packet );
     }
 
-    frameDuration_ = (double)videoStream_->duration / (double)numFrames_;
+    _isAtEOF = (avReadStatus < 0);
+    return !_isAtEOF;
+}
 
-    const double timeBase = (double)videoStream_->time_base.num/
-                            (double)videoStream_->time_base.den;
-    frameDurationInSeconds_ = frameDuration_ * timeBase;
-
-    put_flog( LOG_VERBOSE, "seeking parameters: start_time = %i,"
-                           "duration_ = %i, numFrames_ = %i",
-              videoStream_->start_time, videoStream_->duration, numFrames_ );
-    put_flog( LOG_VERBOSE, "frame_rate = %f, time_base = %f",
-              1./frameDurationInSeconds_, timeBase );
-    put_flog( LOG_VERBOSE, "frameDurationInSeconds_ = %f",
-              frameDurationInSeconds_ );
-
-    return true;
+PicturePtr FFMPEGMovie::_grabSingleFrame( const double posInSeconds )
+{
+    _seekFileTo( posInSeconds );
+    if( _queue.empty( ))
+        throw std::runtime_error( "Frame unavailable error" );
+    return _queue.dequeue();
 }

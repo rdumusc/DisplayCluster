@@ -39,38 +39,17 @@
 
 #include "FFMPEGVideoFrameConverter.h"
 
+#include "FFMPEGFrame.h"
 #include "log.h"
 
 #pragma clang diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter(const AVCodecContext& videoCodecContext,
-                                                     const PixelFormat targetFormat)
-    : swsContext_(0)
-    , avFrameRGB_(0)
+FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter( const AVCodecContext&
+                                                      videoCodecContext,
+                                                      PixelFormat targetFormat )
+    : swsContext_( 0 )
 {
-    // allocate video frame for RGB conversion
-#if(LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,0))
-    avFrameRGB_ = avcodec_alloc_frame();
-#else
-    avFrameRGB_ = av_frame_alloc();
-#endif
-
-    if( !avFrameRGB_ )
-    {
-        put_flog( LOG_ERROR, "Error allocating RGB frame" );
-        return;
-    }
-
-    // alloc buffer for avFrameRGB_
-    if( avpicture_alloc( (AVPicture *)avFrameRGB_, targetFormat,
-                         videoCodecContext.width,
-                         videoCodecContext.height ) != 0 )
-    {
-        put_flog( LOG_ERROR, "Error allocating picture buffer for RGB frame" );
-        return;
-    }
-
     // create sws scaler context
     swsContext_ = sws_getContext( videoCodecContext.width,
                                   videoCodecContext.height,
@@ -88,22 +67,20 @@ FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter(const AVCodecContext& video
 
 FFMPEGVideoFrameConverter::~FFMPEGVideoFrameConverter()
 {
-    sws_freeContext(swsContext_);
-
-    avpicture_free( (AVPicture *)avFrameRGB_ );
-    av_free(avFrameRGB_);
+    sws_freeContext( swsContext_ );
 }
 
-bool FFMPEGVideoFrameConverter::convert(const AVFrame* srcFrame)
+bool FFMPEGVideoFrameConverter::convert( const FFMPEGFrame& srcFrame,
+                                         FFMPEGPicture& dstFrame )
 {
-    const int output_height = sws_scale(swsContext_, srcFrame->data,
-                                        srcFrame->linesize, 0, srcFrame->height,
-                                        avFrameRGB_->data,
-                                        avFrameRGB_->linesize);
-    return output_height == srcFrame->height;
-}
+    const AVFrame& avFrame = srcFrame.getAVFrame();
 
-const uint8_t* FFMPEGVideoFrameConverter::getData() const
-{
-    return avFrameRGB_->data[0];
+    dstFrame.getAVFrame().pkt_dts = avFrame.pkt_dts;
+
+    const int output_height = sws_scale( swsContext_, avFrame.data,
+                                         avFrame.linesize, 0,
+                                         avFrame.height,
+                                         dstFrame.getAVFrame().data,
+                                         dstFrame.getAVFrame().linesize );
+    return output_height == avFrame.height;
 }

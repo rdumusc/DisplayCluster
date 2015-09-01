@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,33 +37,67 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ElapsedTimer.h"
+#ifndef MTQUEUE_H
+#define MTQUEUE_H
 
-#define MICROSEC 1000000.0
+#include <queue>
+#include <mutex>
+#include <condition_variable>
 
-ElapsedTimer::ElapsedTimer() {}
-
-void ElapsedTimer::setCurrentTime( boost::posix_time::ptime time )
+template <class T>
+class MTQueue
 {
-    previousTime_ = currentTime_;
-    currentTime_ = time;
-}
+public:
+    MTQueue( const size_t max_size )
+        : _max_size( max_size )
+    {}
 
-boost::posix_time::time_duration ElapsedTimer::getElapsedTime() const
-{
-    if (previousTime_.is_not_a_date_time() || currentTime_.is_not_a_date_time())
-        return boost::posix_time::time_duration(); // duration == 0
+    void enqueue( const T t )
+    {
+        std::unique_lock<std::mutex> lock( _mutex );
+        while( _queue.size() >= _max_size )
+            _full.wait( lock );
+        _queue.push( t );
+        _empty.notify_one();
+    }
 
-    return currentTime_ - previousTime_;
-}
+    T dequeue()
+    {
+        std::unique_lock<std::mutex> lock( _mutex );
+        while( _queue.empty( ))
+            _empty.wait( lock );
+        T val = _queue.front();
+        _queue.pop();
+        _full.notify_one();
+        return val;
+    }
 
-double ElapsedTimer::toSeconds( const boost::posix_time::time_duration time )
-{
-    return time.total_microseconds() / MICROSEC;
-}
+    void clear()
+    {
+        std::lock_guard<std::mutex> lock( _mutex );
+        while( !_queue.empty( ))
+            _queue.pop();
+        _full.notify_one();
+    }
 
-boost::posix_time::time_duration
-ElapsedTimer::toTimeDuration( const double seconds )
-{
-    return boost::posix_time::microseconds( seconds * MICROSEC );
-}
+    size_t size() const
+    {
+        std::lock_guard<std::mutex> lock( _mutex );
+        return _queue.size();
+    }
+
+    bool empty() const
+    {
+        std::lock_guard<std::mutex> lock( _mutex );
+        return _queue.empty();
+    }
+
+private:
+    size_t _max_size;
+    std::queue<T> _queue;
+    mutable std::mutex _mutex;
+    std::condition_variable _empty;
+    std::condition_variable _full;
+};
+
+#endif

@@ -38,83 +38,78 @@
 
 #include "Movie.h"
 
-#include "FFMPEGMovie.h"
-#include "ContentWindow.h"
-#include "MovieContent.h"
-#include "WallToWallChannel.h"
 #include "log.h"
 
+#include "ContentWindow.h"
+#include "FFMPEGMovie.h"
+#include "FFMPEGFrame.h"
+#include "MovieContent.h"
+#include "WallToWallChannel.h"
+
 Movie::Movie( const QString& uri )
-    : ffmpegMovie_( new FFMPEGMovie( uri ))
-    , uri_( uri )
-    , paused_( false )
-    , suspended_( false )
-    , isVisible_( true )
-    , skippedLastFrame_( false )
+    : _ffmpegMovie( new FFMPEGMovie( uri ))
+    , _paused( false )
+    , _loop( true )
+    , _isVisible( true )
+    , _sharedTimestamp( 0.0 )
 {
     // Observed bug [DISCL-295]: opening a movie might fail on WallProcesses
     // despite correctly reading metadata on the MasterProcess.
     // bool FFMPEGMovie::openVideoStreamDecoder(): could not open codec
     // error: -11 Resource temporarily unavailable
-    if( !ffmpegMovie_->isValid( ))
+    if( !_ffmpegMovie->isValid( ))
         put_flog( LOG_WARN, "Movie is invalid: %s",
                   uri.toLocal8Bit().constData( ));
+    else
+        _ffmpegMovie->startDecoding();
 }
 
-Movie::~Movie()
-{
-    delete ffmpegMovie_;
-}
+Movie::~Movie() {}
 
 void Movie::setVisible( const bool isVisible )
 {
-    isVisible_ = isVisible;
+    _isVisible = isVisible;
 }
 
 void Movie::setPause( const bool pause )
 {
-    paused_ = pause;
+    _paused = pause;
 }
 
 void Movie::setLoop( const bool loop )
 {
-    ffmpegMovie_->setLoop( loop );
+    _loop = loop;
 }
 
 void Movie::render()
 {
-    if( !texture_.isValid( ))
+    if( !_texture.isValid( ))
         return;
 
-    quad_.render();
+    _quad.render();
 }
 
 void Movie::renderPreview()
 {
-    if( !texture_.isValid( ))
+    if( !_texture.isValid( ))
         return;
 
-    previewQuad_.render();
+    _previewQuad.render();
 }
 
 void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 {
-    if( !ffmpegMovie_->isValid( ))
+    if( !_ffmpegMovie->isValid( ))
         return;
 
-    if( !texture_.isValid( ))
+    if( !_texture.isValid( ))
     {
         _generateTexture();
-        quad_.setTexture( texture_.getTextureId( ));
-        previewQuad_.setTexture( texture_.getTextureId( ));
+        _quad.setTexture( _texture.getTextureId( ));
+        _previewQuad.setTexture( _texture.getTextureId( ));
     }
 
-    quad_.setTexCoords( window->getZoomRect( ));
-
-    // Stop decoding when the window is moving.
-    // This is to avoid saccades when reaching a new GLWindow.
-    // The decoding resumes when the movement is finished.
-    suspended_ = window->isMoving() || window->isResizing();
+    _quad.setTexCoords( window->getZoomRect( ));
 
     MovieContent& movie = static_cast<MovieContent&>( *window->getContent( ));
     setPause( movie.getControlState() & STATE_PAUSED );
@@ -125,55 +120,69 @@ void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 
 void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
 {
-    if( paused_ || suspended_ || !ffmpegMovie_->isValid( ))
+    if( _paused || !_ffmpegMovie->isValid( ))
         return;
 
-    const bool isReady = !_qmlItem->isAnimating();
-    if( !wallToWallChannel.allReady( isReady ))
-        return;
-
-    elapsedTimer_.setCurrentTime( wallToWallChannel.getTime( ));
-    timestamp_ += elapsedTimer_.getElapsedTime();
-
-    skippedLastFrame_ = !isVisible_;
-    ffmpegMovie_->update( timestamp_, skippedLastFrame_ );
-
-    // Get the current timestamp back from the FFMPEG movie.
-    timestamp_ = ffmpegMovie_->getTimestamp();
-
-    if( ffmpegMovie_->isNewFrameAvailable( ))
-        texture_.update( ffmpegMovie_->getData( ), GL_RGBA );
-}
-
-void Movie::postRenderSync( WallToWallChannel& wallToWallChannel )
-{
-    if( paused_ || suspended_ )
-        return;
-
+    _updateTimestamp( wallToWallChannel );
     _synchronizeTimestamp( wallToWallChannel );
+
+    if( !_isVisible )
+        return;
+
+    if( _futurePicture.valid() && is_ready( _futurePicture ))
+    {
+        try
+        {
+            _texture.update( _futurePicture.get()->getData(), GL_RGBA );
+        }
+        catch( const std::exception& e )
+        {
+            put_flog( LOG_DEBUG, "Future was canceled: ", e.what( ));
+        }
+    }
+
+    const double delay = fabs( _sharedTimestamp - _ffmpegMovie->getPosition( ));
+    if( !_futurePicture.valid() && delay >= _ffmpegMovie->getFrameDuration( ))
+        _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
 }
 
 bool Movie::_generateTexture()
 {
-    QImage image( ffmpegMovie_->getWidth(), ffmpegMovie_->getHeight(),
+    QImage image( _ffmpegMovie->getWidth(), _ffmpegMovie->getHeight(),
                   QImage::Format_RGB32 );
     image.fill( 0 );
 
-    return texture_.init( image );
+    return _texture.init( image );
+}
+
+void Movie::_updateTimestamp( WallToWallChannel& wallToWallChannel )
+{
+    _timer.setCurrentTime( wallToWallChannel.getTime( ));
+    _sharedTimestamp += ElapsedTimer::toSeconds( _timer.getElapsedTime( ));
+
+    const double maxDelay = 2.0 * _ffmpegMovie->getFrameDuration();
+    _sharedTimestamp = std::min( _sharedTimestamp, _sharedTimestamp + maxDelay );
+
+    if( _loop && (_ffmpegMovie->isAtEOF( ) ||
+                  _sharedTimestamp > _ffmpegMovie->getDuration( )))
+        _sharedTimestamp = 0.0;
+    else
+        _ffmpegMovie->getDuration();
 }
 
 void Movie::_synchronizeTimestamp( WallToWallChannel& wallToWallChannel )
 {
     // Elect a leader among processes which have decoded a frame
-    const bool isCandidate = !skippedLastFrame_ && ffmpegMovie_->isValid();
+    const bool isCandidate = _ffmpegMovie->isValid() && _isVisible;
     const int leader = wallToWallChannel.electLeader( isCandidate );
 
     if( leader < 0 )
         return;
 
     if( leader == wallToWallChannel.getRank( ))
-        wallToWallChannel.broadcast( timestamp_ );
+        wallToWallChannel.broadcast( ElapsedTimer::toTimeDuration(
+                                         _sharedTimestamp ));
     else
-        timestamp_ = wallToWallChannel.receiveTimestampBroadcast( leader );
+        _sharedTimestamp = ElapsedTimer::toSeconds(
+                         wallToWallChannel.receiveTimestampBroadcast( leader ));
 }
-
