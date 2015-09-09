@@ -40,6 +40,7 @@
 #include "MovieThumbnailGenerator.h"
 
 #include "FFMPEGMovie.h"
+#include "FFMPEGFrame.h"
 
 #define PREVIEW_RELATIVE_POSITION  0.5
 
@@ -50,17 +51,25 @@ MovieThumbnailGenerator::MovieThumbnailGenerator(const QSize &size)
 
 QImage MovieThumbnailGenerator::generate(const QString &filename) const
 {
-    FFMPEGMovie movie(filename);
+    FFMPEGMovie movie( filename );
 
-    if( !movie.isValid() )
-        return createErrorImage("movie");
+    if( !movie.isValid( ))
+        return createErrorImage( "movie" );
 
-    if ( !movie.jumpTo( PREVIEW_RELATIVE_POSITION * movie.getDuration( )))
-        return createErrorImage("movie");
-
-    QImage image( (uchar*)movie.getData(), movie.getWidth(), movie.getHeight(), QImage::Format_ARGB32 );
-    image = image.scaled(size_, aspectRatioMode_);
-    image = image.rgbSwapped();
-    addMetadataToImage(image, filename);
-    return image;
+    const double target = PREVIEW_RELATIVE_POSITION * movie.getDuration();
+    auto future = movie.getFrame( target );
+    try
+    {
+        auto picture = future.get();
+        QImage image( (uchar*)picture->getData(), movie.getWidth(),
+                      movie.getHeight(), QImage::Format_ARGB32 );
+        image = image.scaled(size_, aspectRatioMode_);
+        image = image.rgbSwapped();
+        addMetadataToImage(image, filename);
+        return image;
+    }
+    catch( const std::exception& )
+    {
+        return createErrorImage( "movie" );
+    }
 }

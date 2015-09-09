@@ -51,8 +51,10 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   DynamicTexture.h
   DynamicTextureContent.h
   ElapsedTimer.h
+  FFMPEGFrame.h
   FFMPEGMovie.h
   FFMPEGVideoFrameConverter.h
+  FFMPEGVideoStream.h
   FileCommandHandler.h
   FpsCounter.h
   FpsRenderer.h
@@ -70,6 +72,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   Movie.h
   MPIChannel.h
   MPIContext.h
+  MTQueue.h
   PixelStreamContent.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
@@ -163,8 +166,10 @@ list(APPEND DCCORE_SOURCES
   DynamicTexture.cpp
   DynamicTextureContent.cpp
   ElapsedTimer.cpp
+  FFMPEGFrame.cpp
   FFMPEGMovie.cpp
   FFMPEGVideoFrameConverter.cpp
+  FFMPEGVideoStream.cpp
   FileCommandHandler.cpp
   FpsCounter.cpp
   FpsRenderer.cpp

@@ -45,6 +45,7 @@
 #include <boost/shared_ptr.hpp>
 #include <QtCore/QRectF>
 #include <iostream>
+#include <future>
 
 class Configuration;
 class Content;
@@ -54,6 +55,10 @@ class DisplayGroup;
 class DisplayGroupAdapter;
 class DisplayGroupRenderer;
 class DynamicTexture;
+class FFMPEGFrame;
+class FFMPEGPicture;
+class FFMPEGVideoStream;
+class FFMPEGVideoFrameConverter;
 class GLWindow;
 class MarkerRenderer;
 class Markers;
@@ -80,6 +85,7 @@ typedef boost::shared_ptr< DisplayGroupAdapter > DisplayGroupAdapterPtr;
 typedef boost::shared_ptr< DisplayGroup > DisplayGroupPtr;
 typedef boost::shared_ptr< DisplayGroupRenderer > DisplayGroupRendererPtr;
 typedef boost::shared_ptr< DynamicTexture > DynamicTexturePtr;
+typedef std::shared_ptr<FFMPEGPicture> PicturePtr;
 typedef boost::shared_ptr< MarkerRenderer > MarkerRendererPtr;
 typedef boost::shared_ptr< Markers > MarkersPtr;
 typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
@@ -134,6 +140,12 @@ template<typename T, typename ...Args>
 std::unique_ptr<T> make_unique( Args&& ...args )
 {
     return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+}
+
+template<typename R>
+bool is_ready( std::future<R> const& f )
+{
+    return f.wait_for( std::chrono::seconds( 0 )) == std::future_status::ready;
 }
 
 #endif

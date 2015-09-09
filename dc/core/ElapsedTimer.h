@@ -59,6 +59,9 @@ public:
     /** Get the elapsed time between the last two calls to setCurrentTime(). */
     boost::posix_time::time_duration getElapsedTime() const;
 
+    static double toSeconds( boost::posix_time::time_duration time );
+    static boost::posix_time::time_duration toTimeDuration( double seconds );
+
 private:
     boost::posix_time::ptime currentTime_;
     boost::posix_time::ptime previousTime_;
