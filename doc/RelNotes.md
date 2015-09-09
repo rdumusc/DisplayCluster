@@ -16,6 +16,10 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 * The handling of mouse and touch gestures has been unified and simplified.
 * Improved automatic placement of windows.
 
+## Optimizations
+
+* Movies are decoded asynchronously for more performance and responsiveness.
+
 ## Bug Fixes {#Fixes}
 
 * Touchpads no longer generate undesired gestures on laptops.
