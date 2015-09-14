@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE( testFullScreenSize )
     BOOST_CHECK_EQUAL( coords.height(), wallSize.width() / CONTENT_AR );
 }
 
-BOOST_AUTO_TEST_CASE( testResizeRelative )
+BOOST_AUTO_TEST_CASE( testResizeRelativeToBorder )
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( CONTENT_SIZE );
@@ -231,19 +231,56 @@ BOOST_AUTO_TEST_CASE( testResizeRelative )
     controller.resizeRelative( QPointF( 5, 5 ));
     BOOST_CHECK( window.getCoordinates() == originalCoords );
 
+    // These border resize conserve the window aspect ratio
     window.setBorder( ContentWindow::TOP );
     controller.resizeRelative( QPointF( 5, 5 ));
     BOOST_CHECK_EQUAL( window.getCoordinates().top() - 5, originalCoords.top());
+    BOOST_CHECK_EQUAL( window.getCoordinates().width() + 5.0 * CONTENT_AR,
+                       originalCoords.width());
 
     window.setBorder( ContentWindow::BOTTOM );
     controller.resizeRelative( QPointF( 2, 2 ));
     BOOST_CHECK_EQUAL( window.getCoordinates().bottom() - 2,
                        originalCoords.bottom( ));
+    BOOST_CHECK_EQUAL( window.getCoordinates().width() + 3.0 * CONTENT_AR,
+                       originalCoords.width());
+}
 
+BOOST_AUTO_TEST_CASE( testResizeRelativeToCorner )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( CONTENT_SIZE );
+    ContentWindow window( content );
+
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( window, *displayGroup );
+
+    const QRectF originalCoords = window.getCoordinates();
+
+    // These corner resize alters the window aspect ratio
     window.setBorder( ContentWindow::TOP_RIGHT );
+    controller.resizeRelative( QPointF( 2, 10 ));
+    BOOST_CHECK_EQUAL( window.getCoordinates().top() - 10,
+                       originalCoords.top());
+    BOOST_CHECK_EQUAL( window.getCoordinates().right() - 2,
+                       originalCoords.right());
+    BOOST_CHECK_EQUAL( window.getCoordinates().height() + 10,
+                       originalCoords.height());
+    BOOST_CHECK_EQUAL( window.getCoordinates().width() - 2,
+                       originalCoords.width());
+
+    const QRectF prevCoords = window.getCoordinates();
+
+    window.setBorder( ContentWindow::BOTTOM_LEFT );
     controller.resizeRelative( QPointF( 1, 2 ));
-    BOOST_CHECK( window.getCoordinates().topRight() - QPointF( 1, 7 ) ==
-                 originalCoords.topRight( ));
+    BOOST_CHECK_EQUAL( window.getCoordinates().bottom() - 2,
+                       prevCoords.bottom());
+    BOOST_CHECK_EQUAL( window.getCoordinates().left() - 1,
+                       prevCoords.left());
+    BOOST_CHECK_EQUAL( window.getCoordinates().height() - 2,
+                       prevCoords.height());
+    BOOST_CHECK_EQUAL( window.getCoordinates().width() + 1,
+                       prevCoords.width());
 }
 
 BOOST_AUTO_TEST_CASE( testFocusModeCoordinates )

@@ -60,11 +60,19 @@ public:
     void pinch( QPointF position, qreal scaleFactor ) override;
     //@}
 
+    /** Adjust the zoom of the window to the aspect ratio of the content. */
+    void adjustZoomToContentAspectRatio();
+
 private:
+    void _checkAndApply( QRectF zoomRect );
     void _moveZoomRect( const QPointF& sceneDelta ) const;
-    void _scaleZoomRect( const QPointF& center, qreal zoomFactor ) const;
+    void _scaleZoomRect( const QPointF& center, qreal zoomFactor );
+    void _constrainZoomLevel( QRectF& zoomRect ) const;
     void _constraintPosition( QRectF& zoomRect ) const;
     QSizeF _getMaxZoom() const;
+    QSizeF _getMinZoom() const;
+    QRectF _toContentRect( const QRectF& zoomRect ) const;
+    QRectF _toZoomRect( const QRectF& contentRect ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

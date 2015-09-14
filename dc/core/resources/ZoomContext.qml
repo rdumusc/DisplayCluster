@@ -5,15 +5,16 @@ import "style.js" as Style
 Rectangle {
     border.width: Style.zoomContextBorderWidth
     border.color: Style.zoomContextBorderColor
-    width: parent.width * 0.25
-    height: parent.height * 0.25
+    width: parent.width <= parent.height ? parent.width * 0.25 : height
+                                           / contentwindow.content.aspectRatio
+    height: parent.width >= parent.height ? parent.height * 0.25 : width
+                                            * contentwindow.content.aspectRatio
     anchors.bottom: parent.bottom
     anchors.left: parent.left
     anchors.bottomMargin: 0.25 * height
     anchors.leftMargin: anchors.bottomMargin
-    visible: options.showZoomContext &&
-             contentwindow.zoomRect.width !== 1 &&
-             contentwindow.zoomRect.height !== 1
+    visible: options.showZoomContext && (contentwindow.zoomRect.width !== 1
+                                         || contentwindow.zoomRect.height !== 1)
 
     ContentItem {
         objectName: "ZoomContextItem"

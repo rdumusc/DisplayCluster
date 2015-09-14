@@ -41,6 +41,7 @@
 
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
+#include "ZoomInteractionDelegate.h"
 
 #include <QTransform>
 
@@ -51,6 +52,7 @@ const qreal MIN_VISIBLE_AREA_PX = 300.0;
 const qreal INSIDE_MARGIN = 0.05;
 const qreal LARGE_SIZE_SCALE = 0.75;
 const qreal WINDOW_CONTROLS_MARGIN_PX = 175.0;
+const qreal ONE_PERCENT = 0.01;
 }
 
 ContentWindowController::ContentWindowController()
@@ -88,63 +90,71 @@ void ContentWindowController::resize( const QSizeF size,
 
 void ContentWindowController::resizeRelative( const QPointF& delta )
 {
-    QRectF coordinates( _contentWindow->getCoordinates( ));
+    const QRectF& coord = _contentWindow->getCoordinates();
+
+    QPointF fixedPoint;
+    QSizeF newSize = coord.size();
+    bool isCorner = false;
+
     switch( _contentWindow->getBorder( ))
     {
     case ContentWindow::TOP:
-        coordinates.adjust( 0, delta.y(), 0, 0 );
+        fixedPoint = QPointF( coord.left() + coord.width() * 0.5,
+                              coord.bottom( ));
+        newSize += QSizeF( 0, -delta.y( ));
         break;
     case ContentWindow::RIGHT:
-        coordinates.adjust( 0, 0, delta.x(), 0 );
+        fixedPoint = QPointF( coord.left(),
+                              coord.top() + coord.height() * 0.5 );
+        newSize += QSizeF( delta.x(), 0 );
         break;
     case ContentWindow::BOTTOM:
-        coordinates.adjust( 0, 0, 0, delta.y( ));
+        fixedPoint = QPointF( coord.left() + coord.width() * 0.5,
+                              coord.top( ));
+        newSize += QSizeF( 0, delta.y( ));
         break;
     case ContentWindow::LEFT:
-        coordinates.adjust( delta.x(), 0, 0, 0 );
+        fixedPoint = QPointF( coord.right(),
+                              coord.top() + coord.height() * 0.5 );
+        newSize += QSizeF( -delta.x(), 0 );
         break;
     case ContentWindow::TOP_LEFT:
-        _resize( coordinates.bottomRight(),
-                 coordinates.size() - QSizeF( delta.x(), delta.y( )));
-        return;
+        fixedPoint = coord.bottomRight();
+        newSize += QSizeF( -delta.x(), -delta.y( ));
+        isCorner = true;
+        break;
     case ContentWindow::BOTTOM_LEFT:
-        _resize( coordinates.topRight(),
-                 coordinates.size() - QSizeF( delta.x(), -delta.y( )));
-        return;
+        fixedPoint = coord.topRight();
+        newSize += QSizeF( -delta.x(), delta.y( ));
+        isCorner = true;
+        break;
     case ContentWindow::TOP_RIGHT:
-        _resize( coordinates.bottomLeft(),
-                 coordinates.size() - QSizeF( -delta.x(), delta.y( )));
-        return;
+        fixedPoint = coord.bottomLeft();
+        newSize += QSizeF( delta.x(), -delta.y( ));
+        isCorner = true;
+        break;
     case ContentWindow::BOTTOM_RIGHT:
-        _resize( coordinates.topLeft(),
-                 coordinates.size() + QSizeF( delta.x(), delta.y( )));
-        return;
+        fixedPoint = coord.topLeft();
+        newSize += QSizeF( delta.x(), delta.y( ));
+        isCorner = true;
+        break;
     case ContentWindow::NOBORDER:
     default:
         return;
     }
-    QSizeF newSize( coordinates.size( ));
-    _constrainSize( newSize );
-    coordinates.setSize( newSize );
 
-    _constrainPosition( coordinates );
-    _contentWindow->setCoordinates( coordinates );
-}
+    // Resizing from one of the corners modifies the aspect ratio.
+    // Resizing from one of the sides borders tend to let the window snap back
+    // to its content's aspect ratio.
+    if( !isCorner && _contentWindow->getContent()->hasFixedAspectRatio( ))
+    {
+        if( _isCloseToContentAspectRatio( coord.size( )))
+            _constrainAspectRatio( newSize );
+        if( _isCloseToContentAspectRatio( newSize ))
+            _snapToContentAspectRatio( newSize );
+    }
 
-void ContentWindowController::_resize( const QPointF& center, QSizeF size )
-{
-    _constrainSize( size );
-
-    QRectF coordinates( _contentWindow->getCoordinates( ));
-    QTransform transform;
-    transform.translate( center.x(), center.y( ));
-    transform.scale( size.width()/coordinates.width(),
-                     size.height()/coordinates.height( ));
-    transform.translate( -center.x(), -center.y( ));
-
-    coordinates = transform.mapRect( coordinates );
-    _constrainPosition( coordinates );
-    _contentWindow->setCoordinates( coordinates );
+    _resize( fixedPoint, newSize );
 }
 
 void ContentWindowController::scale( const QPointF& center, const double factor)
@@ -235,7 +245,7 @@ QRectF ContentWindowController::getFocusedCoord() const
     const QSizeF& wallSize = _displayGroup->getCoordinates().size();
     const QSizeF maxSize = wallSize.boundedTo( wallSize - margins );
 
-    QSizeF size = _contentWindow->getContent()->getDimensions();
+    QSizeF size = _contentWindow->getCoordinates().size();
     size.scale( maxSize, Qt::KeepAspectRatio );
     _constrainSize( size );
 
@@ -244,6 +254,54 @@ QRectF ContentWindowController::getFocusedCoord() const
     coord.moveCenter( QPointF( x, wallSize.height() * 0.5 ));
     _constrainFullyInside( coord );
     return coord;
+}
+
+void ContentWindowController::_resize( const QPointF& center, QSizeF size )
+{
+    _constrainSize( size );
+
+    QRectF coordinates( _contentWindow->getCoordinates( ));
+    QTransform transform;
+    transform.translate( center.x(), center.y( ));
+    transform.scale( size.width()/coordinates.width(),
+                     size.height()/coordinates.height( ));
+    transform.translate( -center.x(), -center.y( ));
+
+    coordinates = transform.mapRect( coordinates );
+    _constrainPosition( coordinates );
+
+    _contentWindow->setCoordinates( coordinates );
+
+    auto zoomDelegate = dynamic_cast<ZoomInteractionDelegate*>(
+                            _contentWindow->getInteractionDelegate( ));
+    if( zoomDelegate )
+        zoomDelegate->adjustZoomToContentAspectRatio();
+}
+
+void ContentWindowController::_constrainAspectRatio( QSizeF& windowSize ) const
+{
+    const QSizeF currentSize = _contentWindow->getCoordinates().size();
+    const auto mode = windowSize < currentSize ?
+                           Qt::KeepAspectRatio : Qt::KeepAspectRatioByExpanding;
+    windowSize = currentSize.scaled( windowSize, mode );
+}
+
+bool ContentWindowController::_isCloseToContentAspectRatio( const QSizeF&
+                                                            windowSize ) const
+{
+    const qreal windowAR = windowSize.width() / windowSize.height();
+    const qreal contentAR = _contentWindow->getContent()->getAspectRatio();
+
+    return std::fabs( windowAR - contentAR ) < ONE_PERCENT;
+}
+
+void ContentWindowController::_snapToContentAspectRatio( QSizeF&
+                                                         windowSize ) const
+{
+    const QSizeF contentSize( _contentWindow->getContent()->getDimensions( ));
+    const auto mode = windowSize < contentSize ?
+                       Qt::KeepAspectRatio : Qt::KeepAspectRatioByExpanding;
+    windowSize = contentSize.scaled( windowSize, mode );
 }
 
 void ContentWindowController::_constrainSize( QSizeF& windowSize ) const

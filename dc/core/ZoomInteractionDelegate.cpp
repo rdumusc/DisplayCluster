@@ -66,6 +66,24 @@ void ZoomInteractionDelegate::pinch( const QPointF position,
     _scaleZoomRect( getNormalizedPoint( pos ), 1.0 / scaleFactor );
 }
 
+void ZoomInteractionDelegate::adjustZoomToContentAspectRatio()
+{
+    QRectF contentRect = _toContentRect( _contentWindow.getZoomRect( ));
+    QSizeF contentSize = _contentWindow.getContent()->getDimensions();
+    contentSize = contentSize / contentSize.width();
+    contentSize.scale( contentRect.size(), Qt::KeepAspectRatio );
+    contentRect.setSize( contentSize );
+
+    _checkAndApply( _toZoomRect( contentRect ));
+}
+
+void ZoomInteractionDelegate::_checkAndApply( QRectF zoomRect )
+{
+    _constrainZoomLevel( zoomRect );
+    _constraintPosition( zoomRect );
+    _contentWindow.setZoomRect( zoomRect );
+}
+
 void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
 {
     QRectF zoomRect = _contentWindow.getZoomRect();
@@ -78,7 +96,7 @@ void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
 }
 
 void ZoomInteractionDelegate::_scaleZoomRect( const QPointF& center,
-                                              const qreal zoomFactor ) const
+                                              const qreal zoomFactor )
 {
     QRectF zoomRect = _contentWindow.getZoomRect();
 
@@ -93,18 +111,24 @@ void ZoomInteractionDelegate::_scaleZoomRect( const QPointF& center,
     transform.translate( -point.x(), -point.y( ));
     zoomRect = transform.mapRect( zoomRect );
 
+    _checkAndApply( zoomRect );
+}
+
+void ZoomInteractionDelegate::_constrainZoomLevel( QRectF& zoomRect ) const
+{
     const QSizeF maxZoom = _getMaxZoom();
 
     // constrain max zoom
     if( zoomRect.width() < maxZoom.width() || zoomRect.height() < maxZoom.height( ))
         zoomRect = _contentWindow.getZoomRect();
 
+    const QSizeF minZoom = _getMinZoom();
+
     // constrain min zoom
-    if( zoomRect.width() > MIN_ZOOM || zoomRect.height() > MIN_ZOOM )
-        zoomRect = UNIT_RECTF;
-    else
-        _constraintPosition( zoomRect );
-    _contentWindow.setZoomRect( zoomRect );
+    if( zoomRect.width() > minZoom.width( ))
+        zoomRect.setWidth( minZoom.width( ));
+    if( zoomRect.height() > minZoom.height( ))
+        zoomRect.setHeight( minZoom.height( ));
 }
 
 void ZoomInteractionDelegate::_constraintPosition( QRectF& zoomRect ) const
@@ -134,4 +158,36 @@ QSizeF ZoomInteractionDelegate::_getMaxZoom() const
 
     return QSizeF( window.width() / maxScaleFactor / content.width(),
                    window.height() / maxScaleFactor / content.height( ));
+}
+
+QSizeF ZoomInteractionDelegate::_getMinZoom() const
+{
+    // The aspect ratio of the zoom rectangle must match that of the window
+    const QSizeF window( getWindowCoord().size( ));
+    return window.scaled( MIN_ZOOM, MIN_ZOOM, Qt::KeepAspectRatio );
+}
+
+QRectF ZoomInteractionDelegate::_toContentRect( const QRectF& zoomRect ) const
+{
+    const QRectF& window = _contentWindow.getCoordinates();
+
+    const qreal w = window.width() / zoomRect.width();
+    const qreal h = window.height() / zoomRect.height();
+
+    const qreal posX = -zoomRect.x() * w;
+    const qreal posY = -zoomRect.y() * h;
+
+    return QRectF( posX, posY, w, h );
+}
+
+QRectF ZoomInteractionDelegate::_toZoomRect( const QRectF& contentRect ) const
+{
+    const QRectF& window = _contentWindow.getCoordinates();
+    const qreal w = window.width() / contentRect.width();
+    const qreal h = window.height() / contentRect.height();
+
+    const qreal posX = -contentRect.x() / contentRect.width();
+    const qreal posY = -contentRect.y() / contentRect.height();
+
+    return QRectF( posX, posY, w, h );
 }
