@@ -243,7 +243,7 @@ void FFMPEGMovie::_decodeOneFrame()
 
 void FFMPEGMovie::_consume()
 {
-    while( true )
+    while( !_stopConsuming )
     {
         std::unique_lock<std::mutex> lock( _targetMutex );
         _targetChanged.wait( lock );
@@ -348,13 +348,19 @@ bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
         const int64_t timestamp = _videoStream->decodeTimestamp( packet );
         if( timestamp >= targetTimestamp )
         {
-            _streamPosition = _videoStream->getPositionInSec( timestamp );
-            _queue.clear();
-            _queue.enqueue( _videoStream->decode( packet ));
+            auto picture = _videoStream->decode( packet );
+            // This validity check is to prevent against rare decoding errors
+            // and is not inherently part of the seeking process.
+            if( picture )
+            {
+                _streamPosition = _videoStream->getPositionInSec( timestamp );
+                _queue.clear();
+                _queue.enqueue( picture );
 
-            // free the packet that was allocated by av_read_frame
-            av_free_packet( &packet );
-            break;
+                // free the packet that was allocated by av_read_frame
+                av_free_packet( &packet );
+                break;
+            }
         }
         // free the packet that was allocated by av_read_frame
         av_free_packet( &packet );
