@@ -56,3 +56,8 @@ bool PixelStreamContent::readMetadata()
 {
     return true;
 }
+
+bool PixelStreamContent::hasFixedAspectRatio() const
+{
+    return _uri == "dock";
+}

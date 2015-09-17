@@ -15,6 +15,8 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 
 * The handling of mouse and touch gestures has been unified and simplified.
 * Improved automatic placement of windows.
+* Resizing contents using the window borders has been rethought. This operation
+  now adjusts the zoom level to preserve a correct pixel aspect ratio.
 
 ## Optimizations
 

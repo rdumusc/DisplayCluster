@@ -134,6 +134,9 @@ private:
      */
     void _resize( const QPointF& center, QSizeF size );
 
+    void _constrainAspectRatio( QSizeF& windowSize ) const;
+    bool _isCloseToContentAspectRatio( const QSizeF& windowSize ) const;
+    void _snapToContentAspectRatio( QSizeF& windowSize ) const;
     void _constrainSize( QSizeF& windowSize ) const;
     void _constrainPosition( QRectF& window ) const;
     void _constrainFullyInside( QRectF& window ) const;

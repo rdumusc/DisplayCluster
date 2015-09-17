@@ -67,6 +67,7 @@ class Content : public QObject
 {
     Q_OBJECT
     Q_PROPERTY( ContentActionsModel* actions READ getActions CONSTANT )
+    Q_PROPERTY( qreal aspectRatio READ getAspectRatio CONSTANT )
 
 public:
     /** Constructor **/
@@ -96,6 +97,9 @@ public:
 
     /** Get the aspect ratio. */
     qreal getAspectRatio() const;
+
+    /** @return true if the content has a fixed aspect ratio. */
+    virtual bool hasFixedAspectRatio() const;
 
     /** Get the actions from QML. */
     ContentActionsModel* getActions();

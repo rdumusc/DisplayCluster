@@ -60,6 +60,9 @@ public:
     **/
     bool readMetadata() override;
 
+    /** @return true if the streamer can handle aspect ratio changes. */
+    bool hasFixedAspectRatio() const override;
+
 private:
     friend class boost::serialization::access;
 

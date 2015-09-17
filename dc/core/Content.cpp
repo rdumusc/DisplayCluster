@@ -73,8 +73,13 @@ void Content::setDimensions( const QSize& dimensions )
 qreal Content::getAspectRatio() const
 {
     if( _size.height() == 0 )
-        return 0.f;
+        return 0.0;
     return (qreal)_size.width() / (qreal)_size.height();
+}
+
+bool Content::hasFixedAspectRatio() const
+{
+    return true;
 }
 
 ContentActionsModel* Content::getActions()
