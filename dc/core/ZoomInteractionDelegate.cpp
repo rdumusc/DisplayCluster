@@ -162,9 +162,15 @@ QSizeF ZoomInteractionDelegate::_getMaxZoom() const
 
 QSizeF ZoomInteractionDelegate::_getMinZoom() const
 {
-    // The aspect ratio of the zoom rectangle must match that of the window
     const QSizeF window( getWindowCoord().size( ));
-    return window.scaled( MIN_ZOOM, MIN_ZOOM, Qt::KeepAspectRatio );
+    QSizeF content( _contentWindow.getContent()->getDimensions( ));
+    content.scale( window, Qt::KeepAspectRatioByExpanding );
+    const qreal windowAR = window.width() / window.height();
+    const qreal contentAR = content.width() / content.height();
+
+    if( contentAR > windowAR )
+        return QSizeF( MIN_ZOOM * window.width() / content.width(), MIN_ZOOM );
+    return QSizeF( MIN_ZOOM, MIN_ZOOM * window.height() / content.height( ));
 }
 
 QRectF ZoomInteractionDelegate::_toContentRect( const QRectF& zoomRect ) const
