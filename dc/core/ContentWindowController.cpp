@@ -148,7 +148,7 @@ void ContentWindowController::resizeRelative( const QPointF& delta )
     // to its content's aspect ratio.
     if( !isCorner && _contentWindow->getContent()->hasFixedAspectRatio( ))
     {
-        if( _isCloseToContentAspectRatio( coord.size( )))
+        if( _contentWindow->getZoomRect() == UNIT_RECTF )
             _constrainAspectRatio( newSize );
         if( _isCloseToContentAspectRatio( newSize ))
             _snapToContentAspectRatio( newSize );
