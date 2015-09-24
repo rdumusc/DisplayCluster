@@ -62,7 +62,7 @@ extern "C"
 }
 
 #include "types.h"
-#include "MTQueue.h"
+#include <deflect/MTQueue.h>
 
 #include <QString>
 
@@ -134,7 +134,7 @@ private:
     bool _isValid;
     std::atomic<bool> _isAtEOF;
 
-    MTQueue<PicturePtr> _queue;
+    deflect::MTQueue<PicturePtr> _queue;
     std::promise<PicturePtr> _promise;
 
     std::thread _decodeThread;

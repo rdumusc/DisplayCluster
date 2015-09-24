@@ -72,7 +72,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   Movie.h
   MPIChannel.h
   MPIContext.h
-  MTQueue.h
   PixelStreamContent.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
