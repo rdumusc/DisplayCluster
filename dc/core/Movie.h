@@ -83,6 +83,7 @@ private:
 
     bool _generateTexture();
 
+    double _getDelay() const;
     void _updateTimestamp( WallToWallChannel& wallToWallChannel );
     void _synchronizeTimestamp( WallToWallChannel& wallToWallChannel );
     void _rewind();

@@ -163,6 +163,7 @@ private:
     void _decode();
     void _decodeOneFrame();
 
+    double _getPtsDelta() const;
     void _consume();
     bool _seekTo( double timePosInSeconds );
 

@@ -77,14 +77,35 @@ public:
     /** Destructor. */
     ~FFMPEGVideoStream();
 
-    /** Decode a video packet. */
+    /**
+     * Decode a video packet.
+     *
+     * @param packet The av packet to decode
+     * @return The decoded picture, or nullptr if the input is not a video
+     *         packet or an error occured.
+     */
     PicturePtr decode( AVPacket& packet );
 
     /**
-     * Partially decode a video packet to get its timestamp.
+     * Partially decode a video packet to determine its timestamp.
+     *
+     * This function is intended to help reach a desired timestamp, for instance
+     * after seeking the file, without the need to decode the full picture.
+     *
+     * Only ONE of decode or decodeTimestamp must be called for a single packet,
+     * otherwise the behaviour of the stream may become undefined (wrong picture
+     * timestamp, for example).
+     *
+     * @sa getPictureForLastDecodedPacket()
      * @return the packet timestamp, or -1 on error.
      */
     int64_t decodeTimestamp( AVPacket& packet );
+
+    /**
+     * Call after a successful decodeTimestamp to get the corresponding picture.
+     * @return The decoded picture, or nullptr if an error occured.
+     */
+    PicturePtr decodePictureForLastPacket();
 
     /** Get the width of the video stream. */
     unsigned int getWidth() const;
@@ -100,6 +121,9 @@ public:
 
     /** Get the duration of a frame in seconds. */
     double getFrameDuration() const;
+
+    /** Get the frameIndex corresponding to the given time in seconds. */
+    int64_t getFrameIndex( double timePositionInSec ) const;
 
     /** Get the timestamp corresponding to the given time in seconds. */
     int64_t getTimestamp( double timePositionInSec ) const;

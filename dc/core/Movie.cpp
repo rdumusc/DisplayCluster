@@ -141,7 +141,11 @@ void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
         }
     }
 
-    const double delay = fabs( _sharedTimestamp - _ffmpegMovie->getPosition( ));
+    if( _loop && (_ffmpegMovie->isAtEOF( ) ||
+                  _sharedTimestamp > _ffmpegMovie->getDuration( )))
+        _sharedTimestamp = 0.0;
+
+    const double delay = _getDelay();
     if( !_futurePicture.valid() && delay >= _ffmpegMovie->getFrameDuration( ))
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
 }
@@ -155,19 +159,21 @@ bool Movie::_generateTexture()
     return _texture.init( image );
 }
 
+double Movie::_getDelay() const
+{
+    return fabs( _sharedTimestamp - _ffmpegMovie->getPosition( ));
+}
+
 void Movie::_updateTimestamp( WallToWallChannel& wallToWallChannel )
 {
     _timer.setCurrentTime( wallToWallChannel.getTime( ));
+
+    // Don't increment the timestamp until all the processes have caught up
+    const bool isInSync = _getDelay() < _ffmpegMovie->getFrameDuration();
+    if( !wallToWallChannel.allReady( !_isVisible || isInSync ))
+        return;
+
     _sharedTimestamp += ElapsedTimer::toSeconds( _timer.getElapsedTime( ));
-
-    const double maxDelay = 2.0 * _ffmpegMovie->getFrameDuration();
-    _sharedTimestamp = std::min( _sharedTimestamp, _sharedTimestamp + maxDelay );
-
-    if( _loop && (_ffmpegMovie->isAtEOF( ) ||
-                  _sharedTimestamp > _ffmpegMovie->getDuration( )))
-        _sharedTimestamp = 0.0;
-    else
-        _ffmpegMovie->getDuration();
 }
 
 void Movie::_synchronizeTimestamp( WallToWallChannel& wallToWallChannel )

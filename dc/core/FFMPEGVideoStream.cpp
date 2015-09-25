@@ -74,12 +74,7 @@ PicturePtr FFMPEGVideoStream::decode( AVPacket& packet )
     if( !_decodeToAvFrame( packet ))
         return PicturePtr();
 
-    auto picture = std::make_shared<FFMPEGPicture>( getWidth(), getHeight(),
-                                                    PIX_FMT_RGBA );
-    if( _frameConverter->convert( *_frame, *picture ))
-        return picture;
-
-    return PicturePtr();
+    return decodePictureForLastPacket();
 }
 
 int64_t FFMPEGVideoStream::decodeTimestamp( AVPacket& packet )
@@ -88,6 +83,16 @@ int64_t FFMPEGVideoStream::decodeTimestamp( AVPacket& packet )
         return int64_t( -1 );
 
     return _frame->getTimestamp();
+}
+
+PicturePtr FFMPEGVideoStream::decodePictureForLastPacket()
+{
+    auto picture = std::make_shared<FFMPEGPicture>( getWidth(), getHeight(),
+                                                    PIX_FMT_RGBA );
+    if( _frameConverter->convert( *_frame, *picture ))
+        return picture;
+
+    return PicturePtr();
 }
 
 bool FFMPEGVideoStream::_isVideoPacket( const AVPacket& packet ) const
@@ -148,10 +153,15 @@ double FFMPEGVideoStream::getFrameDuration() const
     return _frameDurationInSeconds;
 }
 
-int64_t FFMPEGVideoStream::getTimestamp( double timePositionInSec ) const
+int64_t FFMPEGVideoStream::getFrameIndex( double timePositionInSec ) const
 {
     const int64_t index = timePositionInSec / _frameDurationInSeconds;
-    return getTimestamp( index );
+    return index;
+}
+
+int64_t FFMPEGVideoStream::getTimestamp( double timePositionInSec ) const
+{
+    return getTimestamp( getFrameIndex( timePositionInSec ));
 }
 
 int64_t FFMPEGVideoStream::getTimestamp( int64_t frameIndex ) const
@@ -198,7 +208,7 @@ bool FFMPEGVideoStream::seekToNearestFullframe( int64_t frameIndex )
 
     const int64_t seek_target = getTimestamp( frameIndex );
     const int64_t seek_min = INT64_MIN;
-    const int64_t seek_max = seek_target;
+    const int64_t seek_max = INT64_MAX;
     const int seek_flags = AVSEEK_FLAG_FRAME;
 
     if( avformat_seek_file( &_avFormatContext, _videoStream->index, seek_min,
