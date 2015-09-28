@@ -241,6 +241,11 @@ void FFMPEGMovie::_decodeOneFrame()
     _readVideoFrame();
 }
 
+double FFMPEGMovie::_getPtsDelta() const
+{
+    return _targetTimestamp - getPosition();
+}
+
 void FFMPEGMovie::_consume()
 {
     while( !_stopConsuming )
@@ -250,27 +255,24 @@ void FFMPEGMovie::_consume()
         if( _stopConsuming )
             return;
 
-        double ptsDelta = _targetTimestamp - getPosition();
-
-        // If we seek, we have to consume at least one frame.
         if( _seekTo( _targetTimestamp ))
-            ptsDelta = getFrameDuration();
+            _ptsPosition = -1.0; // Reset the position after seeking
 
         PicturePtr frame;
-        while( !_stopConsuming && ptsDelta >= getFrameDuration() && !isAtEOF( ))
+        while( !_stopConsuming && _getPtsDelta() >= getFrameDuration() && !isAtEOF( ))
         {
             frame = _queue.dequeue();
             _ptsPosition = _videoStream->getPositionInSec( frame->getTimestamp( ));
-            ptsDelta = _targetTimestamp - getPosition();
         }
 
         if( !frame )
         {
             auto exception = std::runtime_error( "Frame unavailable error" );
             _promise.set_exception( std::make_exception_ptr( exception ));
+            return;
         }
-        else
-            _promise.set_value( frame );
+
+        _promise.set_value( frame );
     }
 }
 
@@ -328,9 +330,7 @@ bool FFMPEGMovie::_readVideoFrame()
 
 bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
 {
-    const double frameDuration = _videoStream->getFrameDuration();
-    const int64_t frameIndex = timePosInSeconds / frameDuration;
-
+    const int64_t frameIndex = _videoStream->getFrameIndex( timePosInSeconds );
     if( !_videoStream->seekToNearestFullframe( frameIndex ))
         return false;
 
@@ -340,6 +340,7 @@ bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
     AVPacket packet;
     av_init_packet( &packet );
 
+    const double frameDuration = _videoStream->getFrameDuration();
     const double target = std::max( 0.0, timePosInSeconds - frameDuration );
     const int64_t targetTimestamp = _videoStream->getTimestamp( target );
 
@@ -348,7 +349,7 @@ bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
         const int64_t timestamp = _videoStream->decodeTimestamp( packet );
         if( timestamp >= targetTimestamp )
         {
-            auto picture = _videoStream->decode( packet );
+            auto picture = _videoStream->decodePictureForLastPacket();
             // This validity check is to prevent against rare decoding errors
             // and is not inherently part of the seeking process.
             if( picture )
