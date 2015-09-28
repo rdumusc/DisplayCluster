@@ -71,8 +71,8 @@ public:
     { Q_UNUSED( position ) }
     Q_INVOKABLE virtual void pan( QPointF position, QPointF delta )
     { Q_UNUSED( position ) Q_UNUSED( delta ) }
-    Q_INVOKABLE virtual void pinch( QPointF position, qreal scaleFactor )
-    { Q_UNUSED( position ) Q_UNUSED( scaleFactor ) }
+    Q_INVOKABLE virtual void pinch( QPointF position, qreal pixelDelta )
+    { Q_UNUSED( position ) Q_UNUSED( pixelDelta ) }
     Q_INVOKABLE virtual void swipeLeft() {}
     Q_INVOKABLE virtual void swipeRight() {}
     Q_INVOKABLE virtual void swipeUp() {}

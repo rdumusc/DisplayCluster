@@ -119,12 +119,14 @@ QGestureRecognizer::Result PinchGestureRecognizer::recognize( QGesture* state,
 
             if (gesture->_isNewSequence) {
                 gesture->_scaleFactor = 1.0;
+                gesture->_pixelDelta = 0.0;
                 gesture->_lastScaleFactor = 1.0;
             } else {
                 gesture->_lastScaleFactor = gesture->_scaleFactor;
-                QLineF line(p1.screenPos(), p2.screenPos());
-                QLineF lastLine(p1.lastScreenPos(),  p2.lastScreenPos());
+                QLineF line(p1.scenePos(), p2.scenePos());
+                QLineF lastLine(p1.lastScenePos(),  p2.lastScenePos());
                 gesture->_scaleFactor = line.length() / lastLine.length();
+                gesture->_pixelDelta = line.length() - lastLine.length();
             }
             gesture->_totalScaleFactor = gesture->_totalScaleFactor * gesture->_scaleFactor;
             gesture->_changeFlags = static_cast< PinchGesture::ChangeFlags >(gesture->_changeFlags | PinchGesture::ScaleFactorChanged);
@@ -175,6 +177,7 @@ void PinchGestureRecognizer::reset( QGesture* state )
 
     gesture->_startCenterPoint = gesture->_lastCenterPoint = gesture->_centerPoint = QPointF();
     gesture->_totalScaleFactor = gesture->_lastScaleFactor = gesture->_scaleFactor = 1;
+    gesture->_pixelDelta = 0.0;
     gesture->_totalRotationAngle = gesture->_lastRotationAngle = gesture->_rotationAngle = 0;
 
     gesture->_isNewSequence = true;

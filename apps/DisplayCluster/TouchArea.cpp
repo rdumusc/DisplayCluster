@@ -181,12 +181,7 @@ void TouchArea::pinch( PinchGesture* gesture )
     if( gesture->state() == Qt::GestureStarted ||
         gesture->state() == Qt::GestureUpdated )
     {
-        const qreal factor = gesture->scaleFactor();
-
-        if( std::isnan( factor ) || std::isinf( factor ))
-            return;
-
-        emit pinch( gesture->position(), factor );
+        emit pinch( gesture->position(), gesture->pixelDelta( ));
     }
     else
         emit touchEnd( gesture->position( ));

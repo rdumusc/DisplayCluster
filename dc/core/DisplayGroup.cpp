@@ -205,7 +205,7 @@ void DisplayGroup::unfocus( const QUuid& id )
     window->setFocused( false );
     removeFocusedWindow( window );
     // Make sure the window dimensions are re-adjusted to the new zoom level
-    window->getController()->scale( window->getCoordinates().center(), 1.0 );
+    window->getController()->scale( window->getCoordinates().center(), 0.0 );
     sendDisplayGroup();
 }
 
