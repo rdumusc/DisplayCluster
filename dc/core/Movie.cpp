@@ -120,11 +120,14 @@ void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
 
 void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
 {
-    if( _paused || !_ffmpegMovie->isValid( ))
+    if( !_ffmpegMovie->isValid( ))
         return;
 
-    _updateTimestamp( wallToWallChannel );
-    _synchronizeTimestamp( wallToWallChannel );
+    if( !_paused )
+    {
+        _updateTimestamp( wallToWallChannel );
+        _synchronizeTimestamp( wallToWallChannel );
+    }
 
     if( !_isVisible )
         return;
@@ -145,8 +148,8 @@ void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
                   _sharedTimestamp > _ffmpegMovie->getDuration( )))
         _sharedTimestamp = 0.0;
 
-    const double delay = _getDelay();
-    if( !_futurePicture.valid() && delay >= _ffmpegMovie->getFrameDuration( ))
+    const bool needsFrame = _getDelay() >= _ffmpegMovie->getFrameDuration();
+    if( !_futurePicture.valid() && needsFrame )
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
 }
 
@@ -169,7 +172,7 @@ void Movie::_updateTimestamp( WallToWallChannel& wallToWallChannel )
     _timer.setCurrentTime( wallToWallChannel.getTime( ));
 
     // Don't increment the timestamp until all the processes have caught up
-    const bool isInSync = _getDelay() < _ffmpegMovie->getFrameDuration();
+    const bool isInSync = _getDelay() <= _ffmpegMovie->getFrameDuration();
     if( !wallToWallChannel.allReady( !_isVisible || isInSync ))
         return;
 

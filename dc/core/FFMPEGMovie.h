@@ -151,6 +151,7 @@ private:
 
     std::mutex _targetMutex;
     double _targetTimestamp;
+    bool _targetChangedSent;
     std::condition_variable _targetChanged;
 
     /** Init the global FFMPEG context. */

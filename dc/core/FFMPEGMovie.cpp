@@ -45,13 +45,14 @@
 
 #define MIN_SEEK_DELTA_SEC  0.5
 #define VIDEO_QUEUE_SIZE    4
+#define UNDEFINED_PTS      -1.0
 
 #pragma clang diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 FFMPEGMovie::FFMPEGMovie( const QString& uri )
     : _avFormatContext( 0 )
-    , _ptsPosition( 0.0 )
+    , _ptsPosition( UNDEFINED_PTS )
     , _streamPosition( 0.0 )
     , _isValid( false )
     , _isAtEOF( false )
@@ -61,6 +62,7 @@ FFMPEGMovie::FFMPEGMovie( const QString& uri )
     , _seek( false )
     , _seekPosition( 0.0 )
     , _targetTimestamp( 0.0 )
+    , _targetChangedSent( false )
 {
     FFMPEGMovie::initGlobalState();
     _isValid = _open( uri );
@@ -190,6 +192,10 @@ void FFMPEGMovie::stopDecoding()
     if( _consumeThread.joinable( ))
     {
         _queue.enqueue( std::make_shared<FFMPEGPicture>( 1, 1, PIX_FMT_RGBA ));
+        {
+            std::lock_guard<std::mutex> lock( _targetMutex );
+            _targetChangedSent = true;
+        }
         _targetChanged.notify_one();
         _consumeThread.join();
     }
@@ -210,6 +216,7 @@ std::future<PicturePtr> FFMPEGMovie::getFrame( const double posInSeconds )
     std::lock_guard<std::mutex> lock( _targetMutex );
     _promise = std::promise<PicturePtr>();
     _targetTimestamp = posInSeconds;
+    _targetChangedSent = true;
     _targetChanged.notify_one();
     return _promise.get_future();
 }
@@ -250,13 +257,18 @@ void FFMPEGMovie::_consume()
 {
     while( !_stopConsuming )
     {
-        std::unique_lock<std::mutex> lock( _targetMutex );
-        _targetChanged.wait( lock );
-        if( _stopConsuming )
-            return;
+        {
+            std::unique_lock<std::mutex> lock( _targetMutex );
+            while( !_targetChangedSent )
+                _targetChanged.wait( lock );
+            _targetChangedSent = false;
 
-        if( _seekTo( _targetTimestamp ))
-            _ptsPosition = -1.0; // Reset the position after seeking
+            if( _stopConsuming )
+                return;
+
+            if( _seekTo( _targetTimestamp ))
+                _ptsPosition = UNDEFINED_PTS; // Reset position after seeking
+        }
 
         PicturePtr frame;
         while( !_stopConsuming && _getPtsDelta() >= getFrameDuration() && !isAtEOF( ))
@@ -278,9 +290,6 @@ void FFMPEGMovie::_consume()
 
 bool FFMPEGMovie::_seekTo( double posInSeconds )
 {
-    if( _seek )
-        return false;
-
     posInSeconds = std::max( 0.0, std::min( posInSeconds, getDuration( )));
 
     const double ptsDelta = posInSeconds - getPosition();
@@ -290,12 +299,13 @@ bool FFMPEGMovie::_seekTo( double posInSeconds )
     if( ptsDelta >= 0.0 && streamDelta < MIN_SEEK_DELTA_SEC )
         return false;
 
-    _queue.clear();
     std::unique_lock<std::mutex> lock( _seekMutex );
+    _queue.clear();
     _seekPosition = posInSeconds;
     _seek = true;
     _seekRequested.notify_one();
-    _seekFinished.wait( lock );
+    while( _seek )
+        _seekFinished.wait( lock );
     return true;
 }
 
