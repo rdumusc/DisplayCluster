@@ -129,6 +129,18 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 
     // Retain the new DisplayGroup
     _displayGroup = displayGroup;
+
+    // Work around a bug in animation in Qt, where the opacity property
+    // of the focus context may not always be restored to its original value.
+    // See JIRA issue: DISCL-305
+    if( !displayGroup->hasFocusedWindows( ))
+    {
+        for( QGraphicsItem* child : _displayGroupItem->childItems( ))
+        {
+            if( child->toGraphicsObject()->objectName() == "focuscontext" )
+                child->toGraphicsObject()->setProperty( "opacity", 0.0 );
+        }
+    }
 }
 
 void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )
