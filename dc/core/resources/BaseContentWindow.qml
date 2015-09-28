@@ -9,13 +9,14 @@ Rectangle {
     property int stackingOrder: 0
     property bool isBackground: false
     property bool animating: false
-    property real yOffset: titleBar.visible ? titleBar.height : 0
+    property real heightOffset: titleBar.visible ? titleBar.height : 0
+    property real yOffset: 0.5 * heightOffset
 
     x: contentwindow.x
-    y: contentwindow.y - 0.5 * yOffset
+    y: contentwindow.y - yOffset
     z: stackingOrder
     width: contentwindow.width
-    height: contentwindow.height + yOffset
+    height: contentwindow.height + heightOffset
     border.color: Style.windowBorderDefaultColor
 
     Rectangle
@@ -48,9 +49,9 @@ Rectangle {
             PropertyChanges {
                 target: windowRect
                 x: contentwindow.controller.getFocusedCoord().x
-                y: contentwindow.controller.getFocusedCoord().y - 0.5 * yOffset
+                y: contentwindow.controller.getFocusedCoord().y - yOffset
                 width: contentwindow.controller.getFocusedCoord().width
-                height: contentwindow.controller.getFocusedCoord().height + yOffset
+                height: contentwindow.controller.getFocusedCoord().height + heightOffset
                 border.color: Style.windowBorderSelectedColor
                 z: stackingOrder + Style.focusZorder
             }

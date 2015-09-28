@@ -57,16 +57,23 @@ BaseContentWindow {
         width: parent.width
         height: parent.height - (titleBar.visible ? titleBar.height : 0)
 
+        function removeOffset(position) {
+            // C++ interaction delegates don't have any knowledge of the title
+            // bar offset applied to this contentInteractionArea. Gesture
+            // positions must be passed without the offset.
+            return Qt.point(position.x, position.y - parent.yOffset);
+        }
+
         onDoubleTap: toggleFocusMode()
         onTouchBegin: {
             displaygroup.moveContentWindowToFront(contentwindow.id)
-            contentwindow.delegate.touchBegin(position)
+            contentwindow.delegate.touchBegin(removeOffset(position))
         }
-        onTouchEnd: contentwindow.delegate.touchEnd(position)
-        onTap: contentwindow.delegate.tap(position)
-        onTapAndHold: contentwindow.delegate.tapAndHold(position)
-        onPan: contentwindow.delegate.pan(position, delta)
-        onPinch: contentwindow.delegate.pinch(position, scaleFactor)
+        onTouchEnd: contentwindow.delegate.touchEnd(removeOffset(position))
+        onTap: contentwindow.delegate.tap(removeOffset(position))
+        onTapAndHold: contentwindow.delegate.tapAndHold(removeOffset(position))
+        onPan: contentwindow.delegate.pan(removeOffset(position), delta)
+        onPinch: contentwindow.delegate.pinch(removeOffset(position), scaleFactor)
         onSwipeLeft:contentwindow.delegate.swipeLeft()
         onSwipeRight: contentwindow.delegate.swipeRight()
         onSwipeUp: contentwindow.delegate.swipeUp()
