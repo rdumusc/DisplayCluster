@@ -108,8 +108,8 @@ public:
     /** @return the maximum size of the content, considering wall size. */
     QSizeF getMaxContentSize() const;
 
-    /** @return the focused coordinates for the window. */
-    Q_INVOKABLE QRectF getFocusedCoord() const;
+    /** Constrain the given size between getMinSize() and getMaxSize(). */
+    void constrainSize( QSizeF& windowSize ) const;
 
     /**
      * Helper function to resize a rectangle (window, zoom rectangle) around a
@@ -150,11 +150,8 @@ private:
     void _constrainAspectRatio( QSizeF& windowSize ) const;
     bool _isCloseToContentAspectRatio( const QSizeF& windowSize ) const;
     void _snapToContentAspectRatio( QSizeF& windowSize ) const;
-    void _constrainSize( QSizeF& windowSize ) const;
     void _constrainPosition( QRectF& window ) const;
-    void _constrainFullyInside( QRectF& window ) const;
     QRectF _getCenteredCoordinates( const QSizeF& size ) const;
-    qreal _getInsideMargin() const;
 
     // Storing pointers because references cannot be serialized with boost
     ContentWindow* _contentWindow;

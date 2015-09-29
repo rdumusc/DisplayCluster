@@ -40,9 +40,8 @@
 
 #include "ContentWindow.h"
 #include "ContentWindowController.h"
-
+#include "LayoutEngine.h"
 #include "log.h"
-#include <boost/foreach.hpp>
 
 IMPLEMENT_SERIALIZE_FOR_XML( DisplayGroup )
 
@@ -51,7 +50,7 @@ DisplayGroup::DisplayGroup()
 }
 
 DisplayGroup::DisplayGroup( const QSizeF& size )
-    : showWindowTitles_( true )
+    : _showWindowTitles( true )
 {
     coordinates_.setSize( size );
 }
@@ -62,7 +61,7 @@ DisplayGroup::~DisplayGroup()
 
 void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
 {
-    BOOST_FOREACH( ContentWindowPtr existingWindow, contentWindows_ )
+    for( ContentWindowPtr existingWindow : _contentWindows )
     {
         if( contentWindow->getID() == existingWindow->getID( ))
         {
@@ -71,8 +70,8 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
         }
     }
 
-    contentWindows_.push_back( contentWindow );
-    watchChanges( contentWindow );
+    _contentWindows.push_back( contentWindow );
+    _watchChanges( contentWindow );
 
     contentWindow->setController(
                 make_unique<ContentWindowController>( *contentWindow, *this ));
@@ -91,14 +90,14 @@ void DisplayGroup::removeWindowLater( const QUuid windowId )
 
 void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
 {
-    ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
-                                           contentWindows_.end(),
+    ContentWindowPtrs::iterator it = find( _contentWindows.begin(),
+                                           _contentWindows.end(),
                                            contentWindow );
-    if( it == contentWindows_.end( ))
+    if( it == _contentWindows.end( ))
         return;
 
-    removeFocusedWindow( *it );
-    contentWindows_.erase( it );
+    _removeFocusedWindow( *it );
+    _contentWindows.erase( it );
 
     // disconnect any existing connections with the window
     disconnect( contentWindow.get(), 0, this, 0 );
@@ -114,18 +113,18 @@ void DisplayGroup::moveContentWindowToFront( const QUuid id )
 
 void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
 {
-    if( contentWindow == contentWindows_.back( ))
+    if( contentWindow == _contentWindows.back( ))
         return;
 
-    ContentWindowPtrs::iterator it = find( contentWindows_.begin(),
-                                           contentWindows_.end(),
+    ContentWindowPtrs::iterator it = find( _contentWindows.begin(),
+                                           _contentWindows.end(),
                                            contentWindow );
-    if( it == contentWindows_.end( ))
+    if( it == _contentWindows.end( ))
         return;
 
     // move it to end of the list (last item rendered is on top)
-    contentWindows_.erase( it );
-    contentWindows_.push_back( contentWindow );
+    _contentWindows.erase( it );
+    _contentWindows.push_back( contentWindow );
 
     emit( contentWindowMovedToFront( contentWindow ));
     sendDisplayGroup();
@@ -133,12 +132,12 @@ void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
 
 bool DisplayGroup::getShowWindowTitles() const
 {
-    return showWindowTitles_;
+    return _showWindowTitles;
 }
 
 bool DisplayGroup::isEmpty() const
 {
-    return contentWindows_.empty();
+    return _contentWindows.empty();
 }
 
 ContentWindowPtr DisplayGroup::getActiveWindow() const
@@ -146,17 +145,17 @@ ContentWindowPtr DisplayGroup::getActiveWindow() const
     if ( isEmpty( ))
         return ContentWindowPtr();
 
-    return contentWindows_.back();
+    return _contentWindows.back();
 }
 
 const ContentWindowPtrs& DisplayGroup::getContentWindows() const
 {
-    return contentWindows_;
+    return _contentWindows;
 }
 
 ContentWindowPtr DisplayGroup::getContentWindow( const QUuid& id ) const
 {
-    BOOST_FOREACH( ContentWindowPtr window, contentWindows_ )
+    for( ContentWindowPtr window : _contentWindows )
     {
         if( window->getID() == id )
             return window;
@@ -168,29 +167,31 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
 {
     clear();
 
-    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
+    for( ContentWindowPtr window : contentWindows )
     {
         addContentWindow( window );
         if( window->isFocused( ))
-            focusedWindows_.insert( window );
+            _focusedWindows.insert( window );
     }
     sendDisplayGroup();
 }
 
 bool DisplayGroup::hasFocusedWindows() const
 {
-    return !focusedWindows_.empty();
+    return !_focusedWindows.empty();
 }
 
 void DisplayGroup::focus( const QUuid& id )
 {
     ContentWindowPtr window = getContentWindow( id );
-    if( ! window )
+    if( !window || _focusedWindows.count( window ))
         return;
 
+    _focusedWindows.insert( window );
+    _updateFocusedWindowsCoordinates();
     window->setFocused( true );
 
-    if( focusedWindows_.insert( window ).second && focusedWindows_.size() == 1 )
+    if( _focusedWindows.size() == 1 )
         emit hasFocusedWindowsChanged();
 
     sendDisplayGroup();
@@ -203,29 +204,36 @@ void DisplayGroup::unfocus( const QUuid& id )
         return;
 
     window->setFocused( false );
-    removeFocusedWindow( window );
+    _removeFocusedWindow( window );
     // Make sure the window dimensions are re-adjusted to the new zoom level
     window->getController()->scale( window->getCoordinates().center(), 0.0 );
+    _updateFocusedWindowsCoordinates();
+
     sendDisplayGroup();
+}
+
+const ContentWindowSet& DisplayGroup::getFocusedWindows() const
+{
+    return _focusedWindows;
 }
 
 void DisplayGroup::clear()
 {
-    if( contentWindows_.empty( ))
+    if( _contentWindows.empty( ))
         return;
 
-    put_flog( LOG_INFO, "removing %i windows", contentWindows_.size( ));
+    put_flog( LOG_INFO, "removing %i windows", _contentWindows.size( ));
 
-    while( !contentWindows_.empty( ))
-        removeContentWindow( contentWindows_[0] );
+    while( !_contentWindows.empty( ))
+        removeContentWindow( _contentWindows[0] );
 }
 
 void DisplayGroup::setShowWindowTitles( const bool set )
 {
-    if( showWindowTitles_ == set )
+    if( _showWindowTitles == set )
         return;
 
-    showWindowTitles_ = set;
+    _showWindowTitles = set;
 
     emit showWindowTitlesChanged( set );
     sendDisplayGroup();
@@ -236,7 +244,7 @@ void DisplayGroup::sendDisplayGroup()
     emit modified( shared_from_this( ));
 }
 
-void DisplayGroup::watchChanges( ContentWindowPtr contentWindow )
+void DisplayGroup::_watchChanges( ContentWindowPtr contentWindow )
 {
     connect( contentWindow.get(), SIGNAL( modified( )),
              this, SLOT( sendDisplayGroup( )));
@@ -244,8 +252,15 @@ void DisplayGroup::watchChanges( ContentWindowPtr contentWindow )
              this, SLOT( sendDisplayGroup( )));
 }
 
-void DisplayGroup::removeFocusedWindow( ContentWindowPtr window )
+void DisplayGroup::_removeFocusedWindow( ContentWindowPtr window )
 {
-    if( focusedWindows_.erase( window ) && focusedWindows_.empty( ))
+    if( _focusedWindows.erase( window ) && _focusedWindows.empty( ))
         emit hasFocusedWindowsChanged();
+}
+
+void DisplayGroup::_updateFocusedWindowsCoordinates()
+{
+    LayoutEngine engine( *this );
+    for( auto window : _focusedWindows )
+        window->setFocusedCoordinates( engine.getFocusedCoord( *window ));
 }

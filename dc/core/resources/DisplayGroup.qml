@@ -17,7 +17,7 @@ Item {
         color: Style.focusContextColor
         opacity: 0
         visible: opacity > 0
-        z: Style.focusZorder
+        z: Style.focusBackgroundZorder
         states: [
             State {
                 name: "focused"

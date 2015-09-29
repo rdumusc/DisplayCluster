@@ -46,6 +46,7 @@ namespace ut = boost::unit_test;
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "ContentWindowController.h"
+#include "LayoutEngine.h"
 
 #include "MinimalGlobalQtApp.h"
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
@@ -283,20 +284,21 @@ BOOST_AUTO_TEST_CASE( testResizeRelativeToCorner )
                        prevCoords.width());
 }
 
-BOOST_AUTO_TEST_CASE( testFocusModeCoordinates )
+BOOST_AUTO_TEST_CASE( testLayoutEngineOneWindow )
 {
     ContentPtr content( new DummyContent );
     content->setDimensions( CONTENT_SIZE );
-    ContentWindow window( content );
+    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
 
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    ContentWindowController controller( window, *displayGroup );
+    displayGroup->addContentWindow( window );
+    displayGroup->focus( window->getID( ));
 
-    const QRectF& coords = controller.getFocusedCoord();
+    LayoutEngine engine( *displayGroup );
+    const QRectF coords = engine.getFocusedCoord( *window );
 
     const qreal expectedPadding = 0.05 * wallSize.width();
     const qreal expectedXOffset = 175.0; // window controls width
-
     const qreal totalExpectedMargin = 2.0 * expectedPadding + expectedXOffset;
     const qreal expectedWidth = wallSize.width() - totalExpectedMargin;
     const qreal expectedHeight = expectedWidth / content->getAspectRatio();
@@ -307,4 +309,25 @@ BOOST_AUTO_TEST_CASE( testFocusModeCoordinates )
     BOOST_CHECK_EQUAL( coords.y(), expectedY );
     BOOST_CHECK_EQUAL( coords.width(), expectedWidth );
     BOOST_CHECK_EQUAL( coords.height(), expectedHeight );
+}
+
+BOOST_AUTO_TEST_CASE( testLayoutEngineTwoWindows )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( CONTENT_SIZE );
+    ContentWindowPtr window1 = boost::make_shared<ContentWindow>( content );
+    ContentWindowPtr window2 = boost::make_shared<ContentWindow>( content );
+
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    displayGroup->addContentWindow( window1 );
+    displayGroup->addContentWindow( window2 );
+    displayGroup->focus( window1->getID( ));
+    displayGroup->focus( window2->getID( ));
+
+    LayoutEngine engine( *displayGroup );
+    const QRectF coords1 = engine.getFocusedCoord( *window1 );
+    const QRectF coords2 = engine.getFocusedCoord( *window2 );
+
+    BOOST_CHECK_EQUAL( coords1, QRectF( 225, 406.25, 250, 187.5 ));
+    BOOST_CHECK_EQUAL( coords2, QRectF( 700, 406.25, 250, 187.5 ));
 }

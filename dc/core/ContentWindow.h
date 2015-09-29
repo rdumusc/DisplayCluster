@@ -77,6 +77,8 @@ class ContentWindow : public Coordinates
     Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
     Q_PROPERTY( ContentInteractionDelegate* delegate READ getInteractionDelegate CONSTANT )
     Q_PROPERTY( ContentWindowController* controller READ getController CONSTANT )
+    Q_PROPERTY( QRectF focusedCoordinates READ getFocusedCoordinates
+                WRITE setFocusedCoordinates NOTIFY focusedCoordinatesChanged )
 
 public:
     /** The current active window border used for resizing */
@@ -133,6 +135,11 @@ public:
      */
     ContentWindowController* getController();
 
+    /** @return the controller for this window, or 0 if the window has not been
+     *          added to a DisplayGroup.
+     */
+    const ContentWindowController* getController() const;
+
     /** Assign a controller. */
     void setController( ContentWindowControllerPtr controller );
 
@@ -160,6 +167,12 @@ public:
 
     /** Set the window in focused mode. */
     void setFocused( bool value );
+
+    /** @return the focused coordinates of this window. */
+    const QRectF& getFocusedCoordinates() const;
+
+    /** Set the focused coordinates of this window. */
+    void setFocusedCoordinates( const QRectF& coordinates );
 
 
     /** Set the current state. */
@@ -219,6 +232,7 @@ signals:
     //@{
     void borderChanged();
     void focusedChanged();
+    void focusedCoordinatesChanged();
     void stateChanged();
     void labelChanged();
     void controlsVisibleChanged();
@@ -241,6 +255,7 @@ private:
         ar & zoomRect_;
         ar & windowBorder_;
         ar & focused_;
+        ar & focusedCoordinates_;
         ar & windowState_;
         ar & controlsVisible_;
     }
@@ -306,6 +321,7 @@ private:
     QRectF zoomRect_;
     ContentWindow::WindowBorder windowBorder_;
     bool focused_;
+    QRectF focusedCoordinates_;
     ContentWindow::WindowState windowState_;
     bool controlsVisible_;
 

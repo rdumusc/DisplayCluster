@@ -67,6 +67,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   gestures/PanGestureRecognizer.h
   gestures/PinchGesture.h
   gestures/PinchGestureRecognizer.h
+  LayoutEngine.h
   log.h
   Marker.h
   Movie.h
@@ -176,6 +177,7 @@ list(APPEND DCCORE_SOURCES
   GLTexture2D.cpp
   GLUtils.cpp
   GLWindow.cpp
+  LayoutEngine.cpp
   log.cpp
   Marker.cpp
   Markers.cpp
