@@ -12,6 +12,7 @@ Item {
 
     Rectangle {
         id: focuscontext
+        objectName: "focuscontext"
         anchors.fill: parent
         color: Style.focusContextColor
         opacity: 0
