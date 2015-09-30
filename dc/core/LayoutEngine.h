@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,29 +37,29 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentInteractionDelegate.h"
+#ifndef LAYOUTENGINE_H
+#define LAYOUTENGINE_H
 
-#include "ContentWindow.h"
+#include "types.h"
 
-ContentInteractionDelegate::ContentInteractionDelegate( ContentWindow& contentWindow )
-    : _contentWindow( contentWindow )
+/**
+ * Layout engine for positionning windows on the wall.
+ */
+class LayoutEngine
 {
-}
+public:
+    LayoutEngine( const DisplayGroup& group );
+    ~LayoutEngine();
 
-ContentInteractionDelegate::~ContentInteractionDelegate() {}
+    /** @return the focused coordinates for the window. */
+    QRectF getFocusedCoord( const ContentWindow& window ) const;
 
-QRectF ContentInteractionDelegate::getWindowCoord() const
-{
-    if( _contentWindow.isFocused( ))
-        return _contentWindow.getFocusedCoordinates();
+private:
+    const DisplayGroup& _displayGroup;
 
-    return _contentWindow.getCoordinates();
-}
+    QRectF _getNominalCoord( const ContentWindow& window ) const;
+    void _constrainFullyInside( QRectF& window ) const;
+    qreal _getInsideMargin() const;
+};
 
-QPointF
-ContentInteractionDelegate::getNormalizedPoint( const QPointF& point ) const
-{
-    const QRectF& window = getWindowCoord();
-    return QPointF( point.x() / window.width(),
-                    point.y() / window.height( ));
-}
+#endif // LAYOUTENGINE_H

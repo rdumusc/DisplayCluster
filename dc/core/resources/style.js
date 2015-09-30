@@ -3,6 +3,8 @@
 var focusTransitionTime = 500;
 var focusContextColor = "black"
 var focusContextOpacity = 0.7;
+var focusBackgroundZorder = 98;
+var unfocusZorder = 99;
 var focusZorder = 100;
 
 var borderWidth = 100

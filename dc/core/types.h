@@ -41,11 +41,12 @@
 #define TYPES_H
 
 #include <deflect/types.h>
-#include <vector>
 #include <boost/shared_ptr.hpp>
 #include <QtCore/QRectF>
-#include <iostream>
 #include <future>
+#include <iostream>
+#include <set>
+#include <vector>
 
 class Configuration;
 class Content;
@@ -100,6 +101,7 @@ typedef boost::shared_ptr< TestPattern > TestPatternPtr;
 typedef boost::shared_ptr< WallContent > WallContentPtr;
 typedef boost::shared_ptr< WallWindow > WallWindowPtr;
 
+typedef std::set< ContentWindowPtr > ContentWindowSet;
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
 

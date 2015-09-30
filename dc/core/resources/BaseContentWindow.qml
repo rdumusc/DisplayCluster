@@ -8,7 +8,8 @@ Rectangle {
     property alias titleBar: titleBar
     property int stackingOrder: 0
     property bool isBackground: false
-    property bool animating: false
+    property bool animating: widthAnimation.running || heightAnimation.running
+                             || unfocusTransition.running
     property real heightOffset: titleBar.visible ? titleBar.height : 0
     property real yOffset: 0.5 * heightOffset
 
@@ -19,16 +20,15 @@ Rectangle {
     height: contentwindow.height + heightOffset
     border.color: Style.windowBorderDefaultColor
 
-    Rectangle
-    {
+    Rectangle {
         id: titleBar
-        visible: displaygroup.showWindowTitles && !windowRect.isBackground && contentwindow.label !== "Dock"
+        visible: displaygroup.showWindowTitles && !windowRect.isBackground
+                 && contentwindow.label !== "Dock"
         width: parent.width
         height: Style.windowTitleHeight
         color: parent.border.color
 
-        Text
-        {
+        Text {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.right: parent.right
@@ -48,10 +48,10 @@ Rectangle {
             when: contentwindow.focused
             PropertyChanges {
                 target: windowRect
-                x: contentwindow.controller.getFocusedCoord().x
-                y: contentwindow.controller.getFocusedCoord().y - yOffset
-                width: contentwindow.controller.getFocusedCoord().width
-                height: contentwindow.controller.getFocusedCoord().height + heightOffset
+                x: contentwindow.focusedCoordinates.x
+                y: contentwindow.focusedCoordinates.y - yOffset
+                width: contentwindow.focusedCoordinates.width
+                height: contentwindow.focusedCoordinates.height + heightOffset
                 border.color: Style.windowBorderSelectedColor
                 z: stackingOrder + Style.focusZorder
             }
@@ -90,29 +90,73 @@ Rectangle {
         }
     ]
 
-    function startAnimating() { animating = state == "focused" }
-    function stopAnimating() { animating = state != "focused" }
-
     transitions: [
         Transition {
-            to: "focused"
-            reversible: true
-            // onRunningChanged does not work, only work around is to change
-            // animating property at the beginning and end of a sequence.
+            from: "focused"
+            id: unfocusTransition
+            // Add "running" property which is missing in QtQuick1
+            property bool running: false
             SequentialAnimation {
-                ScriptAction { script: startAnimating(); }
-                PropertyAction { property: "z" } // Immediately set the z value
-                NumberAnimation {
-                    properties: "x,y,height,width"
-                    duration: Style.focusTransitionTime
-                    easing.type: Easing.InOutQuad
+                PropertyAction {
+                    target: unfocusTransition
+                    property: "running"
+                    value: true
                 }
-                ScriptAction { script: stopAnimating(); }
-            }
-            ColorAnimation {
-                properties: "border.color"
-                duration: Style.focusTransitionTime
+                // Slide behind other focused windows for the transition
+                PropertyAction {
+                    target: windowRect
+                    property: "z"
+                    value: Style.unfocusZorder
+                }
+                ParallelAnimation {
+                    ColorAnimation { duration: Style.focusTransitionTime }
+                    NumberAnimation {
+                        target: windowRect
+                        properties: "x,y,height,width"
+                        duration: Style.focusTransitionTime
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+                PropertyAction {
+                    target: unfocusTransition
+                    property: "running"
+                    value: false
+                }
             }
         }
     ]
+
+    Behavior on border.color {
+        ColorAnimation { duration: Style.focusTransitionTime }
+    }
+    Behavior on x {
+        enabled: contentwindow.focused
+        NumberAnimation {
+            duration: Style.focusTransitionTime
+            easing.type: Easing.InOutQuad
+        }
+    }
+    Behavior on y {
+        enabled: contentwindow.focused
+        NumberAnimation {
+            duration: Style.focusTransitionTime
+            easing.type: Easing.InOutQuad
+        }
+    }
+    Behavior on width {
+        enabled: contentwindow.focused
+        NumberAnimation {
+            id: widthAnimation
+            duration: Style.focusTransitionTime
+            easing.type: Easing.InOutQuad
+        }
+    }
+    Behavior on height {
+        enabled: contentwindow.focused
+        NumberAnimation {
+            id: heightAnimation
+            duration: Style.focusTransitionTime
+            easing.type: Easing.InOutQuad
+        }
+    }
 }

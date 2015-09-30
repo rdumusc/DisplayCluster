@@ -112,6 +112,11 @@ ContentWindowController* ContentWindow::getController()
     return controller_.get();
 }
 
+const ContentWindowController* ContentWindow::getController() const
+{
+    return controller_.get();
+}
+
 void ContentWindow::setController( ContentWindowControllerPtr controller )
 {
     controller_.reset( controller.release( ));
@@ -168,6 +173,20 @@ void ContentWindow::setBorder( const ContentWindow::WindowBorder border )
 bool ContentWindow::isFocused() const
 {
     return focused_;
+}
+
+const QRectF& ContentWindow::getFocusedCoordinates() const
+{
+    return focusedCoordinates_;
+}
+
+void ContentWindow::setFocusedCoordinates( const QRectF& coordinates )
+{
+    if( coordinates == focusedCoordinates_ )
+        return;
+
+    focusedCoordinates_ = coordinates;
+    emit focusedCoordinatesChanged();
 }
 
 void ContentWindow::setFocused( const bool value )

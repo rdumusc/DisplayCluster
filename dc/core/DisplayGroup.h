@@ -126,6 +126,9 @@ public:
     /** Unfocus a window. */
     Q_INVOKABLE void unfocus( const QUuid& id );
 
+    /** Get the set of focused windows. */
+    const ContentWindowSet& getFocusedWindows() const;
+
 public slots:
     /** Clear all ContentWindows. */
     void clear();
@@ -180,9 +183,9 @@ private:
     template< class Archive >
     void serialize( Archive & ar, const unsigned int )
     {
-        ar & showWindowTitles_;
-        ar & contentWindows_;
-        ar & focusedWindows_;
+        ar & _showWindowTitles;
+        ar & _contentWindows;
+        ar & _focusedWindows;
         ar & coordinates_;
     }
 
@@ -191,9 +194,9 @@ private:
     void serialize_members_xml( Archive & ar, const unsigned int )
     {
         ar & boost::serialization::make_nvp( "showWindowTitles",
-                                             showWindowTitles_ );
+                                             _showWindowTitles );
         ar & boost::serialization::make_nvp( "contentWindows",
-                                             contentWindows_ );
+                                             _contentWindows );
         ar & boost::serialization::make_nvp( "coordinates", coordinates_ );
     }
 
@@ -202,12 +205,12 @@ private:
                             const unsigned int version)
     {
         serialize_members_xml( ar, version );
-        BOOST_FOREACH( ContentWindowPtr window, contentWindows_ )
+        BOOST_FOREACH( ContentWindowPtr window, _contentWindows )
         {
             if( window->isFocused( ))
             {
                 window->setState( ContentWindow::SELECTED );
-                focusedWindows_.insert( window );
+                _focusedWindows.insert( window );
             }
             else
                 window->setState( ContentWindow::NONE );
@@ -221,12 +224,13 @@ private:
         serialize_members_xml( ar, version );
     }
 
-    void watchChanges( ContentWindowPtr contentWindow );
-    void removeFocusedWindow( ContentWindowPtr window );
+    void _watchChanges( ContentWindowPtr contentWindow );
+    void _removeFocusedWindow( ContentWindowPtr window );
+    void _updateFocusedWindowsCoordinates();
 
-    bool showWindowTitles_;
-    ContentWindowPtrs contentWindows_;
-    std::set<ContentWindowPtr> focusedWindows_;
+    bool _showWindowTitles;
+    ContentWindowPtrs _contentWindows;
+    ContentWindowSet _focusedWindows;
 };
 
 BOOST_CLASS_VERSION( DisplayGroup, FIRST_DISPLAYGROUP_VERSION )
