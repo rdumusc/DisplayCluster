@@ -42,9 +42,7 @@
 #include <QEvent>
 #include <QGraphicsSceneMouseEvent>
 
-#include <math.h>       /* fabs */
-
-#define WHEEL_EVENT_FACTOR 1440.0
+#include <cmath> // std::abs
 
 TouchMouseArea::TouchMouseArea()
 {
@@ -85,7 +83,7 @@ void TouchMouseArea::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
     // Also generate a tap event if releasing the button in place
     const QPointF delta = _mousePressPos - event_->scenePos();
     const double epsilon = std::numeric_limits< double >::epsilon();
-    if( fabs( delta.x( )) < epsilon && fabs( delta.y( )) < epsilon )
+    if( std::abs( delta.x( )) < epsilon && std::abs( delta.y( )) < epsilon )
         emit tap( event_->scenePos( ));
 }
 
@@ -96,11 +94,8 @@ void TouchMouseArea::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event_ )
 
 void TouchMouseArea::wheelEvent( QGraphicsSceneWheelEvent* event_ )
 {
-    // change zoom based on wheel delta.
-    // deltas are counted in 1/8 degrees, so scale based on 180 degrees =>
-    // delta = 180*8 = 1440
-    const qreal scaleFactor = 1.0 + event_->delta() / WHEEL_EVENT_FACTOR;
-    emit pinch( event_->scenePos(), scaleFactor );
+    // common mouse delta is 120, scroll/resize of 40 pixels seems ok
+    emit pinch( event_->scenePos(), event_->delta() / 3.0 );
 }
 
 void TouchMouseArea::keyPressEvent( QKeyEvent* keyEvent )

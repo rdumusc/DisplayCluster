@@ -109,12 +109,12 @@ void PixelStreamInteractionDelegate::pan( const QPointF position,
 
 
 void PixelStreamInteractionDelegate::pinch( const QPointF position,
-                                            const qreal scaleFactor )
+                                            const qreal pixelDelta )
 {
     deflect::Event deflectEvent = _getNormEvent( position );
     deflectEvent.type = deflect::Event::EVT_WHEEL;
     deflectEvent.mouseLeft = false;
-    deflectEvent.dy = scaleFactor - 1.0;
+    deflectEvent.dy = pixelDelta;
 
     emit notify( deflectEvent );
 }

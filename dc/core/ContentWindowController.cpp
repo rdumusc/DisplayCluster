@@ -157,12 +157,15 @@ void ContentWindowController::resizeRelative( const QPointF& delta )
     _resize( fixedPoint, newSize );
 }
 
-void ContentWindowController::scale( const QPointF& center, const double factor)
+void ContentWindowController::scale( const QPointF& center,
+                                     const double pixelDelta )
 {
-    if( factor <= 0.0 )
-        return;
-
-    _resize( center, _contentWindow->getCoordinates().size() * factor );
+    QSizeF newSize = _contentWindow->getCoordinates().size();
+    newSize.scale( newSize.width() + pixelDelta,
+                   newSize.height() + pixelDelta,
+                   pixelDelta > 0 ? Qt::KeepAspectRatio
+                                  : Qt::KeepAspectRatioByExpanding );
+    _resize( center, newSize );
 }
 
 void ContentWindowController::adjustSize( const SizeState state )
@@ -256,18 +259,26 @@ QRectF ContentWindowController::getFocusedCoord() const
     return coord;
 }
 
+QRectF
+ContentWindowController::scaleRectAroundPosition( const QRectF& rect,
+                                                  const QPointF& position,
+                                                  const QSizeF& size )
+{
+    QTransform transform;
+    transform.translate( position.x(), position.y( ));
+    transform.scale( size.width() / rect.width(),
+                     size.height() / rect.height( ));
+    transform.translate( -position.x(), -position.y( ));
+
+    return transform.mapRect( rect );
+}
+
 void ContentWindowController::_resize( const QPointF& center, QSizeF size )
 {
     _constrainSize( size );
 
     QRectF coordinates( _contentWindow->getCoordinates( ));
-    QTransform transform;
-    transform.translate( center.x(), center.y( ));
-    transform.scale( size.width()/coordinates.width(),
-                     size.height()/coordinates.height( ));
-    transform.translate( -center.x(), -center.y( ));
-
-    coordinates = transform.mapRect( coordinates );
+    coordinates = scaleRectAroundPosition( coordinates, center, size );
     _constrainPosition( coordinates );
 
     _contentWindow->setCoordinates( coordinates );

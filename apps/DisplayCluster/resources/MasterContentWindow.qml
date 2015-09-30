@@ -43,7 +43,7 @@ BaseContentWindow {
         }
         onPinch: {
             contentwindow.state = ContentWindow.RESIZING
-            contentwindow.controller.scale(position, scaleFactor)
+            contentwindow.controller.scale(position, pixelDelta)
         }
     }
 
@@ -73,7 +73,7 @@ BaseContentWindow {
         onTap: contentwindow.delegate.tap(removeOffset(position))
         onTapAndHold: contentwindow.delegate.tapAndHold(removeOffset(position))
         onPan: contentwindow.delegate.pan(removeOffset(position), delta)
-        onPinch: contentwindow.delegate.pinch(removeOffset(position), scaleFactor)
+        onPinch: contentwindow.delegate.pinch(removeOffset(position), pixelDelta)
         onSwipeLeft:contentwindow.delegate.swipeLeft()
         onSwipeRight: contentwindow.delegate.swipeRight()
         onSwipeUp: contentwindow.delegate.swipeUp()

@@ -79,8 +79,8 @@ public:
     /** Resize the window relative to the current active window border */
     Q_INVOKABLE void resizeRelative( const QPointF& delta );
 
-    /** Scale the window by the given factor (around the given center). */
-    Q_INVOKABLE void scale( const QPointF& center, double factor );
+    /** Scale the window by the given pixel delta (around the given center). */
+    Q_INVOKABLE void scale( const QPointF& center, double pixelDelta );
 
     /** Adjust the window coordinates to match the desired state. */
     void adjustSize( const SizeState state );
@@ -110,6 +110,19 @@ public:
 
     /** @return the focused coordinates for the window. */
     Q_INVOKABLE QRectF getFocusedCoord() const;
+
+    /**
+     * Helper function to resize a rectangle (window, zoom rectangle) around a
+     * point of interest (pinch center, mouse wheel position).
+     *
+     * @param rect the current rectangle
+     * @param position the point of interest to scale/resize around
+     * @param size the new absolute size to resize to
+     * @return the scaled rectangle
+     */
+    static QRectF scaleRectAroundPosition( const QRectF& rect,
+                                           const QPointF& position,
+                                           const QSizeF& size );
 
 private:
     Q_DISABLE_COPY( ContentWindowController )

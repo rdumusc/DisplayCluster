@@ -109,6 +109,9 @@ public:
     /** @sa QPinchGesture::scaleFactor */
     qreal scaleFactor() const { return _scaleFactor; }
 
+    /** @return the delta in pixels since the last update. */
+    qreal pixelDelta() const { return _pixelDelta; }
+
     /** @sa QPinchGesture::setTotalScaleFactor */
     void setTotalScaleFactor(qreal value) { _totalScaleFactor = value; }
 
@@ -151,6 +154,7 @@ private:
     qreal _totalScaleFactor;
     qreal _lastScaleFactor;
     qreal _scaleFactor;
+    qreal _pixelDelta;
 
     qreal _totalRotationAngle;
     qreal _lastRotationAngle;

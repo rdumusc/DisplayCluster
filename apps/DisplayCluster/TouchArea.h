@@ -72,7 +72,7 @@ signals:
 
     void pan( QPointF position, QPointF delta );
 
-    void pinch( QPointF position, qreal scaleFactor );
+    void pinch( QPointF position, qreal pixelDelta );
 
     void swipeLeft();
     void swipeRight();

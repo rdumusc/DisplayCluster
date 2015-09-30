@@ -57,7 +57,7 @@ public:
     /** @name Touch gesture handlers. */
     //@{
     void pan( QPointF position, QPointF delta ) override;
-    void pinch( QPointF position, qreal scaleFactor ) override;
+    void pinch( QPointF position, qreal pixelDelta ) override;
     //@}
 
     /** Adjust the zoom of the window to the aspect ratio of the content. */
@@ -66,7 +66,7 @@ public:
 private:
     void _checkAndApply( QRectF zoomRect );
     void _moveZoomRect( const QPointF& sceneDelta ) const;
-    void _scaleZoomRect( const QPointF& center, qreal zoomFactor );
+    void _scaleZoomRect( const QPointF& position, qreal pixelDelta );
     void _constrainZoomLevel( QRectF& zoomRect ) const;
     void _constraintPosition( QRectF& zoomRect ) const;
     QSizeF _getMaxZoom() const;

@@ -60,10 +60,10 @@ void ZoomInteractionDelegate::pan( const QPointF position, const QPointF delta )
 }
 
 void ZoomInteractionDelegate::pinch( const QPointF position,
-                                     const qreal scaleFactor )
+                                     const qreal pixelDelta )
 {
     const QPointF pos = position - getWindowCoord().topLeft();
-    _scaleZoomRect( getNormalizedPoint( pos ), 1.0 / scaleFactor );
+    _scaleZoomRect( pos, pixelDelta );
 }
 
 void ZoomInteractionDelegate::adjustZoomToContentAspectRatio()
@@ -95,23 +95,21 @@ void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
     _contentWindow.setZoomRect( zoomRect );
 }
 
-void ZoomInteractionDelegate::_scaleZoomRect( const QPointF& center,
-                                              const qreal zoomFactor )
+void ZoomInteractionDelegate::_scaleZoomRect( const QPointF& position,
+                                              const qreal pixelDelta )
 {
-    QRectF zoomRect = _contentWindow.getZoomRect();
+    QRectF contentRect = _toContentRect( _contentWindow.getZoomRect( ));
 
-    QTransform current;
-    current.translate( zoomRect.x(), zoomRect.y( ));
-    current.scale( zoomRect.width(), zoomRect.height( ));
-    const QPointF point = current.map( center );
+    QSizeF newSize = contentRect.size();
+    newSize.scale( newSize.width() + pixelDelta,
+                   newSize.height() + pixelDelta,
+                   pixelDelta > 0 ? Qt::KeepAspectRatio
+                                  : Qt::KeepAspectRatioByExpanding );
 
-    QTransform transform;
-    transform.translate( point.x(), point.y( ));
-    transform.scale( zoomFactor, zoomFactor );
-    transform.translate( -point.x(), -point.y( ));
-    zoomRect = transform.mapRect( zoomRect );
-
-    _checkAndApply( zoomRect );
+    contentRect = ContentWindowController::scaleRectAroundPosition( contentRect,
+                                                                    position,
+                                                                    newSize );
+    _checkAndApply( _toZoomRect( contentRect ));
 }
 
 void ZoomInteractionDelegate::_constrainZoomLevel( QRectF& zoomRect ) const

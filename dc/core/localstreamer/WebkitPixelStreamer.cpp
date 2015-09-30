@@ -223,7 +223,7 @@ void WebkitPixelStreamer::processWheelEvent(const deflect::Event &wheelEvent)
 
     if(!hitResult.isNull() && isWebGLElement(hitResult.element()))
     {
-        const int delta = wheelEvent.dy * webView_.page()->viewportSize().height();
+        const int delta = wheelEvent.dy;
         QWheelEvent myEvent(hitResult.pos(), delta, Qt::NoButton,
                             (Qt::KeyboardModifiers)wheelEvent.modifiers,
                             Qt::Vertical);
