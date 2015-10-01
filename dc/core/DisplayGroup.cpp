@@ -173,6 +173,7 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
         if( window->isFocused( ))
             _focusedWindows.insert( window );
     }
+    _updateFocusedWindowsCoordinates();
     sendDisplayGroup();
 }
 
@@ -207,7 +208,6 @@ void DisplayGroup::unfocus( const QUuid& id )
     _removeFocusedWindow( window );
     // Make sure the window dimensions are re-adjusted to the new zoom level
     window->getController()->scale( window->getCoordinates().center(), 0.0 );
-    _updateFocusedWindowsCoordinates();
 
     sendDisplayGroup();
 }
@@ -254,8 +254,13 @@ void DisplayGroup::_watchChanges( ContentWindowPtr contentWindow )
 
 void DisplayGroup::_removeFocusedWindow( ContentWindowPtr window )
 {
-    if( _focusedWindows.erase( window ) && _focusedWindows.empty( ))
-        emit hasFocusedWindowsChanged();
+    if( _focusedWindows.erase( window ))
+    {
+        _updateFocusedWindowsCoordinates();
+
+        if( _focusedWindows.empty( ))
+            emit hasFocusedWindowsChanged();
+    }
 }
 
 void DisplayGroup::_updateFocusedWindowsCoordinates()
