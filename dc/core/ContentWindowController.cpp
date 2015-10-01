@@ -161,7 +161,7 @@ void ContentWindowController::scale( const QPointF& center,
     QSizeF newSize = _contentWindow->getCoordinates().size();
     newSize.scale( newSize.width() + pixelDelta,
                    newSize.height() + pixelDelta,
-                   pixelDelta > 0 ? Qt::KeepAspectRatio
+                   pixelDelta < 0 ? Qt::KeepAspectRatio
                                   : Qt::KeepAspectRatioByExpanding );
     _resize( center, newSize );
 }
