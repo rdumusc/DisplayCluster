@@ -5,7 +5,7 @@ import "style.js" as Style
 Rectangle {
     property alias listview: buttons
 
-    id: rootObj
+    id: windowControls
     width: buttons.width + radius + (Style.buttonsSize - Style.buttonsImageSize)
     height: buttons.height + (Style.buttonsSize - Style.buttonsImageSize)
     color: Style.controlsDefaultColor
@@ -51,7 +51,7 @@ Rectangle {
             extend: "selected"
             PropertyChanges {
                 target: buttons
-                fixed_buttons_count: 2
+                fixed_buttons_count: 1
             }
         },
         State {
@@ -59,7 +59,7 @@ Rectangle {
             when: contentwindow.selected
             extend: "opaque"
             PropertyChanges {
-                target: rootObj
+                target: windowControls
                 color: Style.controlsFocusedColor
                 border.color: Style.controlsFocusedColor
             }
@@ -69,7 +69,7 @@ Rectangle {
             when: contentwindow.controlsVisible
                   && contentwindow.border === ContentWindow.NOBORDER
             PropertyChanges {
-                target: rootObj
+                target: windowControls
                 opacity: 1
             }
         }
@@ -78,7 +78,7 @@ Rectangle {
     transitions: [
         Transition {
             NumberAnimation {
-                target: rootObj
+                target: windowControls
                 property: "opacity"
                 duration: Style.focusTransitionTime
                 easing.type: Easing.InOutQuad
