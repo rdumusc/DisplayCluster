@@ -66,7 +66,6 @@ public:
 private:
     void _checkAndApply( QRectF zoomRect );
     void _moveZoomRect( const QPointF& sceneDelta ) const;
-    void _scaleZoomRect( const QPointF& position, qreal pixelDelta );
     void _constrainZoomLevel( QRectF& zoomRect ) const;
     void _constraintPosition( QRectF& zoomRect ) const;
     QSizeF _getMaxZoom() const;
