@@ -14,7 +14,12 @@ set(VERSION_PATCH 0)
 set(VERSION_ABI 1)
 
 set(DISPLAYCLUSTER_INCLUDE_NAME dc)
-set(DISPLAYCLUSTER_DESCRIPTION "A collaborative software for driving large display walls")
+set(DISPLAYCLUSTER_DESCRIPTION
+  "A collaborative software for driving large display walls")
+set(DISPLAYCLUSTER_MAINTAINER
+  "Blue Brain Project <bbp-open-source@googlegroups.com>")
+set(DISPLAYCLUSTER_LICENSE BSD)
+
 include(Common)
 
 common_package(Boost REQUIRED COMPONENTS program_options date_time serialization
