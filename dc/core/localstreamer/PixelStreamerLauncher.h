@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -100,17 +100,6 @@ public slots:
      * @param pos The position of the center of the Dock
      */
     void openDock( QPointF pos );
-
-    /**
-     * Open the Dock.
-     *
-     * A new dock instance is created if it was closed, otherwise the existing
-     * Dock instance is moved to the given position.
-     * @param pos The position of the center of the Dock
-     * @param size The initial size of the Dock in pixels.
-     * @param rootDir The initial root directory of the Dock.
-     */
-    void openDock( QPointF pos, QSize size, QString rootDir );
 
     /** Hide the Dock. */
     void hideDock();

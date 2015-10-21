@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
 /*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -89,9 +89,9 @@ void PixelStreamWindowManager::showWindow( const QString& uri )
     }
 }
 
-void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
-                                                      QPointF pos,
-                                                      QSize size )
+void PixelStreamWindowManager::openWindow( const QString& uri,
+                                           const QPointF& pos,
+                                           const QSize& size )
 {
     if( getContentWindow( uri ))
     {
@@ -107,9 +107,6 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
     put_flog( LOG_INFO, "opening pixel stream window: '%s'",
               uri.toLocal8Bit().constData( ));
 
-    if( pos.isNull( ))
-        pos = _displayGroup.getCoordinates().center();
-
     ContentPtr content = ContentFactory::getPixelStreamContent( uri );
     if( size.isValid( ))
         content->setDimensions( size );
@@ -117,10 +114,16 @@ void PixelStreamWindowManager::openPixelStreamWindow( const QString uri,
 
     ContentWindowController controller( *contentWindow, _displayGroup );
     controller.resize( size.isValid() ? size : EMPTY_STREAM_SIZE );
-    controller.moveCenterTo( pos );
+    controller.moveCenterTo( !pos.isNull() ? pos :
+                                      _displayGroup.getCoordinates().center( ));
 
     _streamerWindows[ uri ] = contentWindow->getID();
     _displayGroup.addContentWindow( contentWindow );
+}
+
+void PixelStreamWindowManager::openPixelStreamWindow( const QString uri )
+{
+    openWindow( uri, QPointF(), QSize( ));
 }
 
 void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )

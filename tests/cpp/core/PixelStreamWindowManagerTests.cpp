@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     const QPointF pos( testWindowPos );
     const QSize size( testWindowSize );
 
-    windowManager.openPixelStreamWindow( uri, pos, size );
+    windowManager.openWindow( uri, pos, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
@@ -113,8 +113,7 @@ BOOST_AUTO_TEST_CASE( testEventReceiver )
 {
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     PixelStreamWindowManager windowManager( *displayGroup );
-    windowManager.openPixelStreamWindow( CONTENT_URI, testWindowPos,
-                                         testWindowSize );
+    windowManager.openWindow( CONTENT_URI, testWindowPos, testWindowSize );
     ContentWindowPtr window = windowManager.getContentWindow( CONTENT_URI );
     BOOST_REQUIRE( window );
 
@@ -147,7 +146,7 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     const QPointF pos( testWindowPos );
     const QSize size( testWindowSize );
 
-    windowManager.openPixelStreamWindow( uri, pos, size );
+    windowManager.openWindow( uri, pos, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 

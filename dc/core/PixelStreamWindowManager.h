@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -86,7 +86,6 @@ public:
      */
     void showWindow( const QString& uri );
 
-public slots:
     /**
      * Open a window for a new PixelStream.
      *
@@ -95,8 +94,15 @@ public slots:
      *        If pos.isNull(), the window is centered on the DisplayGroup.
      * @param size the desired size of the window in pixels.
      */
-    void openPixelStreamWindow( QString uri, QPointF pos = QPointF(),
-                                QSize size = QSize( ));
+    void openWindow( const QString& uri, const QPointF& pos, const QSize& size);
+
+public slots:
+    /**
+     * Open a window for a new external PixelStream.
+     *
+     * @param uri the URI of the streamer
+     */
+    void openPixelStreamWindow( QString uri );
 
     /**
      * Close the window of a PixelStream.
