@@ -1,5 +1,8 @@
 /*********************************************************************/
 /* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/*                     Raphael.Dumusc@epfl.ch                        */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -95,7 +98,7 @@ void Configuration::load()
 
     query.setQuery("string(/configuration/content/@maxScale)");
     if(query.evaluateTo(&queryResult))
-        ContentWindow::setMaxContentScale(queryResult.toDouble( ));
+        Content::setMaxScale( queryResult.toDouble( ));
 }
 
 int Configuration::getTotalScreenCountX() const

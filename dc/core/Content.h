@@ -1,5 +1,8 @@
 /*********************************************************************/
 /* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/*                     Raphael.Dumusc@epfl.ch                        */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -54,6 +57,8 @@
 #include <QObject>
 #include <QSize>
 
+#include <deflect/SizeHints.h>
+
 class WallToWallChannel;
 
 /**
@@ -89,6 +94,12 @@ public:
     /** Get the dimensions. */
     QSize getDimensions() const;
 
+    /** @return the min dimensions, used to constrain resize/scale. */
+    QSize getMinDimensions() const;
+
+    /** @return the preferred dimensions, used to for 1:1 size. */
+    QSize getPreferredDimensions() const;
+
     /** @return the max dimensions, used to constrain resize/scale. */
     virtual QSize getMaxDimensions() const;
 
@@ -103,6 +114,15 @@ public:
 
     /** Get the actions from QML. */
     ContentActionsModel* getActions();
+
+    /** Set optional size hints to constrain resize/scale and 1:1 size. */
+    void setSizeHints( const deflect::SizeHints& sizeHints );
+
+    /** Set the maximum factor for zoom and resize; value times content size */
+    static void setMaxScale( qreal value );
+
+    /** @return the maxium scale factor for zoom and resize */
+    static qreal getMaxScale();
 
 signals:
     /** Emitted by any Content subclass when its state has been modified */
@@ -158,6 +178,8 @@ protected:
     QString _uri;
     QSize _size;
     ContentActionsModel _actions;
+    deflect::SizeHints _sizeHints;
+    static qreal maxScale_;
 };
 
 BOOST_CLASS_VERSION( Content, 2 )

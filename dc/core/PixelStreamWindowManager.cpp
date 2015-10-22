@@ -184,11 +184,29 @@ void PixelStreamWindowManager::updateStreamDimensions( deflect::FramePtr frame )
     if( !contentWindow )
         return;
 
-    // External streamers don't have an initial size
+    // External streamers might not have reported an initial size yet
     if( contentWindow->getContent()->getDimensions().isEmpty( ))
     {
         ContentWindowController controller( *contentWindow, _displayGroup );
         controller.resize( size, CENTER );
     }
     contentWindow->getContent()->setDimensions( size );
+}
+
+void PixelStreamWindowManager::updateSizeHints( const QString uri,
+                                                const deflect::SizeHints hints )
+{
+    ContentWindowPtr contentWindow = getContentWindow( uri );
+    if( !contentWindow )
+        return;
+
+    const QSize size( hints.preferredWidth, hints.preferredHeight );
+
+   // External streamers might not have reported an initial size yet
+    if( contentWindow->getContent()->getDimensions().isEmpty( ))
+        contentWindow->getContent()->setDimensions( size );
+
+    contentWindow->getContent()->setSizeHints( hints );
+    ContentWindowController controller( *contentWindow, _displayGroup );
+    controller.adjustSize( SIZE_1TO1 );
 }

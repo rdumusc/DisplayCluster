@@ -1,6 +1,7 @@
 /*********************************************************************/
 /* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -277,6 +278,9 @@ void MasterApplication::initMPIConnection()
              &deflect::Server::registerToEvents,
              pixelStreamWindowManager_.get(),
              &PixelStreamWindowManager::registerEventReceiver );
+    connect( deflectServer_.get(), &deflect::Server::receivedSizeHints,
+             pixelStreamWindowManager_.get(),
+             &PixelStreamWindowManager::updateSizeHints );
 
     connect( pixelStreamWindowManager_.get(),
              &PixelStreamWindowManager::pixelStreamWindowClosed,

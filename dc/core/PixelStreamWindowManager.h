@@ -47,6 +47,7 @@
 #include <map>
 
 #include "types.h"
+#include <deflect/SizeHints.h>
 
 /**
  * Handles window creation, association and updates for pixel streamers, both
@@ -128,6 +129,14 @@ public slots:
      * @param frame the new stream frame to check its dimension
      */
     void updateStreamDimensions( deflect::FramePtr frame );
+
+    /**
+     * Update the size hints for the content, sent by the streamer.
+     *
+     * @param uri the URI of the streamer
+     * @param hints the new size hints to use for the content
+     */
+    void updateSizeHints( QString uri, deflect::SizeHints hints );
 
 signals:
     /**

@@ -1,6 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -57,7 +58,7 @@ namespace
 {
 const QSizeF wallSize( 1000, 1000 );
 const QSize CONTENT_SIZE( 800, 600 );
-const QSize BIG_CONTENT_SIZE( CONTENT_SIZE * 4 );
+const QSize BIG_CONTENT_SIZE( CONTENT_SIZE * (Content::getMaxScale()+1) );
 const QSize SMALL_CONTENT_SIZE( CONTENT_SIZE / 4 );
 const qreal CONTENT_AR = qreal(CONTENT_SIZE.width()) /
                          qreal(CONTENT_SIZE.height());
@@ -151,12 +152,14 @@ BOOST_AUTO_TEST_CASE( testSizeLimitsBigContent )
     // Make a large content and validate it
     ContentPtr content = window->getContent();
     content->setDimensions( BIG_CONTENT_SIZE );
-    BOOST_REQUIRE_EQUAL( content->getMaxDimensions(), BIG_CONTENT_SIZE );
-    BOOST_REQUIRE_EQUAL( ContentWindow::getMaxContentScale(), 2.0 );
+    BOOST_REQUIRE_EQUAL( Content::getMaxScale(), 3.0 );
+    BOOST_REQUIRE_EQUAL( content->getMaxDimensions(),
+                         BIG_CONTENT_SIZE * Content::getMaxScale( ));
 
     // Test controller and zoom limits
     BOOST_CHECK_EQUAL( controller.getMinSize(), QSize( 300, 300 ));
-    BOOST_CHECK_EQUAL( controller.getMaxSize(), 2.0 * BIG_CONTENT_SIZE );
+    BOOST_CHECK_EQUAL( controller.getMaxSize(),
+                       BIG_CONTENT_SIZE * Content::getMaxScale( ));
 
     const QSizeF normalMaxSize = controller.getMaxSize();
     window->setZoomRect( QRectF( QPointF( 0.3, 0.1 ), QSizeF( 0.25, 0.25 )));
@@ -172,16 +175,55 @@ BOOST_AUTO_TEST_CASE( testSizeLimitsSmallContent )
     // Make a small content and validate it
     ContentPtr content = window->getContent();
     content->setDimensions( SMALL_CONTENT_SIZE );
-    BOOST_REQUIRE_EQUAL( content->getMaxDimensions(), SMALL_CONTENT_SIZE );
-    BOOST_REQUIRE_EQUAL( ContentWindow::getMaxContentScale(), 2.0 );
+    BOOST_REQUIRE_EQUAL( content->getMaxDimensions(),
+                         SMALL_CONTENT_SIZE * Content::getMaxScale( ));
+    BOOST_REQUIRE_EQUAL( Content::getMaxScale(), 3.0 );
 
     // Test controller and zoom limits
     BOOST_CHECK_EQUAL( controller.getMinSize(), QSize( 300, 300 ));
-    BOOST_CHECK_EQUAL( controller.getMaxSize(), 2.0 * SMALL_CONTENT_SIZE );
+    BOOST_CHECK_EQUAL( controller.getMaxSize(),
+                       SMALL_CONTENT_SIZE * Content::getMaxScale( ));
 
     const QSizeF normalMaxSize = controller.getMaxSize();
     window->setZoomRect( QRectF( QPointF( 0.3, 0.1 ), QSizeF( 0.25, 0.25 )));
     BOOST_CHECK_EQUAL( controller.getMaxSize(), 0.25 * normalMaxSize );
+}
+
+BOOST_AUTO_TEST_CASE( testSizeHints )
+{
+    ContentWindowPtr window = makeDummyWindow();
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    ContentWindowController controller( *window, *displayGroup );
+    ContentPtr content = window->getContent();
+
+    const QSize maxSize( CONTENT_SIZE * 2 );
+    const QSize minSize( CONTENT_SIZE / 2 );
+    deflect::SizeHints hints;
+    hints.maxWidth = maxSize.width();
+    hints.maxHeight = maxSize.height();
+    hints.minWidth = minSize.width();
+    hints.minHeight = minSize.height();
+    hints.preferredWidth = CONTENT_SIZE.width();
+    hints.preferredHeight = CONTENT_SIZE.height();
+    content->setSizeHints( hints );
+    content->setDimensions( CONTENT_SIZE );
+    const QRectF& coords = window->getCoordinates();
+
+    // too big, constrains to maxSize
+    controller.resize( maxSize * 2, CENTER );
+    BOOST_CHECK_EQUAL( coords.size(), maxSize );
+
+    // go back to preferred size
+    controller.adjustSize( SIZE_1TO1 );
+    BOOST_CHECK_EQUAL( coords.size(), CONTENT_SIZE );
+
+    // perfect max size
+    controller.resize( maxSize, CENTER );
+    BOOST_CHECK_EQUAL( coords.size(), maxSize );
+
+    // too small, stays at current size
+    controller.resize( minSize / 2, CENTER );
+    BOOST_CHECK_EQUAL( coords.size(), maxSize );
 }
 
 BOOST_AUTO_TEST_CASE( testLargeSize )

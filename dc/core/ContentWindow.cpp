@@ -1,5 +1,8 @@
 /*********************************************************************/
 /* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/*                     Raphael.Dumusc@epfl.ch                        */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -51,8 +54,6 @@
 #endif
 
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
-
-qreal ContentWindow::maxContentScale_ = 2.0;
 
 ContentWindow::ContentWindow( ContentPtr content )
     : uuid_( QUuid::createUuid( ))
@@ -275,17 +276,6 @@ void ContentWindow::setControlsVisible( const bool value )
     controlsVisible_ = value;
     emit controlsVisibleChanged();
     emit modified();
-}
-
-void ContentWindow::setMaxContentScale( const qreal value )
-{
-    if( value > 0 )
-        maxContentScale_ = value;
-}
-
-qreal ContentWindow::getMaxContentScale()
-{
-    return maxContentScale_;
 }
 
 void ContentWindow::init()
