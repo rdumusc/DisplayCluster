@@ -21,6 +21,7 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
   operation.
 * Resizes of pixelstream windows will respect hints for minimum and maximum
   sizes; also 1:1 size will work accordingly
+* Improved the visual appearance of resize borders
 
 ## Optimizations
 
