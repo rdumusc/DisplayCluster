@@ -19,6 +19,8 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
   now adjusts the zoom level to preserve a correct pixel aspect ratio.
 * Resize with the pinch gesture is now pixel correct and linear for the entire
   operation.
+* Resizes of pixelstream windows will respect hints for minimum and maximum
+  sizes; also 1:1 size will work accordingly
 
 ## Optimizations
 

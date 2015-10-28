@@ -1,6 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -147,10 +148,8 @@ QSizeF ZoomInteractionDelegate::_getMaxZoom() const
 {
     const QSizeF content( getMaxContentSize( _contentWindow ));
     const QSizeF window( getWindowCoord().size( ));
-    const qreal maxScaleFactor = ContentWindow::getMaxContentScale();
-
-    return QSizeF( window.width() / maxScaleFactor / content.width(),
-                   window.height() / maxScaleFactor / content.height( ));
+    return QSizeF( window.width() / content.width(),
+                   window.height() / content.height( ));
 }
 
 QSizeF ZoomInteractionDelegate::_getMinZoom() const

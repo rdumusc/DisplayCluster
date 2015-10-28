@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Daniel Nachbaur <daniel.nachbaur@epfl.ch>     */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE( testNoStreamerWindowCreation )
     const QPointF pos( testWindowPos );
     const QSize size( testWindowSize );
 
-    windowManager.openPixelStreamWindow( uri, pos, size );
+    windowManager.openWindow( uri, pos, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
@@ -113,8 +113,7 @@ BOOST_AUTO_TEST_CASE( testEventReceiver )
 {
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     PixelStreamWindowManager windowManager( *displayGroup );
-    windowManager.openPixelStreamWindow( CONTENT_URI, testWindowPos,
-                                         testWindowSize );
+    windowManager.openWindow( CONTENT_URI, testWindowPos, testWindowSize );
     ContentWindowPtr window = windowManager.getContentWindow( CONTENT_URI );
     BOOST_REQUIRE( window );
 
@@ -147,7 +146,7 @@ BOOST_AUTO_TEST_CASE( testExplicitWindowCreation )
     const QPointF pos( testWindowPos );
     const QSize size( testWindowSize );
 
-    windowManager.openPixelStreamWindow( uri, pos, size );
+    windowManager.openWindow( uri, pos, size );
     ContentWindowPtr window = windowManager.getContentWindow( uri );
     BOOST_REQUIRE( window );
 
@@ -219,4 +218,36 @@ BOOST_AUTO_TEST_CASE( testImplicitWindowCreation )
     windowManager.closePixelStreamWindow( uri );
     BOOST_CHECK( !windowManager.getContentWindow( uri ));
     BOOST_CHECK( !displayGroup->getContentWindow( window->getID( )));
+}
+
+BOOST_AUTO_TEST_CASE( testSizeHints )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    PixelStreamWindowManager windowManager( *displayGroup );
+    const QString uri = CONTENT_URI;
+    windowManager.openPixelStreamWindow( uri );
+    ContentWindowPtr window = windowManager.getContentWindow( uri );
+    ContentPtr content = window->getContent();
+
+    BOOST_CHECK_EQUAL( content->getDimensions(), QSizeF( ));
+    BOOST_CHECK_EQUAL( content->getMinDimensions(), QSizeF( ));
+    BOOST_CHECK_EQUAL( content->getMaxDimensions(), QSizeF( ));
+    BOOST_CHECK_EQUAL( content->getPreferredDimensions(), QSizeF( ));
+
+    const QSize minSize( 80, 100 );
+    const QSize maxSize( 800, 1000 );
+    const QSize preferredSize( 400, 500 );
+    deflect::SizeHints hints;
+    hints.minWidth = minSize.width();
+    hints.minHeight = minSize.height();
+    hints.maxWidth = maxSize.width();
+    hints.maxHeight = maxSize.height();
+    hints.preferredWidth = preferredSize.width();
+    hints.preferredHeight = preferredSize.height();
+    windowManager.updateSizeHints( CONTENT_URI, hints );
+
+    BOOST_CHECK_EQUAL( content->getDimensions(), preferredSize );
+    BOOST_CHECK_EQUAL( content->getMinDimensions(), minSize );
+    BOOST_CHECK_EQUAL( content->getMaxDimensions(), maxSize );
+    BOOST_CHECK_EQUAL( content->getPreferredDimensions(), preferredSize );
 }

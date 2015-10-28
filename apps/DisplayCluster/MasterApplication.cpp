@@ -1,6 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -69,6 +70,7 @@
 #include "ws/DisplayGroupAdapter.h"
 
 #include <deflect/CommandHandler.h>
+#include <deflect/EventReceiver.h>
 #include <deflect/FrameDispatcher.h>
 #include <deflect/Server.h>
 
@@ -119,7 +121,8 @@ MasterApplication::~MasterApplication()
 
 void MasterApplication::init()
 {
-    connect( this, SIGNAL( lastWindowClosed( )), this, SLOT( quit( )));
+    connect( this, &MasterApplication::lastWindowClosed,
+             this, &MasterApplication::quit );
 
     masterWindow_.reset( new MasterWindow( displayGroup_, *config_ ));
     pixelStreamWindowManager_.reset(
@@ -167,15 +170,15 @@ void MasterApplication::startDeflectServer()
     deflect::FrameDispatcher& dispatcher =
             deflectServer_->getPixelStreamDispatcher();
 
-    connect( &dispatcher, SIGNAL( openPixelStream( QString )),
+    connect( &dispatcher, &deflect::FrameDispatcher::openPixelStream,
              pixelStreamWindowManager_.get(),
-             SLOT( openPixelStreamWindow( QString )));
-    connect( &dispatcher, SIGNAL( deletePixelStream( QString )),
+             &PixelStreamWindowManager::openPixelStreamWindow );
+    connect( &dispatcher, &deflect::FrameDispatcher::deletePixelStream,
              pixelStreamWindowManager_.get(),
-             SLOT( closePixelStreamWindow( QString )));
+             &PixelStreamWindowManager::closePixelStreamWindow );
     connect( pixelStreamWindowManager_.get(),
-             SIGNAL( pixelStreamWindowClosed( QString )),
-             &dispatcher, SLOT( deleteStream( QString )));
+             &PixelStreamWindowManager::pixelStreamWindowClosed,
+             &dispatcher, &deflect::FrameDispatcher::deleteStream );
 
     deflect::CommandHandler& handler = deflectServer_->getCommandHandler();
     handler.registerCommandHandler(
@@ -199,13 +202,13 @@ void MasterApplication::startWebservice( const int webServicePort )
     DisplayGroupAdapterPtr adapter( new DisplayGroupAdapter( displayGroup_ ));
     TextInputHandler* textInputHandler = new TextInputHandler( adapter );
     webServiceServer_->addHandler( "/dcapi/textinput",
-                                   dcWebservice::HandlerPtr( textInputHandler ));
+                                  dcWebservice::HandlerPtr( textInputHandler ));
 
     textInputHandler->moveToThread( webServiceServer_.get( ));
     textInputDispatcher_.reset( new TextInputDispatcher( displayGroup_ ));
-    textInputDispatcher_->connect( textInputHandler,
-                                   SIGNAL( receivedKeyInput( char )),
-                                   SLOT( sendKeyEventToActiveWindow( char )));
+    connect( textInputHandler, &TextInputHandler::receivedKeyInput,
+             textInputDispatcher_.get(),
+             &TextInputDispatcher::sendKeyEventToActiveWindow );
 
     webServiceServer_->start();
 }
@@ -231,13 +234,13 @@ void MasterApplication::initPixelStreamLauncher()
              new PixelStreamerLauncher( *pixelStreamWindowManager_, *config_ ));
 
     connect( masterWindow_.get(),
-             SIGNAL( openWebBrowser( QPointF, QSize, QString )),
+             &MasterWindow::openWebBrowser,
              pixelStreamerLauncher_.get(),
-             SLOT( openWebBrowser( QPointF, QSize, QString )));
-    connect( masterWindow_.get(), SIGNAL( openDock( QPointF )),
-             pixelStreamerLauncher_.get(), SLOT( openDock( QPointF )));
-    connect( masterWindow_.get(), SIGNAL( hideDock( )),
-             pixelStreamerLauncher_.get(), SLOT( hideDock( )));
+             &PixelStreamerLauncher::openWebBrowser );
+    connect( masterWindow_.get(), &MasterWindow::openDock,
+             pixelStreamerLauncher_.get(), &PixelStreamerLauncher::openDock );
+    connect( masterWindow_.get(), &MasterWindow::hideDock,
+             pixelStreamerLauncher_.get(), &PixelStreamerLauncher::hideDock );
 }
 
 void MasterApplication::initMPIConnection()
@@ -245,47 +248,56 @@ void MasterApplication::initMPIConnection()
     masterToWallChannel_->moveToThread( &mpiSendThread_ );
     masterFromWallChannel_->moveToThread( &mpiReceiveThread_ );
 
-    connect( displayGroup_.get(), SIGNAL( modified( DisplayGroupPtr )),
-             masterToWallChannel_.get(), SLOT( sendAsync( DisplayGroupPtr )),
-             Qt::DirectConnection );
-
-    connect( masterWindow_->getOptions().get(), SIGNAL( updated( OptionsPtr )),
-             masterToWallChannel_.get(), SLOT( sendAsync( OptionsPtr )),
-             Qt::DirectConnection );
-
-    connect( markers_.get(), SIGNAL( updated( MarkersPtr )),
-             masterToWallChannel_.get(), SLOT( sendAsync( MarkersPtr )),
-             Qt::DirectConnection );
-
-    connect( &deflectServer_->getPixelStreamDispatcher(),
-             SIGNAL( sendFrame( deflect::FramePtr )),
+    connect( displayGroup_.get(), &DisplayGroup::modified,
              masterToWallChannel_.get(),
-             SLOT( send( deflect::FramePtr )));
+             [this]( DisplayGroupPtr displayGroup )
+                { masterToWallChannel_->sendAsync( displayGroup ); },
+             Qt::DirectConnection );
+
+    connect( masterWindow_->getOptions().get(), &Options::updated,
+             masterToWallChannel_.get(),
+             [this]( OptionsPtr options )
+                { masterToWallChannel_->sendAsync( options ); },
+             Qt::DirectConnection );
+
+    connect( markers_.get(), &Markers::updated,
+             masterToWallChannel_.get(),
+             [this]( MarkersPtr markers )
+                { masterToWallChannel_->sendAsync( markers ); },
+             Qt::DirectConnection );
+
     connect( &deflectServer_->getPixelStreamDispatcher(),
-             SIGNAL( sendFrame( deflect::FramePtr )),
+             &deflect::FrameDispatcher::sendFrame,
+             masterToWallChannel_.get(),
+             &MasterToWallChannel::send );
+    connect( &deflectServer_->getPixelStreamDispatcher(),
+             &deflect::FrameDispatcher::sendFrame,
              pixelStreamWindowManager_.get(),
-             SLOT( updateStreamDimensions( deflect::FramePtr )));
+             &PixelStreamWindowManager::updateStreamDimensions );
     connect( deflectServer_.get(),
-             SIGNAL( registerToEvents( QString, bool, deflect::EventReceiver*)),
+             &deflect::Server::registerToEvents,
              pixelStreamWindowManager_.get(),
-             SLOT( registerEventReceiver( QString, bool,
-                                          deflect::EventReceiver* )));
+             &PixelStreamWindowManager::registerEventReceiver );
+    connect( deflectServer_.get(), &deflect::Server::receivedSizeHints,
+             pixelStreamWindowManager_.get(),
+             &PixelStreamWindowManager::updateSizeHints );
 
     connect( pixelStreamWindowManager_.get(),
-             SIGNAL( pixelStreamWindowClosed( QString )),
-             deflectServer_.get(), SLOT(onPixelStreamerClosed( QString )));
+             &PixelStreamWindowManager::pixelStreamWindowClosed,
+             deflectServer_.get(), &deflect::Server::onPixelStreamerClosed );
     connect( pixelStreamWindowManager_.get(),
-             SIGNAL( eventRegistrationReply( QString, bool )),
+             &PixelStreamWindowManager::eventRegistrationReply,
              deflectServer_.get(),
-             SLOT( onEventRegistrationReply( QString, bool )));
+             &deflect::Server::onEventRegistrationReply );
 
     connect( masterFromWallChannel_.get(),
-             SIGNAL( receivedRequestFrame( const QString )),
+             &MasterFromWallChannel::receivedRequestFrame,
              &deflectServer_->getPixelStreamDispatcher(),
-             SLOT( requestFrame( const QString )));
+             &deflect::FrameDispatcher::requestFrame );
 
-    connect( &mpiReceiveThread_, SIGNAL( started( )),
-             masterFromWallChannel_.get(), SLOT( processMessages( )));
+    connect( &mpiReceiveThread_, &QThread::started,
+             masterFromWallChannel_.get(),
+             &MasterFromWallChannel::processMessages );
 
     mpiSendThread_.start();
     mpiReceiveThread_.start();
@@ -296,11 +308,11 @@ void MasterApplication::initTouchListener()
 {
     QGraphicsView* graphicsView = masterWindow_->getGraphicsView();
     touchListener_.reset( new MultiTouchListener( graphicsView ));
-    connect( touchListener_.get(), SIGNAL( touchPointAdded( int, QPointF )),
-             markers_.get(), SLOT( addMarker( int, QPointF )));
-    connect( touchListener_.get(), SIGNAL( touchPointUpdated( int, QPointF )),
-             markers_.get(), SLOT( updateMarker( int, QPointF )));
-    connect( touchListener_.get(), SIGNAL( touchPointRemoved( int )),
-             markers_.get(), SLOT( removeMarker( int )));
+    connect( touchListener_.get(), &MultiTouchListener::touchPointAdded,
+             markers_.get(), &Markers::addMarker );
+    connect( touchListener_.get(), &MultiTouchListener::touchPointUpdated,
+             markers_.get(), &Markers::updateMarker );
+    connect( touchListener_.get(), &MultiTouchListener::touchPointRemoved,
+             markers_.get(), &Markers::removeMarker );
 }
 #endif

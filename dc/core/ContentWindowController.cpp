@@ -1,6 +1,7 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -171,7 +172,7 @@ void ContentWindowController::adjustSize( const SizeState state )
     switch( state )
     {
     case SIZE_1TO1:
-        resize( _contentWindow->getContent()->getDimensions(), CENTER );
+        resize( _contentWindow->getContent()->getPreferredDimensions(), CENTER);
         break;
 
     case SIZE_LARGE:
@@ -216,16 +217,18 @@ void ContentWindowController::moveTo( const QPointF& position,
 
 QSizeF ContentWindowController::getMinSize() const
 {
+    const QSizeF& minContentSize =
+            _contentWindow->getContent()->getMinDimensions();
     const QSizeF& wallSize = _displayGroup->getCoordinates().size();
-    return QSizeF( std::max( MIN_SIZE * wallSize.width(), MIN_VISIBLE_AREA_PX ),
-                   std::max( MIN_SIZE * wallSize.height(),
-                             MIN_VISIBLE_AREA_PX ));
+    const QSizeF minSize(
+                std::max( MIN_SIZE * wallSize.width(), MIN_VISIBLE_AREA_PX ),
+                std::max( MIN_SIZE * wallSize.height(), MIN_VISIBLE_AREA_PX ));
+    return std::max( minContentSize, minSize );
 }
 
 QSizeF ContentWindowController::getMaxSize() const
 {
     QSizeF maxSize = getMaxContentSize();
-    maxSize *= ContentWindow::getMaxContentScale();
     maxSize.rwidth() *= _contentWindow->getZoomRect().size().width();
     maxSize.rheight() *= _contentWindow->getZoomRect().size().height();
     return maxSize;

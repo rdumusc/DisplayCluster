@@ -1,5 +1,8 @@
 /*********************************************************************/
 /* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/*                     Raphael.Dumusc@epfl.ch                        */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -40,6 +43,8 @@
 
 IMPLEMENT_SERIALIZE_FOR_XML( Content )
 
+qreal Content::maxScale_ = 3.0;
+
 Content::Content( const QString& uri )
     : _uri( uri )
 {
@@ -55,9 +60,54 @@ QSize Content::getDimensions() const
     return _size;
 }
 
+QSize Content::getMinDimensions() const
+{
+    if( _sizeHints.minWidth == deflect::SizeHints::UNSPECIFIED_SIZE ||
+        _sizeHints.minHeight == deflect::SizeHints::UNSPECIFIED_SIZE )
+    {
+        return UNDEFINED_SIZE;
+    }
+    return QSize( _sizeHints.minWidth, _sizeHints.minHeight );
+}
+
+QSize Content::getPreferredDimensions() const
+{
+    if( _sizeHints.preferredWidth == deflect::SizeHints::UNSPECIFIED_SIZE ||
+        _sizeHints.preferredHeight == deflect::SizeHints::UNSPECIFIED_SIZE )
+    {
+        return getDimensions();
+    }
+    return QSize( _sizeHints.preferredWidth, _sizeHints.preferredHeight );
+}
+
 QSize Content::getMaxDimensions() const
 {
-    return getDimensions();
+    if( _sizeHints.maxWidth == deflect::SizeHints::UNSPECIFIED_SIZE ||
+        _sizeHints.maxHeight == deflect::SizeHints::UNSPECIFIED_SIZE )
+    {
+        return getDimensions().isValid() ? getDimensions() * getMaxScale()
+                                         : UNDEFINED_SIZE;
+    }
+    return QSize( _sizeHints.maxWidth, _sizeHints.maxHeight );
+}
+
+void Content::setSizeHints( const deflect::SizeHints& sizeHints )
+{
+    if( _sizeHints == sizeHints )
+        return;
+    _sizeHints = sizeHints;
+    emit modified();
+}
+
+void Content::setMaxScale( const qreal value )
+{
+    if( value > 0 )
+        maxScale_ = value;
+}
+
+qreal Content::getMaxScale()
+{
+    return maxScale_;
 }
 
 void Content::setDimensions( const QSize& dimensions )
@@ -67,7 +117,7 @@ void Content::setDimensions( const QSize& dimensions )
 
     _size = dimensions;
 
-    emit( modified( ));
+    emit modified();
 }
 
 qreal Content::getAspectRatio() const

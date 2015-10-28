@@ -1,5 +1,8 @@
 /*********************************************************************/
 /* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/*                     Raphael.Dumusc@epfl.ch                        */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -209,12 +212,6 @@ public:
     /** Set the visibility of the window control buttons. */
     void setControlsVisible( bool value );
 
-    /** Set the maximum factor for zoom and resize; value times content size */
-    static void setMaxContentScale( qreal value );
-
-    /** @return the maxium scale factor for zoom and resize */
-    static qreal getMaxContentScale();
-
 signals:
     /** Emitted when the Content signals that it has been modified. */
     void contentModified();
@@ -326,8 +323,6 @@ private:
     bool controlsVisible_;
 
     boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
-
-    static qreal maxContentScale_;
 };
 
 BOOST_CLASS_VERSION( ContentWindow, 3 )

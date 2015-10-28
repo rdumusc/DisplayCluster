@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -76,7 +76,7 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     const QString& uri = QString( "WebBrowser_%1" ).arg( webbrowserCounter++ );
 
     const QSize viewportSize = !size.isEmpty() ? size : WEBBROWSER_DEFAULT_SIZE;
-    _windowManager.openPixelStreamWindow( uri, pos, viewportSize );
+    _windowManager.openWindow( uri, pos, viewportSize );
 
     CommandLineOptions options;
     options.setPixelStreamerType( PS_WEBKIT );
@@ -99,21 +99,17 @@ void PixelStreamerLauncher::openDock( const QPointF pos )
     const unsigned int dockHeight = dockWidth *
                                     DockPixelStreamer::getDefaultAspectRatio();
 
-    openDock( pos, QSize( dockWidth, dockHeight ), _config.getDockStartDir( ));
-}
+    QSize dockSize( dockWidth, dockHeight );
 
-void PixelStreamerLauncher::openDock( const QPointF pos, const QSize size,
-                                      const QString rootDir )
-{
     const QString& dockUri = DockPixelStreamer::getUniqueURI();
-    const QSize& dockSize = DockPixelStreamer::constrainSize( size );
+    dockSize = DockPixelStreamer::constrainSize( dockSize );
 
-    _windowManager.openPixelStreamWindow( dockUri, pos, dockSize );
+    _windowManager.openWindow( dockUri, pos, dockSize );
     _windowManager.showWindow( dockUri );
 
     if( !_processes.count( dockUri ))
     {
-        if( !_createDock( dockSize, rootDir ))
+        if( !_createDock( dockSize, _config.getDockStartDir( )))
             put_flog( LOG_ERROR, "Dock process could not be started!" );
     }
 }
