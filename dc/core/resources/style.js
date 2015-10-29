@@ -7,9 +7,9 @@ var focusBackgroundZorder = 98;
 var unfocusZorder = 99;
 var focusZorder = 100;
 
-var borderWidth = 100
-var activeBorderColor = "red";
-var inactiveBorderColor = "#80000000";
+var borderWidth = 50
+var activeBorderColor = "#FCEE21";
+var inactiveBorderColor = "#F0F2F2F2";
 var borderOpacity = 0.4;
 
 var controlsDefaultColor = "#F2F2F2";
@@ -39,5 +39,5 @@ var windowBorderResizingColor = "#F2F2F2";
 
 var zoomContextBorderColor = "white";
 var zoomContextBorderWidth = 10;
-var zoomContextSelectionColor = "red";
+var zoomContextSelectionColor = "#6B9794";
 var zoomContextSelectionWidth = 5;
