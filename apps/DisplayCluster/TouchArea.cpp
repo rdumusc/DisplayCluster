@@ -59,6 +59,8 @@
 TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
     : QDeclarativeItem( parentItem_ )
     , _blockTapGesture( false )
+    , _tapAndHoldEnabled( true )
+    , _doubleTapEnabled( true )
 {
     grabGesture( Qt::TapGesture );
     grabGesture( DoubleTapGestureRecognizer::type( ));
@@ -81,11 +83,41 @@ bool TouchArea::sceneEvent( QEvent* event_ )
     }
 }
 
+bool TouchArea::isTapAndHoldEnabled() const
+{
+    return _tapAndHoldEnabled;
+}
+
+void TouchArea::setTapAndHoldEnabled( const bool value )
+{
+    if( _tapAndHoldEnabled == value )
+        return;
+
+    _tapAndHoldEnabled = value;
+
+    emit tapAndHoldEnabledChanged();
+}
+
+bool TouchArea::isDoubleTapEnabled() const
+{
+    return _doubleTapEnabled;
+}
+
+void TouchArea::setDoubleTapEnabled( const bool value )
+{
+    if( _doubleTapEnabled == value )
+        return;
+
+    _doubleTapEnabled = value;
+
+    emit doubleTapEnabledChanged();
+}
+
 bool TouchArea::gestureEvent( QGestureEvent* event_ )
 {
     QGesture* gesture = 0;
 
-    if( ( gesture = event_->gesture( Qt::TapAndHoldGesture )))
+    if( _tapAndHoldEnabled && ( gesture = event_->gesture( Qt::TapAndHoldGesture )))
     {
         event_->accept( Qt::TapAndHoldGesture );
         tapAndHold( static_cast< QTapAndHoldGesture* >( gesture ));
@@ -99,7 +131,7 @@ bool TouchArea::gestureEvent( QGestureEvent* event_ )
 
         return true;
     }
-    if( ( gesture = event_->gesture( DoubleTapGestureRecognizer::type( ))))
+    if(  _doubleTapEnabled && ( gesture = event_->gesture( DoubleTapGestureRecognizer::type( ))))
     {
         event_->accept( DoubleTapGestureRecognizer::type( ));
         doubleTap( static_cast< DoubleTapGesture* >( gesture ));

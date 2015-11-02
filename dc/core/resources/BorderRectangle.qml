@@ -5,7 +5,6 @@ import "style.js" as Style
 Item {
     id: borderRect
     property int border: modelData
-    state: "inactive"
 
     property bool isRight: border === ContentWindow.RIGHT
                            || border == ContentWindow.BOTTOM_RIGHT
@@ -19,6 +18,7 @@ Item {
     property bool isBottom: border === ContentWindow.BOTTOM
                             || border === ContentWindow.BOTTOM_LEFT
                             || border === ContentWindow.BOTTOM_RIGHT
+    property bool isActive: contentwindow.border === border
 
     width: border === ContentWindow.TOP
            || border === ContentWindow.BOTTOM ? parent.width - Style.borderWidth
@@ -39,27 +39,9 @@ Item {
         width: Style.borderWidth
         height: Style.borderWidth
         radius: Style.borderWidth
-        color: Style.inactiveBorderColor
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
+        visible: isActive || contentwindow.border === ContentWindow.NOBORDER
+        color: isActive ? Style.activeBorderColor : Style.inactiveBorderColor
     }
-
-    states: [
-        State {
-            name: "active"
-            when: contentwindow.border === border
-            PropertyChanges {
-                target: controlCircle
-                color: Style.activeBorderColor
-            }
-        },
-        State {
-            name: "inactive"
-            when: contentwindow.border === ContentWindow.NOBORDER
-            PropertyChanges {
-                target: controlCircle
-                color: Style.inactiveBorderColor
-            }
-        }
-    ]
 }

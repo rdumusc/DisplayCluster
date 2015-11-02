@@ -57,10 +57,26 @@ class QTapAndHoldGesture;
 class TouchArea : public QDeclarativeItem
 {
     Q_OBJECT
+    Q_PROPERTY( bool tapAndHoldEnabled READ isTapAndHoldEnabled WRITE setTapAndHoldEnabled
+                NOTIFY tapAndHoldEnabledChanged )
+    Q_PROPERTY( bool doubleTapEnabled READ isDoubleTapEnabled WRITE setDoubleTapEnabled
+                NOTIFY doubleTapEnabledChanged )
 
 public:
     explicit TouchArea( QDeclarativeItem* parentItem = 0 );
     virtual ~TouchArea();
+
+    /** Is the tap and hold gesture used by touch area. */
+    bool isTapAndHoldEnabled() const;
+
+    /** Set tap and hold gesture usage by touch area. */
+    void setTapAndHoldEnabled( bool value );
+
+    /** Is the double tap gesture used by touch area. */
+    bool isDoubleTapEnabled() const;
+
+    /** Set the double tap gesture usage by touch area. */
+    void setDoubleTapEnabled( bool value );
 
 signals:
     void touchBegin( QPointF position );
@@ -79,6 +95,12 @@ signals:
     void swipeUp();
     void swipeDown();
 
+    /** @name QProperty notifiers */
+    //@{
+    void tapAndHoldEnabledChanged();
+    void doubleTapEnabledChanged();
+    //@}
+
 protected:
     /** @name Re-implemented QGraphicsRectItem events */
     //@{
@@ -95,6 +117,8 @@ private:
     void swipe( QSwipeGesture* gesture );
 
     bool _blockTapGesture;
+    bool _tapAndHoldEnabled;
+    bool _doubleTapEnabled;
 };
 
 #endif // TOUCHAREA_H
