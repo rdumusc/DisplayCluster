@@ -10,6 +10,7 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 * Double tapping a window bring it in focus mode, replacing the old confusing
   switch to and from interaction mode with a tap and hold.
 * Animated transitions to and from the focus mode.
+* startdisplaycluster accepts extra arguments for the mpiexec command.
 
 ## Enhancements {#Enhancements}
 
@@ -26,6 +27,7 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 ## Optimizations
 
 * Movies are decoded asynchronously for more performance and responsiveness.
+* Idle CPU usage has been reduced by using non-spinning blocking MPI calls.
 
 ## Bug Fixes {#Fixes}
 
