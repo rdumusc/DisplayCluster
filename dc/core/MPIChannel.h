@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2014-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -83,7 +83,7 @@ public:
      * @param argc main program arguments count
      * @param argv main program arguments
      */
-    MPIChannel(int argc, char* argv[]);
+    MPIChannel( int argc, char* argv[] );
 
     /**
      * Create a new channel from splitting its parent channel.
@@ -91,7 +91,7 @@ public:
      * @param color All processes with the same color belong to the same channel
      * @param key If provided, used to order the new ranks for the new channel
      */
-    MPIChannel(const MPIChannel& parent, const int color, const int key);
+    MPIChannel( const MPIChannel& parent, int color, int key );
 
     /** Destructor, closes the MPI channel. */
     ~MPIChannel();
@@ -113,7 +113,7 @@ public:
      * @param localValue The value to sum
      * @return the sum of the localValues
      */
-    int globalSum(const int localValue) const;
+    int globalSum( int localValue ) const;
 
     /**
      * Send data to a single process
@@ -121,23 +121,24 @@ public:
      * @param serializedData The serialized data
      * @param dest The destination process
      */
-    void send(const MPIMessageType type, const std::string& serializedData, const int dest);
+    void send( MPIMessageType type, const std::string& serializedData,
+               int dest );
 
     /**
      * Send a signal to all processes
      * @param type The type of signal
      */
-    void sendAll(const MPIMessageType type);
+    void sendAll( MPIMessageType type );
 
     /**
      * Send a brodcast message to all other processes
      * @param type The message type
      * @param serializedData The serialized data
      */
-    void broadcast(const MPIMessageType type, const std::string& serializedData);
+    void broadcast( MPIMessageType type, const std::string& serializedData );
 
     /** Nonblocking probe for messages from a given source */
-    bool isMessageAvailable(const int src);
+    bool isMessageAvailable( int src );
 
     /**
      * Perform a blocking probe operation that returns if a message is pending
@@ -145,7 +146,7 @@ public:
      * @param tag The message tag of interest, default MPI_ANY_TAG
      * @return The probe result for a subsequent receive()
      */
-    ProbeResult probe(const int src = MPI_ANY_SOURCE, const int tag = MPI_ANY_TAG);
+    ProbeResult probe( int src = MPI_ANY_SOURCE, int tag = MPI_ANY_TAG );
 
     /**
      * Receive a header from a specific process.
@@ -154,7 +155,7 @@ public:
      * @param src The source process
      * @return The header containing the message type and size
      */
-    MPIHeader receiveHeader(const int src);
+    MPIHeader receiveHeader( int src );
 
     /**
      * Receive a message from a specific process.
@@ -165,7 +166,7 @@ public:
      * @param src The source process
      * @param tag The message tag/type, see probe()
      */
-    void receive(char* dataBuffer, const size_t messageSize, const int src, const int tag = 0);
+    void receive( char* dataBuffer, size_t messageSize, int src, int tag = 0 );
 
     /**
      * Recieve a broadcast.
@@ -175,23 +176,23 @@ public:
      * @param messageSize The number of bytes to receive
      * @param src The source process
      */
-    void receiveBroadcast(char* dataBuffer, const size_t messageSize, const int src);
+    void receiveBroadcast( char* dataBuffer, size_t messageSize, int src );
 
     /**
      * Gather the values accross all the processes.
      * @param value The local value
      * @return A vector of values of size getSize(), ordered by process rank
      */
-    std::vector<uint64_t> gatherAll(const uint64_t value);
+    std::vector<uint64_t> gatherAll( uint64_t value );
 
 private:
-    MPIContextPtr mpiContext_;
-    MPI_Comm mpiComm_;
-    int mpiRank_;
-    int mpiSize_;
+    MPIContextPtr _mpiContext;
+    MPI_Comm _mpiComm;
+    int _mpiRank;
+    int _mpiSize;
 
-    void send(const MPIHeader& header, const int dest);
-    bool isValid(const int dest) const;
+    bool _isValid( const int dest ) const;
+    void _send( const MPIHeader& header, const int dest );
 };
 
 #endif // MPICHANNEL_H

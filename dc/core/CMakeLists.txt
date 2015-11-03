@@ -73,6 +73,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   Movie.h
   MPIChannel.h
   MPIContext.h
+  MPINospin.h
   PixelStreamContent.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
@@ -189,6 +190,7 @@ list(APPEND DCCORE_SOURCES
   MovieContent.cpp
   MPIChannel.cpp
   MPIContext.cpp
+  MPINospin.cpp
   Options.cpp
   PixelStream.cpp
   PixelStreamContent.cpp

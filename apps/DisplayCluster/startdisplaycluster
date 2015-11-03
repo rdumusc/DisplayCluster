@@ -14,6 +14,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="The configuration file to load")
+parser.add_argument("--mpiargs", help="Extra arguments for the mpiexec command")
 parser.add_argument("--session", help="The session to load")
 parser.add_argument("--printcmd", help="Print the command without executing it",
                     action="store_true")
@@ -57,6 +58,11 @@ if MPIRUN_CMD is None:
     print('Error, could not find mpiexec executable in PATH')
     exit(-3)
 
+if args.mpiargs:
+    mpi_args = args.mpiargs + ' '
+else:
+    mpi_args = ''
+
 # mpiexec has a different commandline syntax for MVAPICH, MPICH2, and OpenMPI
 IS_MVAPICH = distutils.spawn.find_executable('mpiname')
 IS_MPICH2 = distutils.spawn.find_executable('mpich2version')
@@ -65,22 +71,22 @@ if IS_MVAPICH:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = '-env DISPLAY '
-    MPI_ARGS = '-genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts'
+    mpi_args += '-genvlist MPIEXEC_SIGNAL_PROPAGATION,LD_LIBRARY_PATH -hosts'
 elif IS_MPICH2:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     MPI_PER_NODE_HOST = '-host'
     EXPORT_DISPLAY = '-env DISPLAY '
-    MPI_ARGS = '-genvlist LD_LIBRARY_PATH'
+    mpi_args += '-genvlist LD_LIBRARY_PATH'
 elif IS_MPICH3:
     MPI_SPECIAL_FLAGS = '-env MV2_ENABLE_AFFINITY 0 -env IPATH_NO_CPUAFFINITY 1'
     MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = '-env DISPLAY '
-    MPI_ARGS = '-genvlist LD_LIBRARY_PATH -hosts'
+    mpi_args += '-genvlist LD_LIBRARY_PATH -hosts'
 else:
     MPI_SPECIAL_FLAGS = ''
     MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = '-x DISPLAY='
-    MPI_ARGS = '-x LD_LIBRARY_PATH -host'
+    mpi_args += '-x LD_LIBRARY_PATH -host'
 
 # Form the application parameters list
 DC_PARAMS = '--config ' + DC_CONFIG_FILE
@@ -153,7 +159,7 @@ except Exception as e:
 HOST_LIST = ",".join(hostlist)
 RUN_COMMANDS = ' : '.join(runcommands)
 
-START_CMD = '%s %s %s %s' % (MPIRUN_CMD, MPI_ARGS, HOST_LIST, RUN_COMMANDS)
+START_CMD = '%s %s %s %s' % (MPIRUN_CMD, mpi_args, HOST_LIST, RUN_COMMANDS)
 
 if args.printcmd:
     print(START_CMD)
