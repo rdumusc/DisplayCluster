@@ -89,6 +89,8 @@ BaseContentWindow {
             id: touchBorderDelegate
             BorderRectangle {
                 TouchArea {
+                    tapAndHoldEnabled: false
+                    doubleTapEnabled: false
                     anchors.fill: parent
                     onTouchBegin: {
                         contentwindow.border = parent.border
