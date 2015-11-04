@@ -237,9 +237,12 @@ QSizeF ContentWindowController::getMaxSize() const
 QSizeF ContentWindowController::getMaxContentSize() const
 {
     QSizeF maxContentSize = _contentWindow->getContent()->getMaxDimensions();
-    if( maxContentSize.isEmpty() || maxContentSize == UNDEFINED_SIZE )
-        maxContentSize = _displayGroup->getCoordinates().size();
-    return maxContentSize;
+    if( maxContentSize.isValid( ))
+        return maxContentSize;
+
+    maxContentSize = _contentWindow->getContent()->getDimensions();
+    return maxContentSize.scaled( _displayGroup->getCoordinates().size(),
+                                  Qt::KeepAspectRatioByExpanding );
 }
 
 void ContentWindowController::constrainSize( QSizeF& windowSize ) const
