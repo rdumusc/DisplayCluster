@@ -1,18 +1,19 @@
 Release Notes {#ReleaseNotes}
 ============
 
-# New in this release {#New}
+# New in DisplayCluster 0.6
 
-DisplayCluster 0.6 introduces a new focus mode for windows.
+DisplayCluster 0.6 introduces a new focus mode for windows and many other
+improvements:
 
-## New Features {#NewFeatures}
+## New Features
 
 * Double tapping a window bring it in focus mode, replacing the old confusing
   switch to and from interaction mode with a tap and hold.
 * Animated transitions to and from the focus mode.
 * startdisplaycluster accepts extra arguments for the mpiexec command.
 
-## Enhancements {#Enhancements}
+## Enhancements
 
 * The handling of mouse and touch gestures has been unified and simplified.
 * Improved automatic placement of windows.
@@ -21,15 +22,15 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 * Resize with the pinch gesture is now pixel correct and linear for the entire
   operation.
 * Resizes of pixelstream windows will respect hints for minimum and maximum
-  sizes; also 1:1 size will work accordingly
-* Improved the visual appearance of resize borders
+  sizes; also 1:1 size will work accordingly.
+* Improved the visual appearance of resize borders.
 
 ## Optimizations
 
 * Movies are decoded asynchronously for more performance and responsiveness.
 * Idle CPU usage has been reduced by using non-spinning blocking MPI calls.
 
-## Bug Fixes {#Fixes}
+## Bug Fixes
 
 * Touchpads no longer generate undesired gestures on laptops.
 
@@ -39,7 +40,7 @@ DisplayCluster 0.6 introduces a new focus mode for windows.
 
 DisplayCluster 0.5 provides the following improvements:
 
-## New Features {#NewFeatures}
+## New Features
 
 * The dcStream library has been moved to a separate project:
   [Deflect](https://github.com/BlueBrain/Deflect).
