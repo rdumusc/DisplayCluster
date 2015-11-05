@@ -44,6 +44,7 @@
 
 #include <QMainWindow>
 #include <QMimeData>
+#include <QAction>
 
 class BackgroundWidget;
 class MasterConfiguration;
@@ -71,6 +72,9 @@ public:
 
     /** Get the display options that change during runtime. */
     OptionsPtr getOptions() const;
+
+    /** Get the action that controls the auto-focus of PixelStream windows. */
+    QAction* getAutoFocusPixelStreamsAction();
 
 signals:
     /** Emitted when users want to open a dock. */
@@ -119,6 +123,8 @@ private:
     BackgroundWidget* backgroundWidget_;
     WebbrowserWidget* webbrowserWidget_;
     DisplayGroupGraphicsView* dggv_;
+
+    QAction* autoFocusPixelStreamsAction_;
 
     QString contentFolder_;
     QString sessionFolder_;

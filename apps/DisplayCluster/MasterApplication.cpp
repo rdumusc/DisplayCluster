@@ -290,6 +290,13 @@ void MasterApplication::initMPIConnection()
              deflectServer_.get(),
              &deflect::Server::onEventRegistrationReply );
 
+    QAction* autoFocusAction = masterWindow_->getAutoFocusPixelStreamsAction();
+    autoFocusAction->setChecked(
+                pixelStreamWindowManager_->getAutoFocusNewWindows( ));
+    connect( autoFocusAction, &QAction::toggled,
+             pixelStreamWindowManager_.get(),
+             &PixelStreamWindowManager::setAutoFocusNewWindows );
+
     connect( masterFromWallChannel_.get(),
              &MasterFromWallChannel::receivedRequestFrame,
              &deflectServer_->getPixelStreamDispatcher(),

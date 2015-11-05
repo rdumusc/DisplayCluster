@@ -57,6 +57,7 @@ const QSize EMPTY_STREAM_SIZE( 640, 480 );
 PixelStreamWindowManager::PixelStreamWindowManager( DisplayGroup& displayGroup )
     : QObject()
     , _displayGroup( displayGroup )
+    , _autoFocusNewWindows( true )
 {
     connect( &displayGroup, SIGNAL( contentWindowRemoved( ContentWindowPtr )),
              this, SLOT( onContentWindowRemoved( ContentWindowPtr )));
@@ -119,6 +120,9 @@ void PixelStreamWindowManager::openWindow( const QString& uri,
 
     _streamerWindows[ uri ] = contentWindow->getID();
     _displayGroup.addContentWindow( contentWindow );
+
+    if( _autoFocusNewWindows && uri != DockPixelStreamer::getUniqueURI( ))
+        _displayGroup.focus( contentWindow->getID( ));
 }
 
 void PixelStreamWindowManager::openPixelStreamWindow( const QString uri )
@@ -191,6 +195,16 @@ void PixelStreamWindowManager::updateStreamDimensions( deflect::FramePtr frame )
         controller.resize( size, CENTER );
     }
     contentWindow->getContent()->setDimensions( size );
+}
+
+bool PixelStreamWindowManager::getAutoFocusNewWindows() const
+{
+    return _autoFocusNewWindows;
+}
+
+void PixelStreamWindowManager::setAutoFocusNewWindows( const bool set )
+{
+    _autoFocusNewWindows = set;
 }
 
 void PixelStreamWindowManager::updateSizeHints( const QString uri,

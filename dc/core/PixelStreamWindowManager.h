@@ -97,6 +97,9 @@ public:
      */
     void openWindow( const QString& uri, const QPointF& pos, const QSize& size);
 
+    /** Check if new windows open in focus mode. */
+    bool getAutoFocusNewWindows() const;
+
 public slots:
     /**
      * Open a window for a new external PixelStream.
@@ -138,6 +141,9 @@ public slots:
      */
     void updateSizeHints( QString uri, deflect::SizeHints hints );
 
+    /** Open new windows in focus mode. */
+    void setAutoFocusNewWindows( bool set );
+
 signals:
     /**
      * Is emitted when the associated content window of the streamer is closed.
@@ -169,6 +175,8 @@ private:
 
     typedef std::map< QString, QUuid > ContentWindowMap;
     ContentWindowMap _streamerWindows;
+
+    bool _autoFocusNewWindows;
 };
 
 #endif

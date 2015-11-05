@@ -75,6 +75,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     , backgroundWidget_( new BackgroundWidget( config, this ))
     , webbrowserWidget_( new WebbrowserWidget( config, this ))
     , dggv_( new DisplayGroupGraphicsView( config, options_, this ))
+    , autoFocusPixelStreamsAction_( 0 )
     , contentFolder_( config.getDockStartDir( ))
     , sessionFolder_( config.getDockStartDir( ))
 {
@@ -109,6 +110,11 @@ DisplayGroupGraphicsView* MasterWindow::getGraphicsView()
 OptionsPtr MasterWindow::getOptions() const
 {
     return options_;
+}
+
+QAction* MasterWindow::getAutoFocusPixelStreamsAction()
+{
+    return autoFocusPixelStreamsAction_;
 }
 
 void MasterWindow::setupMasterWindowUI()
@@ -229,6 +235,12 @@ void MasterWindow::setupMasterWindowUI()
     connect( enableAlphaBlendingAction, SIGNAL( toggled( bool )),
              options_.get(), SLOT( enableAlphaBlending( bool )));
 
+    // auto focus pixel streams
+    autoFocusPixelStreamsAction_ = new QAction( "Auto-focus streamers", this );
+    autoFocusPixelStreamsAction_->setStatusTip(
+           "Open the windows of the external streamers in focus mode" );
+    autoFocusPixelStreamsAction_->setCheckable( true );
+
     QAction * showAboutDialog = new QAction("About", this);
     showAboutDialog->setStatusTip("About DisplayCluster");
     connect(showAboutDialog, SIGNAL(triggered()), this, SLOT(openAboutWidget()));
@@ -250,6 +262,7 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction( showTestPatternAction );
     viewMenu->addAction( showZoomContextAction );
     viewMenu->addAction( enableAlphaBlendingAction );
+    viewMenu->addAction( autoFocusPixelStreamsAction_ );
     toolsMenu->addAction( computeImagePyramidAction );
 
     helpMenu->addAction( showAboutDialog );
