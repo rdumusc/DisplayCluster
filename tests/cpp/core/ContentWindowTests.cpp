@@ -44,7 +44,7 @@ namespace ut = boost::unit_test;
 #include "ContentWindow.h"
 
 #include "MinimalGlobalQtApp.h"
-BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
+BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
 #include "DummyContent.h"
 
