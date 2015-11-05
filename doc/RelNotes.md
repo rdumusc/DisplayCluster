@@ -1,6 +1,14 @@
 Release Notes {#ReleaseNotes}
 ============
 
+# New in git master branch
+
+## New Features
+
+* Added an option to open new PixelStream windows in focus mode
+
+- - -
+
 # New in DisplayCluster 0.6
 
 DisplayCluster 0.6 introduces a new focus mode for windows and many other
