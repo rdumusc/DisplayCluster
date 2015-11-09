@@ -170,7 +170,7 @@ signals:
     void hasFocusedWindowsChanged();
 
 private slots:
-    void sendDisplayGroup();
+    void _sendDisplayGroup();
 
 private:
     Q_DISABLE_COPY( DisplayGroup )

@@ -209,15 +209,6 @@ bool ContentWindow::setState( const ContentWindow::WindowState state )
     if( windowState_ == state )
         return false;
 
-    if( content_->getType() == CONTENT_TYPE_PIXEL_STREAM && state == SELECTED )
-    {
-        PixelStreamInteractionDelegate* delegate =
-                static_cast<PixelStreamInteractionDelegate*>(
-                    interactionDelegate_.get( ));
-        if( !delegate->hasEventReceivers( ))
-            return false;
-    }
-
     windowState_ = state;
 
     emit stateChanged();

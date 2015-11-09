@@ -77,7 +77,7 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
                 make_unique<ContentWindowController>( *contentWindow, *this ));
 
     emit( contentWindowAdded( contentWindow ));
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
 void DisplayGroup::removeWindowLater( const QUuid windowId )
@@ -103,7 +103,7 @@ void DisplayGroup::removeContentWindow( ContentWindowPtr contentWindow )
     disconnect( contentWindow.get(), 0, this, 0 );
 
     emit( contentWindowRemoved( contentWindow ));
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
 void DisplayGroup::moveContentWindowToFront( const QUuid id )
@@ -127,7 +127,7 @@ void DisplayGroup::moveContentWindowToFront( ContentWindowPtr contentWindow )
     _contentWindows.push_back( contentWindow );
 
     emit( contentWindowMovedToFront( contentWindow ));
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
 bool DisplayGroup::getShowWindowTitles() const
@@ -174,7 +174,7 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
             _focusedWindows.insert( window );
     }
     _updateFocusedWindowsCoordinates();
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
 bool DisplayGroup::hasFocusedWindows() const
@@ -195,7 +195,7 @@ void DisplayGroup::focus( const QUuid& id )
     if( _focusedWindows.size() == 1 )
         emit hasFocusedWindowsChanged();
 
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
 void DisplayGroup::unfocus( const QUuid& id )
@@ -209,7 +209,7 @@ void DisplayGroup::unfocus( const QUuid& id )
     // Make sure the window dimensions are re-adjusted to the new zoom level
     window->getController()->scale( window->getCoordinates().center(), 0.0 );
 
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
 const ContentWindowSet& DisplayGroup::getFocusedWindows() const
@@ -236,20 +236,25 @@ void DisplayGroup::setShowWindowTitles( const bool set )
     _showWindowTitles = set;
 
     emit showWindowTitlesChanged( set );
-    sendDisplayGroup();
+    _sendDisplayGroup();
 }
 
-void DisplayGroup::sendDisplayGroup()
+void DisplayGroup::_sendDisplayGroup()
 {
     emit modified( shared_from_this( ));
 }
 
 void DisplayGroup::_watchChanges( ContentWindowPtr contentWindow )
 {
-    connect( contentWindow.get(), SIGNAL( modified( )),
-             this, SLOT( sendDisplayGroup( )));
-    connect( contentWindow.get(), SIGNAL( contentModified( )),
-             this, SLOT( sendDisplayGroup( )));
+    connect( contentWindow.get(), &ContentWindow::contentModified,
+             this, &DisplayGroup::_sendDisplayGroup );
+
+    connect( contentWindow.get(), &ContentWindow::contentModified,
+             this, [this]()
+    {
+        _updateFocusedWindowsCoordinates();
+        _sendDisplayGroup();
+    } );
 }
 
 void DisplayGroup::_removeFocusedWindow( ContentWindowPtr window )
