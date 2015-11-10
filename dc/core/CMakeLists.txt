@@ -130,6 +130,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   PixelStreamInteractionDelegate.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
+  QmlControlPanel.h
   RenderController.h
   WallFromMasterChannel.h
   WallGraphicsScene.h
@@ -198,6 +199,7 @@ list(APPEND DCCORE_SOURCES
   PixelStreamSegmentRenderer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
+  QmlControlPanel.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
   RenderContext.cpp

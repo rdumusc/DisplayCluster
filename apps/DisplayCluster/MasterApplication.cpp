@@ -241,6 +241,10 @@ void MasterApplication::initPixelStreamLauncher()
              pixelStreamerLauncher_.get(), &PixelStreamerLauncher::openDock );
     connect( masterWindow_.get(), &MasterWindow::hideDock,
              pixelStreamerLauncher_.get(), &PixelStreamerLauncher::hideDock );
+
+    connect( masterWindow_.get(), &MasterWindow::openAppLauncher,
+             pixelStreamerLauncher_.get(),
+             &PixelStreamerLauncher::openAppLauncher );
 }
 
 void MasterApplication::initMPIConnection()

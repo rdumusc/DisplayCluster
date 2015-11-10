@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -56,13 +56,19 @@ public:
      * @param filename \see Configuration
      * @throw std::runtime_error if the file could not be read
      */
-    MasterConfiguration(const QString& filename);
+    MasterConfiguration( const QString& filename );
 
     /**
      * Get the Dock startup directory
      * @return directory path
      */
     const QString& getDockStartDir() const;
+
+    /**
+     * Get the Application Launcher QML file
+     * @return file path
+     */
+    const QString& getAppLauncherFile() const;
 
     /**
      * Get the port where the WebService server will be listening for incoming
@@ -94,13 +100,13 @@ public:
      * Set the background color
      * @param color
      */
-    void setBackgroundColor(const QColor& color);
+    void setBackgroundColor( const QColor& color );
 
     /**
      * Set the URI to the Content to be used as background
      * @param uri empty string to use no background content
      */
-    void setBackgroundUri(const QString& uri);
+    void setBackgroundUri( const QString& uri );
 
     /**
      * Save the configuration to the current xml file.
@@ -113,15 +119,19 @@ public:
      * @param filename destination file
      * @return true on succes, false on failure
      */
-    bool save(const QString& filename) const;
+    bool save( const QString& filename ) const;
 
 private:
     void loadMasterSettings();
-    void loadDockStartDirectory(QXmlQuery& query);
-    void loadWebBrowserStartURL(QXmlQuery& query);
-    void loadBackgroundProperties(QXmlQuery& query);
+    void loadDockStartDirectory( QXmlQuery& query );
+    void loadWebService( QXmlQuery& query );
+    void loadAppLauncher( QXmlQuery& query );
+    void loadWebBrowserStartURL( QXmlQuery& query );
+    void loadBackgroundProperties( QXmlQuery& query );
 
     QString dockStartDir_;
+    QString appLauncherFile_;
+
     int dcWebServicePort_;
     QString webBrowserDefaultURL_;
 

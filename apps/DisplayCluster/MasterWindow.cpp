@@ -288,6 +288,12 @@ void MasterWindow::setupMasterWindowUI()
     connect(dggv_, SIGNAL(backgroundTapAndHold(QPointF)),
             this, SIGNAL(openDock(QPointF)));
 
+    // Forward control panel actions
+    connect( &dggv_->getControlPanel(), &QmlControlPanel::openContentPanel,
+             this, &MasterWindow::openDock );
+    connect( &dggv_->getControlPanel(), &QmlControlPanel::openApplicationsPanel,
+             this, &MasterWindow::openAppLauncher );
+
     // create contents dock widget
     QDockWidget * contentsDockWidget = new QDockWidget("Contents", this);
     QWidget * contentsWidget = new QWidget();

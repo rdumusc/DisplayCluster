@@ -49,15 +49,21 @@
 #include <QCoreApplication>
 #include <QProcess>
 
-#define DOCK_WIDTH_RELATIVE_TO_WALL   0.175
-
+namespace
+{
 #ifdef _WIN32
-#define LOCALSTREAMER_BIN "localstreamer.exe"
+const QString LOCALSTREAMER_BIN( "localstreamer.exe" );
+const QString QMLSTREAMER_BIN( "qmlstreamer.exe" );
 #else
-#define LOCALSTREAMER_BIN "localstreamer"
+const QString LOCALSTREAMER_BIN( "localstreamer" );
+const QString QMLSTREAMER_BIN( "qmlstreamer" );
 #endif
 
-#define WEBBROWSER_DEFAULT_SIZE QSize( 1280, 1024 )
+const QString APP_LAUNCHER_URI( "App Launcher" );
+
+const qreal DOCK_WIDTH_RELATIVE_TO_WALL = 0.175;
+const QSize WEBBROWSER_DEFAULT_SIZE( 1280, 1024 );
+}
 
 PixelStreamerLauncher::PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
                                               const MasterConfiguration& config )
@@ -114,6 +120,19 @@ void PixelStreamerLauncher::openDock( const QPointF pos )
     }
 }
 
+bool PixelStreamerLauncher::openAppLauncher()
+{
+    const QString& appLauncherQmlFile = _config.getAppLauncherFile();
+    if( appLauncherQmlFile.isEmpty( ))
+        return false;
+
+    const QStringList args( QString( "--qml %1" ).arg( appLauncherQmlFile ));
+
+    const QString& uri = APP_LAUNCHER_URI;
+    _processes[uri] = new QProcess( this );
+    return _processes[uri]->startDetached( _getQmlStreamerBin( ), args );
+}
+
 void PixelStreamerLauncher::hideDock()
 {
     _windowManager.hideWindow( DockPixelStreamer::getUniqueURI( ));
@@ -125,7 +144,7 @@ void PixelStreamerLauncher::dereferenceLocalStreamer( const QString uri )
 }
 
 bool PixelStreamerLauncher::_createDock( const QSize& size,
-                                        const QString& rootDir )
+                                         const QString& rootDir )
 {
     const QString& uri = DockPixelStreamer::getUniqueURI();
 
@@ -148,4 +167,10 @@ QString PixelStreamerLauncher::_getLocalStreamerBin() const
 {
     const QString& appDir = QCoreApplication::applicationDirPath();
     return QString( "%1/%2" ).arg( appDir, LOCALSTREAMER_BIN );
+}
+
+QString PixelStreamerLauncher::_getQmlStreamerBin() const
+{
+    const QString& appDir = QCoreApplication::applicationDirPath();
+    return QString( "%1/%2" ).arg( appDir, QMLSTREAMER_BIN );
 }

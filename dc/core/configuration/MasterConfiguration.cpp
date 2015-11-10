@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -45,13 +45,17 @@
 #include <QtXmlPatterns>
 #include <stdexcept>
 
-#define DEFAULT_WEBSERVICE_PORT 8888
-#define TRIM_REGEX "[\\n\\t\\r]"
-#define DEFAULT_URL "http://www.google.com";
+namespace
+{
+const int DEFAULT_WEBSERVICE_PORT = 8888;
+const QRegExp TRIM_REGEX( "[\\n\\t\\r]" );
+const QString DEFAULT_URL( "http://www.google.com" );
+}
 
-MasterConfiguration::MasterConfiguration(const QString &filename)
-    : Configuration(filename)
-    , backgroundColor_(Qt::black)
+MasterConfiguration::MasterConfiguration( const QString& filename )
+    : Configuration( filename )
+    , dcWebServicePort_( DEFAULT_WEBSERVICE_PORT )
+    , backgroundColor_( Qt::black )
 {
     loadMasterSettings();
 }
@@ -59,58 +63,68 @@ MasterConfiguration::MasterConfiguration(const QString &filename)
 void MasterConfiguration::loadMasterSettings()
 {
     QXmlQuery query;
-    if(!query.setFocus(QUrl(filename_)))
-        throw std::runtime_error("Invalid configuration file: " + filename_.toStdString());
+    if( !query.setFocus( QUrl( filename_ )))
+        throw std::runtime_error( "Invalid configuration file: " +
+                                  filename_.toStdString( ));
 
-    loadDockStartDirectory(query);
-    loadWebBrowserStartURL(query);
-    loadBackgroundProperties(query);
+    loadDockStartDirectory( query );
+    loadWebService( query );
+    loadAppLauncher( query );
+    loadWebBrowserStartURL( query );
+    loadBackgroundProperties( query );
 }
 
-void MasterConfiguration::loadDockStartDirectory(QXmlQuery& query)
+void MasterConfiguration::loadDockStartDirectory( QXmlQuery& query )
 {
     QString queryResult;
 
-    query.setQuery("string(/configuration/dock/@directory)");
-    if (query.evaluateTo(&queryResult))
-        dockStartDir_ = queryResult.remove(QRegExp(TRIM_REGEX));
-    if (dockStartDir_.isEmpty())
+    query.setQuery( "string(/configuration/dock/@directory)" );
+    if( query.evaluateTo( &queryResult ))
+        dockStartDir_ = queryResult.remove( QRegExp( TRIM_REGEX ));
+    if( dockStartDir_.isEmpty( ))
         dockStartDir_ = QDir::homePath();
+}
 
-    // WebService server port
-    query.setQuery("string(/configuration/webservice/@port)");
-    if (query.evaluateTo(&queryResult))
+void MasterConfiguration::loadWebService( QXmlQuery& query )
+{
+    QString queryResult;
+    query.setQuery( "string(/configuration/webservice/@port)" );
+    if( query.evaluateTo( &queryResult ))
     {
-        if (queryResult.isEmpty())
-            dcWebServicePort_ = DEFAULT_WEBSERVICE_PORT;
-        else
+        if( !queryResult.isEmpty( ))
             dcWebServicePort_ = queryResult.toInt();
     }
 }
 
-void MasterConfiguration::loadWebBrowserStartURL(QXmlQuery& query)
+void MasterConfiguration::loadAppLauncher( QXmlQuery& query )
 {
     QString queryResult;
+    query.setQuery( "string(/configuration/applauncher/@qml)" );
+    if( query.evaluateTo( &queryResult ))
+        appLauncherFile_ = queryResult.remove( QRegExp( TRIM_REGEX ));
+}
 
-    query.setQuery("string(/configuration/webbrowser/@defaultURL)");
-    if (query.evaluateTo(&queryResult))
-        webBrowserDefaultURL_ = queryResult.remove(QRegExp(TRIM_REGEX));
-    if (webBrowserDefaultURL_.isEmpty())
+void MasterConfiguration::loadWebBrowserStartURL( QXmlQuery& query )
+{
+    QString queryResult;
+    query.setQuery( "string(/configuration/webbrowser/@defaultURL)");
+    if( query.evaluateTo( &queryResult ))
+        webBrowserDefaultURL_ = queryResult.remove( QRegExp( TRIM_REGEX ));
+    if( webBrowserDefaultURL_.isEmpty( ))
         webBrowserDefaultURL_ = DEFAULT_URL;
 }
 
-void MasterConfiguration::loadBackgroundProperties(QXmlQuery& query)
+void MasterConfiguration::loadBackgroundProperties( QXmlQuery& query )
 {
     QString queryResult;
+    query.setQuery( "string(/configuration/background/@uri)" );
+    if( query.evaluateTo( &queryResult ))
+        backgroundUri_ = queryResult.remove( QRegExp( TRIM_REGEX ));
 
-    query.setQuery("string(/configuration/background/@uri)");
-    if(query.evaluateTo(&queryResult))
-        backgroundUri_ = queryResult.remove(QRegExp("[\\n\\t\\r]"));
-
-    query.setQuery("string(/configuration/background/@color)");
-    if (query.evaluateTo(&queryResult))
+    query.setQuery( "string(/configuration/background/@color)" );
+    if( query.evaluateTo( &queryResult ))
     {
-        queryResult.remove(QRegExp("[\\n\\t\\r]"));
+        queryResult.remove( QRegExp( TRIM_REGEX ));
 
         const QColor newColor( queryResult );
         if( newColor.isValid( ))
@@ -121,6 +135,11 @@ void MasterConfiguration::loadBackgroundProperties(QXmlQuery& query)
 const QString& MasterConfiguration::getDockStartDir() const
 {
     return dockStartDir_;
+}
+
+const QString& MasterConfiguration::getAppLauncherFile() const
+{
+    return appLauncherFile_;
 }
 
 int MasterConfiguration::getWebServicePort() const
@@ -162,7 +181,7 @@ bool MasterConfiguration::save( const QString& filename ) const
 {
     QDomDocument doc( "XmlDoc" );
     QFile infile( filename_ );
-    if( !infile.open(QIODevice::ReadOnly ))
+    if( !infile.open( QIODevice::ReadOnly ))
     {
         put_flog( LOG_ERROR, "could not open configuration file: '%s'",
                   filename.toLocal8Bit().constData( ));

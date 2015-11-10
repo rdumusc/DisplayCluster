@@ -72,6 +72,7 @@ DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
 
     engine_.rootContext()->setContextProperty( "options", options.get( ));
     engine_.rootContext()->setContextProperty( "dggv", this );
+    engine_.rootContext()->setContextProperty( "cppcontrolpanel", &controlPanel_ );
 }
 
 DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
@@ -122,6 +123,11 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
     connect( displayGroup_.get(),
              SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveToFront( ContentWindowPtr )));
+}
+
+QmlControlPanel& DisplayGroupGraphicsView::getControlPanel()
+{
+    return controlPanel_;
 }
 
 void DisplayGroupGraphicsView::clearScene()

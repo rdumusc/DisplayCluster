@@ -61,6 +61,9 @@ namespace ut = boost::unit_test;
 #define CONFIG_EXPECTED_URL "http://bbp.epfl.ch"
 #define CONFIG_EXPECTED_DEFAULT_URL "http://www.google.com"
 
+#define CONFIG_EXPECTED_APPLAUNCHER "/some/path/to/launcher.qml"
+#define CONFIG_EXPECTED_DEFAULT_APPLAUNCHER ""
+
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
 void testBaseParameters( const Configuration& config )
@@ -108,6 +111,8 @@ BOOST_AUTO_TEST_CASE( test_master_configuration )
 
     BOOST_CHECK( config.getBackgroundColor() == QColor( CONFIG_EXPECTED_BACKGROUND_COLOR ));
     BOOST_CHECK_EQUAL( config.getBackgroundUri().toStdString(), CONFIG_EXPECTED_BACKGROUND );
+
+    BOOST_CHECK_EQUAL( config.getAppLauncherFile().toStdString(), CONFIG_EXPECTED_APPLAUNCHER );
 }
 
 BOOST_AUTO_TEST_CASE( test_master_configuration_default_values )
@@ -116,6 +121,7 @@ BOOST_AUTO_TEST_CASE( test_master_configuration_default_values )
 
     BOOST_CHECK_EQUAL( config.getDockStartDir().toStdString(), QDir::homePath().toStdString() );
     BOOST_CHECK_EQUAL( config.getWebBrowserDefaultURL().toStdString(), CONFIG_EXPECTED_DEFAULT_URL );
+    BOOST_CHECK_EQUAL( config.getAppLauncherFile().toStdString(), CONFIG_EXPECTED_DEFAULT_APPLAUNCHER );
 }
 
 BOOST_AUTO_TEST_CASE( test_save_configuration )

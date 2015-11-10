@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013-2015, EPFL/Blue Brain Project                  */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,95 +37,41 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXELSTREAMERLAUNCHER_H
-#define PIXELSTREAMERLAUNCHER_H
-
-#include <map>
+#ifndef QMLCONTROLPANEL_H
+#define QMLCONTROLPANEL_H
 
 #include <QObject>
 #include <QPointF>
-#include <QSize>
-
-class QProcess;
-class PixelStreamWindowManager;
-class MasterConfiguration;
 
 /**
- * Launch Pixel Streamers as separate processes.
+ * A C++ interface to the QML control panel.
  *
- * The processes connect to the Master application on localhost using the
- * deflect::Stream API. They can be terminated by the user by closing their
- * associated window.
- *
- * Due to an incompatibility between QProcess and MPI(*), we must start the
- * processes DETACHED.
- * In theory they might stay alive after the main application has exited.
- * In practice, this doesn't seem to happen; our processes exit when the
- * deflect::Stream is closed in any case.
- *
- * (*) MPI captures the SIGCHLD that QProcess relies on to detect that the
- * process has finished. Thus, the call to waitForFinished() blocks forever in
- * QProcess destructor...
+ * It exposes a set of possible actions as an enum type for use in a Qml list
+ * and maps them back to explicit Qt signals in the C++ code.
  */
-class PixelStreamerLauncher : public QObject
+class QmlControlPanel : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY( QmlControlPanel )
 
 public:
-    /**
-     * Create a new PixelStreamerLauncher
-     *
-     * @param windowManager Manages the windows of the streamers
-     * @param config The configuration for the default parameters
-     */
-    PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
-                           const MasterConfiguration& config );
+    /** The different actions supported by the Qml control panel. */
+    enum ControlPanelActions
+    {
+        OPEN_CONTENT,
+        OPEN_APPLICATION
+    };
+    Q_ENUMS( ControlPanelActions )
+
+    QmlControlPanel() = default;
+
+signals:
+    void openContentPanel( QPointF position );
+    void openApplicationsPanel( QPointF position );
 
 public slots:
-    /**
-     * Open a WebBrowser.
-     *
-     * @param pos The position of the center of the browser window.
-     *        If pos.isNull(), the window is centered on the DisplayWall.
-     * @param size The initial size of the viewport of the webbrowser in pixels.
-     * @param url The webpage to open.
-     */
-    void openWebBrowser( QPointF pos, QSize size, QString url );
+    void processAction( ControlPanelActions action, QPointF position );
 
-    /**
-     * Open the Dock using default parameters.
-     *
-     * A new dock instance is created if it was closed, otherwise the existing
-     * Dock instance is moved to the given position.
-     * @param pos The position of the center of the Dock
-     */
-    void openDock( QPointF pos );
-
-    /** Hide the Dock. */
-    void hideDock();
-
-    /**
-     * Open the Applications launcher.
-     * @return true on success, false on error or if the path to the AppLauncher
-     *         QML file is not defined in the configuration
-     */
-    bool openAppLauncher();
-
-private slots:
-    void dereferenceLocalStreamer( QString uri );
-
-private:
-    Q_DISABLE_COPY( PixelStreamerLauncher )
-
-    typedef std::map< QString, QProcess* > Streamers;
-    Streamers _processes;
-
-    PixelStreamWindowManager& _windowManager;
-    const MasterConfiguration& _config;
-
-    bool _createDock( const QSize& size, const QString& rootDir );
-    QString _getLocalStreamerBin() const;
-    QString _getQmlStreamerBin() const;
 };
 
-#endif // PIXELSTREAMERLAUNCHER_H
+#endif

@@ -40,5 +40,7 @@
         <file>BaseContentWindow.qml</file>
         <file>OneToOneControlButton.qml</file>
         <file>FocusControlButton.qml</file>
+        <file>ControlPanel.qml</file>
+        <file>ControlPanelDelegate.qml</file>
     </qresource>
 </RCC>
