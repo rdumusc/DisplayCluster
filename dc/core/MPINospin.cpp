@@ -44,6 +44,7 @@
 
 #include "MPINospin.h"
 
+#include <algorithm>
 #include <ctime>
 
 namespace
