@@ -63,7 +63,7 @@ namespace ut = boost::unit_test;
 
 // QCoreApplication is required by QtXml for loading legacy configuration files
 #include "MinimalGlobalQtApp.h"
-BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp )
+BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
 namespace
 {
