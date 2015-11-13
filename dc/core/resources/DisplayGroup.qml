@@ -43,6 +43,6 @@ Item {
 
     ControlPanel {
         id: controlPanel
-        property alias buttons: controlPanel.buttons
+        property alias buttonDelegate: controlPanel.buttonDelegate
     }
 }

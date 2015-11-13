@@ -37,49 +37,25 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef QMLCONTROLPANEL_H
-#define QMLCONTROLPANEL_H
+#ifndef QMLUTILS_H
+#define QMLUTILS_H
 
-#include <QObject>
-#include <QPointF>
+#include <QDebug>
+#include <stdexcept>
 
 /**
- * A C++ interface to the QML control panel item.
- *
- * It exposes a set of possible actions as an enum type for use in Qml
- * and maps them back to Qt signals in the C++ code.
+ * Qml utility functions.
  */
-class QmlControlPanel : public QObject
+
+template <typename T>
+static void qmlCheckOrThrow( const T& component )
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( QmlControlPanel )
-
-public:
-    /** The different actions supported by the Qml control panel. */
-    enum ControlPanelActions
+    if( component.isError( ))
     {
-        OPEN_CONTENT,
-        OPEN_APPLICATION,
-        NEW_SESSION,
-        LOAD_SESSION,
-        SAVE_SESSION
-    };
-    Q_ENUMS( ControlPanelActions )
-
-    /** Constructor */
-    QmlControlPanel() = default;
-
-public slots:
-    /** Calling this method emits a signal corresponding to the given action. */
-    void processAction( ControlPanelActions action, QPointF position );
-
-signals:
-    void openContentPanel( QPointF position );
-    void openApplicationsPanel( QPointF position );
-
-    void clearSession();
-    void openLoadSessionPanel( QPointF position );
-    void openSaveSessionPanel( QPointF position );
-};
+        for( const auto& error : component.errors( ))
+            qWarning() << error.url() << error.line() << error;
+        throw std::runtime_error( "Invadid QML component" );
+    }
+}
 
 #endif

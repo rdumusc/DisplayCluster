@@ -42,6 +42,7 @@
 #include "DisplayGroup.h"
 #include "DisplayGroupGraphicsScene.h"
 #include "Options.h"
+#include "qmlUtils.h"
 
 #include <boost/foreach.hpp>
 #include <QGraphicsObject>
@@ -106,6 +107,7 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
 
     QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
     displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
+    qmlCheckOrThrow( component );
     scene()->addItem( displayGroupItem_ );
 
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();

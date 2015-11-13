@@ -15,15 +15,13 @@ DisplayGroup {
         }
     }
 
-    controlPanel.buttons.delegate: touchControlPanelDelegate
-
-    Component {
-        id: touchControlPanelDelegate
+    controlPanel.buttonDelegate: Component {
         ControlPanelDelegate {
+            id: touchControlPanel
             TouchMouseArea {
                 anchors.fill: parent
                 onTap: {
-                    var action = controlPanel.buttons.model.get(index).action
+                    var action = touchControlPanel.ListView.view.model.get(index).action
                     var position = Qt.point(controlPanel.width,
                                             displaygroup.height / 2)
                     cppcontrolpanel.processAction(action, position)

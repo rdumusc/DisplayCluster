@@ -50,6 +50,15 @@ void QmlControlPanel::processAction( ControlPanelActions action,
     case OPEN_APPLICATION:
         emit openApplicationsPanel( position );
         break;
+    case NEW_SESSION:
+        emit clearSession();
+        break;
+    case LOAD_SESSION:
+        emit openLoadSessionPanel( position );
+        break;
+    case SAVE_SESSION:
+        emit openSaveSessionPanel( position );
+        break;
     default:
         break;
     }

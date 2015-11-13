@@ -77,6 +77,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamContent.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
+  qmlUtils.h
   Renderable.h
   RenderContext.h
   SessionCommandHandler.h

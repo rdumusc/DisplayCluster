@@ -124,9 +124,13 @@ bool PixelStreamerLauncher::openAppLauncher()
 {
     const QString& appLauncherQmlFile = _config.getAppLauncherFile();
     if( appLauncherQmlFile.isEmpty( ))
+    {
+        put_flog( LOG_INFO, "xml configuration is missing a qml property for "
+                            "the applauncher. This panel is unavailable." );
         return false;
+    }
 
-    const QStringList args( QString( "--qml %1" ).arg( appLauncherQmlFile ));
+    const auto args = QStringList() << QString( "--qml" ) << appLauncherQmlFile;
 
     const QString& uri = APP_LAUNCHER_URI;
     _processes[uri] = new QProcess( this );

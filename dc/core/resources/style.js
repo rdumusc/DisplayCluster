@@ -41,3 +41,10 @@ var zoomContextBorderColor = "white";
 var zoomContextBorderWidth = 10;
 var zoomContextSelectionColor = "#6B9794";
 var zoomContextSelectionWidth = 5;
+
+var controlPanelWidth = 780
+var controlPanelHeight = 920
+var controlPanelPadding = 50
+var controlPanelBackground = "transparent"
+var controlPanelTextSize = 70
+var controlPanelTextSpacing = 20

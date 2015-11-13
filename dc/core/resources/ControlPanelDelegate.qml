@@ -1,19 +1,23 @@
 import QtQuick 1.1
+import "qrc:/qml/core/style.js" as Style
 
-
-Row {
+Item {
     id: button
     width: parent.width
-    height: 70
+    height: Style.controlPanelTextSize
 
-    spacing: 20
-    Image {
-        source: icon
-        height: button.height
-        width: height
-    }
-    Text {
-        text: label
-        font.pixelSize: button.height * 0.8 // Fill the button vertically
+    Row {
+        anchors.fill: parent
+        spacing: Style.controlPanelTextSpacing
+        Image {
+            source: icon
+            height: button.height
+            width: height
+        }
+        Text {
+            text: label
+            font.capitalization: Font.AllUppercase
+            font.pixelSize: button.height * 0.8 // Fill the button vertically
+        }
     }
 }
