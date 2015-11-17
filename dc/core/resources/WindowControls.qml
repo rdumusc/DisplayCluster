@@ -16,13 +16,13 @@ Rectangle {
     anchors.top: parent.top
     anchors.topMargin: options.showWindowBorders ? -Style.windowBorderWidth / 2 : 0
     anchors.rightMargin: Style.controlsLeftMargin
-    visible: opacity > 0 && contentwindow.label !== "Dock"
+    visible: opacity > 0
     opacity: 0
 
     ListView {
         id: buttons
         width: Style.buttonsSize
-        property int fixed_buttons_count: 3
+        property int fixed_buttons_count: contentwindow.isPanel ? 1 : 3
         height: (count + fixed_buttons_count) * Style.buttonsSize
         anchors.centerIn: parent
         orientation: ListView.Vertical
@@ -56,7 +56,7 @@ Rectangle {
         },
         State {
             name: "selected"
-            when: contentwindow.selected
+            when: contentwindow.state === ContentWindow.SELECTED
             extend: "opaque"
             PropertyChanges {
                 target: windowControls

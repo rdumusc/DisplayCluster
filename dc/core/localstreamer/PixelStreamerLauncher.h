@@ -106,10 +106,11 @@ public slots:
 
     /**
      * Open the Applications launcher.
+     * @param pos The position of the center of the panel
      * @return true on success, false on error or if the path to the AppLauncher
      *         QML file is not defined in the configuration
      */
-    bool openAppLauncher();
+    bool openAppLauncher( QPointF pos );
 
 private slots:
     void dereferenceLocalStreamer( QString uri );

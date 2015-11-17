@@ -51,11 +51,6 @@ Rectangle {
                         label: "Open"
                         icon: "qrc:///img/close.svg"
                         action: QmlControlPanel.LOAD_SESSION
-                    },
-                    ListElement {
-                        label: "Save (not available)"
-                        icon: "qrc:///img/close.svg"
-                        action: QmlControlPanel.SAVE_SESSION
                     }
                 ]
             }

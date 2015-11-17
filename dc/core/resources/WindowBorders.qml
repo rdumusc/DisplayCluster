@@ -9,7 +9,7 @@ Rectangle {
     property real baseOpacity: Style.borderOpacity
     property alias borderDelegate: repeater.delegate
 
-    visible: contentwindow.label !== "Dock"
+    visible: !contentwindow.isPanel
              && contentwindow.controlsVisible
              && contentwindow.state !== ContentWindow.SELECTED
     opacity: baseOpacity

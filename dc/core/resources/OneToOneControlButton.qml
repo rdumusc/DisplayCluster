@@ -3,5 +3,5 @@ import DisplayCluster 1.0
 
 ControlButton {
     image: "qrc:///img/oneToOne.svg"
-    visible: !contentwindow.focused
+    visible: !contentwindow.isPanel && !contentwindow.focused
 }

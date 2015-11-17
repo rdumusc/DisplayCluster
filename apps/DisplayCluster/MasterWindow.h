@@ -87,7 +87,7 @@ signals:
     void openWebBrowser( QPointF pos, QSize size, QString url );
 
     /** Emitted when users want to open an application. */
-    void openAppLauncher();
+    void openAppLauncher( QPointF pos );
 
 protected:
     /** @name Drag events re-implemented from QMainWindow */

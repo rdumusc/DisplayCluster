@@ -177,6 +177,8 @@ private:
     ContentWindowMap _streamerWindows;
 
     bool _autoFocusNewWindows;
+
+    bool _isPanel( const QString& uri ) const;
 };
 
 #endif

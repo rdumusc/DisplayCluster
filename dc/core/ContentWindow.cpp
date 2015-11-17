@@ -55,8 +55,9 @@
 
 IMPLEMENT_SERIALIZE_FOR_XML( ContentWindow )
 
-ContentWindow::ContentWindow( ContentPtr content )
+ContentWindow::ContentWindow( ContentPtr content, const WindowType type )
     : uuid_( QUuid::createUuid( ))
+    , type_( type )
     , content_( content )
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
@@ -71,6 +72,7 @@ ContentWindow::ContentWindow( ContentPtr content )
 
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
+    , type_( WindowType::DEFAULT )
     , zoomRect_( UNIT_RECTF )
     , windowBorder_( NOBORDER )
     , focused_( false )
@@ -85,6 +87,11 @@ ContentWindow::~ContentWindow()
 const QUuid& ContentWindow::getID() const
 {
     return uuid_;
+}
+
+bool ContentWindow::isPanel() const
+{
+    return type_ == WindowType::PANEL;
 }
 
 Content* ContentWindow::getContentPtr() const

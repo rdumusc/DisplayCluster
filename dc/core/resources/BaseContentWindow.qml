@@ -23,7 +23,7 @@ Rectangle {
     Rectangle {
         id: titleBar
         visible: displaygroup.showWindowTitles && !windowRect.isBackground
-                 && contentwindow.label !== "Dock"
+                 && !contentwindow.isPanel
         width: parent.width
         height: Style.windowTitleHeight
         color: parent.border.color

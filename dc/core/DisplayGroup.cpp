@@ -185,7 +185,7 @@ bool DisplayGroup::hasFocusedWindows() const
 void DisplayGroup::focus( const QUuid& id )
 {
     ContentWindowPtr window = getContentWindow( id );
-    if( !window || _focusedWindows.count( window ))
+    if( !window || window->isPanel() || _focusedWindows.count( window ))
         return;
 
     _focusedWindows.insert( window );

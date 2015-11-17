@@ -81,13 +81,10 @@ void PixelStreamWindowManager::hideWindow( const QString& uri )
 
 void PixelStreamWindowManager::showWindow( const QString& uri )
 {
-    ContentWindowPtr contentWindow = getContentWindow( uri );
-    if( contentWindow )
-    {
-        const bool isDock = uri == DockPixelStreamer::getUniqueURI();
-        contentWindow->setState( isDock ? ContentWindow::SELECTED :
-                                          ContentWindow::NONE );
-    }
+    ContentWindowPtr window = getContentWindow( uri );
+    if( window )
+        window->setState( window->isPanel() ? ContentWindow::SELECTED :
+                                              ContentWindow::NONE );
 }
 
 void PixelStreamWindowManager::openWindow( const QString& uri,
@@ -96,7 +93,7 @@ void PixelStreamWindowManager::openWindow( const QString& uri,
 {
     if( getContentWindow( uri ))
     {
-        if( uri == DockPixelStreamer::getUniqueURI( ) && !pos.isNull( ))
+        if( uri == DockPixelStreamer::getUniqueURI() && !pos.isNull( ))
         {
             ContentWindowPtr window = getContentWindow( uri );
             ContentWindowController controller( *window, _displayGroup );
@@ -108,21 +105,26 @@ void PixelStreamWindowManager::openWindow( const QString& uri,
     put_flog( LOG_INFO, "opening pixel stream window: '%s'",
               uri.toLocal8Bit().constData( ));
 
+    const auto type = _isPanel( uri ) ? ContentWindow::PANEL :
+                                        ContentWindow::DEFAULT;
+
     ContentPtr content = ContentFactory::getPixelStreamContent( uri );
     if( size.isValid( ))
         content->setDimensions( size );
-    ContentWindowPtr contentWindow( new ContentWindow( content ));
+    ContentWindowPtr window( new ContentWindow( content, type ));
 
-    ContentWindowController controller( *contentWindow, _displayGroup );
+    ContentWindowController controller( *window, _displayGroup );
     controller.resize( size.isValid() ? size : EMPTY_STREAM_SIZE );
     controller.moveCenterTo( !pos.isNull() ? pos :
                                       _displayGroup.getCoordinates().center( ));
+    if( window->isPanel( ))
+        window->setControlsVisible( true );
 
-    _streamerWindows[ uri ] = contentWindow->getID();
-    _displayGroup.addContentWindow( contentWindow );
+    _streamerWindows[ uri ] = window->getID();
+    _displayGroup.addContentWindow( window );
 
-    if( _autoFocusNewWindows && uri != DockPixelStreamer::getUniqueURI( ))
-        _displayGroup.focus( contentWindow->getID( ));
+    if( _autoFocusNewWindows )
+        _displayGroup.focus( window->getID( ));
 }
 
 void PixelStreamWindowManager::openPixelStreamWindow( const QString uri )
@@ -135,9 +137,9 @@ void PixelStreamWindowManager::closePixelStreamWindow( const QString uri )
     put_flog( LOG_INFO, "closing pixel stream window: '%s'",
               uri.toLocal8Bit().constData( ));
 
-    ContentWindowPtr contentWindow = getContentWindow( uri );
-    if( contentWindow )
-        _displayGroup.removeContentWindow( contentWindow );
+    ContentWindowPtr window = getContentWindow( uri );
+    if( window )
+        _displayGroup.removeContentWindow( window );
 }
 
 void PixelStreamWindowManager::registerEventReceiver( const QString uri,
@@ -147,25 +149,25 @@ void PixelStreamWindowManager::registerEventReceiver( const QString uri,
 {
     bool success = false;
 
-    ContentWindowPtr contentWindow = getContentWindow( uri );
-    if( !contentWindow )
+    ContentWindowPtr window = getContentWindow( uri );
+    if( !window )
     {
         put_flog( LOG_DEBUG, "No window found for stream: '%s', creating one.",
                   uri.toStdString().c_str( ));
         openPixelStreamWindow( uri );
-        contentWindow = getContentWindow( uri );
+        window = getContentWindow( uri );
     }
 
     // If a receiver is already registered, don't register this one if
     // "exclusive" was requested
     PixelStreamInteractionDelegate* delegate =
             static_cast<PixelStreamInteractionDelegate*>(
-                contentWindow->getInteractionDelegate( ));
+                window->getInteractionDelegate( ));
     if( !exclusive || !delegate->hasEventReceivers( ))
         success = delegate->registerEventReceiver( receiver );
 
-    if( uri == DockPixelStreamer::getUniqueURI( ))
-        contentWindow->setState( ContentWindow::SELECTED );
+    if( window->isPanel( ))
+        window->setState( ContentWindow::SELECTED );
 
     emit eventRegistrationReply( uri, success );
 }
@@ -223,4 +225,10 @@ void PixelStreamWindowManager::updateSizeHints( const QString uri,
     contentWindow->getContent()->setSizeHints( hints );
     ContentWindowController controller( *contentWindow, _displayGroup );
     controller.adjustSize( SIZE_1TO1 );
+}
+
+bool PixelStreamWindowManager::_isPanel( const QString& uri ) const
+{
+    return uri == DockPixelStreamer::getUniqueURI() ||
+           uri == QString( "AppLauncher" );
 }

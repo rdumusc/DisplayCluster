@@ -59,7 +59,7 @@ const QString LOCALSTREAMER_BIN( "localstreamer" );
 const QString QMLSTREAMER_BIN( "qmlstreamer" );
 #endif
 
-const QString APP_LAUNCHER_URI( "App Launcher" );
+const QString APP_LAUNCHER_URI( "AppLauncher" );
 
 const qreal DOCK_WIDTH_RELATIVE_TO_WALL = 0.175;
 const QSize WEBBROWSER_DEFAULT_SIZE( 1280, 1024 );
@@ -106,10 +106,9 @@ void PixelStreamerLauncher::openDock( const QPointF pos )
                                     DockPixelStreamer::getDefaultAspectRatio();
 
     QSize dockSize( dockWidth, dockHeight );
-
-    const QString& dockUri = DockPixelStreamer::getUniqueURI();
     dockSize = DockPixelStreamer::constrainSize( dockSize );
 
+    const QString& dockUri = DockPixelStreamer::getUniqueURI();
     _windowManager.openWindow( dockUri, pos, dockSize );
     _windowManager.showWindow( dockUri );
 
@@ -120,19 +119,21 @@ void PixelStreamerLauncher::openDock( const QPointF pos )
     }
 }
 
-bool PixelStreamerLauncher::openAppLauncher()
+bool PixelStreamerLauncher::openAppLauncher( const QPointF pos )
 {
     const QString& appLauncherQmlFile = _config.getAppLauncherFile();
     if( appLauncherQmlFile.isEmpty( ))
     {
         put_flog( LOG_INFO, "xml configuration is missing a qml property for "
-                            "the applauncher. This panel is unavailable." );
+                            "the AppLauncher. This panel is unavailable." );
         return false;
     }
 
-    const auto args = QStringList() << QString( "--qml" ) << appLauncherQmlFile;
-
     const QString& uri = APP_LAUNCHER_URI;
+    _windowManager.openWindow( uri, pos, UNDEFINED_SIZE );
+
+    const auto args = QStringList() << QString( "--qml" ) << appLauncherQmlFile
+                                    << QString( "--streamname") << uri;
     _processes[uri] = new QProcess( this );
     return _processes[uri]->startDetached( _getQmlStreamerBin( ), args );
 }
