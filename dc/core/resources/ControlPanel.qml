@@ -20,7 +20,7 @@ Rectangle {
     ListView {
         anchors.fill: parent
         anchors.margins: Style.controlPanelPadding
-        spacing: Style.controlPanelPadding
+        spacing: Style.controlPanelSectionsMargin
         interactive: false // Don't let users scroll the list
 
         model: ListModel {

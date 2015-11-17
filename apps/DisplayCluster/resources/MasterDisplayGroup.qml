@@ -4,6 +4,7 @@ import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
 
 DisplayGroup {
+    id: dispGroup
     showFocusContext: false
     TouchArea {
         anchors.fill: parent
@@ -22,8 +23,8 @@ DisplayGroup {
                 anchors.fill: parent
                 onTap: {
                     var action = touchControlPanel.ListView.view.model.get(index).action
-                    var position = Qt.point(controlPanel.width,
-                                            displaygroup.height / 2)
+                    var absPos = mapToItem(dispGroup, width, height/2)
+                    var position = Qt.point(absPos.x, absPos.y)
                     cppcontrolpanel.processAction(action, position)
                 }
             }

@@ -45,6 +45,9 @@ var zoomContextSelectionWidth = 5;
 var controlPanelWidth = 780
 var controlPanelHeight = 920
 var controlPanelPadding = 50
+var controlPanelSectionsMargin = controlPanelPadding * 3
 var controlPanelBackground = "transparent"
 var controlPanelTextSize = 70
 var controlPanelTextSpacing = 20
+
+var panelsAnimationTime = 300
