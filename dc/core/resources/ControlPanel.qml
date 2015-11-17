@@ -29,12 +29,12 @@ Rectangle {
                 subItems: [
                     ListElement {
                         label: "Add file"
-                        icon: "qrc:///img/play.svg"
+                        icon: "qrc:///img/add.svg"
                         action: QmlControlPanel.OPEN_CONTENT
                     },
                     ListElement {
                         label: "Start application"
-                        icon: "qrc:///img/close.svg"
+                        icon: "qrc:///img/launch.svg"
                         action: QmlControlPanel.OPEN_APPLICATION
                     }
                 ]
@@ -44,12 +44,12 @@ Rectangle {
                 subItems: [
                     ListElement {
                         label: "New"
-                        icon: "qrc:///img/play.svg"
+                        icon: "qrc:///img/add.svg"
                         action: QmlControlPanel.NEW_SESSION
                     },
                     ListElement {
                         label: "Open"
-                        icon: "qrc:///img/close.svg"
+                        icon: "qrc:///img/play.svg"
                         action: QmlControlPanel.LOAD_SESSION
                     }
                 ]
@@ -68,7 +68,7 @@ Rectangle {
             interactive: false // Don't let users scroll the list
             // workaround for QtQuick1 which is missing the headerItem property
             property real headerItemHeight: Style.controlPanelTextSize
-                                            + Style.controlPanelTextSpacing
+                                            + Style.controlPanelPadding
 
             model: subItems
             delegate: buttonDelegate
@@ -76,7 +76,7 @@ Rectangle {
                 text: title
                 font.underline: true
                 font.pixelSize: Style.controlPanelTextSize
-                height: font.pixelSize + Style.controlPanelTextSpacing
+                height: font.pixelSize + Style.controlPanelPadding
             }
         }
     }

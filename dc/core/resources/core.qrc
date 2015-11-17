@@ -14,6 +14,10 @@
         <file>play.svg</file>
         <file>oneToOne.svg</file>
         <file>focus.svg</file>
+        <file>add.svg</file>
+        <file>launch.svg</file>
+        <file>load.svg</file>
+        <file>tick.svg</file>
     </qresource>
     <qresource prefix="/fonts">
         <file>Gotham-Book.otf</file>
