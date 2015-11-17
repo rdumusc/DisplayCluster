@@ -296,7 +296,7 @@ void MasterWindow::setupMasterWindowUI()
     connect( &dggv_->getControlPanel(), &QmlControlPanel::clearSession,
              displayGroup_.get(), &DisplayGroup::clear );
     connect( &dggv_->getControlPanel(), &QmlControlPanel::openLoadSessionPanel,
-             this, &MasterWindow::openDock );
+             this, &MasterWindow::openSessionLoader );
 
     // create contents dock widget
     QDockWidget * contentsDockWidget = new QDockWidget("Contents", this);

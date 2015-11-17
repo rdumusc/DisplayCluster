@@ -81,6 +81,9 @@ public:
     PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
                            const MasterConfiguration& config );
 
+    static const QString appLauncherUri;
+    static const QString sessionLoaderUri;
+
 public slots:
     /**
      * Open a WebBrowser.
@@ -105,6 +108,12 @@ public slots:
     void hideDock();
 
     /**
+     * Open the Session loader.
+     * @param pos The position of the center of the panel
+     */
+    void openSessionLoader( QPointF pos );
+
+    /**
      * Open the Applications launcher.
      * @param pos The position of the center of the panel
      * @return true on success, false on error or if the path to the AppLauncher
@@ -124,7 +133,8 @@ private:
     PixelStreamWindowManager& _windowManager;
     const MasterConfiguration& _config;
 
-    bool _createDock( const QSize& size, const QString& rootDir );
+    bool _createDock( const QString& uri, const QSize& size,
+                      const QString& rootDir );
     QString _getLocalStreamerBin() const;
     QString _getQmlStreamerBin() const;
 };

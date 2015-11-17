@@ -68,6 +68,7 @@ void MasterConfiguration::loadMasterSettings()
                                   filename_.toStdString( ));
 
     loadDockStartDirectory( query );
+    loadSessionsDirectory( query );
     loadWebService( query );
     loadAppLauncher( query );
     loadWebBrowserStartURL( query );
@@ -83,6 +84,17 @@ void MasterConfiguration::loadDockStartDirectory( QXmlQuery& query )
         dockStartDir_ = queryResult.remove( QRegExp( TRIM_REGEX ));
     if( dockStartDir_.isEmpty( ))
         dockStartDir_ = QDir::homePath();
+}
+
+void MasterConfiguration::loadSessionsDirectory( QXmlQuery& query )
+{
+    QString queryResult;
+
+    query.setQuery( "string(/configuration/sessions/@directory)" );
+    if( query.evaluateTo( &queryResult ))
+        sessionsDir_ = queryResult.remove( QRegExp( TRIM_REGEX ));
+    if( sessionsDir_.isEmpty( ))
+        sessionsDir_ = QDir::homePath();
 }
 
 void MasterConfiguration::loadWebService( QXmlQuery& query )
@@ -135,6 +147,11 @@ void MasterConfiguration::loadBackgroundProperties( QXmlQuery& query )
 const QString& MasterConfiguration::getDockStartDir() const
 {
     return dockStartDir_;
+}
+
+const QString& MasterConfiguration::getSessionsDir() const
+{
+    return sessionsDir_;
 }
 
 const QString& MasterConfiguration::getAppLauncherFile() const

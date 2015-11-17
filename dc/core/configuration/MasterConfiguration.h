@@ -65,6 +65,12 @@ public:
     const QString& getDockStartDir() const;
 
     /**
+     * Get the Dock startup directory
+     * @return directory path
+     */
+    const QString& getSessionsDir() const;
+
+    /**
      * Get the Application Launcher QML file
      * @return file path
      */
@@ -124,12 +130,14 @@ public:
 private:
     void loadMasterSettings();
     void loadDockStartDirectory( QXmlQuery& query );
+    void loadSessionsDirectory( QXmlQuery& query );
     void loadWebService( QXmlQuery& query );
     void loadAppLauncher( QXmlQuery& query );
     void loadWebBrowserStartURL( QXmlQuery& query );
     void loadBackgroundProperties( QXmlQuery& query );
 
     QString dockStartDir_;
+    QString sessionsDir_;
     QString appLauncherFile_;
 
     int dcWebServicePort_;

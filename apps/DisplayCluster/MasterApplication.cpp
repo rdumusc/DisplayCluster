@@ -245,6 +245,9 @@ void MasterApplication::initPixelStreamLauncher()
     connect( masterWindow_.get(), &MasterWindow::openAppLauncher,
              pixelStreamerLauncher_.get(),
              &PixelStreamerLauncher::openAppLauncher );
+    connect( masterWindow_.get(), &MasterWindow::openSessionLoader,
+             pixelStreamerLauncher_.get(),
+             &PixelStreamerLauncher::openSessionLoader );
 }
 
 void MasterApplication::initMPIConnection()

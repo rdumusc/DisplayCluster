@@ -44,6 +44,7 @@
 #include "ContentFactory.h"
 #include "DisplayGroup.h"
 #include "localstreamer/DockPixelStreamer.h"
+#include "localstreamer/PixelStreamerLauncher.h"
 #include "log.h"
 #include "PixelStreamInteractionDelegate.h"
 
@@ -230,5 +231,6 @@ void PixelStreamWindowManager::updateSizeHints( const QString uri,
 bool PixelStreamWindowManager::_isPanel( const QString& uri ) const
 {
     return uri == DockPixelStreamer::getUniqueURI() ||
-           uri == QString( "AppLauncher" );
+           uri == PixelStreamerLauncher::appLauncherUri ||
+           uri == PixelStreamerLauncher::sessionLoaderUri;
 }
