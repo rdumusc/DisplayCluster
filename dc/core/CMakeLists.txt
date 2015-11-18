@@ -16,6 +16,7 @@ set(DCCORE_LINK_LIBRARIES
   PRIVATE
     Qt5::OpenGL
     Qt5::Svg
+    Qt5::Quick
     Qt5::WebKitWidgets
     Qt5::Xml
     Qt5::XmlPatterns

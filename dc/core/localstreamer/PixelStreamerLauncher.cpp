@@ -49,6 +49,8 @@
 #include <QCoreApplication>
 #include <QProcess>
 
+#include <QQuickView> // To determine the qml streamer size
+
 namespace
 {
 #ifdef _WIN32
@@ -130,38 +132,42 @@ void PixelStreamerLauncher::hideDock()
 
 void PixelStreamerLauncher::openContentLoader( const QPointF pos )
 {
-    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
     const QString& uri = contentLoaderUri;
+    if( _processes.count( uri ))
+        return;
+
+    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
     const QPointF centerPos( pos.x() + 0.5 * dockSize.width(),
                              pos.y() + 0.5 * dockSize.height( ));
     _windowManager.openWindow( uri, centerPos, dockSize );
     _windowManager.showWindow( uri );
 
-    if( !_processes.count( uri ))
-    {
-        if( !_createDock( uri, dockSize, _config.getDockStartDir( )))
-            put_flog( LOG_ERROR, "Dock process could not be started!" );
-    }
+    if( !_createDock( uri, dockSize, _config.getDockStartDir( )))
+        put_flog( LOG_ERROR, "Dock process could not be started!" );
 }
 
 void PixelStreamerLauncher::openSessionLoader( const QPointF pos )
 {
-    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
     const QString& uri = sessionLoaderUri;
+    if( _processes.count( uri ))
+        return;
+
+    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
     const QPointF centerPos( pos.x() + 0.5 * dockSize.width(),
                              pos.y() + 0.5 * dockSize.height( ));
     _windowManager.openWindow( uri, centerPos, dockSize );
     _windowManager.showWindow( uri );
 
-    if( !_processes.count( uri ))
-    {
-        if( !_createDock( uri, dockSize, _config.getSessionsDir( )))
-            put_flog( LOG_ERROR, "Dock process could not be started!" );
-    }
+    if( !_createDock( uri, dockSize, _config.getSessionsDir( )))
+        put_flog( LOG_ERROR, "Dock process could not be started!" );
 }
 
 bool PixelStreamerLauncher::openAppLauncher( const QPointF pos )
 {
+    const QString& uri = appLauncherUri;
+    if( _processes.count( uri ))
+        return false;
+
     const QString& appLauncherQmlFile = _config.getAppLauncherFile();
     if( appLauncherQmlFile.isEmpty( ))
     {
@@ -170,8 +176,18 @@ bool PixelStreamerLauncher::openAppLauncher( const QPointF pos )
         return false;
     }
 
-    const QString& uri = appLauncherUri;
-    _windowManager.openWindow( uri, pos, UNDEFINED_SIZE );
+    const QQuickView view( appLauncherQmlFile );
+    if( view.status() != QQuickView::Ready )
+    {
+        put_flog( LOG_INFO, "The configured AppLauncher qml file appears "
+                            "invalid. This panel is unavailable" );
+        return false;
+    }
+
+    const QSize qmlSize = view.initialSize();
+    const QPointF centerPos( pos.x() + 0.5 * qmlSize.width(),
+                             pos.y() + 0.5 * qmlSize.height( ));
+    _windowManager.openWindow( uri, centerPos, qmlSize );
 
     const auto args = QStringList() << QString( "--qml" ) << appLauncherQmlFile
                                     << QString( "--streamname") << uri;
