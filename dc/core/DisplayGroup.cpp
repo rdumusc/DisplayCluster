@@ -246,7 +246,7 @@ void DisplayGroup::_sendDisplayGroup()
 
 void DisplayGroup::_watchChanges( ContentWindowPtr contentWindow )
 {
-    connect( contentWindow.get(), &ContentWindow::contentModified,
+    connect( contentWindow.get(), &ContentWindow::modified,
              this, &DisplayGroup::_sendDisplayGroup );
 
     connect( contentWindow.get(), &ContentWindow::contentModified,
