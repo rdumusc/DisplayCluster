@@ -290,7 +290,7 @@ void MasterWindow::setupMasterWindowUI()
 
     // Forward control panel actions
     connect( &dggv_->getControlPanel(), &QmlControlPanel::openContentPanel,
-             this, &MasterWindow::openDock );
+             this, &MasterWindow::openContentLoader );
     connect( &dggv_->getControlPanel(), &QmlControlPanel::openApplicationsPanel,
              this, &MasterWindow::openAppLauncher );
     connect( &dggv_->getControlPanel(), &QmlControlPanel::clearSession,

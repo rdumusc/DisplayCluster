@@ -84,6 +84,9 @@ signals:
     void hideDock();
 
     /** Emitted when users want to open a session. */
+    void openContentLoader( QPointF pos );
+
+    /** Emitted when users want to open a session. */
     void openSessionLoader( QPointF pos );
 
     /** Emitted when users want to open a webbrowser. */

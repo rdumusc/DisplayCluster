@@ -82,6 +82,7 @@ public:
                            const MasterConfiguration& config );
 
     static const QString appLauncherUri;
+    static const QString contentLoaderUri;
     static const QString sessionLoaderUri;
 
 public slots:
@@ -108,14 +109,20 @@ public slots:
     void hideDock();
 
     /**
+     * Open the Content loader.
+     * @param pos The position of the top-left corner of the panel
+     */
+    void openContentLoader( QPointF pos );
+
+    /**
      * Open the Session loader.
-     * @param pos The position of the center of the panel
+     * @param pos The position of the top-left corner of the panel
      */
     void openSessionLoader( QPointF pos );
 
     /**
      * Open the Applications launcher.
-     * @param pos The position of the center of the panel
+     * @param pos The position of the top-left corner of the panel
      * @return true on success, false on error or if the path to the AppLauncher
      *         QML file is not defined in the configuration
      */

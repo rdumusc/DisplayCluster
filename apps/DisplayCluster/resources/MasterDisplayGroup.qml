@@ -7,6 +7,7 @@ DisplayGroup {
     id: dispGroup
     showFocusContext: false
     TouchArea {
+        z: controlPanel.z - 1
         anchors.fill: parent
         onTap: {
             dggv.notifyBackgroundTap(position)
@@ -23,7 +24,7 @@ DisplayGroup {
                 anchors.fill: parent
                 onTap: {
                     var action = touchControlPanel.ListView.view.model.get(index).action
-                    var absPos = mapToItem(dispGroup, width, height/2)
+                    var absPos = mapToItem(dispGroup, controlPanel.width + 180, 0)
                     var position = Qt.point(absPos.x, absPos.y)
                     cppcontrolpanel.processAction(action, position)
                 }

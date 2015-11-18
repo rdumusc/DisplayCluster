@@ -64,6 +64,7 @@ const QSize WEBBROWSER_DEFAULT_SIZE( 1280, 1024 );
 }
 
 const QString PixelStreamerLauncher::appLauncherUri = QString( "AppLauncher" );
+const QString PixelStreamerLauncher::contentLoaderUri = QString( "ContentLoader" );
 const QString PixelStreamerLauncher::sessionLoaderUri = QString( "SessionsPanel" );
 
 PixelStreamerLauncher::PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
@@ -127,11 +128,29 @@ void PixelStreamerLauncher::hideDock()
     _windowManager.hideWindow( DockPixelStreamer::getUniqueURI( ));
 }
 
+void PixelStreamerLauncher::openContentLoader( const QPointF pos )
+{
+    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
+    const QString& uri = contentLoaderUri;
+    const QPointF centerPos( pos.x() + 0.5 * dockSize.width(),
+                             pos.y() + 0.5 * dockSize.height( ));
+    _windowManager.openWindow( uri, centerPos, dockSize );
+    _windowManager.showWindow( uri );
+
+    if( !_processes.count( uri ))
+    {
+        if( !_createDock( uri, dockSize, _config.getDockStartDir( )))
+            put_flog( LOG_ERROR, "Dock process could not be started!" );
+    }
+}
+
 void PixelStreamerLauncher::openSessionLoader( const QPointF pos )
 {
     const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
     const QString& uri = sessionLoaderUri;
-    _windowManager.openWindow( uri, pos, dockSize );
+    const QPointF centerPos( pos.x() + 0.5 * dockSize.width(),
+                             pos.y() + 0.5 * dockSize.height( ));
+    _windowManager.openWindow( uri, centerPos, dockSize );
     _windowManager.showWindow( uri );
 
     if( !_processes.count( uri ))

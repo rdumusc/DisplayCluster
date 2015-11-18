@@ -231,6 +231,7 @@ void PixelStreamWindowManager::updateSizeHints( const QString uri,
 bool PixelStreamWindowManager::_isPanel( const QString& uri ) const
 {
     return uri == DockPixelStreamer::getUniqueURI() ||
-           uri == PixelStreamerLauncher::appLauncherUri ||
-           uri == PixelStreamerLauncher::sessionLoaderUri;
+            uri == PixelStreamerLauncher::appLauncherUri ||
+            uri == PixelStreamerLauncher::contentLoaderUri ||
+            uri == PixelStreamerLauncher::sessionLoaderUri;
 }
