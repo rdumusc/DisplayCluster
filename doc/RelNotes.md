@@ -5,6 +5,7 @@ Release Notes {#ReleaseNotes}
 
 ## New Features
 
+* Added an optional clock on the background
 * A new control area on the left of the background lets users open content,
   sessions and launch applications (via an optional Deflect qmlstreamer).
 * Added an option to open new PixelStream windows in focus mode
