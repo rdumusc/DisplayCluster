@@ -6,6 +6,8 @@ Rectangle {
     width: Style.controlPanelWidth
     height: Style.controlPanelHeight
 
+    visible: options.showControlArea
+
     anchors.verticalCenter: parent.verticalCenter
     anchors.left: parent.left
     anchors.leftMargin: Style.controlPanelPadding
@@ -28,7 +30,7 @@ Rectangle {
                 title: "CONTENT    "
                 subItems: [
                     ListElement {
-                        label: "Add file"
+                        label: "Open file"
                         icon: "qrc:///img/add.svg"
                         action: QmlControlPanel.OPEN_CONTENT
                     },
@@ -43,8 +45,8 @@ Rectangle {
                 title: "SESSION    "
                 subItems: [
                     ListElement {
-                        label: "New"
-                        icon: "qrc:///img/add.svg"
+                        label: "Clear"
+                        icon: "qrc:///img/close.svg"
                         action: QmlControlPanel.NEW_SESSION
                     },
                     ListElement {

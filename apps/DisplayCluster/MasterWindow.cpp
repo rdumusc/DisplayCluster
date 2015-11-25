@@ -226,6 +226,14 @@ void MasterWindow::setupMasterWindowUI()
     connect( displayGroup_.get(), SIGNAL( showWindowTitlesChanged( bool )),
              showWindowTitlesAction, SLOT( setChecked( bool )));
 
+    // show control area action
+    QAction* showControlAreaAction = new QAction( "Show Control Area", this );
+    showControlAreaAction->setStatusTip( "Show the Control Area" );
+    showControlAreaAction->setCheckable( true );
+    showControlAreaAction->setChecked( options_->getShowControlArea( ));
+    connect( showControlAreaAction, &QAction::toggled,
+             options_.get(), &Options::setShowControlArea );
+
     // enable alpha blending
     QAction* enableAlphaBlendingAction = new QAction( "Alpha Blending", this );
     enableAlphaBlendingAction->setStatusTip(
@@ -261,6 +269,7 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction( showTouchPoints );
     viewMenu->addAction( showTestPatternAction );
     viewMenu->addAction( showZoomContextAction );
+    viewMenu->addAction( showControlAreaAction );
     viewMenu->addAction( enableAlphaBlendingAction );
     viewMenu->addAction( autoFocusPixelStreamsAction_ );
     toolsMenu->addAction( computeImagePyramidAction );

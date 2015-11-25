@@ -47,6 +47,7 @@ Options::Options()
     , showZoomContext_(true)
     , showStreamingSegments_(false)
     , showStreamingStatistics_(false)
+    , showControlArea_(false)
     , alphaBlendingEnabled_(false)
 {
 }
@@ -79,6 +80,11 @@ bool Options::getShowStreamingSegments() const
 bool Options::getShowStatistics() const
 {
     return showStreamingStatistics_;
+}
+
+bool Options::getShowControlArea() const
+{
+    return showControlArea_;
 }
 
 bool Options::isAlphaBlendingEnabled() const
@@ -139,6 +145,16 @@ void Options::setShowStatistics(bool set)
     showStreamingStatistics_ = set;
 
     emit(updated(shared_from_this()));
+}
+
+void Options::setShowControlArea( const bool set )
+{
+    if( showControlArea_ == set )
+        return;
+
+    showControlArea_ = set;
+    emit( showControlAreaChanged( ));
+    emit( updated( shared_from_this( )));
 }
 
 void Options::enableAlphaBlending( const bool set )
