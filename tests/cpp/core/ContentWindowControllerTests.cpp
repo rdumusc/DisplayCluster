@@ -326,6 +326,29 @@ BOOST_AUTO_TEST_CASE( testResizeRelativeToCorner )
                        prevCoords.width());
 }
 
+BOOST_AUTO_TEST_CASE( testDisplayGroupFocusWindows )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( CONTENT_SIZE );
+    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
+    ContentWindowPtr panel =
+            boost::make_shared<ContentWindow>( content, ContentWindow::PANEL );
+
+    BOOST_REQUIRE( !window->isFocused( ));
+    BOOST_REQUIRE( !panel->isFocused( ));
+
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    displayGroup->addContentWindow( window );
+    displayGroup->addContentWindow( panel );
+    displayGroup->focus( window->getID( ));
+
+    BOOST_CHECK( window->isFocused( ));
+    BOOST_CHECK( !panel->isFocused( ));
+
+    displayGroup->unfocus( window->getID( ));
+    BOOST_CHECK( !window->isFocused( ));
+}
+
 BOOST_AUTO_TEST_CASE( testLayoutEngineOneWindow )
 {
     ContentPtr content( new DummyContent );

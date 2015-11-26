@@ -83,7 +83,7 @@ signals:
     /** Emitted when users want to hide the dock. */
     void hideDock();
 
-    /** Emitted when users want to open a session. */
+    /** Emitted when users want to open a content. */
     void openContentLoader( QPointF pos );
 
     /** Emitted when users want to open a session. */

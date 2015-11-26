@@ -183,3 +183,16 @@ BOOST_AUTO_TEST_CASE( testToggleSelectedState )
     window.toggleSelectedState();
     BOOST_CHECK_EQUAL( window.getState(), ContentWindow::HIDDEN );
 }
+
+BOOST_AUTO_TEST_CASE( testWindowType )
+{
+    ContentPtr content( new DummyContent );
+    content->setDimensions( QSize( WIDTH, HEIGHT ));
+    ContentWindow defaultWindow( content );
+    ContentWindow window( content, ContentWindow::DEFAULT );
+    ContentWindow panel( content, ContentWindow::PANEL );
+
+    BOOST_CHECK_EQUAL( defaultWindow.isPanel(), false );
+    BOOST_CHECK_EQUAL( window.isPanel(), false );
+    BOOST_CHECK_EQUAL( panel.isPanel(), true );
+}

@@ -122,6 +122,8 @@ public:
     /**
      * Create a new window.
      * @param content The Content to be displayed.
+     * @param type The type of the window, which determines its representation
+     *        style and behaviour.
      * @note Rank0 only.
      */
     ContentWindow( ContentPtr content, WindowType type = DEFAULT );

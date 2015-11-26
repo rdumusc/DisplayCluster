@@ -73,6 +73,12 @@ PixelStreamWindowManager::getContentWindow( const QString& uri ) const
                      ContentWindowPtr();
 }
 
+PixelStreamInteractionDelegate* _getPixelStreamDelegate( ContentWindow& window )
+{
+    return static_cast<PixelStreamInteractionDelegate*>(
+                window.getInteractionDelegate( ));
+}
+
 void PixelStreamWindowManager::hideWindow( const QString& uri )
 {
     ContentWindowPtr contentWindow = getContentWindow( uri );
@@ -83,9 +89,12 @@ void PixelStreamWindowManager::hideWindow( const QString& uri )
 void PixelStreamWindowManager::showWindow( const QString& uri )
 {
     ContentWindowPtr window = getContentWindow( uri );
-    if( window )
-        window->setState( window->isPanel() ? ContentWindow::SELECTED :
-                                              ContentWindow::NONE );
+    if( !window )
+        return;
+
+    const bool select = window->isPanel() &&
+                        _getPixelStreamDelegate( *window )->hasEventReceivers();
+    window->setState( select ? ContentWindow::SELECTED : ContentWindow::NONE );
 }
 
 void PixelStreamWindowManager::openWindow( const QString& uri,
@@ -161,9 +170,7 @@ void PixelStreamWindowManager::registerEventReceiver( const QString uri,
 
     // If a receiver is already registered, don't register this one if
     // "exclusive" was requested
-    PixelStreamInteractionDelegate* delegate =
-            static_cast<PixelStreamInteractionDelegate*>(
-                window->getInteractionDelegate( ));
+    auto delegate = _getPixelStreamDelegate( *window );
     if( !exclusive || !delegate->hasEventReceivers( ))
         success = delegate->registerEventReceiver( receiver );
 

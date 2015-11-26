@@ -51,3 +51,4 @@ var controlPanelTextSize = 70
 var controlPanelTextSpacing = 20
 
 var panelsAnimationTime = 300
+var panelsLeftOffset = 180

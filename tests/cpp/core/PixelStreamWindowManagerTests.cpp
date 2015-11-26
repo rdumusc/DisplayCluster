@@ -56,6 +56,7 @@ BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 namespace
 {
 const QString CONTENT_URI( "bla" );
+const QString PANEL_URI( "Dock" );
 const QSize wallSize( 1000, 1000 );
 const QSize defaultPixelStreamWindowSize( 640, 480 );
 const QSize testWindowSize( 500, 400 );
@@ -251,3 +252,53 @@ BOOST_AUTO_TEST_CASE( testSizeHints )
     BOOST_CHECK_EQUAL( content->getMaxDimensions(), maxSize );
     BOOST_CHECK_EQUAL( content->getPreferredDimensions(), preferredSize );
 }
+
+BOOST_AUTO_TEST_CASE( hideAndShowWindow )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    PixelStreamWindowManager windowManager( *displayGroup );
+
+    const QString uri = CONTENT_URI;
+    windowManager.openPixelStreamWindow( uri );
+    ContentWindowPtr window = windowManager.getContentWindow( uri );
+
+    BOOST_REQUIRE( !window->isHidden( ));
+    BOOST_REQUIRE( !window->isPanel( ));
+
+    windowManager.hideWindow( uri );
+    BOOST_CHECK( window->isHidden( ));
+
+    windowManager.showWindow( uri );
+    BOOST_CHECK( !window->isHidden( ));
+    BOOST_CHECK( !window->isSelected( ));
+}
+
+BOOST_AUTO_TEST_CASE( hideAndShowPanel )
+{
+    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
+    PixelStreamWindowManager windowManager( *displayGroup );
+
+    const QString uri = PANEL_URI;
+    windowManager.openPixelStreamWindow( uri );
+    ContentWindowPtr panel = windowManager.getContentWindow( uri );
+
+    BOOST_REQUIRE( panel->isPanel( ));
+    BOOST_REQUIRE( !panel->isHidden( ));
+    BOOST_REQUIRE( !panel->isSelected( ));
+
+    windowManager.hideWindow( uri );
+    BOOST_CHECK( panel->isHidden( ));
+    windowManager.showWindow( uri );
+    BOOST_CHECK( !panel->isHidden( ));
+    BOOST_CHECK( !panel->isSelected( ));
+
+    DummyEventReceiver receiver;
+    windowManager.registerEventReceiver( uri, false, &receiver );
+    BOOST_CHECK( panel->isSelected( ));
+    windowManager.hideWindow( uri );
+    BOOST_CHECK( panel->isHidden( ));
+    windowManager.showWindow( uri );
+    BOOST_CHECK( !panel->isHidden( ));
+    BOOST_CHECK( panel->isSelected( ));
+}
+
