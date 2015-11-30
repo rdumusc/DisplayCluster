@@ -12,20 +12,59 @@ import shlex
 import distutils.spawn
 import argparse
 
+# rtneuron vglrun env detection
+def using_virtualGL():
+    is_vglconnect = \
+        ('VGL_DISPLAY' in os.environ or 'VGL_CLIENT' in os.environ) and \
+        'SSH_CLIENT' in os.environ
+    return is_vglconnect
+
+# http://nullege.com/codes/search/distutils.spawn.find_executable
+def find_executable( executable, path=None ):
+    """Tries to find 'executable' in the directories listed in 'path'.
+
+    A string listing directories separated by 'os.pathsep'; defaults to
+    os.environ['PATH'].  Returns the complete filename or None if not found.
+    """
+    if path is None:
+        path = os.environ['PATH']
+    paths = path.split(os.pathsep)
+    base, ext = os.path.splitext(executable)
+
+    if(sys.platform == 'win32' or os.name == 'os2') and (ext != '.exe'):
+        executable = executable + '.exe'
+
+    if not os.path.isfile(executable):
+        for p in paths:
+            f = os.path.join(p, executable)
+            if os.path.isfile(f):
+                # the file exists, we have a shot at spawn working
+                return f
+        return None
+    else:
+        return executable
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="The configuration file to load")
 parser.add_argument("--mpiargs", help="Extra arguments for the mpiexec command")
 parser.add_argument("--session", help="The session to load")
 parser.add_argument("--printcmd", help="Print the command without executing it",
                     action="store_true")
-parser.add_argument("--vglrun", help="Run the main application using vglrun",
-                    action="store_true")
 args = parser.parse_args()
 
 # DisplayCluster directory; this is the parent directory of this script
 DC_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DC_BIN = DC_PATH + '/bin/displaycluster'
+exec_name = "displaycluster"
+
+DC_BIN = find_executable(exec_name, DC_PATH + "/bin/")
+if(DC_BIN is None):
+    DC_BIN = find_executable(exec_name)
+
+if(DC_BIN is None):
+    print "displaycluster executable not found"
+    exit(-4)
+
 if args.config:
     DC_CONFIG_FILE = args.config
 else:
@@ -93,11 +132,6 @@ DC_PARAMS = '--config ' + DC_CONFIG_FILE
 if args.session:
     DC_PARAMS += ' --session ' + args.session
 
-if args.vglrun:
-    VGLRUN_BIN = 'vglrun '
-else:
-    VGLRUN_BIN = ''
-
 # form the MPI host list
 hostlist = []
 
@@ -114,13 +148,19 @@ try:
         print("masterProcess not found, using defaults: 'localhost' ':0'")
     else:
         host = master_elem.get("host")
-        display = master_elem.get('display')
+        if using_virtualGL():
+            display = os.environ["DISPLAY"]
+        else:
+            display = master_elem.get('display')
 
     if host is None:
         host = 'localhost'
 
+    if using_virtualGL():
+        display = os.environ["DISPLAY"]
+
     if display is None:
-        display = ':0'
+        display = ":0"
 
     if MPI_PER_NODE_HOST:
         node_host = '%s %s' % (MPI_PER_NODE_HOST, host)
@@ -128,7 +168,7 @@ try:
         node_host = ''
         hostlist.append(host)
 
-    rcmd = '%s %s%s %s -np 1 %s%s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, VGLRUN_BIN, DC_BIN, DC_PARAMS)
+    rcmd = '%s %s%s %s -np 1 %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, DC_BIN, DC_PARAMS)
     runcommands.append(rcmd)
 
     # parse the wall process elements
@@ -139,7 +179,11 @@ try:
             print('Error, no host attribute in <process> tag.')
             exit(-1)
 
-        display = elem.get('display')
+        if using_virtualGL():
+            display = os.environ["DISPLAY"]
+        else:
+            display = elem.get('display')
+
         if display == None:
             display = ':0'
 
