@@ -6,7 +6,8 @@ Release Notes {#ReleaseNotes}
 ## New Features
 
 * Added an option to open new PixelStream windows in focus mode
-
+* startdisplaycluster script detects the VirtualGL environment
+  and executes display accordingly
 - - -
 
 # New in DisplayCluster 0.6
