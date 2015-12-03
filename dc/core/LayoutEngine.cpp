@@ -99,18 +99,18 @@ QRectF LayoutEngine::getFocusedCoord( const ContentWindow& window ) const
         return winCoord;
 
     WindowCoordinates nominalCoordinates;
-    // Use an increasing index to spread out potentially overlapping windows
-    int index = 0;
     const qreal centerX = winCoord.center().x();
     for( auto win : focusedWindows )
     {
         QRectF coord = _getNominalCoord( *win );
         if( coord.center().x() == centerX )
-            coord.translate( index, 0.0 );
-        if( win->getID() == window.getID( ))
-            winCoord = coord; // Update the (potentially translated) coordinates
+        {
+            // Use the z index to spread out overlapping windows
+            coord.translate( _displayGroup.getZindex( win ), 0.0 );
+            if( win->getID() == window.getID( ))
+                winCoord = coord; // Update the translated coordinates
+        }
         nominalCoordinates.push_back( coord );
-        ++index;
     }
 
     // Compute scaling factor so that all windows fit in the available width

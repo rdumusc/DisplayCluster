@@ -117,6 +117,15 @@ public:
     void setContentWindows( ContentWindowPtrs contentWindows );
 
 
+    /**
+     * Get the z index of a window
+     * @param window which is part of the DisplayGroup
+     * @return the z value of the window, or -1 if it is not part of the
+     *         DisplayGroup
+     */
+    int getZindex( ContentWindowPtr window ) const;
+
+
     /** Are there focused windows. */
     bool hasFocusedWindows() const;
 

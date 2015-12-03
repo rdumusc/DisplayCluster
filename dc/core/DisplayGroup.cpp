@@ -177,6 +177,13 @@ void DisplayGroup::setContentWindows( ContentWindowPtrs contentWindows )
     _sendDisplayGroup();
 }
 
+int DisplayGroup::getZindex( ContentWindowPtr window ) const
+{
+    const auto it = std::find( _contentWindows.begin(), _contentWindows.end(),
+                               window );
+    return it ==_contentWindows.end() ? - 1 : it - _contentWindows.begin();
+}
+
 bool DisplayGroup::hasFocusedWindows() const
 {
     return !_focusedWindows.empty();

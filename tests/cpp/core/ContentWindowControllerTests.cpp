@@ -64,20 +64,6 @@ const qreal CONTENT_AR = qreal(CONTENT_SIZE.width()) /
                          qreal(CONTENT_SIZE.height());
 }
 
-BOOST_AUTO_TEST_CASE( testControllerCreationByDisplayGroup )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( CONTENT_SIZE );
-    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
-
-    BOOST_CHECK( !window->getController( ));
-
-    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    displayGroup->addContentWindow( window );
-
-    BOOST_CHECK( window->getController( ));
-}
-
 BOOST_AUTO_TEST_CASE( testResizeAndMove )
 {
     ContentPtr content( new DummyContent );
@@ -324,29 +310,6 @@ BOOST_AUTO_TEST_CASE( testResizeRelativeToCorner )
                        prevCoords.height());
     BOOST_CHECK_EQUAL( window.getCoordinates().width() + 1,
                        prevCoords.width());
-}
-
-BOOST_AUTO_TEST_CASE( testDisplayGroupFocusWindows )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( CONTENT_SIZE );
-    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
-    ContentWindowPtr panel =
-            boost::make_shared<ContentWindow>( content, ContentWindow::PANEL );
-
-    BOOST_REQUIRE( !window->isFocused( ));
-    BOOST_REQUIRE( !panel->isFocused( ));
-
-    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    displayGroup->addContentWindow( window );
-    displayGroup->addContentWindow( panel );
-    displayGroup->focus( window->getID( ));
-
-    BOOST_CHECK( window->isFocused( ));
-    BOOST_CHECK( !panel->isFocused( ));
-
-    displayGroup->unfocus( window->getID( ));
-    BOOST_CHECK( !window->isFocused( ));
 }
 
 BOOST_AUTO_TEST_CASE( testLayoutEngineOneWindow )
