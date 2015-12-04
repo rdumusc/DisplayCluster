@@ -81,6 +81,10 @@ public:
     PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
                            const MasterConfiguration& config );
 
+    static const QString appLauncherUri;
+    static const QString contentLoaderUri;
+    static const QString sessionLoaderUri;
+
 public slots:
     /**
      * Open a WebBrowser.
@@ -104,6 +108,26 @@ public slots:
     /** Hide the Dock. */
     void hideDock();
 
+    /**
+     * Open the Content loader.
+     * @param pos The position of the top-left corner of the panel
+     */
+    void openContentLoader( QPointF pos );
+
+    /**
+     * Open the Session loader.
+     * @param pos The position of the top-left corner of the panel
+     */
+    void openSessionLoader( QPointF pos );
+
+    /**
+     * Open the Applications launcher.
+     * @param pos The position of the top-left corner of the panel
+     * @return true on success, false on error or if the path to the AppLauncher
+     *         QML file is not defined in the configuration
+     */
+    bool openAppLauncher( QPointF pos );
+
 private slots:
     void dereferenceLocalStreamer( QString uri );
 
@@ -116,8 +140,10 @@ private:
     PixelStreamWindowManager& _windowManager;
     const MasterConfiguration& _config;
 
-    bool _createDock( const QSize& size, const QString& rootDir );
+    bool _createDock( const QString& uri, const QSize& size,
+                      const QString& rootDir );
     QString _getLocalStreamerBin() const;
+    QString _getQmlStreamerBin() const;
 };
 
 #endif // PIXELSTREAMERLAUNCHER_H

@@ -14,11 +14,13 @@ BaseContentWindow {
     }
 
     function toggleControlsVisibility() {
+        if(contentwindow.isPanel)
+            return
         contentwindow.controlsVisible = !contentwindow.controlsVisible
     }
 
     function toggleFocusMode() {
-        if(contentwindow.label === "Dock")
+        if(contentwindow.isPanel)
             return
         if(contentwindow.focused)
             displaygroup.unfocus(contentwindow.id)
@@ -170,13 +172,14 @@ BaseContentWindow {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         mousearea.onClicked: toggleFocusMode()
+        visible: !contentwindow.isPanel
     }
 
     ContentWindowButton {
         source: "qrc:///img/master/resize.svg"
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        visible: contentwindow.state !== ContentWindow.SELECTED
+        visible: !contentwindow.isPanel && !contentwindow.focused
 
         property variant startMousePos
         property variant startSize

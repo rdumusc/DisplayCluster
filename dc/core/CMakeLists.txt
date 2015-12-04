@@ -16,6 +16,7 @@ set(DCCORE_LINK_LIBRARIES
   PRIVATE
     Qt5::OpenGL
     Qt5::Svg
+    Qt5::Quick
     Qt5::WebKitWidgets
     Qt5::Xml
     Qt5::XmlPatterns
@@ -77,6 +78,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamContent.h
   PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
+  qmlUtils.h
   Renderable.h
   RenderContext.h
   SessionCommandHandler.h
@@ -130,6 +132,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   PixelStreamInteractionDelegate.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
+  QmlControlPanel.h
   RenderController.h
   WallFromMasterChannel.h
   WallGraphicsScene.h
@@ -198,6 +201,7 @@ list(APPEND DCCORE_SOURCES
   PixelStreamSegmentRenderer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
+  QmlControlPanel.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
   RenderContext.cpp

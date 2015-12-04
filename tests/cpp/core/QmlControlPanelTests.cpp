@@ -37,49 +37,64 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include <QtDeclarative>
 
-#include "ContentWindow.h"
-#include "ContentWindowController.h"
-#include "ContentActionsModel.h"
-#include "ContentItem.h"
-#include "ContentInteractionDelegate.h"
+#define BOOST_TEST_MODULE QmlControlPanelTests
+#include <boost/test/unit_test.hpp>
+namespace ut = boost::unit_test;
+
+#include "types.h"
 #include "QmlControlPanel.h"
 
-#define QML_MODULE "DisplayCluster"
+#include "MinimalGlobalQtApp.h"
+BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
-/**
- * Register types for use in Qml
- */
-struct QmlTypeRegistration
+
+namespace
 {
+const QPointF expectedContentPanelPos( 100.0, 200.0 );
+const QPointF expectedApplicationPanelPos( 200.0, 200.0 );
+const QPointF expectedLoadSessionPanelPos( 300.0, 200.0 );
+const QPointF expectedSaveSessionPanelPos( 400.0, 200.0 );
+}
 
-    QmlTypeRegistration()
-    {
-        qmlRegisterType<ContentActionsModel>(
-                    QML_MODULE, 1, 0, "ContentActionsModel");
-        qmlRegisterType<ContentItem>(
-                    QML_MODULE, 1, 0, "ContentItem");
+BOOST_AUTO_TEST_CASE( processActions )
+{
+    QPointF openContentPanelPos;
+    QPointF openApplicationPanelPos;
+    bool clearSessionCalled = false;
+    QPointF openLoadSessionPanelPos;
+    QPointF openSaveSessionPanelPos;
 
-        qmlRegisterUncreatableType<Content>(
-                    QML_MODULE, 1, 0, "Content",
-                    "Content is linked to a ContentWindow and read-only in QML");
-        qmlRegisterUncreatableType<ContentWindow>(
-                    QML_MODULE, 1, 0, "ContentWindow",
-                    "This exports enums to QML");
-        qmlRegisterUncreatableType<ContentWindowController>(
-                    QML_MODULE, 1, 0, "ContentWindowController",
-                    "ContentWindowController is linked to a ContentWindow "
-                    "and read-only in QML");
-        qmlRegisterUncreatableType<ContentInteractionDelegate>(
-                    QML_MODULE, 1, 0, "ContentInteractionDelegate",
-                    "ContentInteractionDelegate is linked to a ContentWindow "
-                    "and read-only in QML");
-        qmlRegisterUncreatableType<QmlControlPanel>(
-                    QML_MODULE, 1, 0, "QmlControlPanel",
-                    "This exports enums to QML");
-    }
-};
+    QmlControlPanel panel;
+    panel.connect( &panel, &QmlControlPanel::openContentPanel,
+                   [&]( QPointF pos ) { openContentPanelPos = pos; }
+    );
+    panel.connect( &panel, &QmlControlPanel::openApplicationsPanel,
+                   [&]( QPointF pos ) { openApplicationPanelPos = pos; }
+    );
+    panel.connect( &panel, &QmlControlPanel::clearSession,
+                   [&]() { clearSessionCalled = true; }
+    );
+    panel.connect( &panel, &QmlControlPanel::openLoadSessionPanel,
+                   [&]( QPointF pos ) { openLoadSessionPanelPos = pos; }
+    );
+    panel.connect( &panel, &QmlControlPanel::openSaveSessionPanel,
+                   [&]( QPointF pos ) { openSaveSessionPanelPos = pos; }
+    );
 
-// Static instance to register types during library static initialisation phase
-static QmlTypeRegistration staticInstance;
+    panel.processAction( QmlControlPanel::OPEN_CONTENT,
+                         expectedContentPanelPos );
+    panel.processAction( QmlControlPanel::OPEN_APPLICATION,
+                         expectedApplicationPanelPos );
+    panel.processAction( QmlControlPanel::NEW_SESSION, QPointF( ));
+    panel.processAction( QmlControlPanel::LOAD_SESSION,
+                         expectedLoadSessionPanelPos );
+    panel.processAction( QmlControlPanel::SAVE_SESSION,
+                         expectedSaveSessionPanelPos );
+
+    BOOST_CHECK_EQUAL( openContentPanelPos, expectedContentPanelPos );
+    BOOST_CHECK_EQUAL( openApplicationPanelPos, expectedApplicationPanelPos );
+    BOOST_CHECK( clearSessionCalled );
+    BOOST_CHECK_EQUAL( openLoadSessionPanelPos, expectedLoadSessionPanelPos );
+    BOOST_CHECK_EQUAL( openSaveSessionPanelPos, expectedSaveSessionPanelPos );
+}

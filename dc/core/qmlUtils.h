@@ -37,49 +37,25 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include <QtDeclarative>
+#ifndef QMLUTILS_H
+#define QMLUTILS_H
 
-#include "ContentWindow.h"
-#include "ContentWindowController.h"
-#include "ContentActionsModel.h"
-#include "ContentItem.h"
-#include "ContentInteractionDelegate.h"
-#include "QmlControlPanel.h"
-
-#define QML_MODULE "DisplayCluster"
+#include <QDebug>
+#include <stdexcept>
 
 /**
- * Register types for use in Qml
+ * Qml utility functions.
  */
-struct QmlTypeRegistration
+
+template <typename T>
+static void qmlCheckOrThrow( const T& component )
 {
-
-    QmlTypeRegistration()
+    if( component.isError( ))
     {
-        qmlRegisterType<ContentActionsModel>(
-                    QML_MODULE, 1, 0, "ContentActionsModel");
-        qmlRegisterType<ContentItem>(
-                    QML_MODULE, 1, 0, "ContentItem");
-
-        qmlRegisterUncreatableType<Content>(
-                    QML_MODULE, 1, 0, "Content",
-                    "Content is linked to a ContentWindow and read-only in QML");
-        qmlRegisterUncreatableType<ContentWindow>(
-                    QML_MODULE, 1, 0, "ContentWindow",
-                    "This exports enums to QML");
-        qmlRegisterUncreatableType<ContentWindowController>(
-                    QML_MODULE, 1, 0, "ContentWindowController",
-                    "ContentWindowController is linked to a ContentWindow "
-                    "and read-only in QML");
-        qmlRegisterUncreatableType<ContentInteractionDelegate>(
-                    QML_MODULE, 1, 0, "ContentInteractionDelegate",
-                    "ContentInteractionDelegate is linked to a ContentWindow "
-                    "and read-only in QML");
-        qmlRegisterUncreatableType<QmlControlPanel>(
-                    QML_MODULE, 1, 0, "QmlControlPanel",
-                    "This exports enums to QML");
+        for( const auto& error : component.errors( ))
+            qWarning() << error.url() << error.line() << error;
+        throw std::runtime_error( "Invadid QML component" );
     }
-};
+}
 
-// Static instance to register types during library static initialisation phase
-static QmlTypeRegistration staticInstance;
+#endif

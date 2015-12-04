@@ -64,20 +64,6 @@ const qreal CONTENT_AR = qreal(CONTENT_SIZE.width()) /
                          qreal(CONTENT_SIZE.height());
 }
 
-BOOST_AUTO_TEST_CASE( testControllerCreationByDisplayGroup )
-{
-    ContentPtr content( new DummyContent );
-    content->setDimensions( CONTENT_SIZE );
-    ContentWindowPtr window = boost::make_shared<ContentWindow>( content );
-
-    BOOST_CHECK( !window->getController( ));
-
-    DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
-    displayGroup->addContentWindow( window );
-
-    BOOST_CHECK( window->getController( ));
-}
-
 BOOST_AUTO_TEST_CASE( testResizeAndMove )
 {
     ContentPtr content( new DummyContent );

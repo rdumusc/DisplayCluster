@@ -3,8 +3,11 @@ import DisplayCluster 1.0
 import "qrc:/qml/core/style.js" as Style
 
 Item {
-    property alias showFocusContext: focuscontext.visible
     id: displaygroupitem
+
+    property alias showFocusContext: focuscontext.visible
+    property alias controlPanel: controlPanel
+
     x: displaygroup.x
     y: displaygroup.y
     width: displaygroup.width
@@ -36,5 +39,10 @@ Item {
                 easing.type: Easing.InOutQuad
             }
         }
+    }
+
+    ControlPanel {
+        id: controlPanel
+        property alias buttonDelegate: controlPanel.buttonDelegate
     }
 }

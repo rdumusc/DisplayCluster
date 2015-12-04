@@ -71,12 +71,13 @@ class ContentWindow : public Coordinates
 {
     Q_OBJECT
     Q_PROPERTY( QUuid id READ getID )
+    Q_PROPERTY( bool isPanel READ isPanel CONSTANT )
+    Q_PROPERTY( Content* content READ getContentPtr CONSTANT )
     Q_PROPERTY( WindowState state READ getState WRITE setState NOTIFY stateChanged )
     Q_PROPERTY( WindowBorder border READ getBorder WRITE setBorder NOTIFY borderChanged )
     Q_PROPERTY( bool focused READ isFocused WRITE setFocused NOTIFY focusedChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
     Q_PROPERTY( bool controlsVisible READ getControlsVisible WRITE setControlsVisible NOTIFY controlsVisibleChanged )
-    Q_PROPERTY( Content* content READ getContentPtr CONSTANT )
     Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
     Q_PROPERTY( ContentInteractionDelegate* delegate READ getInteractionDelegate CONSTANT )
     Q_PROPERTY( ContentWindowController* controller READ getController CONSTANT )
@@ -110,18 +111,31 @@ public:
     };
     Q_ENUMS( WindowState )
 
+    /** The different types of windows. */
+    enum WindowType
+    {
+        DEFAULT,    // A regular window
+        PANEL       // A panel window - always interative, cannot be focused
+    };
+    Q_ENUMS( WindowType )
+
     /**
      * Create a new window.
      * @param content The Content to be displayed.
+     * @param type The type of the window, which determines its representation
+     *        style and behaviour.
      * @note Rank0 only.
      */
-    ContentWindow( ContentPtr content );
+    ContentWindow( ContentPtr content, WindowType type = DEFAULT );
 
     /** Destructor. */
     ~ContentWindow();
 
     /** @return the unique identifier for this window. */
     const QUuid& getID() const;
+
+    /** Is the window a panel */
+    bool isPanel() const;
 
     /** Get the content from QML. */
     Content* getContentPtr() const;
@@ -246,6 +260,7 @@ private:
     void serialize( Archive & ar, const unsigned int )
     {
         ar & coordinates_;
+        ar & type_;
         ar & uuid_;
         ar & content_;
         ar & controller_;
@@ -312,6 +327,7 @@ private:
     void createInteractionDelegate();
 
     QUuid uuid_;
+    WindowType type_;
     ContentPtr content_;
     // Stored as a scoped_ptr instead of unique_ptr for boost::serialization
     boost::scoped_ptr< ContentWindowController > controller_;

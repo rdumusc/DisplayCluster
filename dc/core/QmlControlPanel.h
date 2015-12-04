@@ -37,49 +37,49 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include <QtDeclarative>
+#ifndef QMLCONTROLPANEL_H
+#define QMLCONTROLPANEL_H
 
-#include "ContentWindow.h"
-#include "ContentWindowController.h"
-#include "ContentActionsModel.h"
-#include "ContentItem.h"
-#include "ContentInteractionDelegate.h"
-#include "QmlControlPanel.h"
-
-#define QML_MODULE "DisplayCluster"
+#include <QObject>
+#include <QPointF>
 
 /**
- * Register types for use in Qml
+ * A C++ interface to the QML control panel item.
+ *
+ * It exposes a set of possible actions as an enum type for use in Qml
+ * and maps them back to Qt signals in the C++ code.
  */
-struct QmlTypeRegistration
+class QmlControlPanel : public QObject
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( QmlControlPanel )
 
-    QmlTypeRegistration()
+public:
+    /** The different actions supported by the Qml control panel. */
+    enum ControlPanelActions
     {
-        qmlRegisterType<ContentActionsModel>(
-                    QML_MODULE, 1, 0, "ContentActionsModel");
-        qmlRegisterType<ContentItem>(
-                    QML_MODULE, 1, 0, "ContentItem");
+        OPEN_CONTENT,
+        OPEN_APPLICATION,
+        NEW_SESSION,
+        LOAD_SESSION,
+        SAVE_SESSION
+    };
+    Q_ENUMS( ControlPanelActions )
 
-        qmlRegisterUncreatableType<Content>(
-                    QML_MODULE, 1, 0, "Content",
-                    "Content is linked to a ContentWindow and read-only in QML");
-        qmlRegisterUncreatableType<ContentWindow>(
-                    QML_MODULE, 1, 0, "ContentWindow",
-                    "This exports enums to QML");
-        qmlRegisterUncreatableType<ContentWindowController>(
-                    QML_MODULE, 1, 0, "ContentWindowController",
-                    "ContentWindowController is linked to a ContentWindow "
-                    "and read-only in QML");
-        qmlRegisterUncreatableType<ContentInteractionDelegate>(
-                    QML_MODULE, 1, 0, "ContentInteractionDelegate",
-                    "ContentInteractionDelegate is linked to a ContentWindow "
-                    "and read-only in QML");
-        qmlRegisterUncreatableType<QmlControlPanel>(
-                    QML_MODULE, 1, 0, "QmlControlPanel",
-                    "This exports enums to QML");
-    }
+    /** Constructor */
+    QmlControlPanel() = default;
+
+public slots:
+    /** Calling this method emits a signal corresponding to the given action. */
+    void processAction( ControlPanelActions action, QPointF position );
+
+signals:
+    void openContentPanel( QPointF position );
+    void openApplicationsPanel( QPointF position );
+
+    void clearSession();
+    void openLoadSessionPanel( QPointF position );
+    void openSaveSessionPanel( QPointF position );
 };
 
-// Static instance to register types during library static initialisation phase
-static QmlTypeRegistration staticInstance;
+#endif

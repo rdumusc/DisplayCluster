@@ -60,6 +60,7 @@ class Options : public QObject, public boost::enable_shared_from_this<Options>
     Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
     Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders NOTIFY showWindowBordersChanged )
     Q_PROPERTY( bool showZoomContext READ getShowZoomContext CONSTANT )
+    Q_PROPERTY( bool showControlArea READ getShowControlArea NOTIFY showControlAreaChanged )
     Q_PROPERTY( bool alphaBlending READ isAlphaBlendingEnabled CONSTANT )
 
 public:
@@ -74,6 +75,7 @@ public:
     bool getShowZoomContext() const;
     bool getShowStreamingSegments() const;
     bool getShowStatistics() const;
+    bool getShowControlArea() const;
     bool isAlphaBlendingEnabled() const;
     QColor getBackgroundColor() const;
     ContentPtr getBackgroundContent() const;
@@ -88,6 +90,7 @@ public slots:
     void setShowZoomContext( bool set );
     void setShowStreamingSegments( bool set );
     void setShowStatistics( bool set );
+    void setShowControlArea( bool set );
     void enableAlphaBlending( bool set );
     void setBackgroundColor( QColor color );
 
@@ -106,6 +109,7 @@ signals:
     /** @name QProperty notifiers */
     //@{
     void showWindowBordersChanged();
+    void showControlAreaChanged();
     //@}
 
 private:
@@ -122,6 +126,7 @@ private:
         ar & showZoomContext_;
         ar & showStreamingSegments_;
         ar & showStreamingStatistics_;
+        ar & showControlArea_;
         ar & alphaBlendingEnabled_;
         ar & backgroundColor_;
         ar & backgroundContent_;
@@ -133,6 +138,7 @@ private:
     bool showZoomContext_;
     bool showStreamingSegments_;
     bool showStreamingStatistics_;
+    bool showControlArea_;
     bool alphaBlendingEnabled_;
     QColor backgroundColor_;
     ContentPtr backgroundContent_;

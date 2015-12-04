@@ -49,15 +49,25 @@
 #include <QCoreApplication>
 #include <QProcess>
 
-#define DOCK_WIDTH_RELATIVE_TO_WALL   0.175
+#include <QQuickView> // To determine the qml streamer size
 
+namespace
+{
 #ifdef _WIN32
-#define LOCALSTREAMER_BIN "localstreamer.exe"
+const QString LOCALSTREAMER_BIN( "localstreamer.exe" );
+const QString QMLSTREAMER_BIN( "qmlstreamer.exe" );
 #else
-#define LOCALSTREAMER_BIN "localstreamer"
+const QString LOCALSTREAMER_BIN( "localstreamer" );
+const QString QMLSTREAMER_BIN( "qmlstreamer" );
 #endif
 
-#define WEBBROWSER_DEFAULT_SIZE QSize( 1280, 1024 )
+const qreal DOCK_WIDTH_RELATIVE_TO_WALL = 0.175;
+const QSize WEBBROWSER_DEFAULT_SIZE( 1280, 1024 );
+}
+
+const QString PixelStreamerLauncher::appLauncherUri = QString( "AppLauncher" );
+const QString PixelStreamerLauncher::contentLoaderUri = QString( "ContentLoader" );
+const QString PixelStreamerLauncher::sessionLoaderUri = QString( "SessionsPanel" );
 
 PixelStreamerLauncher::PixelStreamerLauncher( PixelStreamWindowManager& windowManager,
                                               const MasterConfiguration& config )
@@ -92,24 +102,25 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
         put_flog( LOG_ERROR, "Webbrowser process could not be started!" );
 }
 
-void PixelStreamerLauncher::openDock( const QPointF pos )
+QSize computeDockSize( const int wallWidth )
 {
-    const unsigned int dockWidth = _config.getTotalWidth() *
-                                   DOCK_WIDTH_RELATIVE_TO_WALL;
+    const unsigned int dockWidth = wallWidth * DOCK_WIDTH_RELATIVE_TO_WALL;
     const unsigned int dockHeight = dockWidth *
                                     DockPixelStreamer::getDefaultAspectRatio();
+    const QSize dockSize( dockWidth, dockHeight );
+    return DockPixelStreamer::constrainSize( dockSize );
+}
 
-    QSize dockSize( dockWidth, dockHeight );
-
+void PixelStreamerLauncher::openDock( const QPointF pos )
+{
+    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
     const QString& dockUri = DockPixelStreamer::getUniqueURI();
-    dockSize = DockPixelStreamer::constrainSize( dockSize );
-
     _windowManager.openWindow( dockUri, pos, dockSize );
     _windowManager.showWindow( dockUri );
 
     if( !_processes.count( dockUri ))
     {
-        if( !_createDock( dockSize, _config.getDockStartDir( )))
+        if( !_createDock( dockUri, dockSize, _config.getDockStartDir( )))
             put_flog( LOG_ERROR, "Dock process could not be started!" );
     }
 }
@@ -119,17 +130,82 @@ void PixelStreamerLauncher::hideDock()
     _windowManager.hideWindow( DockPixelStreamer::getUniqueURI( ));
 }
 
+void PixelStreamerLauncher::openContentLoader( const QPointF pos )
+{
+    const QString& uri = contentLoaderUri;
+    if( _processes.count( uri ))
+        return;
+
+    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
+    const QPointF centerPos( pos.x() + 0.5 * dockSize.width(),
+                             pos.y() + 0.5 * dockSize.height( ));
+    _windowManager.openWindow( uri, centerPos, dockSize );
+    _windowManager.showWindow( uri );
+
+    if( !_createDock( uri, dockSize, _config.getDockStartDir( )))
+        put_flog( LOG_ERROR, "Dock process could not be started!" );
+}
+
+void PixelStreamerLauncher::openSessionLoader( const QPointF pos )
+{
+    const QString& uri = sessionLoaderUri;
+    if( _processes.count( uri ))
+        return;
+
+    const QSize dockSize = computeDockSize( _config.getTotalWidth( ));
+    const QPointF centerPos( pos.x() + 0.5 * dockSize.width(),
+                             pos.y() + 0.5 * dockSize.height( ));
+    _windowManager.openWindow( uri, centerPos, dockSize );
+    _windowManager.showWindow( uri );
+
+    if( !_createDock( uri, dockSize, _config.getSessionsDir( )))
+        put_flog( LOG_ERROR, "Dock process could not be started!" );
+}
+
+bool PixelStreamerLauncher::openAppLauncher( const QPointF pos )
+{
+    const QString& uri = appLauncherUri;
+    if( _processes.count( uri ))
+        return false;
+
+    const QString& appLauncherQmlFile = _config.getAppLauncherFile();
+    if( appLauncherQmlFile.isEmpty( ))
+    {
+        put_flog( LOG_INFO, "xml configuration is missing a qml property for "
+                            "the AppLauncher. This panel is unavailable." );
+        return false;
+    }
+
+    const QQuickView view( appLauncherQmlFile );
+    if( view.status() != QQuickView::Ready )
+    {
+        put_flog( LOG_INFO, "The configured AppLauncher qml file appears "
+                            "invalid. This panel is unavailable" );
+        return false;
+    }
+
+    const QSize qmlSize = view.initialSize();
+    const QPointF centerPos( pos.x() + 0.5 * qmlSize.width(),
+                             pos.y() + 0.5 * qmlSize.height( ));
+    _windowManager.openWindow( uri, centerPos, qmlSize );
+
+    const auto args = QStringList() << QString( "--qml" ) << appLauncherQmlFile
+                                    << QString( "--streamname") << uri;
+    _processes[uri] = new QProcess( this );
+    return _processes[uri]->startDetached( _getQmlStreamerBin( ), args );
+}
+
 void PixelStreamerLauncher::dereferenceLocalStreamer( const QString uri )
 {
     _processes.erase( uri );
 }
 
-bool PixelStreamerLauncher::_createDock( const QSize& size,
-                                        const QString& rootDir )
+bool PixelStreamerLauncher::_createDock( const QString& uri,
+                                         const QSize& size,
+                                         const QString& rootDir )
 {
-    const QString& uri = DockPixelStreamer::getUniqueURI();
-
-    assert( !_processes.count( uri ));
+    if( _processes.count( uri ))
+        return false;
 
     CommandLineOptions options;
     options.setPixelStreamerType( PS_DOCK );
@@ -148,4 +224,10 @@ QString PixelStreamerLauncher::_getLocalStreamerBin() const
 {
     const QString& appDir = QCoreApplication::applicationDirPath();
     return QString( "%1/%2" ).arg( appDir, LOCALSTREAMER_BIN );
+}
+
+QString PixelStreamerLauncher::_getQmlStreamerBin() const
+{
+    const QString& appDir = QCoreApplication::applicationDirPath();
+    return QString( "%1/%2" ).arg( appDir, QMLSTREAMER_BIN );
 }

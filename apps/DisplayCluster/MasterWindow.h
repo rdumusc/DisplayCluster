@@ -83,8 +83,17 @@ signals:
     /** Emitted when users want to hide the dock. */
     void hideDock();
 
+    /** Emitted when users want to open a content. */
+    void openContentLoader( QPointF pos );
+
+    /** Emitted when users want to open a session. */
+    void openSessionLoader( QPointF pos );
+
     /** Emitted when users want to open a webbrowser. */
     void openWebBrowser( QPointF pos, QSize size, QString url );
+
+    /** Emitted when users want to open an application. */
+    void openAppLauncher( QPointF pos );
 
 protected:
     /** @name Drag events re-implemented from QMainWindow */

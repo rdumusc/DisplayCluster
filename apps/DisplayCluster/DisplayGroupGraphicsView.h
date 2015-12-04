@@ -41,6 +41,8 @@
 
 #include "types.h"
 
+#include "QmlControlPanel.h"
+
 #include <QUuid>
 #include <QGraphicsView>
 #include <QGesture>
@@ -68,6 +70,9 @@ public:
 
     /** Set the DisplayGroup model that this view should present. */
     void setDataModel( DisplayGroupPtr displayGroup );
+
+    /** Get the control panel in this view. */
+    QmlControlPanel& getControlPanel();
 
 signals:
     /** Emitted when a user taps the background. */
@@ -102,6 +107,7 @@ private:
 
     QDeclarativeEngine engine_;
     QGraphicsObject* displayGroupItem_;
+    QmlControlPanel controlPanel_;
 
     typedef QMap<QUuid, QGraphicsItem*> UuidToWindowMap;
     UuidToWindowMap uuidToWindowMap_;

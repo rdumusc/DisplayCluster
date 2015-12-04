@@ -54,12 +54,16 @@ namespace ut = boost::unit_test;
 #define CONFIG_EXPECTED_BACKGROUND "/nfs4/bbp.epfl.ch/visualization/DisplayWall/media/background.png"
 #define CONFIG_EXPECTED_BACKGROUND_COLOR "#242424"
 #define CONFIG_EXPECTED_DOCK_DIR "/nfs4/bbp.epfl.ch/visualization/DisplayWall/media"
+#define CONFIG_EXPECTED_SESSIONS_DIR "/nfs4/bbp.epfl.ch/visualization/DisplayWall/sessions"
 #define CONFIG_EXPECTED_DISPLAY ":0.2"
 #define CONFIG_EXPECTED_HOST_NAME "bbplxviz03i"
 
 #define CONFIG_EXPECTED_WEBSERVICE_PORT 10000
 #define CONFIG_EXPECTED_URL "http://bbp.epfl.ch"
 #define CONFIG_EXPECTED_DEFAULT_URL "http://www.google.com"
+
+#define CONFIG_EXPECTED_APPLAUNCHER "/some/path/to/launcher.qml"
+#define CONFIG_EXPECTED_DEFAULT_APPLAUNCHER ""
 
 BOOST_GLOBAL_FIXTURE( MinimalGlobalQtApp );
 
@@ -103,11 +107,15 @@ BOOST_AUTO_TEST_CASE( test_master_configuration )
     MasterConfiguration config( CONFIG_TEST_FILENAME );
 
     BOOST_CHECK_EQUAL( config.getDockStartDir().toStdString(), CONFIG_EXPECTED_DOCK_DIR );
+    BOOST_CHECK_EQUAL( config.getSessionsDir().toStdString(), CONFIG_EXPECTED_SESSIONS_DIR );
+
     BOOST_CHECK_EQUAL( config.getWebServicePort(), CONFIG_EXPECTED_WEBSERVICE_PORT );
     BOOST_CHECK_EQUAL( config.getWebBrowserDefaultURL().toStdString(), CONFIG_EXPECTED_URL );
 
     BOOST_CHECK( config.getBackgroundColor() == QColor( CONFIG_EXPECTED_BACKGROUND_COLOR ));
     BOOST_CHECK_EQUAL( config.getBackgroundUri().toStdString(), CONFIG_EXPECTED_BACKGROUND );
+
+    BOOST_CHECK_EQUAL( config.getAppLauncherFile().toStdString(), CONFIG_EXPECTED_APPLAUNCHER );
 }
 
 BOOST_AUTO_TEST_CASE( test_master_configuration_default_values )
@@ -115,7 +123,9 @@ BOOST_AUTO_TEST_CASE( test_master_configuration_default_values )
     MasterConfiguration config( CONFIG_TEST_FILENAME_II );
 
     BOOST_CHECK_EQUAL( config.getDockStartDir().toStdString(), QDir::homePath().toStdString() );
+    BOOST_CHECK_EQUAL( config.getSessionsDir().toStdString(), QDir::homePath().toStdString() );
     BOOST_CHECK_EQUAL( config.getWebBrowserDefaultURL().toStdString(), CONFIG_EXPECTED_DEFAULT_URL );
+    BOOST_CHECK_EQUAL( config.getAppLauncherFile().toStdString(), CONFIG_EXPECTED_DEFAULT_APPLAUNCHER );
 }
 
 BOOST_AUTO_TEST_CASE( test_save_configuration )

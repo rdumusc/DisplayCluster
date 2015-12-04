@@ -5,6 +5,8 @@ Release Notes {#ReleaseNotes}
 
 ## New Features
 
+* A new control area on the left of the background lets users open content,
+  sessions and launch applications (via an optional Deflect qmlstreamer).
 * Added an option to open new PixelStream windows in focus mode
 * startdisplaycluster script detects the VirtualGL environment
   and executes display accordingly
