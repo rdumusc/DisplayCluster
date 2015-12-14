@@ -86,7 +86,7 @@ int MPI_Send_Nospin( void *buff, const int count, MPI_Datatype datatype,
         PMPI_Request_get_status( req, &flag, &status );
     }
 
-    return status.MPI_ERROR;
+    return MPI_Wait( &req, &status );
 }
 
 int MPI_Recv_Nospin( void* buff, const int count, MPI_Datatype datatype,
@@ -105,5 +105,5 @@ int MPI_Recv_Nospin( void* buff, const int count, MPI_Datatype datatype,
         PMPI_Request_get_status( req, &flag, status );
     }
 
-    return status->MPI_ERROR;
+    return MPI_Wait( &req, status );
 }
