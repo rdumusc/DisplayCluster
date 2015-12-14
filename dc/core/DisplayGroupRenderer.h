@@ -88,6 +88,7 @@ private:
 
     OptionsPtr _options;
 
+    void _setOptionInQmlContext( OptionsPtr options );
     void _createDisplayGroupQmlItem();
     void _createWindowQmlItem( ContentWindowPtr window );
     bool _hasBackgroundChanged( const QString& newUri ) const;

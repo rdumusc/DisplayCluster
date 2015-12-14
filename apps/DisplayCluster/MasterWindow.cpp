@@ -174,6 +174,14 @@ void MasterWindow::setupMasterWindowUI()
     quitAction->setStatusTip("Quit application");
     connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
+    // show clock action
+    QAction* showClockAction = new QAction( "Show Clock", this );
+    showClockAction->setStatusTip( "Show a clock on the background" );
+    showClockAction->setCheckable( true );
+    showClockAction->setChecked( options_->getShowClock( ));
+    connect( showClockAction, &QAction::toggled, options_.get(),
+             &Options::setShowClock );
+
     // show window borders action
     QAction * showWindowBordersAction = new QAction("Show Window Borders", this);
     showWindowBordersAction->setStatusTip("Show window borders");
@@ -262,6 +270,7 @@ void MasterWindow::setupMasterWindowUI()
     fileMenu->addAction( clearContentsAction );
     fileMenu->addAction( quitAction );
     editMenu->addAction( backgroundAction );
+    viewMenu->addAction( showClockAction );
     viewMenu->addAction( showStatisticsAction );
     viewMenu->addAction( showWindowTitlesAction );
     viewMenu->addAction( showStreamingSegmentsAction );

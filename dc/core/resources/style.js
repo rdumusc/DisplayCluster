@@ -52,3 +52,5 @@ var controlPanelTextSpacing = 20
 
 var panelsAnimationTime = 300
 var panelsLeftOffset = 180
+
+var clockScale = 0.2  // times the height of the displaygroup

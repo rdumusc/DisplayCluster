@@ -57,7 +57,7 @@
 
 namespace
 {
-const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/DisplayGroup.qml" );
+const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/WallDisplayGroup.qml" );
 const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
 const int BACKGROUND_STACKING_ORDER = -1;
 }
@@ -69,19 +69,16 @@ DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
     , _displayGroupItem( 0 )
     , _options( new Options )
 {
+    _setOptionInQmlContext( _options );
     setDisplayGroup( _displayGroup );
-    setRenderingOptions( _options );
+    _setBackground( _options->getBackgroundContent( ));
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
-    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
-    engine.rootContext()->setContextProperty( "options", options.get( ));
-
+    _setOptionInQmlContext( options );
     _setBackground( options->getBackgroundContent( ));
-
-    // Retain the new Options
-    _options = options;
+    _options = options; // Retain the new Options
 }
 
 void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
@@ -141,6 +138,12 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
                 child->toGraphicsObject()->setProperty( "opacity", 0.0 );
         }
     }
+}
+
+void DisplayGroupRenderer::_setOptionInQmlContext( OptionsPtr options )
+{
+    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
+    engine.rootContext()->setContextProperty( "options", options.get( ));
 }
 
 void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )

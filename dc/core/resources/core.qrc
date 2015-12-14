@@ -46,5 +46,13 @@
         <file>FocusControlButton.qml</file>
         <file>ControlPanel.qml</file>
         <file>ControlPanelDelegate.qml</file>
+        <file>WallDisplayGroup.qml</file>
+    </qresource>
+    <qresource prefix="/clock">
+        <file>Clock.qml</file>
+        <file>clock.svg</file>
+        <file>hour.svg</file>
+        <file>minute.svg</file>
+        <file>second.svg</file>
     </qresource>
 </RCC>

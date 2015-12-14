@@ -56,6 +56,7 @@
 class Options : public QObject, public boost::enable_shared_from_this<Options>
 {
     Q_OBJECT
+    Q_PROPERTY( bool showClock READ getShowClock CONSTANT )
     Q_PROPERTY( bool showStatistics READ getShowStatistics CONSTANT )
     Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
     Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders NOTIFY showWindowBordersChanged )
@@ -69,6 +70,7 @@ public:
 
     /** @name Public getters */
     //@{
+    bool getShowClock() const;
     bool getShowWindowBorders() const;
     bool getShowTouchPoints() const;
     bool getShowTestPattern() const;
@@ -84,6 +86,7 @@ public:
 public slots:
     /** @name Public setters. @see updated() */
     //@{
+    void setShowClock( bool set );
     void setShowWindowBorders( bool set );
     void setShowTouchPoints( bool set );
     void setShowTestPattern( bool set );
@@ -120,6 +123,7 @@ private:
     template<class Archive>
     void serialize( Archive & ar, const unsigned int )
     {
+        ar & showClock_;
         ar & showWindowBorders_;
         ar & showTouchPoints_;
         ar & showTestPattern_;
@@ -132,6 +136,7 @@ private:
         ar & backgroundContent_;
     }
 
+    bool showClock_;
     bool showWindowBorders_;
     bool showTouchPoints_;
     bool showTestPattern_;

@@ -41,7 +41,8 @@
 // false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
 Options::Options()
-    : showWindowBorders_(true)
+    : showClock_(false)
+    , showWindowBorders_(true)
     , showTouchPoints_(true)
     , showTestPattern_(false)
     , showZoomContext_(true)
@@ -50,6 +51,11 @@ Options::Options()
     , showControlArea_(false)
     , alphaBlendingEnabled_(false)
 {
+}
+
+bool Options::getShowClock() const
+{
+    return showClock_;
 }
 
 bool Options::getShowWindowBorders() const
@@ -100,6 +106,15 @@ QColor Options::getBackgroundColor() const
 ContentPtr Options::getBackgroundContent() const
 {
     return backgroundContent_;
+}
+
+void Options::setShowClock( const bool set )
+{
+    if( showClock_ == set )
+        return;
+
+    showClock_ = set;
+    emit( updated( shared_from_this( )));
 }
 
 void Options::setShowWindowBorders( const bool set )
