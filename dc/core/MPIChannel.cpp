@@ -44,6 +44,7 @@
 
 #include "log.h"
 
+// #define instead of a function so that put_flog() prints the correct reference
 #define MPI_CHECK( func ) {                                   \
     const int err = ( func );                                 \
     if( err != MPI_SUCCESS )                                  \
@@ -164,7 +165,7 @@ ProbeResult MPIChannel::probe( const int src, const int tag )
     MPI_Status status;
     MPI_CHECK( MPI_Probe_Nospin( src, tag, _mpiComm, &status ));
 
-    int count;
+    int count = MPI_UNDEFINED;
     MPI_CHECK( MPI_Get_count( &status, MPI_BYTE, &count ));
 
     return ProbeResult { status.MPI_SOURCE, count,
@@ -177,6 +178,13 @@ void MPIChannel::receive( char* dataBuffer, const size_t messageSize,
     MPI_Status status;
     MPI_CHECK( MPI_Recv_Nospin( (void*)dataBuffer, messageSize, MPI_BYTE, src,
                                 tag, _mpiComm, &status ));
+
+    // Validate the number of bytes received
+    int count = 0;
+    MPI_CHECK( MPI_Get_count( &status, MPI_BYTE, &count ));
+    if( count != (int)messageSize )
+        put_flog( LOG_ERROR, "incorrect bytes count: %d / %d", count,
+                  messageSize );
 }
 
 void MPIChannel::receiveBroadcast( char* dataBuffer, const size_t messageSize,
@@ -191,7 +199,7 @@ std::vector<uint64_t> MPIChannel::gatherAll( const uint64_t value )
     std::vector<uint64_t> results( _mpiSize );
     MPI_CHECK( MPI_Allgather( (void*)&value, 1, MPI_LONG_LONG_INT,
                               (void*)results.data(), 1, MPI_LONG_LONG_INT,
-                              _mpiComm));
+                              _mpiComm ));
     return results;
 }
 

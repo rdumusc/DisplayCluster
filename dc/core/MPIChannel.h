@@ -65,7 +65,7 @@ struct ProbeResult
     /** @return True if the probe was successful and receive() is safe */
     bool isValid() const
     {
-        return size != MPI_UNDEFINED;
+        return size >= 0;
     }
 };
 

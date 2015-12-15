@@ -57,36 +57,38 @@ int MPI_Probe_Nospin( const int source, const int tag, MPI_Comm comm,
                       MPI_Status* status )
 {
     int flag = 0;
-    MPI_Iprobe( source, tag, comm, &flag, status );
+    int ret = MPI_Iprobe( source, tag, comm, &flag, status );
+    if( ret != MPI_SUCCESS )
+        return ret;
 
     timespec ts{ 0, nsec_start };
     while( !flag )
     {
         nanosleep( &ts, nullptr );
         ts.tv_nsec = std::min( size_t(ts.tv_nsec << 1), nsec_max );
-        MPI_Iprobe( source, tag, comm, &flag, status );
+        ret = MPI_Iprobe( source, tag, comm, &flag, status );
     }
-
-    return status->MPI_ERROR;
+    return ret;
 }
 
 int MPI_Send_Nospin( void *buff, const int count, MPI_Datatype datatype,
                      const int dest, const int tag, MPI_Comm comm )
 {
     MPI_Request req;
-    PMPI_Isend( buff, count, datatype, dest, tag, comm, &req );
+    const int ret = MPI_Isend( buff, count, datatype, dest, tag, comm, &req );
+    if( ret != MPI_SUCCESS )
+        return ret;
 
-    MPI_Status status;
     timespec ts{ 0, nsec_start };
     int flag = 0;
-    while ( !flag )
+    while( !flag )
     {
         nanosleep( &ts, nullptr );
         ts.tv_nsec = std::min( size_t(ts.tv_nsec << 1), nsec_max );
-        PMPI_Request_get_status( req, &flag, &status );
+        // Always returns success. Status unused for single send operations.
+        MPI_Request_get_status( req, &flag, MPI_STATUS_IGNORE );
     }
-
-    return MPI_Wait( &req, &status );
+    return MPI_Wait( &req, MPI_STATUS_IGNORE ); // release the request object
 }
 
 int MPI_Recv_Nospin( void* buff, const int count, MPI_Datatype datatype,
@@ -94,16 +96,17 @@ int MPI_Recv_Nospin( void* buff, const int count, MPI_Datatype datatype,
                      MPI_Status* status )
 {
     MPI_Request req;
-    PMPI_Irecv( buff, count, datatype, from, tag, comm, &req );
+    const int ret = MPI_Irecv( buff, count, datatype, from, tag, comm, &req );
+    if( ret != MPI_SUCCESS )
+        return ret;
 
     timespec ts{ 0, nsec_start };
     int flag = 0;
-    while ( !flag )
+    while( !flag )
     {
         nanosleep( &ts, nullptr );
         ts.tv_nsec = std::min( size_t(ts.tv_nsec << 1), nsec_max );
-        PMPI_Request_get_status( req, &flag, status );
+        MPI_Request_get_status( req, &flag, status ); // Always returns success
     }
-
-    return MPI_Wait( &req, status );
+    return MPI_Wait( &req, status ); // release the request object
 }

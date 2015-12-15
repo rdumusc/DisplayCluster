@@ -39,39 +39,45 @@
 
 #include "MasterFromWallChannel.h"
 
+#include "log.h"
 #include "MPIChannel.h"
 #include "serializationHelpers.h"
 
-MasterFromWallChannel::MasterFromWallChannel(MPIChannelPtr mpiChannel)
-    : mpiChannel_(mpiChannel)
-    , processMessages_(true)
+MasterFromWallChannel::MasterFromWallChannel( MPIChannelPtr mpiChannel )
+    : _mpiChannel( mpiChannel )
+    , _processMessages( true )
 {
 }
 
 void MasterFromWallChannel::processMessages()
 {
-    while(processMessages_)
+    while( _processMessages )
     {
-        const ProbeResult result = mpiChannel_->probe(MPI_ANY_SOURCE, MPI_ANY_TAG);
-        if(!result.isValid())
+        const ProbeResult result = _mpiChannel->probe();
+        if( !result.isValid( ))
+        {
+            put_flog( LOG_ERROR, "Invalid probe result size: %d", result.size );
             continue;
+        }
 
-        buffer_.setSize(result.size);
-        mpiChannel_->receive(buffer_.data(), result.size, result.src, result.message);
+        _buffer.setSize( result.size );
+        _mpiChannel->receive( _buffer.data(), result.size, result.src,
+                              result.message );
 
-        switch(result.message)
+        switch( result.message )
         {
         case MPI_MESSAGE_TYPE_REQUEST_FRAME:
         {
             QString uri;
-            buffer_.deserialize(uri);
-            emit receivedRequestFrame(uri);
+            _buffer.deserialize( uri );
+            emit receivedRequestFrame( uri );
             break;
         }
         case MPI_MESSAGE_TYPE_QUIT:
-            processMessages_ = false;
+            _processMessages = false;
             break;
         default:
+            put_flog( LOG_WARN, "Invalid message type: %d", result.message );
             break;
         }
     }
