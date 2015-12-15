@@ -124,7 +124,7 @@ elif IS_MPICH3:
     EXPORT_DISPLAY = '-env DISPLAY '
     mpi_args += '-genvlist LD_LIBRARY_PATH -hosts'
 else:
-    MPI_SPECIAL_FLAGS = ''
+    MPI_SPECIAL_FLAGS = '-x IPATH_NO_CPUAFFINITY=1'
     MPI_PER_NODE_HOST = None
     EXPORT_DISPLAY = '-x DISPLAY='
     mpi_args += '--mca hwloc_base_binding_policy none -x LD_LIBRARY_PATH -host'
