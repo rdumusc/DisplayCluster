@@ -73,9 +73,9 @@ signals:
 private:
     Q_DISABLE_COPY( MasterFromWallChannel )
 
-    MPIChannelPtr mpiChannel_;
-    SerializeBuffer buffer_;
-    bool processMessages_;
+    MPIChannelPtr _mpiChannel;
+    SerializeBuffer _buffer;
+    bool _processMessages;
 };
 
 #endif // MASTERFROMWALLCHANNEL_H
