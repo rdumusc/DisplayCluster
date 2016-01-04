@@ -42,15 +42,14 @@
 
 #include "types.h"
 
-#include "Drawable.h"
-
-#include <QtCore/QList>
-#include <QtCore/QString>
+#include <QList>
+#include <QString>
+#include <QQuickPaintedItem>
 
 /**
  * Render a test pattern to help setup and debug the display configuration.
  */
-class TestPattern : public Drawable
+class TestPattern : public QQuickPaintedItem
 {
 public:
     /**
@@ -61,14 +60,15 @@ public:
     TestPattern( const WallConfiguration& configuration, const int tileIndex );
 
     /** Render the test pattern. */
-    void draw( QPainter* painter, const QRectF& rect ) final;
+    void paint( QPainter* painter ) final;
 
 private:
     QList<QString> labels_;
     const QSize wallSize_;
+    QRect windowRect_;
 
     void renderCrossPattern( QPainter* painter );
-    void renderLabels( QPainter* painter, const QRectF& rect );
+    void renderLabels( QPainter* painter );
 };
 
 #endif // TESTPATTERN_H

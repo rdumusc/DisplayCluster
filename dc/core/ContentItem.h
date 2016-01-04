@@ -42,12 +42,12 @@
 
 #include "types.h"
 
-#include <QtDeclarative/QDeclarativeItem>
+#include <QQuickPaintedItem>
 
 /**
  * Render a Content in Qml.
  */
-class ContentItem : public QDeclarativeItem
+class ContentItem : public QQuickPaintedItem
 {
     Q_OBJECT
     Q_PROPERTY( Role role READ getRole WRITE setRole NOTIFY roleChanged )
@@ -61,11 +61,10 @@ public:
     Q_ENUMS( Role )
 
     /** Constructor. */
-    explicit ContentItem( QDeclarativeItem* parentItem = 0  );
+    explicit ContentItem( QQuickItem* parentItem = 0  );
 
-    /** Draw call, reimplemented from QGraphicsItem. */
-    void paint( QPainter* painter, const QStyleOptionGraphicsItem*,
-                QWidget* ) override;
+    /** Draw call, reimplemented from QQuickPaintedItem. */
+    void paint( QPainter* painter ) override;
 
     /** Set the factory object to be rendered. */
     void setWallContent( WallContent* wallContent );

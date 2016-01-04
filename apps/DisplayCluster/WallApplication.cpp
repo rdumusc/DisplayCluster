@@ -49,6 +49,7 @@
 
 #include "configuration/WallConfiguration.h"
 
+#include "PixelStreamProvider.h"
 #include "RenderContext.h"
 
 #include <stdexcept>
@@ -136,12 +137,12 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 
     connect( fromMasterChannel_.get(),
              SIGNAL( received( deflect::FramePtr )),
-             &renderController_->getPixelStreamUpdater(),
-             SLOT( updatePixelStream( deflect::FramePtr )));
+             &renderContext_->getPixelStreamProvider(),
+             SLOT( setNewFrame( deflect::FramePtr )));
 
     if( wallChannel_->getRank() == 0 )
     {
-        connect( &renderController_->getPixelStreamUpdater(),
+        connect( &renderContext_->getPixelStreamProvider(),
                  SIGNAL( requestFrame( QString )),
                  toMasterChannel_.get(), SLOT( sendRequestFrame( QString )));
     }
@@ -174,8 +175,6 @@ void WallApplication::renderFrame()
     renderContext_->updateGLWindows();
     wallChannel_->globalBarrier();
     renderContext_->swapBuffers();
-
-    renderController_->postRenderUpdate( *wallChannel_ );
 
     if( renderController_->quitRendering( ))
         quit();

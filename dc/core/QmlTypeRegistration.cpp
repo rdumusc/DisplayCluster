@@ -37,14 +37,14 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include <QtDeclarative>
-
 #include "ContentWindow.h"
 #include "ContentWindowController.h"
 #include "ContentActionsModel.h"
 #include "ContentItem.h"
 #include "ContentInteractionDelegate.h"
 #include "QmlControlPanel.h"
+
+#include <QtQml>
 
 #define QML_MODULE "DisplayCluster"
 

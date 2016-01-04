@@ -47,6 +47,8 @@
 
 #include <deflect/Frame.h>
 
+#include <QApplication>
+
 #define RANK0 0
 
 WallFromMasterChannel::WallFromMasterChannel( MPIChannelPtr mpiChannel )
@@ -67,13 +69,13 @@ void WallFromMasterChannel::receiveMessage()
     switch( mh.type )
     {
     case MPI_MESSAGE_TYPE_DISPLAYGROUP:
-        emit received( receiveBroadcast<DisplayGroupPtr>( mh.size ));
+        emit received( receiveQObjectBroadcast<DisplayGroupPtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_OPTIONS:
-        emit received( receiveBroadcast<OptionsPtr>( mh.size ));
+        emit received( receiveQObjectBroadcast<OptionsPtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_MARKERS:
-        emit received( receiveBroadcast<MarkersPtr>( mh.size ));
+        emit received( receiveQObjectBroadcast<MarkersPtr>( mh.size ));
         break;
     case MPI_MESSAGE_TYPE_PIXELSTREAM:
         emit received( receiveBroadcast<deflect::FramePtr>( mh.size ));
@@ -102,5 +104,13 @@ T WallFromMasterChannel::receiveBroadcast( const size_t messageSize )
     _mpiChannel->receiveBroadcast( _buffer.data(), messageSize, RANK0 );
     _buffer.deserialize( object );
 
+    return object;
+}
+
+template <typename T>
+T WallFromMasterChannel::receiveQObjectBroadcast( const size_t messageSize )
+{
+    T object( receiveBroadcast<T>( messageSize ));
+    object->moveToThread( QApplication::instance()->thread( ));
     return object;
 }

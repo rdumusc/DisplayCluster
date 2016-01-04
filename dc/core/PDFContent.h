@@ -57,6 +57,9 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
+    /** Get the source image url used by the QML engine for rendering. */
+    QString getSourceImage() const final;
+
     /**
      * Reaad PDF informations from the source URI.
      * @return true on success, false if the URI is invalid or an error occured.

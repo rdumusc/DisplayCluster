@@ -39,6 +39,7 @@
 #include "MovieContent.h"
 
 #include "FFMPEGMovie.h"
+#include "MovieProvider.h"
 
 #include <QtCore/QFileInfo>
 
@@ -67,6 +68,16 @@ MovieContent::MovieContent()
 CONTENT_TYPE MovieContent::getType() const
 {
     return CONTENT_TYPE_MOVIE;
+}
+
+QString MovieContent::getProviderId() const
+{
+    return MovieProvider::ID;
+}
+
+QString MovieContent::getSourceImage() const
+{
+    return getProviderId() + QString("/") + _uri;
 }
 
 bool MovieContent::readMetadata()
@@ -124,5 +135,5 @@ void MovieContent::createActions()
     playPauseAction->setChecked( controlState_ & STATE_PAUSED );
     connect( playPauseAction, SIGNAL( checked( )), this, SLOT( pause( )));
     connect( playPauseAction, SIGNAL( unchecked( )), this, SLOT( play( )));
-    _actions.add( playPauseAction );
+    _actions->add( playPauseAction );
 }

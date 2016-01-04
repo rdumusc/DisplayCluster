@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,17 +37,15 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Movie.h"
+#include "MovieUpdater.h"
 
+#include "FFMPEGFrame.h"
+#include "FFMPEGPicture.h"
+#include "FFMPEGMovie.h"
+#include "WallToWallChannel.h"
 #include "log.h"
 
-#include "ContentWindow.h"
-#include "FFMPEGMovie.h"
-#include "FFMPEGFrame.h"
-#include "MovieContent.h"
-#include "WallToWallChannel.h"
-
-Movie::Movie( const QString& uri )
+MovieUpdater::MovieUpdater( const QString& uri )
     : _ffmpegMovie( new FFMPEGMovie( uri ))
     , _paused( false )
     , _loop( true )
@@ -64,69 +63,17 @@ Movie::Movie( const QString& uri )
         _ffmpegMovie->startDecoding();
 }
 
-Movie::~Movie() {}
+MovieUpdater::~MovieUpdater() {}
 
-void Movie::setVisible( const bool isVisible )
-{
-    _isVisible = isVisible;
-}
-
-void Movie::setPause( const bool pause )
-{
-    _paused = pause;
-}
-
-void Movie::setLoop( const bool loop )
-{
-    _loop = loop;
-}
-
-void Movie::render()
-{
-    if( !_texture.isValid( ))
-        return;
-
-    _quad.render();
-}
-
-void Movie::renderPreview()
-{
-    if( !_texture.isValid( ))
-        return;
-
-    _previewQuad.render();
-}
-
-void Movie::preRenderUpdate( ContentWindowPtr window, const QRect& wallArea )
-{
-    if( !_ffmpegMovie->isValid( ))
-        return;
-
-    if( !_texture.isValid( ))
-    {
-        _generateTexture();
-        _quad.setTexture( _texture.getTextureId( ));
-        _previewQuad.setTexture( _texture.getTextureId( ));
-    }
-
-    _quad.setTexCoords( window->getZoomRect( ));
-
-    MovieContent& movie = static_cast<MovieContent&>( *window->getContent( ));
-    setPause( movie.getControlState() & STATE_PAUSED );
-    setLoop( movie.getControlState() & STATE_LOOP );
-
-    setVisible( QRectF( wallArea ).intersects( _qmlItem->getSceneRect( )));
-}
-
-void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
+void MovieUpdater::update( WallToWallChannel& channel )
 {
     if( !_ffmpegMovie->isValid( ))
         return;
 
     if( !_paused )
     {
-        _updateTimestamp( wallToWallChannel );
-        _synchronizeTimestamp( wallToWallChannel );
+        _updateTimestamp( channel );
+        _synchronizeTimestamp( channel );
     }
 
     if( !_isVisible )
@@ -136,7 +83,8 @@ void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
     {
         try
         {
-            _texture.update( _futurePicture.get()->getData(), GL_RGBA );
+            _currentPicture = _futurePicture.get();
+            emit pictureUpdated( _currentPicture->getTimestamp( ));
         }
         catch( const std::exception& e )
         {
@@ -151,47 +99,43 @@ void Movie::preRenderSync( WallToWallChannel& wallToWallChannel )
     const bool needsFrame = _getDelay() >= _ffmpegMovie->getFrameDuration();
     if( !_futurePicture.valid() && needsFrame )
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
+
 }
 
-bool Movie::_generateTexture()
+PicturePtr MovieUpdater::getPicture()
 {
-    QImage image( _ffmpegMovie->getWidth(), _ffmpegMovie->getHeight(),
-                  QImage::Format_RGB32 );
-    image.fill( 0 );
-
-    return _texture.init( image );
+    return _currentPicture;
 }
 
-double Movie::_getDelay() const
+double MovieUpdater::_getDelay() const
 {
     return fabs( _sharedTimestamp - _ffmpegMovie->getPosition( ));
 }
 
-void Movie::_updateTimestamp( WallToWallChannel& wallToWallChannel )
+void MovieUpdater::_updateTimestamp( WallToWallChannel& channel )
 {
-    _timer.setCurrentTime( wallToWallChannel.getTime( ));
+    _timer.setCurrentTime( channel.getTime( ));
 
     // Don't increment the timestamp until all the processes have caught up
     const bool isInSync = _getDelay() <= _ffmpegMovie->getFrameDuration();
-    if( !wallToWallChannel.allReady( !_isVisible || isInSync ))
+    if( !channel.allReady( !_isVisible || isInSync ))
         return;
 
     _sharedTimestamp += ElapsedTimer::toSeconds( _timer.getElapsedTime( ));
 }
 
-void Movie::_synchronizeTimestamp( WallToWallChannel& wallToWallChannel )
+void MovieUpdater::_synchronizeTimestamp( WallToWallChannel& channel )
 {
     // Elect a leader among processes which have decoded a frame
     const bool isCandidate = _ffmpegMovie->isValid() && _isVisible;
-    const int leader = wallToWallChannel.electLeader( isCandidate );
+    const int leader = channel.electLeader( isCandidate );
 
     if( leader < 0 )
         return;
 
-    if( leader == wallToWallChannel.getRank( ))
-        wallToWallChannel.broadcast( ElapsedTimer::toTimeDuration(
-                                         _sharedTimestamp ));
+    if( leader == channel.getRank( ))
+        channel.broadcast( ElapsedTimer::toTimeDuration( _sharedTimestamp ));
     else
         _sharedTimestamp = ElapsedTimer::toSeconds(
-                         wallToWallChannel.receiveTimestampBroadcast( leader ));
+                                   channel.receiveTimestampBroadcast( leader ));
 }

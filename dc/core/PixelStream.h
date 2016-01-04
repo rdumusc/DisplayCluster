@@ -115,6 +115,8 @@ public:
     QString getStatistics() const;
     QList<QObject*> getSegments() const;
 
+    const QString& getUri() const;
+
 signals:
     void statisticsChanged();
     void segmentsChanged();

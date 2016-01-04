@@ -39,60 +39,139 @@
 
 #include "PixelStreamUpdater.h"
 
-#include "log.h"
-
-#include "QmlWindowRenderer.h"
-#include "ContentWindow.h"
-#include "PixelStream.h"
+#include "Tile.h"
+#include "WallToWallChannel.h"
 
 #include <deflect/Frame.h>
+#include <boost/bind.hpp>
+#include <QImage>
+
+template <typename T>
+class ScopedIncrementer
+{
+public:
+    ScopedIncrementer( T& object, std::mutex& mutex )
+        : _object( object )
+        , _mutex( mutex )
+    {
+        std::lock_guard<std::mutex> lock( _mutex );
+        ++_object;
+    }
+    ~ScopedIncrementer()
+    {
+        std::lock_guard<std::mutex> lock( _mutex );
+        --_object;
+    }
+
+private:
+    T& _object;
+    std::mutex& _mutex;
+};
 
 PixelStreamUpdater::PixelStreamUpdater()
+    : _decodeCount( 0 )
+    , _frameIndex( 0 )
 {
+    _swapSyncFrame.setCallback( boost::bind(
+                                    &PixelStreamUpdater::_onFrameSwapped,
+                                    this, _1 ));
 }
 
-void PixelStreamUpdater::synchronizeFramesSwap( const SyncFunction&
-                                                versionCheckFunc )
+void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
 {
-    PixelStreamMap::const_iterator streamIt = _pixelStreamMap.begin();
-    for( ; streamIt != _pixelStreamMap.end(); ++streamIt )
-    {
-        const QString& uri = streamIt.key();
+    // Block calls to getTile() by holding the lock until the frame has
+    // been swapped
+    std::lock_guard<std::mutex> lock( _mutex );
 
-        SwapSyncFrame& swapSyncFrame = _swapSyncFrames[uri];
-        if( swapSyncFrame.sync( versionCheckFunc ))
-        {
-            streamIt.value()->setNewFrame( swapSyncFrame.get( ));
-            emit requestFrame( uri );
-        }
-    }
+    if( !channel.allReady( _decodeCount == 0 ))
+        return;
+
+    const SyncFunction& versionCheckFunc =
+        boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
+
+    _swapSyncFrame.sync( versionCheckFunc );
+}
+
+const QList<QObject*>& PixelStreamUpdater::getTiles() const
+{
+    return _tiles;
+}
+
+QImage PixelStreamUpdater::getTileImage( const uint index )
+{
+    // Ensure that this operation does not conflict with a frame swap
+    ScopedIncrementer<int> increment( _decodeCount, _mutex );
+
+    if( !_swapSyncFrame.get( ))
+        throw std::runtime_error( "No frames yet" );
+
+    auto& segment = _swapSyncFrame.get()->segments.at( index );
+
+    if( segment.parameters.compressed )
+        _decoders[index]->decode( segment );
+
+    return QImage( (const uchar*)segment.imageData.constData(),
+                   segment.parameters.width, segment.parameters.height,
+                   QImage::Format_RGB32 );
 }
 
 void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 {
-    _swapSyncFrames[frame->uri].update( frame );
+    _swapSyncFrame.update( frame );
 }
 
-void PixelStreamUpdater::onWindowAdded( QmlWindowPtr qmlWindow )
+void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
 {
-    ContentWindowPtr window = qmlWindow->getContentWindow();
-    if( window->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM )
-        return;
+    std::sort( frame->segments.begin(), frame->segments.end(),
+               []( const deflect::Segment& s1, const deflect::Segment& s2 )
+        {
+            return ( s1.parameters.y < s2.parameters.y ||
+                     s1.parameters.x < s2.parameters.x );
+        } );
 
-    WallContentPtr stream = qmlWindow->getWallContent();
+    _adjustFrameDecodersCount( frame->segments.size( ));
+    _refreshTiles( frame->segments );
 
-    const QString& uri = window->getContent()->getURI();
-    _pixelStreamMap[uri] = boost::static_pointer_cast<PixelStream>( stream );
+    emit pictureUpdated( _frameIndex++ );
+    emit requestFrame( frame->uri );
 }
 
-void PixelStreamUpdater::onWindowRemoved( QmlWindowPtr qmlWindow )
+void PixelStreamUpdater::_adjustFrameDecodersCount( const size_t count )
 {
-    ContentWindowPtr window = qmlWindow->getContentWindow();
-    if( window->getContent()->getType() != CONTENT_TYPE_PIXEL_STREAM )
-        return;
+    while( _decoders.size() < count )
+        _decoders.push_back( make_unique<deflect::SegmentDecoder>( ));
+}
 
-    const QString& uri = window->getContent()->getURI();
-    disconnect( _pixelStreamMap[uri].get( ));
-    _pixelStreamMap.remove( uri );
-    _swapSyncFrames.remove( uri );
+QRect toRect( const deflect::SegmentParameters& params )
+{
+    return QRect( params.x, params.y, params.width, params.height );
+}
+
+void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
+{
+    // Update existing segments
+    const size_t maxIndex = std::min( (size_t)_tiles.size(),
+                                      segments.size( ));
+    for( size_t i = 0; i < maxIndex; ++i )
+    {
+        Tile* tile = qobject_cast<Tile*>( _tiles[i] );
+        tile->update( toRect( segments[i].parameters ));
+    }
+
+    const bool sizeChange = segments.size() != (size_t)_tiles.size();
+
+    // Insert new objects in the vector if it is smaller
+    for( size_t i = _tiles.size(); i < segments.size(); ++i )
+        _tiles.push_back( new Tile( i, toRect( segments[i].parameters ), this));
+
+    // Or remove objects it if it is bigger
+    const size_t removeCount = _tiles.size() - segments.size();
+    for( size_t i = 0; i < removeCount; ++i )
+    {
+        delete _tiles.back();
+        _tiles.pop_back();
+    }
+
+    if( sizeChange )
+        emit tilesChanged();
 }

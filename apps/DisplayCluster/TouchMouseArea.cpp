@@ -40,18 +40,16 @@
 #include "TouchMouseArea.h"
 
 #include <QEvent>
-#include <QGraphicsSceneMouseEvent>
-
 #include <cmath> // std::abs
 
 TouchMouseArea::TouchMouseArea()
 {
-    setFlag( QGraphicsItem::ItemIsSelectable, true );
-    setFlag( QGraphicsItem::ItemIsFocusable, true ); // to get key events
+//    setFlag( QGraphicsItem::ItemIsSelectable, true );
+//    setFlag( QGraphicsItem::ItemIsFocusable, true ); // to get key events
     setAcceptedMouseButtons( Qt::LeftButton );
 }
 
-bool TouchMouseArea::sceneEvent( QEvent* event_ )
+bool TouchMouseArea::event( QEvent* event_ )
 {
     switch( event_->type( ))
     {
@@ -60,42 +58,44 @@ bool TouchMouseArea::sceneEvent( QEvent* event_ )
         keyPressEvent( static_cast< QKeyEvent* >( event_ ));
         return true;
     default:
-        return TouchArea::sceneEvent( event_ );
+        return TouchArea::event( event_ );
     }
 }
 
-void TouchMouseArea::mousePressEvent( QGraphicsSceneMouseEvent* event_ )
+void TouchMouseArea::mousePressEvent( QMouseEvent* event_ )
 {
-    _mousePressPos = event_->scenePos();
-    emit touchBegin( event_->scenePos( ));
+    _mousePressPos = event_->windowPos();
+    _mousePrevPos = event_->windowPos();
+    emit touchBegin( event_->windowPos( ));
 }
 
-void TouchMouseArea::mouseMoveEvent( QGraphicsSceneMouseEvent* event_ )
+void TouchMouseArea::mouseMoveEvent( QMouseEvent* event_ )
 {
-    const QPointF delta = event_->scenePos() - event_->lastScenePos();
-    emit pan( event_->scenePos(), delta );
+    const QPointF delta = event_->windowPos() - _mousePrevPos;
+    _mousePrevPos = event_->windowPos();
+    emit pan( event_->windowPos(), delta );
 }
 
-void TouchMouseArea::mouseReleaseEvent( QGraphicsSceneMouseEvent* event_ )
+void TouchMouseArea::mouseReleaseEvent( QMouseEvent* event_ )
 {
-    emit touchEnd( event_->scenePos( ));
+    emit touchEnd( event_->windowPos( ));
 
     // Also generate a tap event if releasing the button in place
-    const QPointF delta = _mousePressPos - event_->scenePos();
+    const QPointF delta = _mousePressPos - event_->windowPos();
     const double epsilon = std::numeric_limits< double >::epsilon();
     if( std::abs( delta.x( )) < epsilon && std::abs( delta.y( )) < epsilon )
-        emit tap( event_->scenePos( ));
+        emit tap( event_->windowPos( ));
 }
 
-void TouchMouseArea::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event_ )
+void TouchMouseArea::mouseDoubleClickEvent( QMouseEvent* event_ )
 {
-    emit doubleTap( event_->scenePos( ));
+    emit doubleTap( event_->windowPos( ));
 }
 
-void TouchMouseArea::wheelEvent( QGraphicsSceneWheelEvent* event_ )
+void TouchMouseArea::wheelEvent( QWheelEvent* event_ )
 {
     // common mouse delta is 120, scroll/resize of 40 pixels seems ok
-    emit pinch( event_->scenePos(), event_->delta() / 3.0 );
+    emit pinch( event_->posF(), event_->delta() / 3.0 );
 }
 
 void TouchMouseArea::keyPressEvent( QKeyEvent* keyEvent )

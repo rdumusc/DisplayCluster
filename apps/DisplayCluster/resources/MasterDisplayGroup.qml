@@ -1,4 +1,4 @@
-import QtQuick 1.1
+import QtQuick 2.0
 import DisplayCluster 1.0
 import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
@@ -11,10 +11,10 @@ DisplayGroup {
         z: controlPanel.z - 1
         anchors.fill: parent
         onTap: {
-            dggv.notifyBackgroundTap(position)
+            view.notifyBackgroundTap(position)
         }
         onTapAndHold: {
-            dggv.notifyBackgroundTapAndHold(position)
+            view.notifyBackgroundTapAndHold(position)
         }
     }
 

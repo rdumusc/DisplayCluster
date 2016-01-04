@@ -40,9 +40,12 @@
 #include "PDFContent.h"
 
 #include "PDF.h"
+#include "PDFProvider.h"
+#include "ImageProviderStringifier.h"
 
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
+#include <QTextStream>
 
 BOOST_CLASS_EXPORT_GUID( PDFContent, "PDFContent" )
 
@@ -69,6 +72,16 @@ void PDFContent::_init()
 CONTENT_TYPE PDFContent::getType() const
 {
     return CONTENT_TYPE_PDF;
+}
+
+QString PDFContent::getSourceImage() const
+{
+    QString source;
+    QTextStream stream( &source );
+    stream << PDFProvider::ID << "/" << _uri;
+    stream << "#" << _pageNumber;
+    stream << "#" << stringify( _zoomRect );
+    return source;
 }
 
 bool PDFContent::readMetadata()

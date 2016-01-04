@@ -43,7 +43,6 @@
 #include "types.h"
 
 #include "SwapSyncObject.h"
-#include "PixelStreamUpdater.h"
 
 #include <QObject>
 
@@ -61,14 +60,8 @@ public:
     /** Get the DisplayGroup */
     DisplayGroupPtr getDisplayGroup() const;
 
-    /** Get the PixelStream updater. */
-    PixelStreamUpdater& getPixelStreamUpdater();
-
     /** Update and synchronize scene objects before rendering a frame. */
     void preRenderUpdate( WallToWallChannel& wallChannel );
-
-    /** Update and synchronize scene objects after rendering a frame. */
-    void postRenderUpdate( WallToWallChannel& wallChannel );
 
     /** Do we need to stop rendering. */
     bool quitRendering() const;
@@ -82,18 +75,16 @@ public slots:
 private:
     Q_DISABLE_COPY( RenderController )
 
-    RenderContextPtr renderContext_;
+    RenderContextPtr _renderContext;
 
-    DisplayGroupRendererPtr displayGroupRenderer_;
-    PixelStreamUpdater pixelStreamUpdater_;
+    SwapSyncObject<bool> _syncQuit;
+    SwapSyncObject<DisplayGroupPtr> _syncDisplayGroup;
+    SwapSyncObject<OptionsPtr> _syncOptions;
+    SwapSyncObject<MarkersPtr> _syncMarkers;
 
-    SwapSyncObject<bool> syncQuit_;
-    SwapSyncObject<DisplayGroupPtr> syncDisplayGroup_;
-    SwapSyncObject<OptionsPtr> syncOptions_;
-    SwapSyncObject<MarkersPtr> syncMarkers_;
-
-    void synchronizeObjects( const SyncFunction& versionCheckFunc );
-    void setRenderOptions( OptionsPtr options );
+    void _synchronizeObjects( const SyncFunction& versionCheckFunc );
+    void _setRenderOptions( OptionsPtr options );
+    void _setDisplayGroup( DisplayGroupPtr displayGroup );
 };
 
 #endif // RENDERCONTROLLER_H

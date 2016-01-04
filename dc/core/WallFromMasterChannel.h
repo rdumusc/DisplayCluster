@@ -116,6 +116,8 @@ private:
 
     template <typename T>
     T receiveBroadcast( const size_t messageSize );
+    template <typename T>
+    T receiveQObjectBroadcast( const size_t messageSize );
 };
 
 #endif // WALLFROMMASTERCHANNEL_H

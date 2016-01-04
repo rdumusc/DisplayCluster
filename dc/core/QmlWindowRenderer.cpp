@@ -40,55 +40,42 @@
 #include "QmlWindowRenderer.h"
 
 #include "ContentItem.h"
+#include "ContentSynchronizer.h"
 #include "ContentWindow.h"
-#include "ContentWindowController.h"
-#include "PixelStream.h"
 
-#include <QtDeclarative/QDeclarativeComponent>
+#include <QQmlComponent>
 
 #include <QGraphicsScene>
 
 namespace
 {
-const QString CONTENT_ITEM_OBJECT_NAME( "ContentItem" );
-const QString ZOOM_CONTEXT_ITEM_OBJECT_NAME( "ZoomContextItem" );
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 }
 
-QmlWindowRenderer::QmlWindowRenderer( QDeclarativeEngine& engine,
-                                      QDeclarativeItem& parentItem,
+QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
+                                      QQuickItem& parentItem,
                                       ContentWindowPtr contentWindow,
                                       const bool isBackground )
     : contentWindow_( contentWindow )
-    , windowContext_( new QDeclarativeContext( engine.rootContext( )))
+    , windowContext_( new QQmlContext( engine.rootContext( )))
     , windowItem_( 0 )
-    , wallContent_( WallContent::create( *(contentWindow->getContent( ))))
 {
     windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
 
+    auto content = contentWindow_->getContent();
+    auto provider = engine.imageProvider( content->getProviderId( ));
+    _contentSynchronizer = ContentSynchronizer::create( content, *provider );
+    windowContext_->setContextProperty( "contentsync",
+                                        _contentSynchronizer.get( ));
+
     windowItem_ = createQmlItem( QML_WINDOW_URL );
     windowItem_->setParentItem( &parentItem );
-
-    ContentItem* contentItem =
-       windowItem_->findChild<ContentItem*>( CONTENT_ITEM_OBJECT_NAME );
-    contentItem->setWallContent( wallContent_.get( ));
-    wallContent_->setQmlItem( contentItem );
-
-    ContentItem* zoomContextItem =
-      contentItem->findChild<ContentItem*>( ZOOM_CONTEXT_ITEM_OBJECT_NAME );
-    zoomContextItem->setWallContent( wallContent_.get( ));
-
-    if( contentWindow_->getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM )
-        setupPixelStreamItem();
-
     windowItem_->setProperty( "isBackground", isBackground );
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
 {
-    QGraphicsScene* scene = windowItem_->scene();
-    scene->removeItem( windowItem_ );
     delete windowItem_;
 }
 
@@ -105,20 +92,10 @@ void QmlWindowRenderer::setStackingOrder( const int value )
 }
 
 void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
-                                         const QRect& visibleWallArea )
+                                         const QRect& /*visibleWallArea*/ )
 {
-    wallContent_->preRenderUpdate( contentWindow_, visibleWallArea );
-    wallContent_->preRenderSync( wallChannel );
-}
-
-void QmlWindowRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
-{
-    wallContent_->postRenderSync( wallChannel );
-}
-
-WallContentPtr QmlWindowRenderer::getWallContent()
-{
-    return wallContent_;
+    if( _contentSynchronizer )
+        _contentSynchronizer->sync( wallChannel );
 }
 
 ContentWindowPtr QmlWindowRenderer::getContentWindow()
@@ -126,17 +103,16 @@ ContentWindowPtr QmlWindowRenderer::getContentWindow()
     return contentWindow_;
 }
 
-void QmlWindowRenderer::setupPixelStreamItem()
+QQuickItem* QmlWindowRenderer::createQmlItem( const QUrl& url )
 {
-    PixelStream* stream = static_cast<PixelStream*>( wallContent_.get( ));
-    windowContext_->setContextProperty( "pixelstream", stream );
-    QDeclarativeItem* pixelStreamItem = createQmlItem( QML_PIXELSTREAM_URL );
-    pixelStreamItem->setParentItem( windowItem_ );
-}
-
-QDeclarativeItem* QmlWindowRenderer::createQmlItem( const QUrl& url )
-{
-    QDeclarativeComponent component( windowContext_->engine(), url );
+    QQmlComponent component( windowContext_->engine(), url );
+    if( component.isError( ))
+    {
+        QList<QQmlError> errorList = component.errors();
+        foreach( const QQmlError& error, errorList )
+            qWarning() << error.url() << error.line() << error;
+        return 0;
+    }
     QObject* qmlObject = component.create( windowContext_.get( ));
-    return qobject_cast<QDeclarativeItem*>( qmlObject );
+    return qobject_cast<QQuickItem*>( qmlObject );
 }

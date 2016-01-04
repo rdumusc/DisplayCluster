@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,49 +37,46 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MARKER_H
-#define MARKER_H
+#ifndef WALLSCENE_H
+#define WALLSCENE_H
 
-#include <QPointF>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/serialization/access.hpp>
+#include "types.h"
+
+#include <QObject>
 
 /**
- * A marker to represent touch points.
+ * The scene representing the whole wall area.
+ *
+ * Each wall process displays a portion of the scene in one or more windows.
  */
-class Marker
+class WallScene : public QObject
 {
+    Q_OBJECT
+
 public:
     /** Constructor. */
-    Marker();
+    WallScene( WallWindow& parentWindow );
 
-    /** Set the position */
-    void setPosition(const QPointF& position);
+    /** Destructor. */
+    ~WallScene();
 
-    /** Get the position. */
-    QPointF getPosition() const;
+    /** Display the markers for the touch points. */
+    void displayMarkers( bool value );
 
-    /** Update the internal timestamp without other modifications. */
-    void touch();
+    /** Get the MarkersRenderer. */
+    MarkerRenderer& getMarkersRenderer();
 
-    /**
-     * Check if the marker is active.
-     * @return True if the marker position has been modified
-     *         during the last 5 seconds.
-     */
-    bool isActive(const boost::posix_time::ptime currentTime) const;
+    /** Get the DisplayGroupRenderer. */
+    DisplayGroupRenderer& getDisplayGroupRenderer();
+
+    /** Set the displayGroup for this scene. */
+    void setDisplayGroup( DisplayGroupPtr displayGroup );
 
 private:
-    friend class boost::serialization::access;
+//    void drawForeground( QPainter* painter, const QRectF &rect ) override;
 
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int)
-    {
-        ar & position_;
-    }
-
-    QPointF position_;
-    boost::posix_time::ptime updatedTimestamp_;
+    DisplayGroupRendererPtr _displayGroupRenderer;
+    MarkerRendererPtr _markerRenderer;
 };
 
-#endif
+#endif // WALLSCENE_H

@@ -60,20 +60,21 @@ signals:
     void keyRelease( int key, int modifiers, QString text );
 
 protected:
-    /** @name Re-implemented QGraphicsRectItem events */
+    /** @name Re-implemented QQuickItem events */
     //@{
-    bool sceneEvent( QEvent* event ) override;
-    void mouseMoveEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mousePressEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event ) override;
-    void mouseReleaseEvent( QGraphicsSceneMouseEvent* event ) override;
-    void wheelEvent( QGraphicsSceneWheelEvent* event ) override;
+    bool event( QEvent* event ) override;
+    void mousePressEvent( QMouseEvent* event ) override;
+    void mouseMoveEvent( QMouseEvent* event ) override;
+    void mouseReleaseEvent( QMouseEvent* event ) override;
+    void mouseDoubleClickEvent( QMouseEvent* event ) override;
+    void wheelEvent( QWheelEvent* event ) override;
     void keyPressEvent( QKeyEvent* keyEvent ) override;
     void keyReleaseEvent( QKeyEvent* keyEvent ) override;
     //@}
 
 private:
     QPointF _mousePressPos;
+    QPointF _mousePrevPos;
 };
 
 #endif

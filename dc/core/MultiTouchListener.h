@@ -47,7 +47,8 @@
 
 #include <QObject>
 #include <QTouchEvent>
-#include <QGraphicsView>
+
+class QWindow;
 
 /**
  * Listen to TUIO events and transmit the touch points to a target QGraphicsView.
@@ -57,7 +58,7 @@ class MultiTouchListener : public QObject, public TUIO::TuioListener
     Q_OBJECT
 
 public:
-    MultiTouchListener( QGraphicsView* graphicsView );
+    MultiTouchListener( QWindow* targetWindow );
     ~MultiTouchListener();
 
     void addTuioObject( TUIO::TuioObject* tobj );
@@ -78,20 +79,17 @@ signals:
 private:
     Q_DISABLE_COPY( MultiTouchListener )
 
-    QPointF getScenePos( TUIO::TuioCursor* tcur ) const;
-    void fillBegin( QTouchEvent::TouchPoint& touchPoint ) const;
-    void fill( QTouchEvent::TouchPoint& touchPoint,
+    QPointF _getScreenPos( TUIO::TuioCursor* tcur ) const;
+
+    void _fillBegin( QTouchEvent::TouchPoint& touchPoint ) const;
+    void _fill( QTouchEvent::TouchPoint& touchPoint,
                const QTouchEvent::TouchPoint& prevPoint ) const;
-    void handleEvent( TUIO::TuioCursor* tcur,
-                      const QEvent::Type eventType );
+    void _handleEvent( TUIO::TuioCursor* tcur, QEvent::Type eventType );
 
-    QMap< int, QTouchEvent::TouchPoint > touchPointMap_;
-
-    QGraphicsView* graphicsView_;
-
-    TUIO::TuioClient client_;
-
-    QTouchDevice device_;
+    QMap<int, QTouchEvent::TouchPoint> _touchPointMap;
+    QWindow* _targetWindow;
+    TUIO::TuioClient _client;
+    QTouchDevice _device;
 };
 
 #endif

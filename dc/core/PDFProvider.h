@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,65 +37,24 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef SVG_H
-#define SVG_H
+#ifndef PDFPROVIDER_H
+#define PDFPROVIDER_H
 
-#include "WallContent.h"
-
-#include "types.h"
-#include "GLQuad.h"
-
-#include <QtSvg/QtSvg>
-#include <QtOpenGL/QGLWidget>
-#include <QtOpenGL/QGLFramebufferObject>
-
-typedef boost::shared_ptr<QGLFramebufferObject> FBOPtr;
+#include <QQuickImageProvider>
 
 /**
- * Hold texture FBO and region rendered.
+ * Provides PDF images to QML.
  */
-struct SVGTextureData
-{
-    /** Frame Buffer Object */
-    FBOPtr fbo;
-
-    /** Normalized svg region */
-    QRectF region;
-};
-
-class SVG : public WallContent
+class PDFProvider : public QQuickImageProvider
 {
 public:
-    SVG( const QString& uri );
+    PDFProvider();
+    ~PDFProvider();
 
-    bool isValid() const;
-    QSize getSize() const;
+    static const QString ID;
 
-private:
-    QRectF svgExtents_;
-    QSvgRenderer svgRenderer_;
-
-    SVGTextureData textureData_;
-    FBOPtr previewFbo_;
-    GLQuad quad_;
-
-    void render() override;
-    void renderPreview() override;
-    void preRenderUpdate( ContentWindowPtr window,
-                          const QRect& wallArea ) override;
-
-    QSize getTextureSize() const;
-    const QRectF& getTextureRegion() const;
-    void updateTexture( const QSize& textureSize, const QRectF& svgRegion );
-
-    void generatePreviewTexture();
-    bool setImageData( const QByteArray& imageData );
-    void renderToTexture( const QRectF& svgRegion, FBOPtr targetFbo );
-    QRectF getViewBox( const QRectF& svgRegion );
-    FBOPtr createMultisampledFBO( const QSize& size );
-
-    void saveGLState();
-    void restoreGLState();
+    QImage requestImage( const QString& id, QSize* size,
+                         const QSize& requestedSize ) final;
 };
 
 #endif

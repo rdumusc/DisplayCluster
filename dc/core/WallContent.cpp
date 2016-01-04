@@ -43,11 +43,7 @@
 #include "Content.h"
 
 #include "DynamicTexture.h"
-#include "Movie.h"
 #include "PixelStream.h"
-#include "SVG.h"
-#include "Texture.h"
-#include "PDF.h"
 
 #include <boost/make_shared.hpp>
 
@@ -66,18 +62,18 @@ WallContentPtr WallContent::create( const Content& content )
     {
     case CONTENT_TYPE_DYNAMIC_TEXTURE:
         return boost::make_shared<DynamicTexture>( content.getURI( ));
-    case CONTENT_TYPE_MOVIE:
-        return boost::make_shared<Movie>( content.getURI( ));
+//    case CONTENT_TYPE_MOVIE:
+//        return boost::make_shared<Movie>( content.getURI( ));
     case CONTENT_TYPE_PIXEL_STREAM:
         return boost::make_shared<PixelStream>( content.getURI( ));
-    case CONTENT_TYPE_SVG:
-        return boost::make_shared<SVG>( content.getURI( ));
-    case CONTENT_TYPE_TEXTURE:
-        return boost::make_shared<Texture>( content.getURI( ));
-#if ENABLE_PDF_SUPPORT
-    case CONTENT_TYPE_PDF:
-        return boost::make_shared<PDF>( content.getURI( ));
-#endif
+//    case CONTENT_TYPE_SVG:
+//        return boost::make_shared<SVG>( content.getURI( ));
+//    case CONTENT_TYPE_TEXTURE:
+//        return boost::make_shared<Texture>( content.getURI( ));
+//#if ENABLE_PDF_SUPPORT
+//    case CONTENT_TYPE_PDF:
+//        return boost::make_shared<PDF>( content.getURI( ));
+//#endif
     default:
         return WallContentPtr();
     }

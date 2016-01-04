@@ -44,7 +44,8 @@ namespace
 const int ROLE_ACTION = Qt::UserRole;
 }
 
-ContentActionsModel::ContentActionsModel()
+ContentActionsModel::ContentActionsModel( QObject* parent_ )
+    : QAbstractListModel( parent_ )
 {
 }
 
@@ -63,7 +64,7 @@ QVariant ContentActionsModel::data( const QModelIndex& index_, int role ) const
     if( role == ROLE_ACTION )
     {
         QVariant variant;
-        variant.setValue( static_cast<QObject*>( actions_[ index_.row() ] ));
+        variant.setValue( static_cast<QObject*>( _actions[ index_.row() ] ));
         return variant;
     }
     return QVariant();
@@ -72,11 +73,11 @@ QVariant ContentActionsModel::data( const QModelIndex& index_, int role ) const
 int ContentActionsModel::rowCount( const QModelIndex& parent_ ) const
 {
     Q_UNUSED( parent_ );
-    return actions_.size();
+    return _actions.size();
 }
 
 void ContentActionsModel::add( ContentAction* action )
 {
-    actions_.push_back( action );
+    _actions.push_back( action );
     action->setParent( this );
 }

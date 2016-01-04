@@ -59,7 +59,9 @@ extern "C"
     #include <libswscale/swscale.h>
 }
 
+#include "types.h"
 #include "FFMPEGFrame.h"
+#include "FFMPEGPicture.h"
 
 /**
  * Converts FFMPEG's AVFrame format to a data buffer of user-defined format
@@ -80,13 +82,13 @@ public:
     /**
      * Convert an AVFrame to the target data format
      * @param srcFrame The source frame
-     * @param dstFrame The destination picture
-     * @return true on success
+     * @return The converted picture, or nullptr on error
      */
-    bool convert( const FFMPEGFrame& srcFrame, FFMPEGPicture& dstFrame );
+    PicturePtr convert( const FFMPEGFrame& srcFrame );
 
 private:
-    SwsContext* swsContext_;           // Scaling context
+    SwsContext* _swsContext;           // Scaling context
+    PixelFormat _targetFormat;
 };
 
 #endif // FFMPEGVIDEOFRAMECONVERTER_H

@@ -42,24 +42,21 @@
 
 #include "types.h"
 
-#include <boost/noncopyable.hpp>
-#include <boost/scoped_ptr.hpp>
-
 #include <QGraphicsObject>
 
-#include <QtDeclarative/QDeclarativeEngine>
-#include <QtDeclarative/QDeclarativeContext>
-#include <QtDeclarative/QDeclarativeItem>
+#include <QQmlEngine>
+#include <QQmlContext>
+#include <QQuickItem>
 
 /**
  * Provide a Qml representation of a ContentWindow on the Wall.
  */
-class QmlWindowRenderer : public boost::noncopyable
+class QmlWindowRenderer
 {
 public:
     /** Constructor. */
-    QmlWindowRenderer( QDeclarativeEngine& engine,
-                       QDeclarativeItem& parentItem,
+    QmlWindowRenderer( QQmlEngine& engine,
+                       QQuickItem& parentItem,
                        ContentWindowPtr contentWindow,
                        bool isBackground = false );
     /** Destructor. */
@@ -72,22 +69,19 @@ public:
 
     void preRenderUpdate( WallToWallChannel& wallChannel,
                           const QRect& visibleWallArea );
-    void postRenderUpdate( WallToWallChannel& wallChannel );
-
-    /** Get the WallContent. */
-    WallContentPtr getWallContent();
 
     /** Get the ContentWindow. */
     ContentWindowPtr getContentWindow();
 
 private:
-    ContentWindowPtr contentWindow_;
-    boost::scoped_ptr<QDeclarativeContext> windowContext_;
-    QDeclarativeItem* windowItem_;
-    WallContentPtr wallContent_;
+    Q_DISABLE_COPY( QmlWindowRenderer )
 
-    void setupPixelStreamItem();
-    QDeclarativeItem* createQmlItem( const QUrl& url );
+    ContentWindowPtr contentWindow_;
+    std::unique_ptr<QQmlContext> windowContext_;
+    QQuickItem* windowItem_;
+    std::unique_ptr<ContentSynchronizer> _contentSynchronizer;
+
+    QQuickItem* createQmlItem( const QUrl& url );
 };
 
 #endif // QMLWINDOWRENDERER_H

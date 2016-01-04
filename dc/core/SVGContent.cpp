@@ -38,7 +38,8 @@
 
 #include "SVGContent.h"
 
-#include "SVG.h"
+#include "SVGProvider.h"
+#include "ImageProviderStringifier.h"
 
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
@@ -56,17 +57,22 @@ CONTENT_TYPE SVGContent::getType() const
     return CONTENT_TYPE_SVG;
 }
 
+QString SVGContent::getSourceImage() const
+{
+    return SVGProvider::ID + "/" + _uri + "#" + stringify( _zoomRect );
+}
+
 bool SVGContent::readMetadata()
 {
     QFileInfo file( getURI( ));
     if( !file.exists() || !file.isReadable( ))
         return false;
 
-    const SVG svg( getURI( ));
-    if( !svg.isValid( ))
+    QSvgRenderer svgRenderer( getURI( ));
+    if( !svgRenderer.isValid( ))
         return false;
 
-    _size = svg.getSize();
+    _size = svgRenderer.defaultSize();
     return true;
 }
 

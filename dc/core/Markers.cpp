@@ -39,8 +39,6 @@
 
 #include "Markers.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 Markers::Markers()
 {
 }
@@ -55,7 +53,7 @@ void Markers::addMarker( const int id, const QPointF position )
     if( _markers.count( id ))
         return;
 
-    _markers[id].setPosition( position );
+    _markers[id] = position;
     emit( updated( shared_from_this( )));
 }
 
@@ -64,7 +62,7 @@ void Markers::updateMarker( const int id, const QPointF position )
     if( !_markers.count( id ))
         return;
 
-    _markers[id].setPosition( position );
+    _markers[id] = position;
     emit( updated( shared_from_this( )));
 }
 
@@ -75,25 +73,4 @@ void Markers::removeMarker( const int id )
 
     _markers.erase( id );
     emit( updated( shared_from_this( )));
-}
-
-void Markers::clearOldMarkers()
-{
-    const size_t initialSize = _markers.size();
-
-    const boost::posix_time::ptime now =
-            boost::posix_time::microsec_clock::universal_time();
-
-    MarkersMap::iterator it = _markers.begin();
-
-    while( it != _markers.end( ))
-    {
-        if( !it->second.isActive( now ))
-            _markers.erase( it++ );  // note the post increment; increments the iterator but returns original value for erase
-        else
-            ++it;
-    }
-
-    if( initialSize != _markers.size( ))
-        emit( updated( shared_from_this( )));
 }

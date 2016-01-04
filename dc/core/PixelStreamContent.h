@@ -54,6 +54,12 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
+    /** @copydoc Content::getProviderId */
+    QString getProviderId() const final;
+
+    /** @copydoc Content::getSourceImage */
+    QString getSourceImage() const final;
+
     /**
      * Content method overload, not used for PixelStreams.
      * @return always returns true

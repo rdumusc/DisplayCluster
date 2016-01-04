@@ -217,12 +217,12 @@ ContentWindowPtr State::restoreContent_( QXmlQuery& query, ContentPtr content,
         windowCoordinates.setSize( QSizeF( w, h ));
     contentWindow->setCoordinates( windowCoordinates );
 
-    QRectF zoomRect( contentWindow->getZoomRect( ));
+    QRectF zoomRect( contentWindow->getContent()->getZoomRect( ));
     if( zoom != -1. )
         zoomRect.setSize( QSizeF( 1.0/zoom, 1.0/zoom ));
     if( centerX != -1. || centerY != -1. )
         zoomRect.moveCenter( QPointF( centerX, centerY ));
-    contentWindow->setZoomRect( zoomRect );
+    contentWindow->getContent()->setZoomRect( zoomRect );
 
     return contentWindow;
 }

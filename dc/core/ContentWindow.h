@@ -78,7 +78,6 @@ class ContentWindow : public Coordinates
     Q_PROPERTY( bool focused READ isFocused WRITE setFocused NOTIFY focusedChanged )
     Q_PROPERTY( QString label READ getLabel NOTIFY labelChanged )
     Q_PROPERTY( bool controlsVisible READ getControlsVisible WRITE setControlsVisible NOTIFY controlsVisibleChanged )
-    Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
     Q_PROPERTY( ContentInteractionDelegate* delegate READ getInteractionDelegate CONSTANT )
     Q_PROPERTY( ContentWindowController* controller READ getController CONSTANT )
     Q_PROPERTY( QRectF focusedCoordinates READ getFocusedCoordinates
@@ -163,12 +162,6 @@ public:
 
     /** Set the coordinates in pixel units. */
     void setCoordinates( const QRectF& coordinates );
-
-    /** Get the zoom rectangle in normalized coordinates, [0,0,1,1] default */
-    const QRectF& getZoomRect() const;
-
-    /** Set the zoom rectangle in normalized coordinates. */
-    void setZoomRect( const QRectF& zoomRect );
 
     /** @return the current active resize border. */
     ContentWindow::WindowBorder getBorder() const;
@@ -264,7 +257,6 @@ private:
         ar & uuid_;
         ar & content_;
         ar & controller_;
-        ar & zoomRect_;
         ar & windowBorder_;
         ar & focused_;
         ar & focusedCoordinates_;
@@ -272,7 +264,7 @@ private:
         ar & controlsVisible_;
     }
 
-    /** Serialize for saving to an xml file */
+    /** Serialize members to and from xml. */
     template< class Archive >
     void serialize_members_xml( Archive & ar, const unsigned int version )
     {
@@ -289,8 +281,8 @@ private:
             QRectF backup;
             ar & boost::serialization::make_nvp( "coordinatesBackup", backup );
         }
-        QPointF zoomCenter = zoomRect_.center();
-        qreal zoom = 1.0/zoomRect_.width();
+        QPointF zoomCenter = content_->getZoomRect().center();
+        qreal zoom = 1.0 / content_->getZoomRect().width();
         ar & boost::serialization::make_nvp( "centerX", zoomCenter.rx( ));
         ar & boost::serialization::make_nvp( "centerY", zoomCenter.ry( ));
         ar & boost::serialization::make_nvp( "zoom", zoom );
@@ -299,7 +291,7 @@ private:
         QRectF zoomRect;
         zoomRect.setSize( QSizeF( 1.0/zoom, 1.0/zoom ));
         zoomRect.moveCenter( zoomCenter );
-        setZoomRect( zoomRect );
+        content_->setZoomRect( zoomRect );
         if( version < 1 )
         {
             int controlState = 0;
@@ -329,16 +321,14 @@ private:
     QUuid uuid_;
     WindowType type_;
     ContentPtr content_;
-    // Stored as a scoped_ptr instead of unique_ptr for boost::serialization
-    boost::scoped_ptr< ContentWindowController > controller_;
-    QRectF zoomRect_;
+    ContentWindowController* controller_; // child QObject, don't delete
     ContentWindow::WindowBorder windowBorder_;
     bool focused_;
     QRectF focusedCoordinates_;
     ContentWindow::WindowState windowState_;
     bool controlsVisible_;
 
-    boost::scoped_ptr< ContentInteractionDelegate > interactionDelegate_;
+    boost::scoped_ptr<ContentInteractionDelegate> interactionDelegate_;
 };
 
 BOOST_CLASS_VERSION( ContentWindow, 3 )

@@ -38,18 +38,27 @@
 
 #include "RenderContext.h"
 
+#include "config.h"
 #include "configuration/WallConfiguration.h"
-#include "GLWindow.h"
+#include "log.h"
 #include "TestPattern.h"
 #include "WallWindow.h"
-#include "log.h"
 
-#include <stdexcept>
+#include "MovieProvider.h"
+#if ENABLE_PDF_SUPPORT
+#  include "PDFProvider.h"
+#endif
+#include "PixelStreamProvider.h"
+#include "SVGProvider.h"
+#include "TextureProvider.h"
 
-#include <boost/foreach.hpp>
+namespace
+{
+const QUrl QML_BACKGROUND_URL( "qrc:/qml/core/Background.qml" );
+}
 
 RenderContext::RenderContext( const WallConfiguration& configuration )
-    : scene_( QRectF( QPointF(), configuration.getTotalSize( )))
+    : _wallSize( configuration.getTotalSize( ))
 {
     setupOpenGLWindows( configuration );
     setupVSync();
@@ -57,12 +66,13 @@ RenderContext::RenderContext( const WallConfiguration& configuration )
 
 const QRect& RenderContext::getVisibleWallArea() const
 {
-    return visibleWallArea_;
+    return _visibleWallArea;
 }
 
 void RenderContext::setBackgroundColor( const QColor& color )
 {
-    scene_.setBackgroundBrush( color );
+    for( WallWindowPtr window : _windows )
+        window->setColor( color );
 }
 
 void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
@@ -73,98 +83,126 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
         const QRect screenRect = config.getScreenRect( screenIndex );
         const QPoint windowPos = config.getWindowPos( i );
 
-        visibleWallArea_ = visibleWallArea_.united( screenRect );
+        _visibleWallArea = _visibleWallArea.united( screenRect );
 
-        WallWindowPtr window( new WallWindow( &scene_, screenRect ));
+        WallWindowPtr window( new WallWindow( screenRect ));
+        _windows.push_back( window );
         window->setTestPattern( TestPatternPtr( new TestPattern( config, i )));
-        window->move( windowPos );
-        windows_.push_back( window );
+        window->setPosition( windowPos );
 
-        // share OpenGL context from the first GLWindow
-        QGLWidget* shareWidget = (i==0) ? 0 :
-                             static_cast<QGLWidget*>( windows_[0]->viewport( ));
-        try
-        {
-            // The window takes ownership of the QGLWidget
-            window->setViewport( new GLWindow( shareWidget ));
-        }
-        catch( const std::runtime_error& e )
-        {
-            put_flog( LOG_FATAL, "Error creating a GLWindow: '%s'", e.what( ));
-            throw std::runtime_error( "Failed creating the GLWindows." );
-        }
+        QOpenGLContext& context = window->getGLContext();
+        if( i > 0 )
+            context.setShareContext( &_windows[0]->getGLContext( ));
+
+        // TODO screen selection
+        //QScreen* screen = ?
+        //context.setScreen( screen );
+
+        QQmlEngine* engine = window->engine();
+
+        engine->addImageProvider( MovieProvider::ID, new MovieProvider );
+#if ENABLE_PDF_SUPPORT
+        engine->addImageProvider( PDFProvider::ID, new PDFProvider );
+#endif
+        engine->addImageProvider( PixelStreamProvider::ID,
+                                  new PixelStreamProvider );
+        engine->addImageProvider( SVGProvider::ID, new SVGProvider );
+        engine->addImageProvider( TextureProvider::ID, new TextureProvider );
+
+        window->setSource( QML_BACKGROUND_URL );
 
         if( config.getFullscreen( ))
             window->showFullScreen();
         else
             window->show();
+
+        window->createScene();
     }
 }
 
 void RenderContext::setupVSync()
 {
-    BOOST_FOREACH( WallWindowPtr window, windows_ )
-    {
-        QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
-        glContext->makeCurrent();
-        if( window != windows_.front( ))
-            window->disableVSync();
-    }
+//    BOOST_FOREACH( WallWindowPtr window, windows_ )
+//    {
+//        QOpenGLContext& glContext = window->getContext();
+//        glContext.makeCurrent();
+//        if( window != windows_.front( ))
+//            window->disableVSync();
+//    }
 }
 
 void RenderContext::updateGLWindows()
 {
-    BOOST_FOREACH( WallWindowPtr window, windows_ )
+
+    for( WallWindowPtr window : _windows )
     {
-#ifdef __APPLE__
-        // Using Qt's update() mechanism on OSX. Blocking draw calls causes
-        // the app to never render anything and hang forever in swapBuffer().
-        window->viewport()->update();
-#else
-        window->setBlockDrawCalls( false );
-        window->viewport()->repaint();
-        window->setBlockDrawCalls( true );
-#endif
+        window->getGLContext().makeCurrent( window.get() );
+        window->update();
     }
-    glFinish();
+
+    usleep( 1000 );
+
+//    BOOST_FOREACH( WallWindowPtr window, windows_ )
+//    {
+//#ifdef __APPLE__
+//        // Using Qt's update() mechanism on OSX. Blocking draw calls causes
+//        // the app to never render anything and hang forever in swapBuffer().
+//        window->viewport()->update();
+//#else
+//        window->setBlockDrawCalls( false );
+//        window->viewport()->repaint();
+//        window->setBlockDrawCalls( true );
+//#endif
+//    }
+//    glFinish();
 }
 
 void RenderContext::swapBuffers()
 {
-    BOOST_FOREACH( WallWindowPtr window, windows_ )
-    {
-        if( !window->isExposed( ))
-            continue;
+//    BOOST_FOREACH( WallWindowPtr window, windows_ )
+//    {
+//        if( !window->isExposed( ))
+//            continue;
 
-        QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
-        glContext->makeCurrent();
-        glContext->swapBuffers();
-        glFlush();
-    }
+//        QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
+//        glContext->makeCurrent();
+//        glContext->swapBuffers();
+//        glFlush();
+//    }
 }
 
-WallGraphicsScene& RenderContext::getScene()
+const QSize& RenderContext::getWallSize() const
 {
-    return scene_;
+    return _wallSize;
 }
 
-QDeclarativeEngine& RenderContext::getQmlEngine()
+MovieProvider& RenderContext::getMovieProvider()
 {
-    return engine_;
+    auto engine = _windows.front()->engine();
+    auto movieProvider = engine->imageProvider( MovieProvider::ID );
+    return dynamic_cast<MovieProvider&>( *movieProvider );
+}
+
+PixelStreamProvider& RenderContext::getPixelStreamProvider()
+{
+    auto engine = _windows.front()->engine();
+    auto pixelStreamProvider = engine->imageProvider( PixelStreamProvider::ID );
+    return dynamic_cast<PixelStreamProvider&>( *pixelStreamProvider );
+}
+
+WallWindowPtrs RenderContext::getWindows()
+{
+    return _windows;
 }
 
 void RenderContext::displayFps( const bool value )
 {
-    BOOST_FOREACH( WallWindowPtr window, windows_ )
-    {
+    for( WallWindowPtr window : _windows )
         window->setShowFps( value );
-    }
 }
 
 void RenderContext::displayTestPattern( const bool value )
 {
-    BOOST_FOREACH( WallWindowPtr window, windows_ )
-    {
+    for( WallWindowPtr window : _windows )
         window->getTestPattern()->setVisible( value );
-    }
 }

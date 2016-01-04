@@ -56,31 +56,32 @@
 
 #include <cmath>        /* std::isnan */
 
-TouchArea::TouchArea( QDeclarativeItem* parentItem_ )
-    : QDeclarativeItem( parentItem_ )
+TouchArea::TouchArea( QQuickItem* parentItem_ )
+    : QQuickItem( parentItem_ )
     , _blockTapGesture( false )
     , _tapAndHoldEnabled( true )
     , _doubleTapEnabled( true )
 {
-    grabGesture( Qt::TapGesture );
-    grabGesture( DoubleTapGestureRecognizer::type( ));
-    grabGesture( Qt::TapAndHoldGesture );
-    grabGesture( PanGestureRecognizer::type( ));
-    grabGesture( PinchGestureRecognizer::type( ));
-    grabGesture( Qt::SwipeGesture );
+//    grabGesture( Qt::TapGesture );
+//    grabGesture( DoubleTapGestureRecognizer::type( ));
+//    grabGesture( Qt::TapAndHoldGesture );
+//    grabGesture( PanGestureRecognizer::type( ));
+//    grabGesture( PinchGestureRecognizer::type( ));
+//    grabGesture( Qt::SwipeGesture );
 }
 
 TouchArea::~TouchArea() {}
 
-bool TouchArea::sceneEvent( QEvent* event_ )
+void TouchArea::touchEvent( QTouchEvent* /*event_*/ )
 {
-    switch( event_->type( ))
-    {
-    case QEvent::Gesture:
-        return gestureEvent( static_cast< QGestureEvent* >( event_ ));
-    default:
-        return QGraphicsObject::sceneEvent( event_ );
-    }
+    // TODO redo gesture handling
+//    switch( event_->type( ))
+//    {
+//    case QEvent::Gesture:
+//        return gestureEvent( static_cast< QGestureEvent* >( event_ ));
+//    default:
+//        return QGraphicsObject::sceneEvent( event_ );
+//    }
 }
 
 bool TouchArea::isTapAndHoldEnabled() const

@@ -47,6 +47,8 @@
         <file>ControlPanel.qml</file>
         <file>ControlPanelDelegate.qml</file>
         <file>WallDisplayGroup.qml</file>
+        <file>Background.qml</file>
+        <file>DoubleBufferedImage.qml</file>
     </qresource>
     <qresource prefix="/clock">
         <file>Clock.qml</file>

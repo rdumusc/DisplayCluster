@@ -45,15 +45,15 @@
 #include "RenderContext.h"
 #include "Options.h"
 #include "PixelStream.h"
+#include "WallWindow.h"
 
 #include <deflect/Frame.h>
 
-#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 
-#include <QtDeclarative/QDeclarativeContext>
-#include <QtDeclarative/QDeclarativeComponent>
-#include <QtDeclarative/QDeclarativeItem>
+#include <QQmlContext>
+#include <QQmlComponent>
+#include <QQuickItem>
 
 namespace
 {
@@ -62,42 +62,36 @@ const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
 const int BACKGROUND_STACKING_ORDER = -1;
 }
 
-DisplayGroupRenderer::DisplayGroupRenderer( RenderContextPtr renderContext )
-    : _renderContext( renderContext )
-    , _displayGroup( new DisplayGroup(
-                        renderContext->getScene().sceneRect().size().toSize( )))
+DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow )
+    : _engine( *parentWindow.engine( ))
+    , _displayGroup( new DisplayGroup( QSize( )))
     , _displayGroupItem( 0 )
     , _options( new Options )
 {
-    _setOptionInQmlContext( _options );
-    setDisplayGroup( _displayGroup );
+    _engine.rootContext()->setContextProperty( "options", _options.get( ));
+    _createDisplayGroupQmlItem( *parentWindow.rootObject( ));
     _setBackground( _options->getBackgroundContent( ));
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
-    _setOptionInQmlContext( options );
+    _engine.rootContext()->setContextProperty( "options", options.get( ));
     _setBackground( options->getBackgroundContent( ));
     _options = options; // Retain the new Options
 }
 
 void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
-    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
-
     // Update the scene with the new information
-    engine.rootContext()->setContextProperty( "displaygroup",
-                                              displayGroup.get( ));
-
-    if( !_displayGroupItem )
-        _createDisplayGroupQmlItem();
+    _engine.rootContext()->setContextProperty( "displaygroup",
+                                               displayGroup.get( ));
 
     ContentWindowPtrs contentWindows = displayGroup->getContentWindows();
 
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
     int stackingOrder = BACKGROUND_STACKING_ORDER + 1;
-    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
+    for( ContentWindowPtr window : contentWindows )
     {
         const QUuid& id = window->getID();
 
@@ -127,6 +121,7 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     // Retain the new DisplayGroup
     _displayGroup = displayGroup;
 
+    /** See if this is still needed with QtQuick2...
     // Work around a bug in animation in Qt, where the opacity property
     // of the focus context may not always be restored to its original value.
     // See JIRA issue: DISCL-305
@@ -138,17 +133,12 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
                 child->toGraphicsObject()->setProperty( "opacity", 0.0 );
         }
     }
+    */
 }
 
-void DisplayGroupRenderer::_setOptionInQmlContext( OptionsPtr options )
+void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
+                                            const QRect& visibleWallArea )
 {
-    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
-    engine.rootContext()->setContextProperty( "options", options.get( ));
-}
-
-void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )
-{
-    const QRect& visibleWallArea = _renderContext->getVisibleWallArea();
     foreach( QmlWindowPtr window, _windowItems )
     {
         window->preRenderUpdate( wallChannel, visibleWallArea );
@@ -157,31 +147,20 @@ void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel )
         _backgroundWindowItem->preRenderUpdate( wallChannel, visibleWallArea );
 }
 
-void DisplayGroupRenderer::postRenderUpdate( WallToWallChannel& wallChannel )
+void DisplayGroupRenderer::_createDisplayGroupQmlItem( QQuickItem& parentItem )
 {
-    foreach( QmlWindowPtr window, _windowItems )
-    {
-        window->postRenderUpdate( wallChannel );
-    }
-    if( _backgroundWindowItem )
-        _backgroundWindowItem->postRenderUpdate( wallChannel );
-}
+    _engine.rootContext()->setContextProperty( "displaygroup",
+                                              _displayGroup.get( ));
 
-void DisplayGroupRenderer::_createDisplayGroupQmlItem()
-{
-    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
-
-    QDeclarativeComponent component( &engine, QML_DISPLAYGROUP_URL );
-    _displayGroupItem = qobject_cast<QDeclarativeItem*>( component.create( ));
-    _renderContext->getScene().addItem( _displayGroupItem );
+    QQmlComponent component( &_engine, QML_DISPLAYGROUP_URL );
+    _displayGroupItem = qobject_cast<QQuickItem*>( component.create( ));
+    _displayGroupItem->setParentItem( &parentItem );
 }
 
 void DisplayGroupRenderer::_createWindowQmlItem( ContentWindowPtr window )
 {
-    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
-
     const QUuid& id = window->getID();
-    _windowItems[id].reset( new QmlWindowRenderer( engine, *_displayGroupItem,
+    _windowItems[id].reset( new QmlWindowRenderer( _engine, *_displayGroupItem,
                                                    window ));
     emit windowAdded( _windowItems[id] );
 }
@@ -208,8 +187,7 @@ void DisplayGroupRenderer::_setBackground( ContentPtr content )
     window->setController(
                make_unique<ContentWindowController>( *window, *_displayGroup ));
     window->getController()->adjustSize( SIZE_FULLSCREEN );
-    QDeclarativeEngine& engine = _renderContext->getQmlEngine();
-    _backgroundWindowItem.reset( new QmlWindowRenderer( engine,
+    _backgroundWindowItem.reset( new QmlWindowRenderer( _engine,
                                                         *_displayGroupItem,
                                                         window, true ));
     _backgroundWindowItem->setStackingOrder( BACKGROUND_STACKING_ORDER );

@@ -55,9 +55,7 @@ DisplayGroup::DisplayGroup( const QSizeF& size )
     coordinates_.setSize( size );
 }
 
-DisplayGroup::~DisplayGroup()
-{
-}
+DisplayGroup::~DisplayGroup() {}
 
 void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
 {
@@ -223,6 +221,22 @@ const ContentWindowSet& DisplayGroup::getFocusedWindows() const
 {
     return _focusedWindows;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+void DisplayGroup::moveToThread( QThread* thread )
+{
+    QObject::moveToThread( thread );
+    for( auto window : _contentWindows )
+    {
+        window->moveToThread( thread );
+        window->getContent()->moveToThread( thread );
+    }
+}
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 void DisplayGroup::clear()
 {

@@ -40,7 +40,7 @@
 #ifndef TOUCHAREA_H
 #define TOUCHAREA_H
 
-#include <QtDeclarative/QDeclarativeItem>
+#include <QQuickItem>
 
 class QGestureEvent;
 class DoubleTapGesture;
@@ -54,7 +54,7 @@ class QTapAndHoldGesture;
  * A touch area for capturing touch events in QML.
  * Can be used in a similar way to Qt's MouseArea.
  */
-class TouchArea : public QDeclarativeItem
+class TouchArea : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY( bool tapAndHoldEnabled READ isTapAndHoldEnabled WRITE setTapAndHoldEnabled
@@ -63,7 +63,7 @@ class TouchArea : public QDeclarativeItem
                 NOTIFY doubleTapEnabledChanged )
 
 public:
-    explicit TouchArea( QDeclarativeItem* parentItem = 0 );
+    explicit TouchArea( QQuickItem* parentItem = 0 );
     virtual ~TouchArea();
 
     /** Is the tap and hold gesture used by touch area. */
@@ -102,9 +102,9 @@ signals:
     //@}
 
 protected:
-    /** @name Re-implemented QGraphicsRectItem events */
+    /** @name Re-implemented QQuickItem events */
     //@{
-    bool sceneEvent( QEvent* event ) override;
+    void touchEvent( QTouchEvent* event ) override;
     //@}
 
 private:

@@ -36,18 +36,16 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DisplayGroupGraphicsView.h"
+#include "DisplayGroupView.h"
 
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
-#include "DisplayGroupGraphicsScene.h"
 #include "Options.h"
 #include "qmlUtils.h"
 
-#include <boost/foreach.hpp>
-#include <QGraphicsObject>
-#include <QtDeclarative/QDeclarativeComponent>
-#include <QtDeclarative/QDeclarativeContext>
+#include <QQmlComponent>
+#include <QQmlContext>
+#include <QQuickItem>
 
 #define VIEW_MARGIN 0.05
 
@@ -56,41 +54,21 @@ namespace
 const QString MASTER_WINDOW_OBJECT_NAME( "MasterContentWindow" );
 const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/MasterContentWindow.qml" );
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
+const QUrl QML_BACKGROUND_URL( "qrc:/qml/master/DisplayGroupBackground.qml" );
 }
 
-DisplayGroupGraphicsView::DisplayGroupGraphicsView( const Configuration& config,
-                                                    OptionsPtr options,
-                                                    QWidget* parent_ )
-    : QGraphicsView( parent_ )
-    , displayGroupItem_( 0 )
+DisplayGroupView::DisplayGroupView( OptionsPtr options )
+    : displayGroupItem_( 0 )
 {
-    setScene( new DisplayGroupGraphicsScene( config, this ));
-    setAlignment( Qt::AlignLeft | Qt::AlignTop );
-
-    setInteractive( true );
-    setDragMode( QGraphicsView::RubberBandDrag );
-    setAcceptDrops( true );
-
-    engine_.rootContext()->setContextProperty( "options", options.get( ));
-    engine_.rootContext()->setContextProperty( "dggv", this );
-    engine_.rootContext()->setContextProperty( "cppcontrolpanel", &controlPanel_ );
+    engine()->rootContext()->setContextProperty( "options", options.get( ));
+    engine()->rootContext()->setContextProperty( "view", this );
+    engine()->rootContext()->setContextProperty( "cppcontrolpanel",
+                                                 &controlPanel_ );
 }
 
-DisplayGroupGraphicsView::~DisplayGroupGraphicsView()
-{
-}
+DisplayGroupView::~DisplayGroupView() {}
 
-void DisplayGroupGraphicsView::notifyBackgroundTap( QPointF globalPos )
-{
-    emit backgroundTap( getScenePos( globalPos ));
-}
-
-void DisplayGroupGraphicsView::notifyBackgroundTapAndHold( QPointF globalPos )
-{
-    emit backgroundTapAndHold( getScenePos( globalPos ));
-}
-
-void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
+void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup )
 {
     if( displayGroup_ )
     {
@@ -102,19 +80,17 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
     if( !displayGroup_ )
         return;
 
-    engine_.rootContext()->setContextProperty( "displaygroup",
-                                               displayGroup_.get( ));
+    rootContext()->setContextProperty( "displaygroup", displayGroup_.get( ));
+    setSource( QML_BACKGROUND_URL );
 
-    QDeclarativeComponent component( &engine_, QML_DISPLAYGROUP_URL );
-    displayGroupItem_ = qobject_cast< QGraphicsObject* >( component.create( ));
+    QQmlComponent component( engine(), QML_DISPLAYGROUP_URL );
+    displayGroupItem_ = qobject_cast< QQuickItem* >( component.create( ));
     qmlCheckOrThrow( component );
-    scene()->addItem( displayGroupItem_ );
+    displayGroupItem_->setParentItem( rootObject( ));
 
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
-    BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
-    {
+    for( ContentWindowPtr contentWindow : contentWindows )
         add( contentWindow );
-    }
 
     connect( displayGroup_.get(),
              SIGNAL( contentWindowAdded( ContentWindowPtr )),
@@ -127,103 +103,102 @@ void DisplayGroupGraphicsView::setDataModel( DisplayGroupPtr displayGroup )
              this, SLOT( moveToFront( ContentWindowPtr )));
 }
 
-QmlControlPanel& DisplayGroupGraphicsView::getControlPanel()
+QmlControlPanel& DisplayGroupView::getControlPanel()
 {
     return controlPanel_;
 }
 
-void DisplayGroupGraphicsView::clearScene()
+void DisplayGroupView::clearScene()
 {
-    foreach( QGraphicsItem* itemToRemove, uuidToWindowMap_ )
+    foreach( QQuickItem* itemToRemove, uuidToWindowMap_ )
     {
-        scene()->removeItem( itemToRemove );
+        itemToRemove->setParentItem( 0 );
         delete itemToRemove;
     }
 
     uuidToWindowMap_.clear();
 }
 
-void DisplayGroupGraphicsView::resizeEvent( QResizeEvent* resizeEvt )
+bool DisplayGroupView::event( QEvent *evt )
 {
-    const QSizeF& sceneSize = scene()->sceneRect().size();
+    switch( evt->type( ))
+    {
+    case QEvent::KeyPress:
+    {
+        QKeyEvent* k = static_cast< QKeyEvent* >( evt );
 
-    QSizeF windowSize( width(), height( ));
-    windowSize.scale( sceneSize, Qt::KeepAspectRatioByExpanding );
-    windowSize = windowSize * ( 1.0 + VIEW_MARGIN );
+        // Override default behaviour to process TAB key events
+        QQuickView::keyPressEvent( k );
 
-    // Center the scene in the view
-    setSceneRect( -0.5 * (windowSize.width() - sceneSize.width()),
-                  -0.5 * (windowSize.height() - sceneSize.height()),
-                  windowSize.width(), windowSize.height( ));
-    fitInView( sceneRect( ));
-
-    QGraphicsView::resizeEvent( resizeEvt );
+        if( k->key() == Qt::Key_Backtab ||
+            k->key() == Qt::Key_Tab ||
+           ( k->key() == Qt::Key_Tab && ( k->modifiers() & Qt::ShiftModifier )))
+        {
+            evt->accept();
+        }
+        return true;
+    }
+    default:
+        return QQuickView::event( evt );
+    }
 }
 
-QPointF DisplayGroupGraphicsView::getScenePos( const QPointF& pos_ ) const
+void DisplayGroupView::resizeEvent( QResizeEvent* resizeEvt )
 {
-    // QGesture::hotSpot() gives the position (in pixels) in "global screen
-    // coordinates", i.e. on the display where the Rank0 Qt MainWindow lives.
+//    const QSizeF& sceneSize = scene()->sceneRect().size();
 
-    // Some gestures also have a position attribute but it is inconsistent.
-    // For most gestures it is the same as the hotSpot, but not for QTapGesture.
-    //
-    // Examples taken from qstandardgestures.cpp:
-    // QTapGesture.position() == touchPoint.pos()  (== viewPos)
-    // QTapGesture.hotSpot() == touchPoint.screenPos()
-    // QPinchGesture.centerPoint() == middle_of_2(touchPoint.screenPos())
-    // QPinchGesture.hotSpot() == touchPoint.screenPos()
-    // QTapAndHoldGesture.position() == touchPoint.startScreenPos()
-    // QTapAndHoldGesture.hotSpot() == touchPoint.startScreenPos()
+//    QSizeF windowSize( width(), height( ));
+//    windowSize.scale( sceneSize, Qt::KeepAspectRatioByExpanding );
+//    windowSize = windowSize * ( 1.0 + VIEW_MARGIN );
 
-    // Note that the necessary rounding here is likely to cause imprecisions if
-    // the view is small...
-    return mapToScene( mapFromGlobal( pos_.toPoint( )));
+//    // Center the scene in the view
+//    setSceneRect( -0.5 * (windowSize.width() - sceneSize.width()),
+//                  -0.5 * (windowSize.height() - sceneSize.height()),
+//                  windowSize.width(), windowSize.height( ));
+//    fitInView( sceneRect( ));
+
+    QWindow::resizeEvent( resizeEvt );
 }
 
-void DisplayGroupGraphicsView::add( ContentWindowPtr contentWindow )
+void DisplayGroupView::add( ContentWindowPtr contentWindow )
 {
     // New Context for the window, ownership retained by the windowItem
-    QDeclarativeContext* rootContext = engine_.rootContext();
-    QDeclarativeContext* windowContext = new QDeclarativeContext( rootContext );
+    QQmlContext* windowContext = new QQmlContext( rootContext( ));
     windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
 
-    QDeclarativeComponent component( &engine_, QML_CONTENTWINDOW_URL );
+    QQmlComponent component( engine(), QML_CONTENTWINDOW_URL );
     QObject* windowItem = component.create( windowContext );
     windowContext->setParent( windowItem );
 
     // Store a reference to the window and add it to the scene
     const QUuid& id = contentWindow->getID();
-    uuidToWindowMap_[ id ] = qobject_cast<QGraphicsItem*>( windowItem );
+    uuidToWindowMap_[ id ] = qobject_cast<QQuickItem*>( windowItem );
     uuidToWindowMap_[ id ]->setParentItem( displayGroupItem_ );
 }
 
-void DisplayGroupGraphicsView::remove( ContentWindowPtr contentWindow )
+void DisplayGroupView::remove( ContentWindowPtr contentWindow )
 {
     const QUuid& id = contentWindow->getID();
     if( !uuidToWindowMap_.contains( id ))
         return;
 
-    QGraphicsItem* itemToRemove = uuidToWindowMap_[id];
+    QQuickItem* itemToRemove = uuidToWindowMap_[id];
     uuidToWindowMap_.remove( id );
-
-    scene()->removeItem( itemToRemove );
     delete itemToRemove;
 }
 
-void DisplayGroupGraphicsView::moveToFront( ContentWindowPtr contentWindow )
+void DisplayGroupView::moveToFront( ContentWindowPtr contentWindow )
 {
     const QUuid& id = contentWindow->getID();
     if( !uuidToWindowMap_.contains( id ))
         return;
 
-    QGraphicsItem* itemToRaise = uuidToWindowMap_[id];
+    QQuickItem* itemToRaise = uuidToWindowMap_[id];
 
-    QList<QGraphicsItem*> windows = displayGroupItem_->childItems();
-    foreach( QGraphicsItem* item, windows )
+    QList<QQuickItem*> windows = displayGroupItem_->childItems();
+    foreach( QQuickItem* item, windows )
     {
-        QGraphicsObject* obj = item->toGraphicsObject();
-        if( obj && obj->objectName() == MASTER_WINDOW_OBJECT_NAME )
+        if( item != itemToRaise && item->objectName() == MASTER_WINDOW_OBJECT_NAME )
             item->stackBefore( itemToRaise );
     }
 }

@@ -83,17 +83,4 @@ protected:
     AVFrame* _avFrame;
 };
 
-
-/** A frame of an FFMPEG movie with picture data allocated. */
-class FFMPEGPicture : public FFMPEGFrame
-{
-public:
-    /** Constructor. */
-    FFMPEGPicture( unsigned int width, unsigned int height,
-                   PixelFormat format );
-
-    /** Destructor. */
-    ~FFMPEGPicture();
-};
-
 #endif // FFMPEGFRAME_H

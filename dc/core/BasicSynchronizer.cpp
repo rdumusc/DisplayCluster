@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,56 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DisplayGroupGraphicsScene.h"
+#include "BasicSynchronizer.h"
 
-#include "configuration/Configuration.h"
+#include "Tile.h"
 
-#include <QtGui/QKeyEvent>
-
-DisplayGroupGraphicsScene::DisplayGroupGraphicsScene( const Configuration& config,
-                                                      QObject* parent_ )
-    : QGraphicsScene( parent_ )
+BasicSynchronizer::BasicSynchronizer()
 {
-    setSceneRect( QRectF( QPointF( 0.0, 0.0 ), config.getTotalSize( )));
-
-    for( int i = 0; i < config.getTotalScreenCountX(); ++i )
-        for( int j = 0; j < config.getTotalScreenCountY(); ++j )
-            screens_.push_back( config.getScreenRect( QPoint( i, j )));
-
-    addBackgroundRectangles();
+    _tiles.push_back( new Tile( -1, QRect(), this ));
 }
 
-bool DisplayGroupGraphicsScene::event( QEvent *evt )
+void BasicSynchronizer::sync( WallToWallChannel& channel )
 {
-    switch( evt->type( ))
-    {
-    case QEvent::KeyPress:
-    {
-        QKeyEvent* k = static_cast< QKeyEvent* >( evt );
-
-        // Override default behaviour to process TAB key events
-        QGraphicsScene::keyPressEvent( k );
-
-        if( k->key() == Qt::Key_Backtab ||
-            k->key() == Qt::Key_Tab ||
-           ( k->key() == Qt::Key_Tab && ( k->modifiers() & Qt::ShiftModifier )))
-        {
-            evt->accept();
-        }
-        return true;
-    }
-    default:
-        return QGraphicsScene::event( evt );
-    }
+    Q_UNUSED( channel );
 }
 
-void DisplayGroupGraphicsScene::addBackgroundRectangles()
+QString BasicSynchronizer::getSourceParams() const
 {
-    addRect( sceneRect( )); // Background rectangle for the wall area
+    return QString();
+}
 
-    const QPen pen( (QColor( Qt::black )));       // screen border
-    const QBrush brush( QColor( 0, 0, 0, 32 )); // screen fill color
+bool BasicSynchronizer::allowsTextureCaching() const
+{
+    return true;
+}
 
-    foreach( const QRectF& screen, screens_ )
-        addRect( screen, pen, brush );
+QList<QObject*> BasicSynchronizer::getTiles() const
+{
+    return _tiles;
 }

@@ -39,82 +39,69 @@
 
 #include "PDF.h"
 
-// detect Qt version
-#if QT_VERSION >= 0x050000
-#define POPPLER_QT5
-#include <poppler-qt5.h>
-#elif QT_VERSION >= 0x040000
-#define POPPLER_QT4
-#include <poppler-qt4.h>
-#else
-#error PopplerPixelStreamer needs Qt4 or Qt5
-#endif
-
-#include "ContentWindow.h"
-#include "PDFContent.h"
 #include "log.h"
+#include <poppler-qt5.h>
 
 namespace
 {
 const int INVALID_PAGE_NUMBER = -1;
 const qreal PDF_RES = 72.0;
-const QSize PREVIEW_SIZE( 512, 512 );
 }
 
 PDF::PDF( const QString& uri )
-    : pdfDoc_( 0 )
-    , pdfPage_( 0 )
-    , pageNumber_( INVALID_PAGE_NUMBER )
+    : _pdfDoc( 0 )
+    , _pdfPage( 0 )
+    , _pageNumber( INVALID_PAGE_NUMBER )
 {
-    openDocument( uri );
+    _openDocument( uri );
 }
 
 PDF::~PDF()
 {
-    closeDocument();
+    _closeDocument();
 }
 
 bool PDF::isValid() const
 {
-    return ( pdfDoc_ != 0 );
+    return ( _pdfDoc != 0 );
 }
 
 QSize PDF::getSize() const
 {
-    return pdfPage_ ? pdfPage_->pageSize() : QSize();
+    return _pdfPage ? _pdfPage->pageSize() : QSize();
 }
 
 int PDF::getPage() const
 {
-    return pageNumber_;
+    return _pageNumber;
 }
 
 void PDF::setPage( const int pageNumber )
 {
-    if( pageNumber == pageNumber_ || !isValid( pageNumber ))
+    if( pageNumber == _pageNumber || !isValid( pageNumber ))
         return;
 
-    Poppler::Page* page = pdfDoc_->page( pageNumber );
+    Poppler::Page* page = _pdfDoc->page( pageNumber );
     if( !page )
     {
         put_flog( LOG_WARN, "Could not open page: %d in PDF document: '%s'",
-                  pageNumber, filename_.toLocal8Bit().constData( ));
+                  pageNumber, _filename.toLocal8Bit().constData( ));
         return;
     }
 
-    closePage();
-    pdfPage_ = page;
-    pageNumber_ = pageNumber;
+    _closePage();
+    _pdfPage = page;
+    _pageNumber = pageNumber;
 }
 
 int PDF::getPageCount() const
 {
-    return pdfDoc_->numPages();
+    return _pdfDoc->numPages();
 }
 
 QImage PDF::renderToImage( const QSize& imageSize, const QRectF& region ) const
 {
-    const QSize pageSize( pdfPage_->pageSize( ));
+    const QSize pageSize( _pdfPage->pageSize( ));
 
     const qreal zoomX = 1.0 / region.width();
     const qreal zoomY = 1.0 / region.height();
@@ -125,123 +112,52 @@ QImage PDF::renderToImage( const QSize& imageSize, const QRectF& region ) const
     const qreal resX = PDF_RES * imageSize.width() / pageSize.width();
     const qreal resY = PDF_RES * imageSize.height() / pageSize.height();
 
-    return pdfPage_->renderToImage( resX * zoomX, resY * zoomY,
+    return _pdfPage->renderToImage( resX * zoomX, resY * zoomY,
                                     topLeft.x() * zoomX, topLeft.y() * zoomY,
                                     imageSize.width(), imageSize.height( ));
 }
 
-const QSize& PDF::getTextureSize() const
+bool PDF::isValid( const int pageNumber ) const
 {
-    return texture_.getSize();
+    return pageNumber >=0 && pageNumber < _pdfDoc->numPages();
 }
 
-const QRectF& PDF::getTextureRegion() const
+void PDF::_openDocument( const QString& filename )
 {
-    return textureRect_;
-}
+    _closeDocument();
 
-void PDF::updateTexture( const QSize& textureSize, const QRectF& pdfRegion )
-{
-    const QImage image = renderToImage( textureSize, pdfRegion );
-
-    if( image.isNull( ))
-    {
-        put_flog( LOG_ERROR, "Could not render page in PDF document: '%s'",
-                  filename_.toLocal8Bit().constData( ));
-        return;
-    }
-
-    texture_.update( image, GL_BGRA );
-    textureRect_ = pdfRegion;
-}
-
-void PDF::render()
-{
-    if( !texture_.isValid( ))
-        return;
-
-    quad_.setTexture( texture_.getTextureId( ));
-    quad_.render();
-}
-
-void PDF::renderPreview()
-{
-    if( !texturePreview_.isValid( ))
-    {
-        const QImage image = renderToImage( PREVIEW_SIZE );
-        if( image.isNull( ))
-        {
-            put_flog( LOG_ERROR, "Could not render document preview for: '%s'",
-                      filename_.toLocal8Bit().constData( ));
-        }
-        texturePreview_.update( image, GL_BGRA );
-    }
-
-    quad_.setTexture( texturePreview_.getTextureId( ));
-    quad_.render();
-}
-
-void PDF::openDocument( const QString& filename )
-{
-    closeDocument();
-
-    pdfDoc_ = Poppler::Document::load( filename );
-    if ( !pdfDoc_ || pdfDoc_->isLocked( ))
+    _pdfDoc = Poppler::Document::load( filename );
+    if ( !_pdfDoc || _pdfDoc->isLocked( ))
     {
         put_flog( LOG_DEBUG, "Could not open document: '%s'",
-                  filename_.toLocal8Bit().constData( ));
-        closeDocument();
+                  _filename.toLocal8Bit().constData( ));
+        _closeDocument();
         return;
     }
 
-    filename_ = filename;
-    pdfDoc_->setRenderHint( Poppler::Document::TextAntialiasing );
+    _filename = filename;
+    _pdfDoc->setRenderHint( Poppler::Document::TextAntialiasing );
 
     setPage( 0 );
 }
 
-void PDF::closeDocument()
+void PDF::_closeDocument()
 {
-    if( pdfDoc_ )
+    if( _pdfDoc )
     {
-        closePage();
-        delete pdfDoc_;
-        pdfDoc_ = 0;
-        filename_.clear();
+        _closePage();
+        delete _pdfDoc;
+        _pdfDoc = 0;
+        _filename.clear();
     }
 }
 
-void PDF::closePage()
+void PDF::_closePage()
 {
-    if( pdfPage_ )
+    if( _pdfPage )
     {
-        delete pdfPage_;
-        pdfPage_ = 0;
-        pageNumber_ = INVALID_PAGE_NUMBER;
-        textureRect_ = QRectF();
+        delete _pdfPage;
+        _pdfPage = 0;
+        _pageNumber = INVALID_PAGE_NUMBER;
     }
 }
-
-bool PDF::isValid( const int pageNumber ) const
-{
-    return pageNumber >=0 && pageNumber < pdfDoc_->numPages();
-}
-
-void PDF::preRenderUpdate( ContentWindowPtr window, const QRect& /*wallArea*/ )
-{
-    if( window->isResizing() || _qmlItem->isAnimating( ))
-        return;
-
-    PDFContent& content = static_cast<PDFContent&>( *window->getContent( ));
-
-    const bool pageHasChanged = (pageNumber_ != content.getPage( ));
-    setPage( content.getPage( ));
-
-    const QSize& renderSize = _qmlItem->getSceneRect().size().toSize();
-    if( pageHasChanged || texture_.getSize() != renderSize ||
-        textureRect_ != window->getZoomRect( ) )
-    {
-        updateTexture( renderSize, window->getZoomRect( ));
-    }
-}
-

@@ -40,16 +40,16 @@
 #include "MovieThumbnailGenerator.h"
 
 #include "FFMPEGMovie.h"
-#include "FFMPEGFrame.h"
+#include "FFMPEGPicture.h"
 
 #define PREVIEW_RELATIVE_POSITION  0.5
 
-MovieThumbnailGenerator::MovieThumbnailGenerator(const QSize &size)
-    : ThumbnailGenerator(size)
+MovieThumbnailGenerator::MovieThumbnailGenerator( const QSize& size )
+    : ThumbnailGenerator( size )
 {
 }
 
-QImage MovieThumbnailGenerator::generate(const QString &filename) const
+QImage MovieThumbnailGenerator::generate( const QString& filename ) const
 {
     FFMPEGMovie movie( filename );
 
@@ -61,11 +61,8 @@ QImage MovieThumbnailGenerator::generate(const QString &filename) const
     try
     {
         auto picture = future.get();
-        QImage image( (uchar*)picture->getData(), movie.getWidth(),
-                      movie.getHeight(), QImage::Format_ARGB32 );
-        image = image.scaled(size_, aspectRatioMode_);
-        image = image.rgbSwapped();
-        addMetadataToImage(image, filename);
+        QImage image = picture->toQImage().scaled( size_, aspectRatioMode_ );
+        addMetadataToImage( image, filename );
         return image;
     }
     catch( const std::exception& )

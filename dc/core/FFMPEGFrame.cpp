@@ -76,20 +76,3 @@ const uint8_t* FFMPEGFrame::getData() const
 {
     return _avFrame->data[0];
 }
-
-
-FFMPEGPicture::FFMPEGPicture( const unsigned int width,
-                              const unsigned int height,
-                              const PixelFormat format )
-{
-    if( avpicture_alloc( (AVPicture*)_avFrame, format, width, height ) != 0 )
-    {
-        put_flog( LOG_ERROR, "Error allocating picture buffer for AV frame" );
-        return;
-    }
-}
-
-FFMPEGPicture::~FFMPEGPicture()
-{
-    avpicture_free( (AVPicture*)_avFrame );
-}

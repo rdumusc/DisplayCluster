@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,57 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIE_H
-#define MOVIE_H
+#include "ContentSynchronizer.h"
 
-#include "WallContent.h"
+#include "Content.h"
+#include "BasicSynchronizer.h"
+#include "MovieSynchronizer.h"
+#include "PixelStreamSynchronizer.h"
 
-#include "GLTexture2D.h"
-#include "GLQuad.h"
-#include "ElapsedTimer.h"
+#include "MovieProvider.h"
+#include "PixelStreamProvider.h"
 
-#include <future>
+ContentSynchronizer::~ContentSynchronizer() {}
 
-class FFMPEGMovie;
-
-class Movie : public WallContent
+ContentSynchronizerPtr
+ContentSynchronizer::create( ContentPtr content,
+                             QQmlImageProviderBase& provider )
 {
-public:
-    Movie( const QString& uri );
-    ~Movie();
-
-    void setVisible( bool isVisible );
-
-    void setPause( bool pause );
-    void setLoop( bool loop );
-
-private:
-    std::unique_ptr<FFMPEGMovie> _ffmpegMovie;
-
-    GLTexture2D _texture;
-    GLQuad _quad;
-    GLQuad _previewQuad;
-
-    bool _paused;
-    bool _loop;
-    bool _isVisible;
-
-    ElapsedTimer _timer;
-    double _sharedTimestamp;
-    std::future<PicturePtr> _futurePicture;
-
-    void render() override;
-    void renderPreview() override;
-    void preRenderUpdate( ContentWindowPtr window,
-                          const QRect& wallArea ) override;
-    void preRenderSync( WallToWallChannel& wallToWallChannel ) override;
-
-    bool _generateTexture();
-
-    double _getDelay() const;
-    void _updateTimestamp( WallToWallChannel& wallToWallChannel );
-    void _synchronizeTimestamp( WallToWallChannel& wallToWallChannel );
-    void _rewind();
-};
-
-#endif
+    switch( content->getType( ))
+    {
+    case CONTENT_TYPE_MOVIE:
+        return make_unique<MovieSynchronizer>(
+                   content->getURI(), dynamic_cast<MovieProvider&>( provider ));
+    case CONTENT_TYPE_PIXEL_STREAM:
+        return make_unique<PixelStreamSynchronizer>(
+             content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
+    default:
+        return make_unique<BasicSynchronizer>();
+    }
+}

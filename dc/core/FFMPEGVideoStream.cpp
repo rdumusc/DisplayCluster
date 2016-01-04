@@ -87,12 +87,7 @@ int64_t FFMPEGVideoStream::decodeTimestamp( AVPacket& packet )
 
 PicturePtr FFMPEGVideoStream::decodePictureForLastPacket()
 {
-    auto picture = std::make_shared<FFMPEGPicture>( getWidth(), getHeight(),
-                                                    PIX_FMT_RGBA );
-    if( _frameConverter->convert( *_frame, *picture ))
-        return picture;
-
-    return PicturePtr();
+    return _frameConverter->convert( *_frame );
 }
 
 bool FFMPEGVideoStream::_isVideoPacket( const AVPacket& packet ) const

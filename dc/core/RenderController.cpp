@@ -46,45 +46,40 @@
 #include "DisplayGroup.h"
 #include "Options.h"
 #include "WallToWallChannel.h"
+#include "WallScene.h"
+#include "WallWindow.h"
+
+#include "MovieProvider.h"
+#include "PixelStreamProvider.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 
 RenderController::RenderController( RenderContextPtr renderContext )
-    : renderContext_( renderContext )
-    , displayGroupRenderer_( new DisplayGroupRenderer( renderContext ))
-    , syncQuit_( false )
-    , syncDisplayGroup_( boost::make_shared<DisplayGroup>( QSize( )))
-    , syncOptions_( boost::make_shared<Options>( ))
+    : _renderContext( renderContext )
+    , _syncQuit( false )
+    , _syncDisplayGroup( boost::make_shared<DisplayGroup>( QSize( )))
+    , _syncOptions( boost::make_shared<Options>( ))
 {
-    syncDisplayGroup_.setCallback( boost::bind(
-                                       &DisplayGroupRenderer::setDisplayGroup,
-                                       displayGroupRenderer_.get(), _1 ));
+    _syncDisplayGroup.setCallback( boost::bind(
+                                       &RenderController::_setDisplayGroup,
+                                       this, _1 ));
 
-    MarkerRenderer& markers = renderContext_->getScene().getMarkersRenderer();
-    syncMarkers_.setCallback( boost::bind( &MarkerRenderer::setMarkers,
-                                           &markers, _1 ));
+    for( WallWindowPtr window : _renderContext->getWindows( ))
+    {
+        MarkerRenderer& markers = window->getScene().getMarkersRenderer();
+        _syncMarkers.setCallback( boost::bind( &MarkerRenderer::setMarkers,
+                                               &markers, _1 ));
 
-    syncOptions_.setCallback( boost::bind( &RenderController::setRenderOptions,
-                                          this, _1 ));
-
-    connect( displayGroupRenderer_.get(),
-             SIGNAL( windowAdded( QmlWindowPtr )),
-             &pixelStreamUpdater_, SLOT( onWindowAdded( QmlWindowPtr )));
-
-    connect( displayGroupRenderer_.get(),
-             SIGNAL( windowRemoved( QmlWindowPtr )),
-             &pixelStreamUpdater_, SLOT( onWindowRemoved( QmlWindowPtr )));
+        _syncOptions.setCallback( boost::bind(
+                                      &RenderController::_setRenderOptions,
+                                      this, _1 ));
+    }
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const
 {
-    return syncDisplayGroup_.get();
-}
-
-PixelStreamUpdater& RenderController::getPixelStreamUpdater()
-{
-    return pixelStreamUpdater_;
+    return _syncDisplayGroup.get();
 }
 
 void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
@@ -92,57 +87,68 @@ void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, &wallChannel, _1 );
 
-    synchronizeObjects( versionCheckFunc );
+    _synchronizeObjects( versionCheckFunc );
 
-    displayGroupRenderer_->preRenderUpdate( wallChannel );
-}
+    // TODO There is more than one provider if there are multiple windows
+    _renderContext->getMovieProvider().update( wallChannel );
+    _renderContext->getPixelStreamProvider().update( wallChannel );
 
-void RenderController::postRenderUpdate( WallToWallChannel& wallChannel )
-{
-    displayGroupRenderer_->postRenderUpdate( wallChannel );
+    const QRect& visibleWallArea = _renderContext->getVisibleWallArea();
+    for( WallWindowPtr window : _renderContext->getWindows( ))
+        window->getScene().getDisplayGroupRenderer().preRenderUpdate(
+                    wallChannel, visibleWallArea );
 }
 
 bool RenderController::quitRendering() const
 {
-    return syncQuit_.get();
+    return _syncQuit.get();
 }
 
 void RenderController::updateQuit()
 {
-    syncQuit_.update( true );
+    _syncQuit.update( true );
 }
 
 void RenderController::updateDisplayGroup( DisplayGroupPtr displayGroup )
 {
-    syncDisplayGroup_.update( displayGroup );
+    _syncDisplayGroup.update( displayGroup );
 }
 
 void RenderController::updateOptions( OptionsPtr options )
 {
-    syncOptions_.update( options );
+    _syncOptions.update( options );
 }
 
 void RenderController::updateMarkers( MarkersPtr markers )
 {
-    syncMarkers_.update( markers );
+    _syncMarkers.update( markers );
 }
 
-void RenderController::synchronizeObjects( const SyncFunction&
-                                           versionCheckFunc )
+void RenderController::_synchronizeObjects( const SyncFunction&
+                                            versionCheckFunc )
 {
-    syncQuit_.sync( versionCheckFunc );
-    syncDisplayGroup_.sync( versionCheckFunc );
-    syncMarkers_.sync( versionCheckFunc );
-    syncOptions_.sync( versionCheckFunc );
-    pixelStreamUpdater_.synchronizeFramesSwap( versionCheckFunc );
+    _syncQuit.sync( versionCheckFunc );
+    _syncDisplayGroup.sync( versionCheckFunc );
+    _syncMarkers.sync( versionCheckFunc );
+    _syncOptions.sync( versionCheckFunc );
 }
 
-void RenderController::setRenderOptions( OptionsPtr options )
+void RenderController::_setRenderOptions( OptionsPtr options )
 {
-    renderContext_->setBackgroundColor( options->getBackgroundColor( ));
-    renderContext_->displayTestPattern( options->getShowTestPattern( ));
-    renderContext_->displayFps( options->getShowStatistics( ));
-    renderContext_->getScene().displayMarkers( options->getShowTouchPoints( ));
+    _renderContext->setBackgroundColor( options->getBackgroundColor( ));
+    _renderContext->displayTestPattern( options->getShowTestPattern( ));
+    _renderContext->displayFps( options->getShowStatistics( ));
 
-    displayGroupRenderer_->setRenderingOptions( options );
+    for( WallWindowPtr window : _renderContext->getWindows( ))
+    {
+        window->getScene().displayMarkers( options->getShowTouchPoints( ));
+        window->getScene().getDisplayGroupRenderer().setRenderingOptions(
+                    options );
+    }
+}
+
+void RenderController::_setDisplayGroup( DisplayGroupPtr displayGroup )
+{
+    for( WallWindowPtr window : _renderContext->getWindows( ))
+        window->getScene().setDisplayGroup( displayGroup );
 }

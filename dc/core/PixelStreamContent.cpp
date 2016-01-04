@@ -38,6 +38,8 @@
 
 #include "PixelStreamContent.h"
 
+#include "PixelStreamProvider.h"
+
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 
@@ -60,4 +62,14 @@ bool PixelStreamContent::readMetadata()
 bool PixelStreamContent::hasFixedAspectRatio() const
 {
     return _uri == "dock";
+}
+
+QString PixelStreamContent::getProviderId() const
+{
+    return PixelStreamProvider::ID;
+}
+
+QString PixelStreamContent::getSourceImage() const
+{
+    return PixelStreamProvider::ID + QString("/") + _uri;
 }

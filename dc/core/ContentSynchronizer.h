@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,63 +37,59 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Texture.h"
+#ifndef CONTENTSYNCHRONIZER_H
+#define CONTENTSYNCHRONIZER_H
 
-#include "log.h"
-#include "ContentWindow.h"
+#include "types.h"
+#include "ContentType.h"
 
-#include <QtGui/QImageReader>
+#include <QObject>
+#include <QQmlImageProviderBase>
 
-Texture::Texture( const QString& uri )
-    : uri_( uri )
+/**
+ * Interface for synchronizing QML content rendering.
+ *
+ * An implementation should be provided for each ContentType which requires
+ * a synchronization step before rendring.
+ */
+class ContentSynchronizer : public QObject
 {
-    const QImageReader imageReader( uri_ );
-    if( !imageReader.canRead( ))
-    {
-        put_flog( LOG_ERROR, "error loading: '%s'",
-                  uri_.toLocal8Bit().constData( ));
-        return;
-    }
-    imageSize_ = imageReader.size();
-}
+    Q_OBJECT
+    Q_DISABLE_COPY( ContentSynchronizer )
+    Q_PROPERTY( QString sourceParams READ getSourceParams
+                NOTIFY sourceParamsChanged )
+    Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
+    Q_PROPERTY( QList<QObject*> tiles READ getTiles NOTIFY tilesChanged )
 
-bool Texture::generateTexture()
-{
-    const QImage image( uri_ );
-    if( image.isNull( ))
-    {
-        put_flog( LOG_ERROR, "error loading: '%s'",
-                  uri_.toLocal8Bit().constData( ));
-        return false;
-    }
-    quad_.enableAlphaBlending( image.hasAlphaChannel( ));
+public:
+    /** Constructor */
+    ContentSynchronizer() = default;
 
-    return texture_.init( image, GL_BGRA, true );
-}
+    /** Virtual destructor */
+    virtual ~ContentSynchronizer();
 
-void Texture::render()
-{
-    if( !texture_.isValid( ))
-        return;
+    /** Synchronize the Content. */
+    virtual void sync( WallToWallChannel& channel ) = 0;
 
-    quad_.render();
-}
+    /** Get the additional source parameters. */
+    virtual QString getSourceParams() const = 0;
 
-void Texture::renderPreview()
-{
-    if( !texture_.isValid( ))
-        return;
+    /** @return true if the content allows texture caching for rendering. */
+    virtual bool allowsTextureCaching() const = 0;
 
-    previewQuad_.render();
-}
+    /** Get the list of tiles that compose the content. */
+    virtual QList<QObject*> getTiles() const = 0;
 
-void Texture::preRenderUpdate( ContentWindowPtr window, const QRect& )
-{
-    if( !texture_.isValid( ))
-        generateTexture();
+    /** @return a ContentSynchronizer for the given content. */
+    static ContentSynchronizerPtr create( ContentPtr content,
+                                          QQmlImageProviderBase& provider );
 
-    quad_.setTexCoords( window->getZoomRect( ));
-    quad_.setTexture( texture_.getTextureId( ));
+signals:
+    /** Notifier for the sourceParams property. */
+    void sourceParamsChanged();
 
-    previewQuad_.setTexture( texture_.getTextureId( ));
-}
+    /** Notifier for the tiles property. */
+    void tilesChanged();
+};
+
+#endif // CONTENTSYNCHRONIZER_H

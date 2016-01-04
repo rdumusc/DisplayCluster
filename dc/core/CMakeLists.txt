@@ -9,7 +9,8 @@ set(DCCORE_LINK_LIBRARIES
     Deflect
     dcwebservice
     Qt5::Core
-    Qt5::Declarative
+    Qt5::Qml
+    Qt5::Quick
     Qt5::Widgets
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
@@ -31,12 +32,16 @@ if(ENABLE_TUIO_TOUCH_LISTENER)
 endif()
 
 if(ENABLE_PDF_SUPPORT)
+  list(APPEND DCCORE_PUBLIC_HEADER
+    PDFProvider.h
+  )
   list(APPEND DCCORE_MOC_PUBLIC_HEADERS
     PDFContent.h
   )
   list(APPEND DCCORE_SOURCES
     PDF.cpp
     PDFContent.cpp
+    PDFProvider.cpp
     PDFInteractionDelegate.cpp
     thumbnail/PDFThumbnailGenerator.cpp
   )
@@ -54,6 +59,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ElapsedTimer.h
   FFMPEGFrame.h
   FFMPEGMovie.h
+  FFMPEGPicture.h
   FFMPEGVideoFrameConverter.h
   FFMPEGVideoStream.h
   FileCommandHandler.h
@@ -62,16 +68,15 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   GLQuad.h
   GLTexture2D.h
   GLUtils.h
-  GLWindow.h
   gestures/DoubleTapGestureRecognizer.h
   gestures/PanGesture.h
   gestures/PanGestureRecognizer.h
   gestures/PinchGesture.h
   gestures/PinchGestureRecognizer.h
   LayoutEngine.h
+  ImageProviderStringifier.h
   log.h
-  Marker.h
-  Movie.h
+  MovieProvider.h
   MPIChannel.h
   MPIContext.h
   MPINospin.h
@@ -85,11 +90,11 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   State.h
   StatePreview.h
   StateSerializationHelper.h
-  SVG.h
   SVGContent.h
+  SVGProvider.h
   TestPattern.h
-  Texture.h
   TextureContent.h
+  TextureProvider.h
   WallContent.h
   ZoomInteractionDelegate.h
   configuration/Configuration.h
@@ -112,11 +117,13 @@ list(APPEND DCCORE_PUBLIC_HEADERS
 )
 
 list(APPEND DCCORE_MOC_PUBLIC_HEADERS
+  BasicSynchronizer.h
   Content.h
   ContentAction.h
   ContentActionsModel.h
   ContentInteractionDelegate.h
   ContentItem.h
+  ContentSynchronizer.h
   ContentWindow.h
   ContentWindowController.h
   Coordinates.h
@@ -127,15 +134,20 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MasterFromWallChannel.h
   MasterToWallChannel.h
   MovieContent.h
+  MovieSynchronizer.h
+  MovieUpdater.h
   Options.h
   PixelStream.h
   PixelStreamInteractionDelegate.h
+  PixelStreamProvider.h
+  PixelStreamSynchronizer.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
   QmlControlPanel.h
   RenderController.h
+  Tile.h
   WallFromMasterChannel.h
-  WallGraphicsScene.h
+  WallScene.h
   WallWindow.h
   WallToMasterChannel.h
   WallToWallChannel.h
@@ -154,6 +166,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
 )
 
 list(APPEND DCCORE_SOURCES
+  BasicSynchronizer.cpp
   Content.cpp
   ContentAction.cpp
   ContentActionsModel.cpp
@@ -162,6 +175,7 @@ list(APPEND DCCORE_SOURCES
   ContentType.cpp
   ContentItem.cpp
   ContentInteractionDelegate.cpp
+  ContentSynchronizer.cpp
   ContentWindow.cpp
   ContentWindowController.cpp
   Coordinates.cpp
@@ -172,6 +186,7 @@ list(APPEND DCCORE_SOURCES
   ElapsedTimer.cpp
   FFMPEGFrame.cpp
   FFMPEGMovie.cpp
+  FFMPEGPicture.cpp
   FFMPEGVideoFrameConverter.cpp
   FFMPEGVideoStream.cpp
   FileCommandHandler.cpp
@@ -180,17 +195,18 @@ list(APPEND DCCORE_SOURCES
   GLQuad.cpp
   GLTexture2D.cpp
   GLUtils.cpp
-  GLWindow.cpp
   LayoutEngine.cpp
+  ImageProviderStringifier.cpp
   log.cpp
-  Marker.cpp
   Markers.cpp
   MarkerRenderer.cpp
   MasterFromWallChannel.cpp
   MasterToWallChannel.cpp
   MetaTypeRegistration.cpp
-  Movie.cpp
   MovieContent.cpp
+  MovieProvider.cpp
+  MovieSynchronizer.cpp
+  MovieUpdater.cpp
   MPIChannel.cpp
   MPIContext.cpp
   MPINospin.cpp
@@ -198,7 +214,9 @@ list(APPEND DCCORE_SOURCES
   PixelStream.cpp
   PixelStreamContent.cpp
   PixelStreamInteractionDelegate.cpp
+  PixelStreamProvider.cpp
   PixelStreamSegmentRenderer.cpp
+  PixelStreamSynchronizer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
   QmlControlPanel.cpp
@@ -210,14 +228,14 @@ list(APPEND DCCORE_SOURCES
   State.cpp
   StatePreview.cpp
   StateSerializationHelper.cpp
-  SVG.cpp
   SVGContent.cpp
+  SVGProvider.cpp
   TestPattern.cpp
-  Texture.cpp
   TextureContent.cpp
+  TextureProvider.cpp
   WallContent.cpp
   WallFromMasterChannel.cpp
-  WallGraphicsScene.cpp
+  WallScene.cpp
   WallToMasterChannel.cpp
   WallToWallChannel.cpp
   WallWindow.cpp

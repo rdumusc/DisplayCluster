@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,34 +37,44 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_GRAPHICS_SCENE_H
-#define DISPLAY_GROUP_GRAPHICS_SCENE_H
+#include "MovieSynchronizer.h"
 
-#include "types.h"
+#include "MovieProvider.h"
+#include "MovieUpdater.h"
 
-#include <QGraphicsScene>
-
-/**
- * A scene to draw a representation of a DisplayGroup.
- * Used by DisplayGroupGraphicsView.
- */
-class DisplayGroupGraphicsScene : public QGraphicsScene
+MovieSynchronizer::MovieSynchronizer( const QString& uri,
+                                      MovieProvider& provider )
+    : _provider( provider )
+    , _uri( uri )
+    , _timestamp( 0.0 )
 {
-public:
-    /** Constructor. */
-    DisplayGroupGraphicsScene( const Configuration& config,
-                               QObject* parent = 0 );
+    _updater = _provider.open( uri );
+    connect( _updater.get(), SIGNAL( pictureUpdated( double )),
+             this, SLOT( onPictureUpdated( double )));
+}
 
-protected:
-    /** @name Re-implemented QGraphicsScene events */
-    //@{
-    bool event( QEvent* event ) override;
-    //@}
+MovieSynchronizer::~MovieSynchronizer()
+{
+    _provider.close( _uri );
+}
 
-private:
-    void addBackgroundRectangles();
+void MovieSynchronizer::sync( WallToWallChannel& channel )
+{
+    Q_UNUSED( channel );
+}
 
-    QList<QRectF> screens_;
-};
+QString MovieSynchronizer::getSourceParams() const
+{
+    return QString( "?%1" ).arg( _timestamp );
+}
 
-#endif
+bool MovieSynchronizer::allowsTextureCaching() const
+{
+    return false;
+}
+
+void MovieSynchronizer::onPictureUpdated( const double timestamp )
+{
+    _timestamp = timestamp;
+    emit sourceParamsChanged();
+}

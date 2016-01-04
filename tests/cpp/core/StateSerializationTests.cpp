@@ -180,7 +180,7 @@ void checkContent( ContentPtr content )
 
 void checkLegacyWindow( ContentWindowPtr window )
 {
-    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0/1.5 );
+    BOOST_CHECK_EQUAL( window->getContent()->getZoomRect().width(), 1.0/1.5 );
     BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 0.25, 0.25, 0.5, 0.5 ));
 
     checkContent( window->getContent( ));
@@ -188,7 +188,7 @@ void checkLegacyWindow( ContentWindowPtr window )
 
 void checkWindow( ContentWindowPtr window )
 {
-    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0/1.5 );
+    BOOST_CHECK_EQUAL( window->getContent()->getZoomRect().width(), 1.0/1.5 );
 
     BOOST_CHECK_EQUAL( window->getCoordinates().x(), 0.25 * wallSize.width( ));
     BOOST_CHECK_EQUAL( window->getCoordinates().y(), 0.25 * wallSize.height( ));
@@ -199,7 +199,7 @@ void checkWindow( ContentWindowPtr window )
 
 void checkWindowVersion3( ContentWindowPtr window )
 {
-    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0 );
+    BOOST_CHECK_EQUAL( window->getContent()->getZoomRect().width(), 1.0 );
     BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 486, 170, 600, 300 ));
     BOOST_CHECK( !window->isFocused( ));
 
@@ -208,7 +208,7 @@ void checkWindowVersion3( ContentWindowPtr window )
 
 void checkWindowVersion4( ContentWindowPtr window )
 {
-    BOOST_CHECK_EQUAL( window->getZoomRect().width(), 1.0 );
+    BOOST_CHECK_EQUAL( window->getContent()->getZoomRect().width(), 1.0 );
     BOOST_CHECK_EQUAL( window->getCoordinates(), QRectF( 486, 170, 600, 300 ));
     BOOST_CHECK( window->isFocused( ));
 
@@ -320,7 +320,7 @@ DisplayGroupPtr createTestDisplayGroup()
     ContentWindowPtr contentWindow( new ContentWindow( content ));
     const QPointF position( 0.25 * wallSize.width(), 0.25 * wallSize.height( ));
     contentWindow->setCoordinates( QRectF( position, 0.5 * wallSize ));
-    contentWindow->setZoomRect( QRectF( 0.1, 0.2, 1.0/1.5, 1.0/1.5 ));
+    content->setZoomRect( QRectF( 0.1, 0.2, 1.0/1.5, 1.0/1.5 ));
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     displayGroup->addContentWindow( contentWindow );
     return displayGroup;

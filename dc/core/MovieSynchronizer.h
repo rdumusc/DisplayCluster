@@ -37,42 +37,51 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "WallGraphicsScene.h"
+#ifndef MOVIESYNCHRONIZER_H
+#define MOVIESYNCHRONIZER_H
 
-#include "MarkerRenderer.h"
+#include "BasicSynchronizer.h"
 
-#include <QtOpenGL/QtOpenGL>
-
-WallGraphicsScene::WallGraphicsScene( const QRectF &size, QObject* parent_ )
-    : QGraphicsScene( size, parent_ )
-    , markerRenderer_( new MarkerRenderer )
+/**
+ * Synchronizes a Movie between different QML windows.
+ *
+ * The MovieSynchronizer serves as an interface between the MovieProvider and
+ * the QML rendering, to inform it when new frames are ready and swap them
+ * synchronously.
+ */
+class MovieSynchronizer : public BasicSynchronizer
 {
-}
+    Q_OBJECT
+    Q_DISABLE_COPY( MovieSynchronizer )
 
-void WallGraphicsScene::displayMarkers( const bool value )
-{
-    markerRenderer_->setVisible( value );
-}
+public:
+    /**
+     * Construct a synchronizer for a movie, opening it in the provider.
+     * @param uri The uri of the movie to open.
+     * @param provider The MovieProvider where the movie will be opened.
+     */
+    MovieSynchronizer( const QString& uri, MovieProvider& provider );
 
-MarkerRenderer& WallGraphicsScene::getMarkersRenderer()
-{
-    return *markerRenderer_;
-}
+    /** Destruct the synchronizer and close the movie in the provider. */
+    ~MovieSynchronizer();
 
-void WallGraphicsScene::drawForeground( QPainter* painter, const QRectF& )
-{
-    if( !markerRenderer_->isVisible( ))
-        return;
+    /** @copydoc ContentSynchronizer::sync */
+    void sync( WallToWallChannel& channel ) override;
 
-    painter->beginNativePainting();
+    /** @copydoc ContentSynchronizer::getSourceParams */
+    QString getSourceParams() const override;
 
-    glPushAttrib( GL_ENABLE_BIT );
-    glEnable( GL_DEPTH_TEST );
-    glDisable( GL_LIGHTING );
+    /** @copydoc ContentSynchronizer::allowsTextureCaching */
+    bool allowsTextureCaching() const override;
 
-    markerRenderer_->render();
+private slots:
+    void onPictureUpdated( double timestamp );
 
-    glPopAttrib();
+private:
+    MovieProvider& _provider;
+    MovieUpdaterSharedPtr _updater;
+    QString _uri;
+    double _timestamp;
+};
 
-    painter->endNativePainting();
-}
+#endif

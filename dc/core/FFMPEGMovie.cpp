@@ -40,12 +40,14 @@
 #include "FFMPEGMovie.h"
 
 #include "FFMPEGFrame.h"
+#include "FFMPEGPicture.h"
 #include "FFMPEGVideoStream.h"
 #include "log.h"
 
 #define MIN_SEEK_DELTA_SEC  0.5
 #define VIDEO_QUEUE_SIZE    4
 #define UNDEFINED_PTS      -1.0
+#define DUMMY_TIMESTAMP    -1
 
 #pragma clang diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -191,7 +193,8 @@ void FFMPEGMovie::stopDecoding()
         _decodeThread.join();
     if( _consumeThread.joinable( ))
     {
-        _queue.enqueue( std::make_shared<FFMPEGPicture>( 1, 1, PIX_FMT_RGBA ));
+        _queue.enqueue( std::make_shared<FFMPEGPicture>( 1, 1, PIX_FMT_RGBA,
+                                                         DUMMY_TIMESTAMP ));
         {
             std::lock_guard<std::mutex> lock( _targetMutex );
             _targetChangedSent = true;

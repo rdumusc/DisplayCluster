@@ -52,7 +52,6 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/serialization/nvp.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <QObject>
 #include <QSize>
@@ -73,6 +72,8 @@ class Content : public QObject
     Q_OBJECT
     Q_PROPERTY( ContentActionsModel* actions READ getActions CONSTANT )
     Q_PROPERTY( qreal aspectRatio READ getAspectRatio CONSTANT )
+    Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
+    Q_PROPERTY( QString sourceImage READ getSourceImage CONSTANT )
 
 public:
     /** Constructor **/
@@ -83,6 +84,12 @@ public:
 
     /** Get the content type **/
     virtual CONTENT_TYPE getType() const = 0;
+
+    /** Get the ID of the image provider for this content. */
+    virtual QString getProviderId() const { return QString( "none" ); }
+
+    /** Get the source image url used by the QML engine for rendering. */
+    virtual QString getSourceImage() const { return QString( "error" ); }
 
     /**
      * Read content metadata from the data source.
@@ -112,6 +119,12 @@ public:
     /** @return true if the content has a fixed aspect ratio. */
     virtual bool hasFixedAspectRatio() const;
 
+    /** Get the zoom rectangle in normalized coordinates, [0,0,1,1] default */
+    const QRectF& getZoomRect() const;
+
+    /** Set the zoom rectangle in normalized coordinates. */
+    void setZoomRect( const QRectF& zoomRect );
+
     /** Get the actions from QML. */
     ContentActionsModel* getActions();
 
@@ -134,7 +147,7 @@ protected:
     friend class boost::serialization::access;
 
     // Default constructor required for boost::serialization
-    Content() {}
+    Content();
 
     /** Serialize for sending to Wall applications. */
     template< class Archive >
@@ -143,7 +156,9 @@ protected:
         ar & _uri;
         ar & _size.rwidth();
         ar & _size.rheight();
+        ar & _zoomRect;
         ar & _actions;
+        _actions->setParent( this );
     }
 
     /** Serialize for saving to an xml file */
@@ -177,9 +192,10 @@ protected:
 
     QString _uri;
     QSize _size;
-    ContentActionsModel _actions;
+    QRectF _zoomRect;
+    ContentActionsModel* _actions;
     deflect::SizeHints _sizeHints;
-    static qreal maxScale_;
+    static qreal _maxScale;
 };
 
 BOOST_CLASS_VERSION( Content, 2 )

@@ -57,6 +57,8 @@ TestPattern::TestPattern( const WallConfiguration& configuration,
     const QPoint globalScreenIndex = configuration.getGlobalScreenIndex( tileIndex );
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
 
+    windowRect_ = configuration.getScreenRect( globalScreenIndex );
+
     labels_.push_back(QString("Rank: %1").arg(configuration.getProcessIndex()));
     labels_.push_back(QString("Host: %1").arg(configuration.getHost()));
     labels_.push_back(QString("Display: %1").arg(configuration.getDisplay()));
@@ -65,36 +67,36 @@ TestPattern::TestPattern( const WallConfiguration& configuration,
     labels_.push_back(QString("Fullscreen mode: %1").arg(fullsceenMode));
 }
 
-void TestPattern::draw( QPainter* painter, const QRectF& rect )
+void TestPattern::paint( QPainter* painter )
 {
     painter->setBrush( Qt::black );
-    painter->drawRect( rect );
+    painter->drawRect( windowRect_ );
 
     renderCrossPattern( painter );
-    renderLabels( painter, rect );
+    renderLabels( painter );
 }
 
 void TestPattern::renderCrossPattern( QPainter* painter )
 {
-    const qreal height = wallSize_.height();
-    const qreal width = wallSize_.width();
+    const qreal h = wallSize_.height();
+    const qreal w = wallSize_.width();
 
     QPen pen;
     pen.setWidth( LINE_WIDTH );
 
-    for( qreal y = -1.0 * height; y <= 2.0 * height; y += 0.1 * height )
+    for( qreal y_ = -1.0 * h; y_ <= 2.0 * h; y_ += 0.1 * h )
     {
-        const qreal hue = (y + height) / (3.0 * height);
+        const qreal hue = (y_ + h) / (3.0 * h);
         pen.setColor( QColor::fromHsvF( hue, 1.0, 1.0 ));
         painter->setPen( pen );
-        painter->drawLine( QPointF( 0.0, y ), QPointF( width, y + height ));
-        painter->drawLine( QPointF( 0.0, y ), QPointF( width, y - height ));
+        painter->drawLine( QPointF( 0.0, y_ ), QPointF( w, y_ + h ));
+        painter->drawLine( QPointF( 0.0, y_ ), QPointF( w, y_ - h ));
     }
 }
 
-void TestPattern::renderLabels( QPainter* painter, const QRectF& rect )
+void TestPattern::renderLabels( QPainter* painter )
 {
-    const QPoint offset = rect.topLeft( ).toPoint();
+    const QPoint offset = windowRect_.topLeft();
 
     QFont textFont;
     textFont.setPixelSize( FONT_SIZE );

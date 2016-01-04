@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,33 +37,52 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#include "PixelStreamSynchronizer.h"
 
-#include "WallContent.h"
+#include "PixelStreamProvider.h"
+#include "PixelStreamUpdater.h"
 
-#include "GLTexture2D.h"
-#include "GLQuad.h"
-
-class Texture : public WallContent
+PixelStreamSynchronizer::PixelStreamSynchronizer( const QString& uri,
+                                                 PixelStreamProvider& provider )
+    : _uri( uri )
+    , _provider( provider )
+    , _frameIndex( 0 )
 {
-public:
-    Texture( const QString& uri );
+    _updater = _provider.open( uri );
 
-private:
-    QString uri_;
-    QSize imageSize_;
+    connect( _updater.get(), &PixelStreamUpdater::pictureUpdated,
+             this, &PixelStreamSynchronizer::onPictureUpdated );
+    connect( _updater.get(), &PixelStreamUpdater::tilesChanged,
+             this, &ContentSynchronizer::tilesChanged );
+}
 
-    GLTexture2D texture_;
-    GLQuad quad_;
-    GLQuad previewQuad_;
+PixelStreamSynchronizer::~PixelStreamSynchronizer()
+{
+    _provider.close( _uri );
+}
 
-    void render() override;
-    void renderPreview() override;
-    void preRenderUpdate( ContentWindowPtr window,
-                          const QRect& wallArea ) override;
+void PixelStreamSynchronizer::sync( WallToWallChannel& channel )
+{
+    Q_UNUSED( channel );
+}
 
-    bool generateTexture();
-};
+QString PixelStreamSynchronizer::getSourceParams() const
+{
+    return QString( "?%1" ).arg( _frameIndex );
+}
 
-#endif
+bool PixelStreamSynchronizer::allowsTextureCaching() const
+{
+    return false;
+}
+
+QList<QObject*> PixelStreamSynchronizer::getTiles() const
+{
+    return _updater->getTiles();
+}
+
+void PixelStreamSynchronizer::onPictureUpdated( const uint frameIndex )
+{
+    _frameIndex = frameIndex;
+    emit sourceParamsChanged();
+}

@@ -44,6 +44,7 @@
 #include "CommandLineParameters.h"
 #include "MasterWindow.h"
 #include "DisplayGroup.h"
+#include "DisplayGroupView.h"
 #include "ContentFactory.h"
 #include "configuration/MasterConfiguration.h"
 #include "MasterToWallChannel.h"
@@ -53,7 +54,6 @@
 
 #if ENABLE_TUIO_TOUCH_LISTENER
 #  include "MultiTouchListener.h"
-#  include "DisplayGroupGraphicsView.h" // Required to cast to QGraphicsView
 #endif
 
 #include "localstreamer/PixelStreamerLauncher.h"
@@ -323,8 +323,8 @@ void MasterApplication::initMPIConnection()
 #if ENABLE_TUIO_TOUCH_LISTENER
 void MasterApplication::initTouchListener()
 {
-    QGraphicsView* graphicsView = masterWindow_->getGraphicsView();
-    touchListener_.reset( new MultiTouchListener( graphicsView ));
+    QWindow* targetWindow = masterWindow_->getDisplayGroupView();
+    touchListener_.reset( new MultiTouchListener( targetWindow ));
     connect( touchListener_.get(), &MultiTouchListener::touchPointAdded,
              markers_.get(), &Markers::addMarker );
     connect( touchListener_.get(), &MultiTouchListener::touchPointUpdated,

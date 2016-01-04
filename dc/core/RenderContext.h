@@ -41,13 +41,12 @@
 
 #include "types.h"
 
-#include "WallGraphicsScene.h"
-
 #include <QRectF>
 #include <QColor>
 #include <QFont>
 
-#include <QtDeclarative/QDeclarativeEngine>
+#include <QQmlEngine>
+#include <QQuickItem>
 
 /**
  * A render context composed of multiple GL windows.
@@ -75,10 +74,13 @@ public:
     void swapBuffers();
 
     /** Get access to the scene object. */
-    WallGraphicsScene& getScene();
+    const QSize& getWallSize() const;
 
-    /** Get the QML engine. */
-    QDeclarativeEngine& getQmlEngine();
+    /** Get the movie provider. */
+    MovieProvider& getMovieProvider();
+
+    /** Get the pixel stream provider. */
+    PixelStreamProvider& getPixelStreamProvider();
 
     /** Display or hide the test pattern. */
     void displayTestPattern( bool value );
@@ -86,15 +88,17 @@ public:
     /** Display or hide the fps counter. */
     void displayFps( bool value );
 
+    /** Get access to the windows. */
+    WallWindowPtrs getWindows();
+
 private:
     void setupOpenGLWindows( const WallConfiguration& config );
     void setupVSync();
 
-    WallGraphicsScene scene_;
-    WallWindowPtrs windows_;
-    QRect visibleWallArea_;
+    WallWindowPtrs _windows;
 
-    QDeclarativeEngine engine_;
+    QSize _wallSize;
+    QRect _visibleWallArea;
 };
 
 #endif

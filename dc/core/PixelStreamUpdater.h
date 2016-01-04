@@ -44,8 +44,10 @@
 
 #include "SwapSyncObject.h"
 
-#include <QtCore/QObject>
-#include <QtCore/QMap>
+#include <deflect/SegmentDecoder.h>
+
+#include <QObject>
+#include <mutex>
 
 /**
  * Synchronize the update of PixelStreams and send new frame requests.
@@ -53,37 +55,55 @@
 class PixelStreamUpdater : public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY( PixelStreamUpdater )
 
 public:
     /** Constructor. */
     PixelStreamUpdater();
 
     /** Synchronize the update of the PixelStreams. */
-    void synchronizeFramesSwap( const SyncFunction& versionCheckFunc );
+    void synchronizeFramesSwap( WallToWallChannel& channel );
+
+    /**
+     * Get a segment by its index.
+     * This function is blocking, and can be called by different threads. The
+     * frame will not be swapped until all calls to this function have returned.
+     */
+    QImage getTileImage( uint index );
+
+    /** Get the list of tiles for use by QML repeater. */
+    const QList<QObject*>& getTiles() const;
 
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
     void updatePixelStream( deflect::FramePtr frame );
 
-    /** Connect the new window to receive PixelStream frame updates. */
-    void onWindowAdded( QmlWindowPtr qmlWindow );
-
-    /** Disconnect the window from PixelStream frame updates. */
-    void onWindowRemoved( QmlWindowPtr qmlWindow );
-
 signals:
+    /** Emitted when a new picture has become available. */
+    void pictureUpdated( uint frameIndex );
+
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
 
+    /** Emitted when the number of tiles has changed after a successful swap. */
+    void tilesChanged();
+
 private:
-    Q_DISABLE_COPY( PixelStreamUpdater )
-
-    typedef QMap<QString,PixelStreamPtr> PixelStreamMap;
-    PixelStreamMap _pixelStreamMap;
-
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
-    typedef QMap<QString,SwapSyncFrame> SwapSyncFramesMap;
-    SwapSyncFramesMap _swapSyncFrames;
+    SwapSyncFrame _swapSyncFrame;
+
+    std::vector< std::unique_ptr<deflect::SegmentDecoder> > _decoders;
+
+    std::mutex _mutex;
+    int _decodeCount;
+
+    uint _frameIndex;
+
+    QList<QObject*> _tiles;
+
+    void _onFrameSwapped( deflect::FramePtr frame );
+    void _adjustFrameDecodersCount( const size_t count );
+    void _refreshTiles( const deflect::Segments& segments );
 };
 
-#endif // PIXELSTREAMUPDATER_H
+#endif

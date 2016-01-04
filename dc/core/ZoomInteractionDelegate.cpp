@@ -63,7 +63,8 @@ void ZoomInteractionDelegate::pan( const QPointF position, const QPointF delta )
 void ZoomInteractionDelegate::pinch( QPointF position,
                                      const qreal pixelDelta )
 {
-    QRectF contentRect = _toContentRect( _contentWindow.getZoomRect( ));
+    const QRectF& zoomRect = _contentWindow.getContent()->getZoomRect();
+    QRectF contentRect = _toContentRect( zoomRect );
 
     position -= getWindowCoord().topLeft();
 
@@ -81,7 +82,8 @@ void ZoomInteractionDelegate::pinch( QPointF position,
 
 void ZoomInteractionDelegate::adjustZoomToContentAspectRatio()
 {
-    QRectF contentRect = _toContentRect( _contentWindow.getZoomRect( ));
+    const QRectF& zoomRect = _contentWindow.getContent()->getZoomRect();
+    QRectF contentRect = _toContentRect( zoomRect );
     QSizeF contentSize = _contentWindow.getContent()->getDimensions();
     contentSize = contentSize / contentSize.width();
     contentSize.scale( contentRect.size(), Qt::KeepAspectRatio );
@@ -94,18 +96,18 @@ void ZoomInteractionDelegate::_checkAndApply( QRectF zoomRect )
 {
     _constrainZoomLevel( zoomRect );
     _constraintPosition( zoomRect );
-    _contentWindow.setZoomRect( zoomRect );
+    _contentWindow.getContent()->setZoomRect( zoomRect );
 }
 
 void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
 {
-    QRectF zoomRect = _contentWindow.getZoomRect();
+    QRectF zoomRect = _contentWindow.getContent()->getZoomRect();
     const qreal zoom = zoomRect.width();
     const QPointF normalizedDelta = getNormalizedPoint( sceneDelta ) * zoom;
     zoomRect.translate( -normalizedDelta );
 
     _constraintPosition( zoomRect );
-    _contentWindow.setZoomRect( zoomRect );
+    _contentWindow.getContent()->setZoomRect( zoomRect );
 }
 
 void ZoomInteractionDelegate::_constrainZoomLevel( QRectF& zoomRect ) const
@@ -114,7 +116,7 @@ void ZoomInteractionDelegate::_constrainZoomLevel( QRectF& zoomRect ) const
 
     // constrain max zoom
     if( zoomRect.width() < maxZoom.width() || zoomRect.height() < maxZoom.height( ))
-        zoomRect = _contentWindow.getZoomRect();
+        zoomRect = _contentWindow.getContent()->getZoomRect();
 
     const QSizeF minZoom = _getMinZoom();
 

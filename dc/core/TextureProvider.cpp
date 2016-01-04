@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,81 +37,32 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DISPLAY_GROUP_GRAPHICS_VIEW_H
-#define DISPLAY_GROUP_GRAPHICS_VIEW_H
+#include "TextureProvider.h"
 
-#include "types.h"
+#include "log.h"
 
-#include "QmlControlPanel.h"
+const QString TextureProvider::ID( "texture" );
 
-#include <QUuid>
-#include <QGraphicsView>
-#include <QGesture>
-#include <QGestureEvent>
-#include <QDeclarativeEngine>
+TextureProvider::TextureProvider()
+    : QQuickImageProvider( QQmlImageProviderBase::Image,
+                           ForceAsynchronousImageLoading )
+{}
 
-class PanGesture;
-class PinchGesture;
-class QGraphicsObject;
+TextureProvider::~TextureProvider() {}
 
-/**
- * An interactive graphical view of a DisplayGroup's ContentWindows.
- */
-class DisplayGroupGraphicsView : public QGraphicsView
+QImage TextureProvider::requestImage( const QString& id, QSize* size,
+                                      const QSize& /*requestedSize*/ )
 {
-    Q_OBJECT
+    const QImage image( id );
+    if( image.isNull( ))
+    {
+        put_flog( LOG_ERROR, "error loading: '%s'",
+                  id.toLocal8Bit().constData( ));
+        return QImage();
+    }
 
-public:
-    /** Constructor. */
-    DisplayGroupGraphicsView( const Configuration& config, OptionsPtr options,
-                              QWidget* parent = 0 );
+    if( size )
+        *size = image.size();
 
-    /** Destructor */
-    virtual ~DisplayGroupGraphicsView();
-
-    /** Set the DisplayGroup model that this view should present. */
-    void setDataModel( DisplayGroupPtr displayGroup );
-
-    /** Get the control panel in this view. */
-    QmlControlPanel& getControlPanel();
-
-signals:
-    /** Emitted when a user taps the background. */
-    void backgroundTap( QPointF pos );
-
-    /** Emitted when a user taps and holds the background. */
-    void backgroundTapAndHold( QPointF pos );
-
-protected:
-    /** @name Re-implemented QGraphicsView events */
-    //@{
-    void resizeEvent( QResizeEvent* event ) override;
-    //@}
-
-public slots:
-    /** @name Re-map gesture events from global coordinates. */
-    //@{
-    void notifyBackgroundTap( QPointF globalPos );
-    void notifyBackgroundTapAndHold( QPointF globalPos );
-    //@}
-
-private slots:
-    void add( ContentWindowPtr contentWindow );
-    void remove( ContentWindowPtr contentWindow );
-    void moveToFront( ContentWindowPtr contentWindow );
-
-private:
-    void clearScene();
-    QPointF getScenePos( const QPointF& pos ) const;
-
-    DisplayGroupPtr displayGroup_;
-
-    QDeclarativeEngine engine_;
-    QGraphicsObject* displayGroupItem_;
-    QmlControlPanel controlPanel_;
-
-    typedef QMap<QUuid, QGraphicsItem*> UuidToWindowMap;
-    UuidToWindowMap uuidToWindowMap_;
-};
-
-#endif
+    return image;
+}

@@ -39,12 +39,9 @@
 
 #include "MarkerRenderer.h"
 
-#include "Marker.h"
-
 #include "log.h"
 
 #define MARKER_IMAGE_FILENAME ":/img/marker.png"
-
 #define MARKER_SIZE_PIXELS 30
 
 MarkerRenderer::MarkerRenderer()
@@ -56,7 +53,7 @@ void MarkerRenderer::render()
 {
     const MarkersMap& map = _markers->getMarkers();
     for( MarkersMap::const_iterator it = map.begin(); it != map.end(); ++it )
-        _render( it->second );
+        _renderMarker( it->second );
 }
 
 void MarkerRenderer::setMarkers( MarkersPtr markers )
@@ -64,12 +61,10 @@ void MarkerRenderer::setMarkers( MarkersPtr markers )
     _markers = markers;
 }
 
-void MarkerRenderer::_render( const Marker& marker )
+void MarkerRenderer::_renderMarker( const QPointF& pos )
 {
     if ( !_texture.isValid() && !_generateTexture( ))
         return;
-
-    const QPointF pos = marker.getPosition();
 
     glPushAttrib( GL_ENABLE_BIT | GL_TEXTURE_BIT );
 

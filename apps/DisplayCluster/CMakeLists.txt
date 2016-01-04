@@ -13,7 +13,7 @@ endif()
 
 set(DISPLAYCLUSTER_MOC_HEADERS
   BackgroundWidget.h
-  DisplayGroupGraphicsView.h
+  DisplayGroupView.h
   DisplayGroupListWidget.h
   MasterApplication.h
   MasterWindow.h
@@ -28,8 +28,7 @@ set(DISPLAYCLUSTER_SOURCES
   BackgroundWidget.cpp
   CommandLineParameters.cpp
   ContentWindowListWidgetItem.cpp
-  DisplayGroupGraphicsScene.cpp
-  DisplayGroupGraphicsView.cpp
+  DisplayGroupView.cpp
   DisplayGroupListWidget.cpp
   MasterApplication.cpp
   MasterWindow.cpp

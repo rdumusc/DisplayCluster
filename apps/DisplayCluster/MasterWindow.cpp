@@ -52,7 +52,7 @@
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
 
-#include "DisplayGroupGraphicsView.h"
+#include "DisplayGroupView.h"
 #include "DisplayGroupListWidget.h"
 #include "BackgroundWidget.h"
 #include "WebbrowserWidget.h"
@@ -60,6 +60,7 @@
 #include <dc/core/version.h>
 
 #include <QtWidgets>
+#include <sstream>
 
 namespace
 {
@@ -70,23 +71,23 @@ const QSize DEFAULT_WINDOW_SIZE( 800, 600 );
 MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
                             MasterConfiguration& config )
     : QMainWindow()
-    , displayGroup_( displayGroup )
-    , options_( new Options )
-    , backgroundWidget_( new BackgroundWidget( config, this ))
-    , webbrowserWidget_( new WebbrowserWidget( config, this ))
-    , dggv_( new DisplayGroupGraphicsView( config, options_, this ))
-    , autoFocusPixelStreamsAction_( 0 )
-    , contentFolder_( config.getDockStartDir( ))
-    , sessionFolder_( config.getDockStartDir( ))
+    , _displayGroup( displayGroup )
+    , _options( new Options )
+    , _backgroundWidget( new BackgroundWidget( config, this ))
+    , _webbrowserWidget( new WebbrowserWidget( config, this ))
+    , _displayGroupView( new DisplayGroupView( _options ))
+    , _autoFocusPixelStreamsAction( 0 )
+    , _contentFolder( config.getDockStartDir( ))
+    , _sessionFolder( config.getDockStartDir( ))
 {
-    backgroundWidget_->setModal( true );
+    _backgroundWidget->setModal( true );
 
-    connect( backgroundWidget_, SIGNAL( backgroundColorChanged( QColor )),
-             options_.get(), SLOT( setBackgroundColor( QColor )));
-    connect( backgroundWidget_, SIGNAL( backgroundContentChanged( ContentPtr )),
-             options_.get(), SLOT( setBackgroundContent( ContentPtr )));
+    connect( _backgroundWidget, SIGNAL( backgroundColorChanged( QColor )),
+             _options.get(), SLOT( setBackgroundColor( QColor )));
+    connect( _backgroundWidget, SIGNAL( backgroundContentChanged( ContentPtr )),
+             _options.get(), SLOT( setBackgroundContent( ContentPtr )));
 
-    connect( webbrowserWidget_,
+    connect( _webbrowserWidget,
              SIGNAL( openWebBrowser( QPointF, QSize, QString )),
              this, SIGNAL( openWebBrowser( QPointF, QSize, QString )));
 
@@ -98,79 +99,77 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     show();
 }
 
-MasterWindow::~MasterWindow()
-{
-}
+MasterWindow::~MasterWindow() {}
 
-DisplayGroupGraphicsView* MasterWindow::getGraphicsView()
+DisplayGroupView* MasterWindow::getDisplayGroupView()
 {
-    return dggv_;
+    return _displayGroupView;
 }
 
 OptionsPtr MasterWindow::getOptions() const
 {
-    return options_;
+    return _options;
 }
 
 QAction* MasterWindow::getAutoFocusPixelStreamsAction()
 {
-    return autoFocusPixelStreamsAction_;
+    return _autoFocusPixelStreamsAction;
 }
 
 void MasterWindow::setupMasterWindowUI()
 {
     // create menus in menu bar
-    QMenu * fileMenu = menuBar()->addMenu("&File");
-    QMenu * editMenu = menuBar()->addMenu("&Edit");
-    QMenu * viewMenu = menuBar()->addMenu("&View");
-    QMenu * toolsMenu = menuBar()->addMenu("&Tools");
-    QMenu * helpMenu = menuBar()->addMenu("&Help");
+    QMenu* fileMenu = menuBar()->addMenu("&File");
+    QMenu* editMenu = menuBar()->addMenu("&Edit");
+    QMenu* viewMenu = menuBar()->addMenu("&View");
+    QMenu* toolsMenu = menuBar()->addMenu("&Tools");
+    QMenu* helpMenu = menuBar()->addMenu("&Help");
 
     // create tool bar
-    QToolBar * toolbar = addToolBar("toolbar");
+    QToolBar* toolbar = addToolBar("toolbar");
 
     // open content action
-    QAction * openContentAction = new QAction("Open Content", this);
+    QAction* openContentAction = new QAction("Open Content", this);
     openContentAction->setStatusTip("Open content");
     connect(openContentAction, SIGNAL(triggered()), this, SLOT(openContent()));
 
     // open contents directory action
-    QAction * openContentsDirectoryAction = new QAction("Open Contents Directory", this);
+    QAction* openContentsDirectoryAction = new QAction("Open Contents Directory", this);
     openContentsDirectoryAction->setStatusTip("Open contents directory");
     connect(openContentsDirectoryAction, SIGNAL(triggered()), this, SLOT(openContentsDirectory()));
 
     // clear contents action
-    QAction * clearContentsAction = new QAction("Clear", this);
+    QAction* clearContentsAction = new QAction("Clear", this);
     clearContentsAction->setStatusTip("Clear");
-    connect(clearContentsAction, SIGNAL(triggered()), displayGroup_.get(), SLOT(clear()));
+    connect(clearContentsAction, SIGNAL(triggered()), _displayGroup.get(), SLOT(clear()));
 
     // save state action
-    QAction * saveStateAction = new QAction("Save State", this);
+    QAction* saveStateAction = new QAction("Save State", this);
     saveStateAction->setStatusTip("Save state");
     connect(saveStateAction, SIGNAL(triggered()), this, SLOT(saveState()));
 
     // load state action
-    QAction * loadStateAction = new QAction("Load State", this);
+    QAction* loadStateAction = new QAction("Load State", this);
     loadStateAction->setStatusTip("Load state");
     connect(loadStateAction, SIGNAL(triggered()), this, SLOT(loadState()));
 
     // compute image pyramid action
-    QAction * computeImagePyramidAction = new QAction("Compute Image Pyramid", this);
+    QAction* computeImagePyramidAction = new QAction("Compute Image Pyramid", this);
     computeImagePyramidAction->setStatusTip("Compute image pyramid");
     connect(computeImagePyramidAction, SIGNAL(triggered()), this, SLOT(computeImagePyramid()));
 
     // load background content action
-    QAction * backgroundAction = new QAction("Background", this);
+    QAction* backgroundAction = new QAction("Background", this);
     backgroundAction->setStatusTip("Select the background color and content");
-    connect(backgroundAction, SIGNAL(triggered()), backgroundWidget_, SLOT(show()));
+    connect(backgroundAction, SIGNAL(triggered()), _backgroundWidget, SLOT(show()));
 
     // Open webbrowser action
-    QAction * webbrowserAction = new QAction("Web Browser", this);
+    QAction* webbrowserAction = new QAction("Web Browser", this);
     webbrowserAction->setStatusTip("Open a web browser");
-    connect(webbrowserAction, SIGNAL(triggered()), webbrowserWidget_, SLOT(show()));
+    connect(webbrowserAction, SIGNAL(triggered()), _webbrowserWidget, SLOT(show()));
 
     // quit action
-    QAction * quitAction = new QAction("Quit", this);
+    QAction* quitAction = new QAction("Quit", this);
     quitAction->setStatusTip("Quit application");
     connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
 
@@ -178,86 +177,86 @@ void MasterWindow::setupMasterWindowUI()
     QAction* showClockAction = new QAction( "Show Clock", this );
     showClockAction->setStatusTip( "Show a clock on the background" );
     showClockAction->setCheckable( true );
-    showClockAction->setChecked( options_->getShowClock( ));
-    connect( showClockAction, &QAction::toggled, options_.get(),
+    showClockAction->setChecked( _options->getShowClock( ));
+    connect( showClockAction, &QAction::toggled, _options.get(),
              &Options::setShowClock );
 
     // show window borders action
-    QAction * showWindowBordersAction = new QAction("Show Window Borders", this);
+    QAction* showWindowBordersAction = new QAction("Show Window Borders", this);
     showWindowBordersAction->setStatusTip("Show window borders");
     showWindowBordersAction->setCheckable(true);
-    showWindowBordersAction->setChecked(options_->getShowWindowBorders());
-    connect(showWindowBordersAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowWindowBorders(bool)));
+    showWindowBordersAction->setChecked(_options->getShowWindowBorders());
+    connect(showWindowBordersAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowWindowBorders(bool)));
 
     // show touch points action
-    QAction * showTouchPoints = new QAction("Show Touch Points", this);
+    QAction* showTouchPoints = new QAction("Show Touch Points", this);
     showTouchPoints->setStatusTip("Show touch points");
     showTouchPoints->setCheckable(true);
-    showTouchPoints->setChecked(options_->getShowTouchPoints());
-    connect(showTouchPoints, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowTouchPoints(bool)));
+    showTouchPoints->setChecked(_options->getShowTouchPoints());
+    connect(showTouchPoints, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowTouchPoints(bool)));
 
     // show test pattern action
-    QAction * showTestPatternAction = new QAction("Show Test Pattern", this);
+    QAction* showTestPatternAction = new QAction("Show Test Pattern", this);
     showTestPatternAction->setStatusTip("Show test pattern");
     showTestPatternAction->setCheckable(true);
-    showTestPatternAction->setChecked(options_->getShowTestPattern());
-    connect(showTestPatternAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowTestPattern(bool)));
+    showTestPatternAction->setChecked(_options->getShowTestPattern());
+    connect(showTestPatternAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowTestPattern(bool)));
 
     // show zoom context action
-    QAction * showZoomContextAction = new QAction("Show Zoom Context", this);
+    QAction* showZoomContextAction = new QAction("Show Zoom Context", this);
     showZoomContextAction->setStatusTip("Show zoom context");
     showZoomContextAction->setCheckable(true);
-    showZoomContextAction->setChecked(options_->getShowZoomContext());
-    connect(showZoomContextAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowZoomContext(bool)));
+    showZoomContextAction->setChecked(_options->getShowZoomContext());
+    connect(showZoomContextAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowZoomContext(bool)));
 
     // show streaming segments action
-    QAction * showStreamingSegmentsAction = new QAction("Show Streaming Segments", this);
+    QAction* showStreamingSegmentsAction = new QAction("Show Streaming Segments", this);
     showStreamingSegmentsAction->setStatusTip("Show Streaming Segments");
     showStreamingSegmentsAction->setCheckable(true);
-    showStreamingSegmentsAction->setChecked(options_->getShowStreamingSegments());
-    connect(showStreamingSegmentsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStreamingSegments(bool)));
+    showStreamingSegmentsAction->setChecked(_options->getShowStreamingSegments());
+    connect(showStreamingSegmentsAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowStreamingSegments(bool)));
 
     // show streaming statistics action
-    QAction * showStatisticsAction = new QAction("Show Statistics", this);
+    QAction* showStatisticsAction = new QAction("Show Statistics", this);
     showStatisticsAction->setStatusTip("Show statistics");
     showStatisticsAction->setCheckable(true);
-    showStatisticsAction->setChecked(options_->getShowStatistics());
-    connect(showStatisticsAction, SIGNAL(toggled(bool)), options_.get(), SLOT(setShowStatistics(bool)));
+    showStatisticsAction->setChecked(_options->getShowStatistics());
+    connect(showStatisticsAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowStatistics(bool)));
 
     // show window title action
     QAction* showWindowTitlesAction = new QAction( "Show Window Titles", this );
     showWindowTitlesAction->setStatusTip( "Show window titles" );
     showWindowTitlesAction->setCheckable( true );
-    showWindowTitlesAction->setChecked( displayGroup_->getShowWindowTitles( ));
+    showWindowTitlesAction->setChecked( _displayGroup->getShowWindowTitles( ));
     connect( showWindowTitlesAction, SIGNAL( toggled( bool )),
-             displayGroup_.get(), SLOT( setShowWindowTitles( bool )));
-    connect( displayGroup_.get(), SIGNAL( showWindowTitlesChanged( bool )),
+             _displayGroup.get(), SLOT( setShowWindowTitles( bool )));
+    connect( _displayGroup.get(), SIGNAL( showWindowTitlesChanged( bool )),
              showWindowTitlesAction, SLOT( setChecked( bool )));
 
     // show control area action
     QAction* showControlAreaAction = new QAction( "Show Control Area", this );
     showControlAreaAction->setStatusTip( "Show the Control Area" );
     showControlAreaAction->setCheckable( true );
-    showControlAreaAction->setChecked( options_->getShowControlArea( ));
+    showControlAreaAction->setChecked( _options->getShowControlArea( ));
     connect( showControlAreaAction, &QAction::toggled,
-             options_.get(), &Options::setShowControlArea );
+             _options.get(), &Options::setShowControlArea );
 
     // enable alpha blending
     QAction* enableAlphaBlendingAction = new QAction( "Alpha Blending", this );
     enableAlphaBlendingAction->setStatusTip(
            "Enable alpha blending for transparent contents (png, svg, etc..)" );
     enableAlphaBlendingAction->setCheckable( true );
-    enableAlphaBlendingAction->setChecked( options_->isAlphaBlendingEnabled( ));
+    enableAlphaBlendingAction->setChecked( _options->isAlphaBlendingEnabled( ));
     connect( enableAlphaBlendingAction, SIGNAL( toggled( bool )),
-             options_.get(), SLOT( enableAlphaBlending( bool )));
+             _options.get(), SLOT( enableAlphaBlending( bool )));
 
     // auto focus pixel streams
-    autoFocusPixelStreamsAction_ = new QAction( "Auto-focus streamers", this );
-    autoFocusPixelStreamsAction_->setStatusTip(
+    _autoFocusPixelStreamsAction = new QAction( "Auto-focus streamers", this );
+    _autoFocusPixelStreamsAction->setStatusTip(
            "Open the windows of the external streamers in focus mode" );
-    autoFocusPixelStreamsAction_->setCheckable( true );
+    _autoFocusPixelStreamsAction->setCheckable( true );
 
-    QAction * showAboutDialog = new QAction("About", this);
+    QAction* showAboutDialog = new QAction("About", this);
     showAboutDialog->setStatusTip("About DisplayCluster");
     connect(showAboutDialog, SIGNAL(triggered()), this, SLOT(openAboutWidget()));
 
@@ -280,7 +279,7 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction( showZoomContextAction );
     viewMenu->addAction( showControlAreaAction );
     viewMenu->addAction( enableAlphaBlendingAction );
-    viewMenu->addAction( autoFocusPixelStreamsAction_ );
+    viewMenu->addAction( _autoFocusPixelStreamsAction );
     toolsMenu->addAction( computeImagePyramidAction );
 
     helpMenu->addAction( showAboutDialog );
@@ -295,38 +294,42 @@ void MasterWindow::setupMasterWindowUI()
     toolbar->addAction(backgroundAction);
 
     // main widget / layout area
-    QTabWidget * mainWidget = new QTabWidget();
+    QTabWidget* mainWidget = new QTabWidget();
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    dggv_->setDataModel(displayGroup_);
-    mainWidget->addTab((QWidget *)dggv_, "Display group 0");
+    _displayGroupView->setDataModel( _displayGroup );
+    QWidget* wrapper = QWidget::createWindowContainer( _displayGroupView,
+                                                       mainWidget );
+    mainWidget->addTab( wrapper, "Display group 0" );
+
     // Forward background touch events
-    connect(dggv_, SIGNAL(backgroundTap(QPointF)), this, SIGNAL(hideDock()));
-    connect(dggv_, SIGNAL(backgroundTapAndHold(QPointF)),
-            this, SIGNAL(openDock(QPointF)));
+    connect( _displayGroupView, &DisplayGroupView::backgroundTap,
+             this, &MasterWindow::hideDock );
+    connect( _displayGroupView, &DisplayGroupView::backgroundTapAndHold,
+             this, &MasterWindow::openDock );
 
     // Forward control panel actions
-    connect( &dggv_->getControlPanel(), &QmlControlPanel::openContentPanel,
+    connect( &_displayGroupView->getControlPanel(), &QmlControlPanel::openContentPanel,
              this, &MasterWindow::openContentLoader );
-    connect( &dggv_->getControlPanel(), &QmlControlPanel::openApplicationsPanel,
+    connect( &_displayGroupView->getControlPanel(), &QmlControlPanel::openApplicationsPanel,
              this, &MasterWindow::openAppLauncher );
-    connect( &dggv_->getControlPanel(), &QmlControlPanel::clearSession,
-             displayGroup_.get(), &DisplayGroup::clear );
-    connect( &dggv_->getControlPanel(), &QmlControlPanel::openLoadSessionPanel,
+    connect( &_displayGroupView->getControlPanel(), &QmlControlPanel::clearSession,
+             _displayGroup.get(), &DisplayGroup::clear );
+    connect( &_displayGroupView->getControlPanel(), &QmlControlPanel::openLoadSessionPanel,
              this, &MasterWindow::openSessionLoader );
 
     // create contents dock widget
-    QDockWidget * contentsDockWidget = new QDockWidget("Contents", this);
-    QWidget * contentsWidget = new QWidget();
-    QVBoxLayout * contentsLayout = new QVBoxLayout();
+    QDockWidget* contentsDockWidget = new QDockWidget("Contents", this);
+    QWidget* contentsWidget = new QWidget();
+    QVBoxLayout* contentsLayout = new QVBoxLayout();
     contentsWidget->setLayout(contentsLayout);
     contentsDockWidget->setWidget(contentsWidget);
     addDockWidget(Qt::LeftDockWidgetArea, contentsDockWidget);
 
     // add the list widget
     DisplayGroupListWidget* dglwp = new DisplayGroupListWidget(this);
-    dglwp->setDataModel(displayGroup_);
+    dglwp->setDataModel(_displayGroup);
     contentsLayout->addWidget(dglwp);
 }
 
@@ -336,14 +339,14 @@ void MasterWindow::openContent()
 
     const QString filename = QFileDialog::getOpenFileName( this,
                                                            tr("Choose content"),
-                                                           contentFolder_,
+                                                           _contentFolder,
                                                            filter );
     if( filename.isEmpty( ))
         return;
 
-    contentFolder_ = QFileInfo( filename ).absoluteDir().path();
+    _contentFolder = QFileInfo( filename ).absoluteDir().path();
 
-    if( !ContentLoader( displayGroup_ ).load( filename ))
+    if( !ContentLoader( _displayGroup ).load( filename ))
     {
         QMessageBox messageBox;
         messageBox.setText( "Unsupported file." );
@@ -382,10 +385,10 @@ void MasterWindow::addContentDirectory( const QString& directoryName,
 
     unsigned int contentIndex = 0;
 
-    const QSizeF win( displayGroup_->getCoordinates().width() / (qreal)gridX,
-                      displayGroup_->getCoordinates().height() / (qreal)gridY );
+    const QSizeF win( _displayGroup->getCoordinates().width() / (qreal)gridX,
+                      _displayGroup->getCoordinates().height() / (qreal)gridY );
 
-    ContentLoader contentLoader( displayGroup_ );
+    ContentLoader contentLoader( _displayGroup );
 
     for( int i = 0; i < list.size() && contentIndex < gridX * gridY; ++i )
     {
@@ -405,11 +408,11 @@ void MasterWindow::addContentDirectory( const QString& directoryName,
 void MasterWindow::openContentsDirectory()
 {
     const QString dirName = QFileDialog::getExistingDirectory( this, QString(),
-                                                               contentFolder_ );
+                                                               _contentFolder );
     if( dirName.isEmpty( ))
         return;
 
-    contentFolder_ = dirName;
+    _contentFolder = dirName;
 
     const int gridX = QInputDialog::getInt( this, "Grid X dimension",
                                             "Grid X dimension", 0, 0 );
@@ -435,12 +438,12 @@ void MasterWindow::openAboutWidget()
 void MasterWindow::saveState()
 {
     QString filename = QFileDialog::getSaveFileName( this, "Save State",
-                                                     sessionFolder_,
+                                                     _sessionFolder,
                                                      STATE_FILES_FILTER );
     if( filename.isEmpty( ))
         return;
 
-    sessionFolder_ = QFileInfo( filename ).absoluteDir().path();
+    _sessionFolder = QFileInfo( filename ).absoluteDir().path();
 
     // make sure filename has .dcx extension
     if( !filename.endsWith( ".dcx" ))
@@ -449,7 +452,7 @@ void MasterWindow::saveState()
         filename.append( ".dcx" );
     }
 
-    if( !StateSerializationHelper( displayGroup_ ).save( filename ))
+    if( !StateSerializationHelper( _displayGroup ).save( filename ))
     {
         QMessageBox::warning( this, "Error", "Could not save state file.",
                               QMessageBox::Ok, QMessageBox::Ok );
@@ -459,19 +462,19 @@ void MasterWindow::saveState()
 void MasterWindow::loadState()
 {
     const QString filename = QFileDialog::getOpenFileName( this, "Load State",
-                                                           sessionFolder_,
+                                                           _sessionFolder,
                                                            STATE_FILES_FILTER );
     if( filename.isEmpty( ))
         return;
 
-    sessionFolder_ = QFileInfo( filename ).absoluteDir().path();
+    _sessionFolder = QFileInfo( filename ).absoluteDir().path();
 
     loadState( filename );
 }
 
 void MasterWindow::loadState( const QString& filename )
 {
-    if( !StateSerializationHelper( displayGroup_ ).load( filename ))
+    if( !StateSerializationHelper( _displayGroup ).load( filename ))
     {
         QMessageBox::warning( this, "Error", "Could not load state file.",
                               QMessageBox::Ok, QMessageBox::Ok );
@@ -481,20 +484,20 @@ void MasterWindow::loadState( const QString& filename )
 void MasterWindow::computeImagePyramid()
 {
     const QString filename = QFileDialog::getOpenFileName( this, "Select image",
-                                                           contentFolder_ );
+                                                           _contentFolder );
     if( filename.isEmpty( ))
         return;
 
-    contentFolder_ = QFileInfo( filename ).absoluteDir().path();
+    _contentFolder = QFileInfo( filename ).absoluteDir().path();
 
     put_flog( LOG_DEBUG, "source image filename: %s",
               filename.toLocal8Bit().constData( ));
 
     put_flog( LOG_DEBUG, "target location for image pyramid folder: %s",
-              contentFolder_.toLocal8Bit().constData( ));
+              _contentFolder.toLocal8Bit().constData( ));
 
     DynamicTexturePtr dynamicTexture( new DynamicTexture( filename ));
-    if( !dynamicTexture->generateImagePyramid( contentFolder_ ))
+    if( !dynamicTexture->generateImagePyramid( _contentFolder ))
     {
         QMessageBox::warning( this, "Error", "Image pyramid creation failed.",
                               QMessageBox::Ok, QMessageBox::Ok );
@@ -577,7 +580,7 @@ void MasterWindow::dragEnterEvent(QDragEnterEvent* dragEvent)
 void MasterWindow::dropEvent( QDropEvent* dropEvt )
 {
     const QStringList& urls = extractValidContentUrls( dropEvt->mimeData( ));
-    ContentLoader loader( displayGroup_ );
+    ContentLoader loader( _displayGroup );
     foreach( QString url, urls )
         loader.load( url );
 

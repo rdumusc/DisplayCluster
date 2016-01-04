@@ -57,7 +57,7 @@ class ContentActionsModel : public QAbstractListModel
     Q_DISABLE_COPY( ContentActionsModel )
 
 public:
-    ContentActionsModel();
+    ContentActionsModel( QObject* parent = 0 );
 
     QVariant data( const QModelIndex &index, int role ) const override;
     int rowCount( const QModelIndex& parent = QModelIndex( )) const override;
@@ -70,13 +70,23 @@ private:
 
     QHash<int, QByteArray> roleNames() const final;
 
-    template< class Archive >
-    void serialize( Archive & ar, const unsigned int )
+    std::vector<ContentAction*> _actions; // Children QObjects, don't free
+
+    template<class Archive>
+    void save( Archive& ar, const unsigned int ) const
     {
-        ar & boost::serialization::make_nvp( "actions", actions_ );
+        ar << boost::serialization::make_nvp( "actions", _actions );
     }
 
-    std::vector<ContentAction*> actions_;
+    template<class Archive>
+    void load( Archive& ar, const unsigned int )
+    {
+        ar >> boost::serialization::make_nvp( "actions", _actions );
+        for( auto action : _actions )
+            action->setParent( this );
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 #endif // CONTENTACTIONSMODEL_H

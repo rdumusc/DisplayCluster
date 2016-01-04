@@ -147,7 +147,7 @@ void ContentWindowController::resizeRelative( const QPointF& delta )
     // to its content's aspect ratio.
     if( !isCorner && _contentWindow->getContent()->hasFixedAspectRatio( ))
     {
-        if( _contentWindow->getZoomRect() == UNIT_RECTF )
+        if( _contentWindow->getContent()->getZoomRect() == UNIT_RECTF )
             _constrainAspectRatio( newSize );
         if( _isCloseToContentAspectRatio( newSize ))
             _snapToContentAspectRatio( newSize );
@@ -228,9 +228,10 @@ QSizeF ContentWindowController::getMinSize() const
 
 QSizeF ContentWindowController::getMaxSize() const
 {
+    const QRectF& zoomRect = _contentWindow->getContent()->getZoomRect();
     QSizeF maxSize = getMaxContentSize();
-    maxSize.rwidth() *= _contentWindow->getZoomRect().size().width();
-    maxSize.rheight() *= _contentWindow->getZoomRect().size().height();
+    maxSize.rwidth() *= zoomRect.size().width();
+    maxSize.rheight() *= zoomRect.size().height();
     return maxSize;
 }
 

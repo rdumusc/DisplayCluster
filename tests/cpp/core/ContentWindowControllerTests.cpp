@@ -148,7 +148,8 @@ BOOST_AUTO_TEST_CASE( testSizeLimitsBigContent )
                        BIG_CONTENT_SIZE * Content::getMaxScale( ));
 
     const QSizeF normalMaxSize = controller.getMaxSize();
-    window->setZoomRect( QRectF( QPointF( 0.3, 0.1 ), QSizeF( 0.25, 0.25 )));
+    window->getContent()->setZoomRect( QRectF( QPointF( 0.3, 0.1 ),
+                                               QSizeF( 0.25, 0.25 )));
     BOOST_CHECK_EQUAL( controller.getMaxSize(), 0.25 * normalMaxSize );
 }
 
@@ -171,7 +172,8 @@ BOOST_AUTO_TEST_CASE( testSizeLimitsSmallContent )
                        SMALL_CONTENT_SIZE * Content::getMaxScale( ));
 
     const QSizeF normalMaxSize = controller.getMaxSize();
-    window->setZoomRect( QRectF( QPointF( 0.3, 0.1 ), QSizeF( 0.25, 0.25 )));
+    window->getContent()->setZoomRect( QRectF( QPointF( 0.3, 0.1 ),
+                                               QSizeF( 0.25, 0.25 )));
     BOOST_CHECK_EQUAL( controller.getMaxSize(), 0.25 * normalMaxSize );
 }
 

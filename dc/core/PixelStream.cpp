@@ -82,6 +82,11 @@ QList<QObject*> PixelStream::getSegments() const
     return segmentsList_;
 }
 
+const QString& PixelStream::getUri() const
+{
+    return uri_;
+}
+
 void PixelStream::render()
 {
     glPushMatrix();

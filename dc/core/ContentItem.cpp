@@ -46,16 +46,13 @@
 
 #include <GL/gl.h>
 
-ContentItem::ContentItem( QDeclarativeItem* parentItem_ )
-    : QDeclarativeItem( parentItem_ )
+ContentItem::ContentItem( QQuickItem* parentItem_ )
+    : QQuickPaintedItem( parentItem_ )
     , wallContent_( 0 )
     , role_( ROLE_CONTENT )
-{
-    setFlag( QGraphicsItem::ItemHasNoContents, false );
-}
+{}
 
-void ContentItem::paint( QPainter* painter, const QStyleOptionGraphicsItem*,
-                         QWidget*)
+void ContentItem::paint( QPainter* painter )
 {
     painter->beginNativePainting();
 

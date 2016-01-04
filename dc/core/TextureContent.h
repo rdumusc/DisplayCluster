@@ -54,6 +54,9 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
+    /** Get the image used for rendering in qml. */
+    QString getSourceImage() const override;
+
     /**
      * Read texture metadata.
      * @return true on success, false if the URI is invalid or an error occured.

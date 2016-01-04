@@ -118,14 +118,14 @@ BOOST_AUTO_TEST_CASE( testZoom )
     content->setDimensions( QSize( WIDTH, HEIGHT ));
     ContentWindow window( content );
 
-    BOOST_REQUIRE( window.getZoomRect() == UNIT_RECTF );
+    BOOST_REQUIRE( content->getZoomRect() == UNIT_RECTF );
 
-    window.setZoomRect( QRectF( 0.2, 0.2, 0.7, 0.7 ));
-    BOOST_CHECK( window.getZoomRect() == QRectF( 0.2, 0.2, 0.7, 0.7 ));
-    window.setZoomRect( QRectF( -0.1, 0.2, 0.7, 0.7 ));
-    BOOST_CHECK( window.getZoomRect() == QRectF( -0.1, 0.2, 0.7, 0.7 ));
-    window.setZoomRect( QRectF( 0.1, 0.5, 2.0, 2.0 ));
-    BOOST_CHECK( window.getZoomRect() == QRectF( 0.1, 0.5, 2.0, 2.0 ));
+    content->setZoomRect( QRectF( 0.2, 0.2, 0.7, 0.7 ));
+    BOOST_CHECK( content->getZoomRect() == QRectF( 0.2, 0.2, 0.7, 0.7 ));
+    content->setZoomRect( QRectF( -0.1, 0.2, 0.7, 0.7 ));
+    BOOST_CHECK( content->getZoomRect() == QRectF( -0.1, 0.2, 0.7, 0.7 ));
+    content->setZoomRect( QRectF( 0.1, 0.5, 2.0, 2.0 ));
+    BOOST_CHECK( content->getZoomRect() == QRectF( 0.1, 0.5, 2.0, 2.0 ));
 }
 
 BOOST_AUTO_TEST_CASE( testWindowState )

@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,35 +37,65 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Marker.h"
+#include "MovieProvider.h"
 
-// number of seconds before a marker stops being rendered
-#define MARKER_TIMEOUT_SECONDS 5
+#include "MovieUpdater.h"
+#include "FFMPEGPicture.h"
 
-Marker::Marker()
+const QString MovieProvider::ID( "movie" );
+
+MovieProvider::MovieProvider()
+    : QQuickImageProvider( QQmlImageProviderBase::Image )
 {}
 
-void Marker::setPosition(const QPointF& position)
+MovieProvider::~MovieProvider() {}
+
+QImage MovieProvider::requestImage( const QString& id, QSize* size,
+                                    const QSize& requestedSize )
 {
-    position_ = position;
-    touch();
+    QStringList params = id.split( "?" );
+    if( params.length() != 2 )
+        return QImage();
+
+    const QString& movieFile = params[0];
+
+    bool ok = false;
+    const double timestamp = params[1].toDouble( &ok );
+    if( !ok )
+        return QImage();
+    Q_UNUSED( timestamp );
+
+    if( !_movies.count( movieFile ))
+        return QImage();
+
+    PicturePtr picture = _movies[ movieFile ]->getPicture();
+    if( !picture )
+        return QImage();
+
+    QImage image = picture->toQImage();
+
+    if( !requestedSize.isEmpty( ))
+        image = image.scaled( requestedSize );
+
+    *size = image.size();
+    return image;
 }
 
-QPointF Marker::getPosition() const
+MovieUpdaterSharedPtr MovieProvider::open( const QString& movieFile )
 {
-    return position_;
+    if( !_movies.count( movieFile ))
+        _movies[ movieFile ] = std::make_shared<MovieUpdater>( movieFile );
+
+    return _movies[ movieFile ];
 }
 
-void Marker::touch()
+void MovieProvider::close( const QString& movieFile )
 {
-    updatedTimestamp_ = boost::posix_time::microsec_clock::universal_time();
+    _movies.erase( movieFile );
 }
 
-bool Marker::isActive(const boost::posix_time::ptime currentTime) const
+void MovieProvider::update( WallToWallChannel& channel )
 {
-    if((currentTime - updatedTimestamp_).total_seconds() > MARKER_TIMEOUT_SECONDS)
-        return false;
-    else
-        return true;
+    for( auto& movie : _movies )
+        movie.second->update( channel );
 }
-

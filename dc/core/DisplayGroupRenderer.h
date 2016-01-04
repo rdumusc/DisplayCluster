@@ -48,7 +48,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QUuid>
 
-class QDeclarativeItem;
+class QQuickItem;
 
 /**
  * Renders a DisplayGroup.
@@ -59,13 +59,13 @@ class DisplayGroupRenderer : public QObject
 
 public:
     /** Constructor */
-    DisplayGroupRenderer( RenderContextPtr renderContext );
+    DisplayGroupRenderer( WallWindow& parentWindow );
 
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
 
-    void preRenderUpdate( WallToWallChannel& wallChannel );
-    void postRenderUpdate( WallToWallChannel& wallChannel );
+    void preRenderUpdate( WallToWallChannel& wallChannel,
+                          const QRect& visibleWallArea );
 
 public slots:
     /** Set the DisplayGroup to render, replacing the previous one. */
@@ -78,9 +78,9 @@ signals:
 private:
     Q_DISABLE_COPY( DisplayGroupRenderer )
 
-    RenderContextPtr _renderContext;
+    QQmlEngine& _engine;
     DisplayGroupPtr _displayGroup;
-    QDeclarativeItem* _displayGroupItem;
+    QQuickItem* _displayGroupItem;
 
     typedef QMap<QUuid,QmlWindowPtr> QmlWindows;
     QmlWindows _windowItems;
@@ -88,8 +88,7 @@ private:
 
     OptionsPtr _options;
 
-    void _setOptionInQmlContext( OptionsPtr options );
-    void _createDisplayGroupQmlItem();
+    void _createDisplayGroupQmlItem( QQuickItem& parentItem );
     void _createWindowQmlItem( ContentWindowPtr window );
     bool _hasBackgroundChanged( const QString& newUri ) const;
     void _setBackground( ContentPtr backgroundContent );

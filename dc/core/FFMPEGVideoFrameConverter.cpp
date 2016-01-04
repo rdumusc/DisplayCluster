@@ -48,17 +48,17 @@
 FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter( const AVCodecContext&
                                                       videoCodecContext,
                                                       PixelFormat targetFormat )
-    : swsContext_( 0 )
+    : _swsContext( 0 )
+    , _targetFormat( targetFormat )
 {
-    // create sws scaler context
-    swsContext_ = sws_getContext( videoCodecContext.width,
+    _swsContext = sws_getContext( videoCodecContext.width,
                                   videoCodecContext.height,
                                   videoCodecContext.pix_fmt,
                                   videoCodecContext.width,
                                   videoCodecContext.height,
                                   targetFormat, SWS_FAST_BILINEAR,
                                   NULL, NULL, NULL );
-    if( !swsContext_ )
+    if( !_swsContext )
     {
         put_flog( LOG_ERROR, "Error allocating SwsContext" );
         return;
@@ -67,20 +67,25 @@ FFMPEGVideoFrameConverter::FFMPEGVideoFrameConverter( const AVCodecContext&
 
 FFMPEGVideoFrameConverter::~FFMPEGVideoFrameConverter()
 {
-    sws_freeContext( swsContext_ );
+    sws_freeContext( _swsContext );
 }
 
-bool FFMPEGVideoFrameConverter::convert( const FFMPEGFrame& srcFrame,
-                                         FFMPEGPicture& dstFrame )
+PicturePtr FFMPEGVideoFrameConverter::convert( const FFMPEGFrame& srcFrame )
 {
     const AVFrame& avFrame = srcFrame.getAVFrame();
 
-    dstFrame.getAVFrame().pkt_dts = avFrame.pkt_dts;
+    PicturePtr dstFrame = std::make_shared<FFMPEGPicture>( avFrame.width,
+                                                           avFrame.height,
+                                                           _targetFormat,
+                                                           avFrame.pkt_dts );
 
-    const int output_height = sws_scale( swsContext_, avFrame.data,
+    const int output_height = sws_scale( _swsContext, avFrame.data,
                                          avFrame.linesize, 0,
                                          avFrame.height,
-                                         dstFrame.getAVFrame().data,
-                                         dstFrame.getAVFrame().linesize );
-    return output_height == avFrame.height;
+                                         dstFrame->getAVFrame().data,
+                                         dstFrame->getAVFrame().linesize );
+    if( output_height != avFrame.height )
+        return PicturePtr();
+
+    return dstFrame;
 }

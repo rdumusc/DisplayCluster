@@ -42,7 +42,6 @@
 
 #include "types.h"
 
-#include "Marker.h"
 #include "serializationHelpers.h"
 
 #include <QObject>
@@ -53,7 +52,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/serialization/map.hpp>
 
-typedef std::map<int, Marker> MarkersMap;
+typedef std::map<int, QPointF> MarkersMap;
 
 /**
  * Store Markers to display user interaction.
@@ -73,7 +72,6 @@ public slots:
     void addMarker( int id, QPointF position );
     void updateMarker( int id, QPointF position );
     void removeMarker( int id );
-    void clearOldMarkers();
 
 signals:
     void updated( MarkersPtr markers );

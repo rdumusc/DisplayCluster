@@ -37,36 +37,24 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef WALLGRAPHICSSCENE_H
-#define WALLGRAPHICSSCENE_H
+#ifndef TEXTUREPROVIDER_H
+#define TEXTUREPROVIDER_H
 
-#include "types.h"
-
-#include <QGraphicsScene>
+#include <QQuickImageProvider>
 
 /**
- * The scene representing the whole wall area.
- *
- * Each wall process displays a portion of the scene in one or more windows.
+ * Provides Texture images to QML.
  */
-class WallGraphicsScene : public QGraphicsScene
+class TextureProvider : public QQuickImageProvider
 {
-    Q_OBJECT
-
 public:
-    /** Constructor */
-    WallGraphicsScene( const QRectF &size, QObject* parent = 0 );
+    TextureProvider();
+    ~TextureProvider();
 
-    /** Display the markers for the touch points. */
-    void displayMarkers( bool value );
+    static const QString ID;
 
-    /** Get the MarkersRenderer. */
-    MarkerRenderer& getMarkersRenderer();
-
-private:
-    void drawForeground( QPainter* painter, const QRectF &rect ) override;
-
-    MarkerRendererPtr markerRenderer_;
+    QImage requestImage( const QString& id, QSize* size,
+                         const QSize& requestedSize ) final;
 };
 
-#endif // WALLGRAPHICSSCENE_H
+#endif

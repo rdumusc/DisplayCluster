@@ -43,12 +43,19 @@
 
 IMPLEMENT_SERIALIZE_FOR_XML( Content )
 
-qreal Content::maxScale_ = 3.0;
+qreal Content::_maxScale = 3.0;
 
 Content::Content( const QString& uri )
     : _uri( uri )
+    , _zoomRect( UNIT_RECTF )
+    , _actions( new ContentActionsModel( this ))
 {
 }
+
+Content::Content()
+    : _zoomRect( UNIT_RECTF )
+    , _actions( 0 )
+{}
 
 const QString& Content::getURI() const
 {
@@ -102,12 +109,12 @@ void Content::setSizeHints( const deflect::SizeHints& sizeHints )
 void Content::setMaxScale( const qreal value )
 {
     if( value > 0 )
-        maxScale_ = value;
+        _maxScale = value;
 }
 
 qreal Content::getMaxScale()
 {
-    return maxScale_;
+    return _maxScale;
 }
 
 void Content::setDimensions( const QSize& dimensions )
@@ -132,7 +139,21 @@ bool Content::hasFixedAspectRatio() const
     return true;
 }
 
+const QRectF& Content::getZoomRect() const
+{
+    return _zoomRect;
+}
+
+void Content::setZoomRect( const QRectF& zoomRect )
+{
+    if( _zoomRect == zoomRect )
+        return;
+
+    _zoomRect = zoomRect;
+    emit modified();
+}
+
 ContentActionsModel* Content::getActions()
 {
-    return &_actions;
+    return _actions;
 }

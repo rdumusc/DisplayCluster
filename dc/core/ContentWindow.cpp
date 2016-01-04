@@ -59,7 +59,7 @@ ContentWindow::ContentWindow( ContentPtr content, const WindowType type )
     : uuid_( QUuid::createUuid( ))
     , type_( type )
     , content_( content )
-    , zoomRect_( UNIT_RECTF )
+    , controller_( 0 )
     , windowBorder_( NOBORDER )
     , focused_( false )
     , windowState_( NONE )
@@ -73,7 +73,7 @@ ContentWindow::ContentWindow( ContentPtr content, const WindowType type )
 ContentWindow::ContentWindow()
     : uuid_( QUuid::createUuid( ))
     , type_( WindowType::DEFAULT )
-    , zoomRect_( UNIT_RECTF )
+    , controller_( 0 )
     , windowBorder_( NOBORDER )
     , focused_( false )
     , windowState_( NONE )
@@ -117,17 +117,18 @@ void ContentWindow::setContent( ContentPtr content )
 
 ContentWindowController* ContentWindow::getController()
 {
-    return controller_.get();
+    return controller_;
 }
 
 const ContentWindowController* ContentWindow::getController() const
 {
-    return controller_.get();
+    return controller_;
 }
 
 void ContentWindow::setController( ContentWindowControllerPtr controller )
 {
-    controller_.reset( controller.release( ));
+    controller_ = controller.release();
+    controller_->setParent( this );
 }
 
 void ContentWindow::setCoordinates( const QRectF& coordinates )
@@ -142,20 +143,6 @@ void ContentWindow::setCoordinates( const QRectF& coordinates )
 
     emit coordinatesChanged();
 
-    emit modified();
-}
-
-const QRectF& ContentWindow::getZoomRect() const
-{
-    return zoomRect_;
-}
-
-void ContentWindow::setZoomRect( const QRectF& zoomRect )
-{
-    if( zoomRect_ == zoomRect )
-        return;
-
-    zoomRect_ = zoomRect;
     emit modified();
 }
 

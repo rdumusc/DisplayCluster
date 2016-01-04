@@ -48,7 +48,7 @@
 
 class BackgroundWidget;
 class MasterConfiguration;
-class DisplayGroupGraphicsView;
+class DisplayGroupView;
 class WebbrowserWidget;
 
 /**
@@ -68,7 +68,7 @@ public:
     ~MasterWindow();
 
     /** Get the GraphicsView used for touch interaction. */
-    DisplayGroupGraphicsView* getGraphicsView();
+    DisplayGroupView* getDisplayGroupView();
 
     /** Get the display options that change during runtime. */
     OptionsPtr getOptions() const;
@@ -127,16 +127,16 @@ private:
     QStringList extractFolderUrls( const QMimeData* mimeData );
     QString extractStateFile( const QMimeData* mimeData );
 
-    DisplayGroupPtr displayGroup_;
-    OptionsPtr options_;
-    BackgroundWidget* backgroundWidget_;
-    WebbrowserWidget* webbrowserWidget_;
-    DisplayGroupGraphicsView* dggv_;
+    DisplayGroupPtr _displayGroup;
+    OptionsPtr _options;
+    BackgroundWidget* _backgroundWidget;
+    WebbrowserWidget* _webbrowserWidget;
+    DisplayGroupView* _displayGroupView;
 
-    QAction* autoFocusPixelStreamsAction_;
+    QAction* _autoFocusPixelStreamsAction;
 
-    QString contentFolder_;
-    QString sessionFolder_;
+    QString _contentFolder;
+    QString _sessionFolder;
 };
 
 #endif // MASTERWINDOW_H

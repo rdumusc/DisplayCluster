@@ -1,4 +1,4 @@
-import QtQuick 1.1
+import QtQuick 2.0
 import DisplayCluster 1.0
 import "style.js" as Style
 
@@ -11,6 +11,8 @@ Rectangle {
         return !fuzzyCompare(rect.width, 1.0) || !fuzzyCompare(rect.height, 1.0)
     }
 
+    property alias image: image
+
     border.width: Style.zoomContextBorderWidth
     border.color: Style.zoomContextBorderColor
     width: parent.width <= parent.height ? parent.width * 0.25 : parent.height * 0.25
@@ -19,21 +21,21 @@ Rectangle {
     anchors.left: parent.left
     anchors.bottomMargin: 0.25 * height
     anchors.leftMargin: anchors.bottomMargin
-    visible: options.showZoomContext && hasZoom(contentwindow.zoomRect)
+    visible: options.showZoomContext && hasZoom(contentwindow.content.zoomRect)
 
-    ContentItem {
+    DoubleBufferedImage {
+        id: image
         objectName: "ZoomContextItem"
         anchors.fill: parent
-        role: ContentItem.ROLE_PREVIEW
 
         Rectangle {
             border.width: Style.zoomContextSelectionWidth
             border.color: Style.zoomContextSelectionColor
             color: "transparent"
-            x: contentwindow.zoomRect.x * parent.width
-            y: contentwindow.zoomRect.y * parent.height
-            width: parent.width * contentwindow.zoomRect.width
-            height: parent.height * contentwindow.zoomRect.height
+            x: contentwindow.content.zoomRect.x * parent.width
+            y: contentwindow.content.zoomRect.y * parent.height
+            width: parent.width * contentwindow.content.zoomRect.width
+            height: parent.height * contentwindow.content.zoomRect.height
         }
     }
 }

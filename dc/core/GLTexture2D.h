@@ -41,13 +41,12 @@
 #define GLTEXTURE2D_H
 
 #include <QtOpenGL/qgl.h>
-#include <boost/noncopyable.hpp>
 
 /**
  * A 2D GLTexture object.
  * All methods of this class must be called from the OpenGL thread.
  */
-class GLTexture2D : public boost::noncopyable
+class GLTexture2D
 {
 public:
     /** Create an empty texture */
@@ -85,6 +84,8 @@ public:
     GLuint getTextureId() const;
 
 private:
+    Q_DISABLE_COPY( GLTexture2D )
+
     GLuint textureId_;
     QSize size_;
 };

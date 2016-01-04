@@ -77,7 +77,7 @@ private:
     MarkersPtr _markers;
 
     bool _generateTexture();
-    void _render( const Marker& marker );
+    void _renderMarker( const QPointF& pos );
 };
 
 #endif // MARKERRENDERER_H

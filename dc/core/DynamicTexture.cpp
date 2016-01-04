@@ -397,7 +397,7 @@ void DynamicTexture::preRenderUpdate( ContentWindowPtr window,
     if( !loadImageThreadStarted_ )
         loadImageAsync();
 
-    zoomRect_ = window->getZoomRect();
+    zoomRect_ = window->getContent()->getZoomRect();
 }
 
 void DynamicTexture::postRenderSync( WallToWallChannel& )

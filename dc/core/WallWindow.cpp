@@ -39,78 +39,99 @@
 
 #include "WallWindow.h"
 
+//#include "GLUtils.h"
 #include "TestPattern.h"
-#include "GLUtils.h"
+#include "WallScene.h"
 
-WallWindow::WallWindow( QGraphicsScene* scene_, const QRect& sceneRect_ )
-    : QGraphicsView( scene_ )
-    , blockUpdates_( false )
-    , isExposed_( false )
+WallWindow::WallWindow( const QRect& sceneRect )
+    : QQuickView()
+    , _glContext( new QOpenGLContext )
+    , _blockUpdates( false )
+    , _isExposed( false )
 {
-    setCacheMode( QGraphicsView::CacheNone );
-    setViewportUpdateMode( QGraphicsView::FullViewportUpdate );
-    setAttribute( Qt::WA_OpaquePaintEvent );
-    setAttribute( Qt::WA_NoSystemBackground );
-    setWindowFlags( Qt::FramelessWindowHint );
+    setSurfaceType( QWindow::OpenGLSurface );
+    setResizeMode( SizeRootObjectToView );
+    resize( sceneRect.size( ));
 
-    setStyleSheet( "border: 0px" );
-    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-    setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+//    QSurfaceFormat sf = format();
+//    sf.setProfile(QSurfaceFormat::CoreProfile);
+//    sf.setVersion(4, 1);
+//    setFormat(sf);
 
-    setSceneRect( sceneRect_ );
-    resize( sceneRect_.size( ));
+//    setAttribute( Qt::WA_OpaquePaintEvent );
+//    setAttribute( Qt::WA_NoSystemBackground );
+//    setWindowFlags( Qt::FramelessWindowHint );
+
+//    setStyleSheet( "border: 0px" );
+//    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+//    setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+}
+
+QOpenGLContext& WallWindow::getGLContext()
+{
+    return *_glContext;
+}
+
+WallScene& WallWindow::getScene()
+{
+    return *_scene;
+}
+
+void WallWindow::createScene()
+{
+    _scene = make_unique<WallScene>( *this );
 }
 
 void WallWindow::setTestPattern( TestPatternPtr testPattern )
 {
-    testPattern_ = testPattern;
+    _testPattern = testPattern;
 }
 
 TestPatternPtr WallWindow::getTestPattern()
 {
-    return testPattern_;
+    return _testPattern;
 }
 
 void WallWindow::setShowFps( const bool value )
 {
-    fpsRenderer_.setVisible( value );
+    _fpsRenderer.setVisible( value );
 }
 
 void WallWindow::setBlockDrawCalls( const bool enable )
 {
-    blockUpdates_ = enable;
+    _blockUpdates = enable;
 }
 
 void WallWindow::disableVSync()
 {
-    GLUtils::setEnableVSync( this, false );
+//    GLUtils::setEnableVSync( this, false );
 }
 
-bool WallWindow::isExposed() const
-{
-    return isExposed_;
-}
+//bool WallWindow::isExposed() const
+//{
+//    return isExposed_;
+//}
 
-void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
-{
-    if( testPattern_ && testPattern_->isVisible( ))
-    {
-        testPattern_->draw( painter, rect_ );
-        return;
-    }
+//void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
+//{
+//    if( testPattern_ && testPattern_->isVisible( ))
+//    {
+//        testPattern_->draw( painter, rect_ );
+//        return;
+//    }
 
-    if( fpsRenderer_.isVisible( ))
-        fpsRenderer_.draw( painter, rect_ );
+//    if( fpsRenderer_.isVisible( ))
+//        fpsRenderer_.draw( painter, rect_ );
 
-    QGraphicsView::drawForeground( painter, rect_ );
-}
+//    QGraphicsView::drawForeground( painter, rect_ );
+//}
 
-void WallWindow::paintEvent( QPaintEvent* event_ )
-{
-    if( blockUpdates_ )
-        return;
+//void WallWindow::paintEvent( QPaintEvent* event_ )
+//{
+//    if( blockUpdates_ )
+//        return;
 
-    isExposed_ = true;
+//    isExposed_ = true;
 
-    QGraphicsView::paintEvent( event_ );
-}
+//    QGraphicsView::paintEvent( event_ );
+//}

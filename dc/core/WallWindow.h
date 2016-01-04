@@ -42,22 +42,32 @@
 
 #include "types.h"
 
+#include "WallScene.h"
 #include "FpsRenderer.h"
 
-#include <QGraphicsView>
+#include <QQuickView>
+#include <QOpenGLContext>
 
-class WallWindow : public QGraphicsView
+class WallWindow : public QQuickView
 {
     Q_OBJECT
 
 public:
     /**
-     * Constructor.
-     * @param scene The scene to display.
+     * Create a wall window.
      * @param sceneRect The portion of the scene to display in pixels.
      *        The window is also sized accordingly.
      */
-    WallWindow( QGraphicsScene* scene, const QRect& sceneRect );
+    WallWindow( const QRect& sceneRect );
+
+    /** Get the OpenGL context. */
+    QOpenGLContext& getGLContext();
+
+    /** Get the scene that this window renders. */
+    WallScene& getScene();
+
+    /** Create the scene, must happen after the setSource() or setContent(). */
+    void createScene();
 
     /** Set the test pattern. */
     void setTestPattern( TestPatternPtr testPattern );
@@ -74,20 +84,22 @@ public:
     /** Disable VSync on this window for the next swapBuffer() call. */
     void disableVSync();
 
-    /** Check if the window is exposed in the window system. */
-    bool isExposed() const;
+//    /** Check if the window is exposed in the window system. */
+//    bool isExposed() const;
 
 private:
-    /** Reimplemented from QGraphicsView to draw the test pattern */
-    void drawForeground( QPainter* painter, const QRectF& rect ) override;
+//    /** Reimplemented from QGraphicsView to draw the test pattern */
+//    void drawForeground( QPainter* painter, const QRectF& rect ) override;
 
-    /** Reimplemented from QGraphicsView to block unsolicited draw calls. */
-    void paintEvent( QPaintEvent* event ) override;
+//    /** Reimplemented from QGraphicsView to block unsolicited draw calls. */
+//    void paintEvent( QPaintEvent* event ) override;
 
-    TestPatternPtr testPattern_;
-    FpsRenderer fpsRenderer_;
-    bool blockUpdates_;
-    bool isExposed_;
+    std::unique_ptr<QOpenGLContext> _glContext;
+    std::unique_ptr<WallScene> _scene;
+    TestPatternPtr _testPattern;
+    FpsRenderer _fpsRenderer;
+    bool _blockUpdates;
+    bool _isExposed;
 };
 
 #endif // WALLWINDOW_H

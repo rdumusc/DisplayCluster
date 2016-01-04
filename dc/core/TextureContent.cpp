@@ -38,6 +38,7 @@
 
 #include "TextureContent.h"
 
+#include "TextureProvider.h"
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
 #include <QImageReader>
@@ -51,6 +52,11 @@ TextureContent::TextureContent( const QString& uri )
 CONTENT_TYPE TextureContent::getType() const
 {
     return CONTENT_TYPE_TEXTURE;
+}
+
+QString TextureContent::getSourceImage() const
+{
+    return TextureProvider::ID + "/" + _uri;
 }
 
 bool TextureContent::readMetadata()

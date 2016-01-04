@@ -138,6 +138,16 @@ public:
     /** Get the set of focused windows. */
     const ContentWindowSet& getFocusedWindows() const;
 
+    /**
+     * Move this object and its member QObjects to the given QThread.
+     *
+     * This intentionally shadows the default QObject::moveToThread to include
+     * member QObjects which are stored using shared_ptr and thus can't be made
+     * direct children of this class.
+     * @param thread the target thread.
+     */
+    void moveToThread( QThread* thread );
+
 public slots:
     /** Clear all ContentWindows. */
     void clear();
