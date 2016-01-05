@@ -5,7 +5,6 @@ import "style.js" as Style
 BaseContentWindow {
     id: windowRect
 
-    border.width: options.showWindowBorders && !isBackground ? Style.windowBorderWidth : 0
     // for contents with alpha channel such as SVG or PNG
     color: options.alphaBlending ? "transparent" : "black"
 
@@ -15,8 +14,10 @@ BaseContentWindow {
     Item {
         id: contentItemArea
         anchors.bottom: parent.bottom
-        width: parent.width
-        height: parent.height - (titleBar.visible ? titleBar.height : 0)
+        anchors.bottomMargin: windowRect.border.width
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width - 2 * windowRect.border.width
+        height: parent.height - windowRect.border.width - (titleBar.visible ? titleBar.height : windowRect.border.width)
 
         Item {
             id: contentItem
