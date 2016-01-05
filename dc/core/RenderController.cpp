@@ -137,7 +137,6 @@ void RenderController::_setRenderOptions( OptionsPtr options )
 {
     _renderContext->setBackgroundColor( options->getBackgroundColor( ));
     _renderContext->displayTestPattern( options->getShowTestPattern( ));
-    _renderContext->displayFps( options->getShowStatistics( ));
 
     for( WallWindowPtr window : _renderContext->getWindows( ))
     {

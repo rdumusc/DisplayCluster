@@ -12,4 +12,29 @@ DisplayGroup {
         visible: options.showClock
         displayedHeight: displaygroup.height * Style.clockScale
     }
+
+    property int frames: 0
+
+    Timer {
+        id: fpsTimer
+        property real fps: 0
+        interval: 1000
+        repeat: true
+        running: options.showStatistics
+        onTriggered: {
+            fps = frames
+            frames = 0
+        }
+        onRunningChanged: frames = 0
+    }
+
+    Text {
+        visible: options.showStatistics
+        text: fpsTimer.fps + " FPS"
+        font.pixelSize: Style.fpsFontSize
+        color: Style.fpsFontColor
+        x: Style.fpsX
+        y: Style.fpsY
+        z: Style.fpsZ
+    }
 }

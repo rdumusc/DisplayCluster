@@ -85,9 +85,6 @@ public:
     /** Display or hide the test pattern. */
     void displayTestPattern( bool value );
 
-    /** Display or hide the fps counter. */
-    void displayFps( bool value );
-
     /** Get access to the windows. */
     WallWindowPtrs getWindows();
 
