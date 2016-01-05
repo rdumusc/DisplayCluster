@@ -13,12 +13,14 @@ Rectangle {
     property real heightOffset: titleBar.visible ? titleBar.height : 0
     property real yOffset: 0.5 * heightOffset
 
+    border.color: Style.windowBorderDefaultColor
+    border.width: options.showWindowBorders && !isBackground ? Style.windowBorderWidth : 0
+
     x: contentwindow.x
     y: contentwindow.y - yOffset
     z: stackingOrder
-    width: contentwindow.width
-    height: contentwindow.height + heightOffset
-    border.color: Style.windowBorderDefaultColor
+    width: contentwindow.width + 2 * border.width
+    height: contentwindow.height + heightOffset + 2 * border.width
 
     Rectangle {
         id: titleBar

@@ -43,7 +43,6 @@
 #include "Content.h"
 
 #include "DynamicTexture.h"
-#include "PixelStream.h"
 
 #include <boost/make_shared.hpp>
 
@@ -64,8 +63,8 @@ WallContentPtr WallContent::create( const Content& content )
         return boost::make_shared<DynamicTexture>( content.getURI( ));
 //    case CONTENT_TYPE_MOVIE:
 //        return boost::make_shared<Movie>( content.getURI( ));
-    case CONTENT_TYPE_PIXEL_STREAM:
-        return boost::make_shared<PixelStream>( content.getURI( ));
+//    case CONTENT_TYPE_PIXEL_STREAM:
+//        return boost::make_shared<PixelStream>( content.getURI( ));
 //    case CONTENT_TYPE_SVG:
 //        return boost::make_shared<SVG>( content.getURI( ));
 //    case CONTENT_TYPE_TEXTURE:

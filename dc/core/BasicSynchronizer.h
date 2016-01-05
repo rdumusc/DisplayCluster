@@ -66,6 +66,9 @@ public:
     /** @copydoc ContentSynchronizer::getTiles */
     QList<QObject*> getTiles() const override;
 
+    /** @copydoc ContentSynchronizer::getStatistics */
+    QString getStatistics() const override;
+
 private:
     QList<QObject*> _tiles;
 };

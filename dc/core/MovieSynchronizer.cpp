@@ -73,8 +73,16 @@ bool MovieSynchronizer::allowsTextureCaching() const
     return false;
 }
 
+QString MovieSynchronizer::getStatistics() const
+{
+    return _fpsCounter.toString();
+}
+
 void MovieSynchronizer::onPictureUpdated( const double timestamp )
 {
     _timestamp = timestamp;
     emit sourceParamsChanged();
+
+    _fpsCounter.tick();
+    emit statisticsChanged();
 }

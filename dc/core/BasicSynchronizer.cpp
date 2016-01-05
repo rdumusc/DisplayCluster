@@ -65,3 +65,8 @@ QList<QObject*> BasicSynchronizer::getTiles() const
 {
     return _tiles;
 }
+
+QString BasicSynchronizer::getStatistics() const
+{
+    return QString();
+}

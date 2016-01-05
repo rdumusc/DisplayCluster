@@ -81,8 +81,16 @@ QList<QObject*> PixelStreamSynchronizer::getTiles() const
     return _updater->getTiles();
 }
 
+QString PixelStreamSynchronizer::getStatistics() const
+{
+    return _fpsCounter.toString();
+}
+
 void PixelStreamSynchronizer::onPictureUpdated( const uint frameIndex )
 {
     _frameIndex = frameIndex;
     emit sourceParamsChanged();
+
+    _fpsCounter.tick();
+    emit statisticsChanged();
 }

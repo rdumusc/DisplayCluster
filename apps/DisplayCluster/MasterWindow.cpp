@@ -209,12 +209,12 @@ void MasterWindow::setupMasterWindowUI()
     showZoomContextAction->setChecked(_options->getShowZoomContext());
     connect(showZoomContextAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowZoomContext(bool)));
 
-    // show streaming segments action
-    QAction* showStreamingSegmentsAction = new QAction("Show Streaming Segments", this);
-    showStreamingSegmentsAction->setStatusTip("Show Streaming Segments");
-    showStreamingSegmentsAction->setCheckable(true);
-    showStreamingSegmentsAction->setChecked(_options->getShowStreamingSegments());
-    connect(showStreamingSegmentsAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowStreamingSegments(bool)));
+    // show content tiles action
+    QAction* showContentTilesAction = new QAction("Show Content Tiles", this);
+    showContentTilesAction->setStatusTip("Show Content Tiles");
+    showContentTilesAction->setCheckable(true);
+    showContentTilesAction->setChecked(_options->getShowContentTiles());
+    connect(showContentTilesAction, SIGNAL(toggled(bool)), _options.get(), SLOT(setShowContentTiles(bool)));
 
     // show streaming statistics action
     QAction* showStatisticsAction = new QAction("Show Statistics", this);
@@ -272,7 +272,7 @@ void MasterWindow::setupMasterWindowUI()
     viewMenu->addAction( showClockAction );
     viewMenu->addAction( showStatisticsAction );
     viewMenu->addAction( showWindowTitlesAction );
-    viewMenu->addAction( showStreamingSegmentsAction );
+    viewMenu->addAction( showContentTilesAction );
     viewMenu->addAction( showWindowBordersAction );
     viewMenu->addAction( showTouchPoints );
     viewMenu->addAction( showTestPatternAction );

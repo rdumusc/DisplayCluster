@@ -60,6 +60,7 @@ class ContentSynchronizer : public QObject
                 NOTIFY sourceParamsChanged )
     Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
     Q_PROPERTY( QList<QObject*> tiles READ getTiles NOTIFY tilesChanged )
+    Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
 public:
     /** Constructor */
@@ -80,6 +81,9 @@ public:
     /** Get the list of tiles that compose the content. */
     virtual QList<QObject*> getTiles() const = 0;
 
+    /** Get statistics about this Content. */
+    virtual QString getStatistics() const = 0;
+
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content,
                                           QQmlImageProviderBase& provider );
@@ -90,6 +94,9 @@ signals:
 
     /** Notifier for the tiles property. */
     void tilesChanged();
+
+    /** Notifier for the statistics property. */
+    void statisticsChanged();
 };
 
 #endif // CONTENTSYNCHRONIZER_H

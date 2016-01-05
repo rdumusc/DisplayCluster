@@ -46,7 +46,7 @@ Options::Options()
     , showTouchPoints_(true)
     , showTestPattern_(false)
     , showZoomContext_(true)
-    , showStreamingSegments_(false)
+    , showContentTiles_(false)
     , showStreamingStatistics_(false)
     , showControlArea_(false)
     , alphaBlendingEnabled_(false)
@@ -78,9 +78,9 @@ bool Options::getShowZoomContext() const
     return showZoomContext_;
 }
 
-bool Options::getShowStreamingSegments() const
+bool Options::getShowContentTiles() const
 {
-    return showStreamingSegments_;
+    return showContentTiles_;
 }
 
 bool Options::getShowStatistics() const
@@ -148,9 +148,9 @@ void Options::setShowZoomContext(bool set)
     emit(updated(shared_from_this()));
 }
 
-void Options::setShowStreamingSegments(bool set)
+void Options::setShowContentTiles(bool set)
 {
-    showStreamingSegments_ = set;
+    showContentTiles_ = set;
 
     emit(updated(shared_from_this()));
 }
