@@ -81,7 +81,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   MPIContext.h
   MPINospin.h
   PixelStreamContent.h
-  PixelStreamSegmentRenderer.h
   QmlWindowRenderer.h
   qmlUtils.h
   Renderable.h
@@ -137,7 +136,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MovieSynchronizer.h
   MovieUpdater.h
   Options.h
-  PixelStream.h
   PixelStreamInteractionDelegate.h
   PixelStreamProvider.h
   PixelStreamSynchronizer.h
@@ -211,11 +209,9 @@ list(APPEND DCCORE_SOURCES
   MPIContext.cpp
   MPINospin.cpp
   Options.cpp
-  PixelStream.cpp
   PixelStreamContent.cpp
   PixelStreamInteractionDelegate.cpp
   PixelStreamProvider.cpp
-  PixelStreamSegmentRenderer.cpp
   PixelStreamSynchronizer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp

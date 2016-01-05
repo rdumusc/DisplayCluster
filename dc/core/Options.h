@@ -58,7 +58,7 @@ class Options : public QObject, public boost::enable_shared_from_this<Options>
     Q_OBJECT
     Q_PROPERTY( bool showClock READ getShowClock CONSTANT )
     Q_PROPERTY( bool showStatistics READ getShowStatistics CONSTANT )
-    Q_PROPERTY( bool showStreamingSegments READ getShowStreamingSegments CONSTANT )
+    Q_PROPERTY( bool showContentTiles READ getShowContentTiles CONSTANT )
     Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders NOTIFY showWindowBordersChanged )
     Q_PROPERTY( bool showZoomContext READ getShowZoomContext CONSTANT )
     Q_PROPERTY( bool showControlArea READ getShowControlArea NOTIFY showControlAreaChanged )
@@ -75,7 +75,7 @@ public:
     bool getShowTouchPoints() const;
     bool getShowTestPattern() const;
     bool getShowZoomContext() const;
-    bool getShowStreamingSegments() const;
+    bool getShowContentTiles() const;
     bool getShowStatistics() const;
     bool getShowControlArea() const;
     bool isAlphaBlendingEnabled() const;
@@ -91,7 +91,7 @@ public slots:
     void setShowTouchPoints( bool set );
     void setShowTestPattern( bool set );
     void setShowZoomContext( bool set );
-    void setShowStreamingSegments( bool set );
+    void setShowContentTiles( bool set );
     void setShowStatistics( bool set );
     void setShowControlArea( bool set );
     void enableAlphaBlending( bool set );
@@ -128,7 +128,7 @@ private:
         ar & showTouchPoints_;
         ar & showTestPattern_;
         ar & showZoomContext_;
-        ar & showStreamingSegments_;
+        ar & showContentTiles_;
         ar & showStreamingStatistics_;
         ar & showControlArea_;
         ar & alphaBlendingEnabled_;
@@ -141,7 +141,7 @@ private:
     bool showTouchPoints_;
     bool showTestPattern_;
     bool showZoomContext_;
-    bool showStreamingSegments_;
+    bool showContentTiles_;
     bool showStreamingStatistics_;
     bool showControlArea_;
     bool alphaBlendingEnabled_;

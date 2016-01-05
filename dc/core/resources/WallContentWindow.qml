@@ -20,7 +20,6 @@ BaseContentWindow {
 
         Item {
             id: contentItem
-            anchors.fill: parent
 
             Repeater {
                 model: contentsync.tiles
@@ -28,14 +27,25 @@ BaseContentWindow {
                 DoubleBufferedImage {
                     x: model.modelData.coord.x
                     y: model.modelData.coord.y
-                    width: model.modelData.coord.width > 0 ? model.modelData.coord.width : parent.width
-                    height: model.modelData.coord.height > 0 ? model.modelData.coord.height : parent.height
+                    width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width
+                    height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
 
                     property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
                     source: imagesource + tileIndex
 
                     cache: contentsync.allowsTextureCaching
+
+                    Rectangle {
+                        visible: options.showContentTiles
+                        anchors.fill: parent
+                        border.color: Style.segmentBorderColor
+                        color: "transparent"
+                    }
                 }
+            }
+            transform: Scale {
+                xScale: contentItemArea.width / contentwindow.content.size.width
+                yScale: contentItemArea.height / contentwindow.content.size.height
             }
         }
     }
@@ -44,6 +54,19 @@ BaseContentWindow {
         id: zoomContext
         image.source: visible ? imagesource : ""
         image.cache: contentsync.allowsTextureCaching
+    }
+
+    Text {
+        id: statistics
+        text: contentsync.statistics
+        visible: options.showStatistics
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: Style.statisticsBorderMargin
+        anchors.bottomMargin: Style.statisticsBorderMargin
+        font.pointSize: Style.statisticsFontSize
+        color: Style.statisticsFontColor
     }
 
     WindowControls {

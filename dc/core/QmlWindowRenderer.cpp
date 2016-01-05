@@ -50,7 +50,6 @@
 namespace
 {
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
-const QUrl QML_PIXELSTREAM_URL( "qrc:/qml/core/PixelStream.qml" );
 }
 
 QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,

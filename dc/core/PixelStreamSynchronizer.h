@@ -41,6 +41,7 @@
 #define PIXELSTREAMSYNCHRONIZER_H
 
 #include "ContentSynchronizer.h"
+#include "FpsCounter.h"
 
 #include <QObject>
 
@@ -80,11 +81,15 @@ public:
     /** @copydoc ContentSynchronizer::getTiles */
     QList<QObject*> getTiles() const override;
 
+    /** @copydoc ContentSynchronizer::getStatistics */
+    QString getStatistics() const override;
+
 private:
     QString _uri;
     PixelStreamProvider& _provider;
     PixelStreamUpdaterSharedPtr _updater;
     uint _frameIndex;
+    FpsCounter _fpsCounter;
 
     void onPictureUpdated( uint frameIndex );
 };

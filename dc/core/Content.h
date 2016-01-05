@@ -73,6 +73,7 @@ class Content : public QObject
     Q_PROPERTY( ContentActionsModel* actions READ getActions CONSTANT )
     Q_PROPERTY( qreal aspectRatio READ getAspectRatio CONSTANT )
     Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
+    Q_PROPERTY( QSize size READ getDimensions CONSTANT )
     Q_PROPERTY( QString sourceImage READ getSourceImage CONSTANT )
 
 public:

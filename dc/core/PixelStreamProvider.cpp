@@ -54,7 +54,7 @@ PixelStreamProvider::PixelStreamProvider()
 QImage PixelStreamProvider::requestImage( const QString& id, QSize* size,
                                           const QSize& requestedSize )
 {
-    QStringList params = id.split( "?" );
+    const QStringList params = id.split( "?" );
     if( params.length() != 3 )
         return QImage();
 

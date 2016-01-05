@@ -112,7 +112,7 @@ QImage PixelStreamUpdater::getTileImage( const uint index )
 
     return QImage( (const uchar*)segment.imageData.constData(),
                    segment.parameters.width, segment.parameters.height,
-                   QImage::Format_RGB32 );
+                   QImage::Format_RGBX8888 );
 }
 
 void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
@@ -150,8 +150,7 @@ QRect toRect( const deflect::SegmentParameters& params )
 void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
 {
     // Update existing segments
-    const size_t maxIndex = std::min( (size_t)_tiles.size(),
-                                      segments.size( ));
+    const size_t maxIndex = std::min( (size_t)_tiles.size(), segments.size( ));
     for( size_t i = 0; i < maxIndex; ++i )
     {
         Tile* tile = qobject_cast<Tile*>( _tiles[i] );

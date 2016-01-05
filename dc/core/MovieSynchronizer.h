@@ -41,6 +41,7 @@
 #define MOVIESYNCHRONIZER_H
 
 #include "BasicSynchronizer.h"
+#include "FpsCounter.h"
 
 /**
  * Synchronizes a Movie between different QML windows.
@@ -74,6 +75,9 @@ public:
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
 
+    /** @copydoc ContentSynchronizer::getStatistics */
+    QString getStatistics() const override;
+
 private slots:
     void onPictureUpdated( double timestamp );
 
@@ -82,6 +86,7 @@ private:
     MovieUpdaterSharedPtr _updater;
     QString _uri;
     double _timestamp;
+    FpsCounter _fpsCounter;
 };
 
 #endif

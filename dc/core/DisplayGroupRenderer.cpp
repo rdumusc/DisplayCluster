@@ -44,7 +44,6 @@
 #include "ContentWindowController.h"
 #include "RenderContext.h"
 #include "Options.h"
-#include "PixelStream.h"
 #include "WallWindow.h"
 
 #include <deflect/Frame.h>
