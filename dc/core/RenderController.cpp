@@ -46,7 +46,6 @@
 #include "DisplayGroup.h"
 #include "Options.h"
 #include "WallToWallChannel.h"
-#include "WallScene.h"
 #include "WallWindow.h"
 
 #include "MovieProvider.h"
@@ -89,7 +88,6 @@ void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
 
     _synchronizeObjects( versionCheckFunc );
 
-    // TODO There is more than one provider if there are multiple windows
     _renderContext->getMovieProvider().update( wallChannel );
     _renderContext->getPixelStreamProvider().update( wallChannel );
 

@@ -54,10 +54,9 @@ class WallWindow : public QQuickView
 public:
     /**
      * Create a wall window.
-     * @param sceneRect The portion of the scene to display in pixels.
-     *        The window is also sized accordingly.
+     * @param engine optional QML engine from another WallWindow for sharing
      */
-    WallWindow( const QRect& sceneRect );
+    WallWindow( QQmlEngine* engine = nullptr );
 
     /** Get the OpenGL context. */
     QOpenGLContext& getGLContext();
@@ -66,7 +65,7 @@ public:
     WallScene& getScene();
 
     /** Create the scene, must happen after the setSource() or setContent(). */
-    void createScene();
+    void createScene( const QPoint& pos );
 
     /** Set the test pattern. */
     void setTestPattern( TestPatternPtr testPattern );
@@ -76,9 +75,6 @@ public:
 
     /** Block all the update() and repaint() calls. */
     void setBlockDrawCalls( bool enable );
-
-    /** Disable VSync on this window for the next swapBuffer() call. */
-    void disableVSync();
 
 //    /** Check if the window is exposed in the window system. */
 //    bool isExposed() const;

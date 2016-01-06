@@ -62,7 +62,6 @@ class FFMPEGMovie;
 class FFMPEGPicture;
 class FFMPEGVideoStream;
 class FFMPEGVideoFrameConverter;
-class GLWindow;
 class MarkerRenderer;
 class Markers;
 class MasterConfiguration;

@@ -8,8 +8,6 @@ Item {
     property alias showFocusContext: focuscontext.visible
     property alias controlPanel: controlPanel
 
-    x: displaygroup.x
-    y: displaygroup.y
     width: displaygroup.width
     height: displaygroup.height
 

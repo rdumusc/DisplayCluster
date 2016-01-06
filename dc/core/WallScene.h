@@ -54,8 +54,13 @@ class WallScene : public QObject
     Q_OBJECT
 
 public:
-    /** Constructor. */
-    WallScene( WallWindow& parentWindow );
+    /**
+     * Constructor.
+     * @param parentWindow the window to render the scene contents to
+     * @param pos the position of the scene wrt the window in a multi-window
+     *            setup
+     */
+    WallScene( WallWindow& parentWindow, const QPoint& pos );
 
     /** Destructor. */
     ~WallScene();

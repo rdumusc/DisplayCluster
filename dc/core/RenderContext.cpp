@@ -61,7 +61,6 @@ RenderContext::RenderContext( const WallConfiguration& configuration )
     : _wallSize( configuration.getTotalSize( ))
 {
     setupOpenGLWindows( configuration );
-    setupVSync();
 }
 
 const QRect& RenderContext::getVisibleWallArea() const
@@ -85,29 +84,30 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
 
         _visibleWallArea = _visibleWallArea.united( screenRect );
 
-        WallWindowPtr window( new WallWindow( screenRect ));
+        WallWindowPtr window;
+
+        if( i == 0 )
+        {
+            window.reset( new WallWindow );
+
+            QQmlEngine* engine = window->engine();
+
+            engine->addImageProvider( MovieProvider::ID, new MovieProvider );
+#if ENABLE_PDF_SUPPORT
+            engine->addImageProvider( PDFProvider::ID, new PDFProvider );
+#endif
+            engine->addImageProvider( PixelStreamProvider::ID,
+                                      new PixelStreamProvider );
+            engine->addImageProvider( SVGProvider::ID, new SVGProvider );
+            engine->addImageProvider( TextureProvider::ID, new TextureProvider);
+        }
+        else
+            window.reset( new WallWindow( _windows.front()->engine( )));
+
+        window->setPosition( windowPos );
+        window->resize( screenRect.size( ));
         _windows.push_back( window );
         window->setTestPattern( TestPatternPtr( new TestPattern( config, i )));
-        window->setPosition( windowPos );
-
-        QOpenGLContext& context = window->getGLContext();
-        if( i > 0 )
-            context.setShareContext( &_windows[0]->getGLContext( ));
-
-        // TODO screen selection
-        //QScreen* screen = ?
-        //context.setScreen( screen );
-
-        QQmlEngine* engine = window->engine();
-
-        engine->addImageProvider( MovieProvider::ID, new MovieProvider );
-#if ENABLE_PDF_SUPPORT
-        engine->addImageProvider( PDFProvider::ID, new PDFProvider );
-#endif
-        engine->addImageProvider( PixelStreamProvider::ID,
-                                  new PixelStreamProvider );
-        engine->addImageProvider( SVGProvider::ID, new SVGProvider );
-        engine->addImageProvider( TextureProvider::ID, new TextureProvider );
 
         window->setSource( QML_BACKGROUND_URL );
 
@@ -116,26 +116,14 @@ void RenderContext::setupOpenGLWindows( const WallConfiguration& config )
         else
             window->show();
 
-        window->createScene();
+        window->createScene( screenRect.topLeft( ));
     }
-}
-
-void RenderContext::setupVSync()
-{
-//    BOOST_FOREACH( WallWindowPtr window, windows_ )
-//    {
-//        QOpenGLContext& glContext = window->getContext();
-//        glContext.makeCurrent();
-//        if( window != windows_.front( ))
-//            window->disableVSync();
-//    }
 }
 
 void RenderContext::updateGLWindows()
 {
     for( WallWindowPtr window : _windows )
     {
-        window->getGLContext().makeCurrent( window.get() );
         window->update();
     }
 

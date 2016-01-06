@@ -66,7 +66,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   FpsCounter.h
   GLQuad.h
   GLTexture2D.h
-  GLUtils.h
   gestures/DoubleTapGestureRecognizer.h
   gestures/PanGesture.h
   gestures/PanGestureRecognizer.h
@@ -190,7 +189,6 @@ list(APPEND DCCORE_SOURCES
   FpsCounter.cpp
   GLQuad.cpp
   GLTexture2D.cpp
-  GLUtils.cpp
   LayoutEngine.cpp
   ImageProviderStringifier.cpp
   log.cpp

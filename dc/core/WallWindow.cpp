@@ -39,25 +39,18 @@
 
 #include "WallWindow.h"
 
-//#include "GLUtils.h"
 #include "TestPattern.h"
 #include "WallScene.h"
 
-WallWindow::WallWindow( const QRect& sceneRect )
-    : QQuickView()
+WallWindow::WallWindow( QQmlEngine* engine_ )
+    : QQuickView( engine_, nullptr )
     , _glContext( new QOpenGLContext )
     , _blockUpdates( false )
     , _isExposed( false )
 {
     setSurfaceType( QWindow::OpenGLSurface );
     setResizeMode( SizeRootObjectToView );
-    resize( sceneRect.size( ));
-
     setFlags( Qt::FramelessWindowHint );
-
-//    setStyleSheet( "border: 0px" );
-//    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
-//    setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
 }
 
 QOpenGLContext& WallWindow::getGLContext()
@@ -70,9 +63,9 @@ WallScene& WallWindow::getScene()
     return *_scene;
 }
 
-void WallWindow::createScene()
+void WallWindow::createScene( const QPoint& pos )
 {
-    _scene = make_unique<WallScene>( *this );
+    _scene = make_unique<WallScene>( *this, pos );
 }
 
 void WallWindow::setTestPattern( TestPatternPtr testPattern )
@@ -90,11 +83,6 @@ void WallWindow::setBlockDrawCalls( const bool enable )
     _blockUpdates = enable;
 }
 
-void WallWindow::disableVSync()
-{
-//    GLUtils::setEnableVSync( this, false );
-}
-
 //bool WallWindow::isExposed() const
 //{
 //    return isExposed_;
@@ -107,9 +95,6 @@ void WallWindow::disableVSync()
 //        testPattern_->draw( painter, rect_ );
 //        return;
 //    }
-
-//    if( fpsRenderer_.isVisible( ))
-//        fpsRenderer_.draw( painter, rect_ );
 
 //    QGraphicsView::drawForeground( painter, rect_ );
 //}

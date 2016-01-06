@@ -61,7 +61,8 @@ const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
 const int BACKGROUND_STACKING_ORDER = -1;
 }
 
-DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow )
+DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
+                                            const QPoint& pos )
     : _engine( *parentWindow.engine( ))
     , _displayGroup( new DisplayGroup( QSize( )))
     , _displayGroupItem( 0 )
@@ -69,6 +70,7 @@ DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow )
 {
     _engine.rootContext()->setContextProperty( "options", _options.get( ));
     _createDisplayGroupQmlItem( *parentWindow.rootObject( ));
+    _displayGroupItem->setPosition( -pos );
     _setBackground( _options->getBackgroundContent( ));
 
     connect( &parentWindow, &WallWindow::frameSwapped, [this]()

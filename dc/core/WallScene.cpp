@@ -42,8 +42,8 @@
 #include "MarkerRenderer.h"
 #include "DisplayGroupRenderer.h"
 
-WallScene::WallScene( WallWindow& parentWindow )
-    : _displayGroupRenderer( new DisplayGroupRenderer( parentWindow ))
+WallScene::WallScene( WallWindow& parentWindow, const QPoint& pos )
+    : _displayGroupRenderer( new DisplayGroupRenderer( parentWindow, pos ))
     , _markerRenderer( new MarkerRenderer )
 {}
 

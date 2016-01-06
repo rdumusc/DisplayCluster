@@ -33,8 +33,10 @@ DisplayGroup {
         text: fpsTimer.fps + " FPS"
         font.pixelSize: Style.fpsFontSize
         color: Style.fpsFontColor
-        x: Style.fpsX
-        y: Style.fpsY
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.leftMargin: Style.fpsX
+        anchors.topMargin: Style.fpsY
         z: Style.fpsZ
     }
 }
