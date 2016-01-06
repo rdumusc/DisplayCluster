@@ -133,14 +133,11 @@ void RenderContext::setupVSync()
 
 void RenderContext::updateGLWindows()
 {
-
     for( WallWindowPtr window : _windows )
     {
         window->getGLContext().makeCurrent( window.get() );
         window->update();
     }
-
-    usleep( 1000 );
 
 //    BOOST_FOREACH( WallWindowPtr window, windows_ )
 //    {
@@ -193,12 +190,6 @@ PixelStreamProvider& RenderContext::getPixelStreamProvider()
 WallWindowPtrs RenderContext::getWindows()
 {
     return _windows;
-}
-
-void RenderContext::displayFps( const bool value )
-{
-    for( WallWindowPtr window : _windows )
-        window->setShowFps( value );
 }
 
 void RenderContext::displayTestPattern( const bool value )

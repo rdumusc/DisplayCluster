@@ -43,7 +43,6 @@
 #include "types.h"
 
 #include "WallScene.h"
-#include "FpsRenderer.h"
 
 #include <QQuickView>
 #include <QOpenGLContext>
@@ -75,9 +74,6 @@ public:
     /** Get the test pattern */
     TestPatternPtr getTestPattern();
 
-    /** Show or hide the fps counter. */
-    void setShowFps( bool value );
-
     /** Block all the update() and repaint() calls. */
     void setBlockDrawCalls( bool enable );
 
@@ -97,7 +93,6 @@ private:
     std::unique_ptr<QOpenGLContext> _glContext;
     std::unique_ptr<WallScene> _scene;
     TestPatternPtr _testPattern;
-    FpsRenderer _fpsRenderer;
     bool _blockUpdates;
     bool _isExposed;
 };

@@ -70,6 +70,12 @@ DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow )
     _engine.rootContext()->setContextProperty( "options", _options.get( ));
     _createDisplayGroupQmlItem( *parentWindow.rootObject( ));
     _setBackground( _options->getBackgroundContent( ));
+
+    connect( &parentWindow, &WallWindow::frameSwapped, [this]()
+        {
+            const int frames = _displayGroupItem->property( "frames" ).toInt();
+            _displayGroupItem->setProperty( "frames", frames + 1 );
+        });
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )

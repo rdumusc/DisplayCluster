@@ -53,14 +53,7 @@ WallWindow::WallWindow( const QRect& sceneRect )
     setResizeMode( SizeRootObjectToView );
     resize( sceneRect.size( ));
 
-//    QSurfaceFormat sf = format();
-//    sf.setProfile(QSurfaceFormat::CoreProfile);
-//    sf.setVersion(4, 1);
-//    setFormat(sf);
-
-//    setAttribute( Qt::WA_OpaquePaintEvent );
-//    setAttribute( Qt::WA_NoSystemBackground );
-//    setWindowFlags( Qt::FramelessWindowHint );
+    setFlags( Qt::FramelessWindowHint );
 
 //    setStyleSheet( "border: 0px" );
 //    setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
@@ -90,11 +83,6 @@ void WallWindow::setTestPattern( TestPatternPtr testPattern )
 TestPatternPtr WallWindow::getTestPattern()
 {
     return _testPattern;
-}
-
-void WallWindow::setShowFps( const bool value )
-{
-    _fpsRenderer.setVisible( value );
 }
 
 void WallWindow::setBlockDrawCalls( const bool enable )

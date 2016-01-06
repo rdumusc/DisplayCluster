@@ -64,7 +64,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   FFMPEGVideoStream.h
   FileCommandHandler.h
   FpsCounter.h
-  FpsRenderer.h
   GLQuad.h
   GLTexture2D.h
   GLUtils.h
@@ -189,7 +188,6 @@ list(APPEND DCCORE_SOURCES
   FFMPEGVideoStream.cpp
   FileCommandHandler.cpp
   FpsCounter.cpp
-  FpsRenderer.cpp
   GLQuad.cpp
   GLTexture2D.cpp
   GLUtils.cpp
