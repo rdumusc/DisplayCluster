@@ -90,7 +90,6 @@ public:
 
 private:
     void setupOpenGLWindows( const WallConfiguration& config );
-    void setupVSync();
 
     WallWindowPtrs _windows;
 

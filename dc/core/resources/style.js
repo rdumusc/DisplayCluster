@@ -56,7 +56,7 @@ var panelsLeftOffset = 180
 var clockScale = 0.2  // times the height of the displaygroup
 
 var fpsFontSize = 32;
-var fpsFontColor = "black";
+var fpsFontColor = "blue";
 var fpsX = 10;
 var fpsY = 10;
 var fpsZ = 1000;

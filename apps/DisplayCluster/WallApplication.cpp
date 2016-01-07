@@ -172,8 +172,8 @@ void WallApplication::renderFrame()
 
     renderController_->preRenderUpdate( *wallChannel_ );
 
-    renderContext_->updateGLWindows();
     wallChannel_->globalBarrier();
+    renderContext_->updateGLWindows();
     renderContext_->swapBuffers();
 
     if( renderController_->quitRendering( ))

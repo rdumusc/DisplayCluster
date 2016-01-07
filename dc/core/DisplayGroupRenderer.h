@@ -58,8 +58,13 @@ class DisplayGroupRenderer : public QObject
     Q_OBJECT
 
 public:
-    /** Constructor */
-    DisplayGroupRenderer( WallWindow& parentWindow );
+    /**
+     * Constructor.
+     * @param parentWindow the window to render the scene contents to
+     * @param pos the position of the scene wrt the window in a multi-window
+     *            setup
+     */
+    DisplayGroupRenderer( WallWindow& parentWindow, const QPoint& pos );
 
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
