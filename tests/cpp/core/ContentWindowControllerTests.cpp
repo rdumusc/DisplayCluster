@@ -209,9 +209,9 @@ BOOST_AUTO_TEST_CASE( testSizeHints )
     controller.resize( maxSize, CENTER );
     BOOST_CHECK_EQUAL( coords.size(), maxSize );
 
-    // too small, stays at current size
+    // too small, clamped to minSize
     controller.resize( minSize / 2, CENTER );
-    BOOST_CHECK_EQUAL( coords.size(), maxSize );
+    BOOST_CHECK_EQUAL( coords.size(), minSize );
 }
 
 BOOST_AUTO_TEST_CASE( testLargeSize )

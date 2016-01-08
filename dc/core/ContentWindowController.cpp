@@ -257,7 +257,7 @@ void ContentWindowController::constrainSize( QSizeF& windowSize ) const
 
     const QSizeF& minSize = getMinSize();
     if( windowSize < minSize )
-        windowSize = _contentWindow->getCoordinates().size();
+        windowSize.scale( minSize, Qt::KeepAspectRatioByExpanding );
 }
 
 QRectF
