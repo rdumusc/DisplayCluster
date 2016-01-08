@@ -74,6 +74,11 @@ CONTENT_TYPE PDFContent::getType() const
     return CONTENT_TYPE_PDF;
 }
 
+QString PDFContent::getProviderId() const
+{
+    return PDFProvider::ID;
+}
+
 QString PDFContent::getSourceImage() const
 {
     QString source;

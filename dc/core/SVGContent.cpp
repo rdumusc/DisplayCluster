@@ -57,6 +57,11 @@ CONTENT_TYPE SVGContent::getType() const
     return CONTENT_TYPE_SVG;
 }
 
+QString SVGContent::getProviderId() const
+{
+    return SVGProvider::ID;
+}
+
 QString SVGContent::getSourceImage() const
 {
     return SVGProvider::ID + "/" + _uri + "#" + stringify( _zoomRect );

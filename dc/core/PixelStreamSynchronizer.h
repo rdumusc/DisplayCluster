@@ -72,6 +72,9 @@ public:
     /** @copydoc ContentSynchronizer::sync */
     void sync( WallToWallChannel& channel ) override;
 
+    /** @copydoc ContentSynchronizer::updateTiles */
+    void updateTiles( const ContentWindow& window ) override;
+
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;
 
@@ -80,6 +83,9 @@ public:
 
     /** @copydoc ContentSynchronizer::getTiles */
     QList<QObject*> getTiles() const override;
+
+    /** @copydoc ContentSynchronizer::getTilesArea */
+    QSize getTilesArea() const override;
 
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;

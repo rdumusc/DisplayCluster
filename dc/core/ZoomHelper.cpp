@@ -37,48 +37,41 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "WallContent.h"
+#include "ZoomHelper.h"
 
-#include "config.h"
-#include "Content.h"
+#include "ContentWindow.h"
 
-#include "DynamicTexture.h"
+ZoomHelper::ZoomHelper( const ContentWindow& window )
+    : _contentWindow( window )
+{}
 
-#include <boost/make_shared.hpp>
-
-WallContent::WallContent()
-    : _qmlItem( 0 )
+QRectF ZoomHelper::getContentRect() const
 {
+    return toContentRect( _contentWindow.getContent()->getZoomRect( ));
 }
 
-WallContent::~WallContent()
+QRectF ZoomHelper::toContentRect( const QRectF& zoomRect ) const
 {
+    const QRectF& window = _contentWindow.getDisplayCoordinates();
+
+    const qreal w = window.width() / zoomRect.width();
+    const qreal h = window.height() / zoomRect.height();
+
+    const qreal posX = -zoomRect.x() * w;
+    const qreal posY = -zoomRect.y() * h;
+
+    return QRectF( posX, posY, w, h );
 }
 
-WallContentPtr WallContent::create( const Content& content )
+QRectF ZoomHelper::toZoomRect( const QRectF& contentRect ) const
 {
-    switch( content.getType( ))
-    {
-    case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return boost::make_shared<DynamicTexture>( content.getURI( ));
-//    case CONTENT_TYPE_MOVIE:
-//        return boost::make_shared<Movie>( content.getURI( ));
-//    case CONTENT_TYPE_PIXEL_STREAM:
-//        return boost::make_shared<PixelStream>( content.getURI( ));
-//    case CONTENT_TYPE_SVG:
-//        return boost::make_shared<SVG>( content.getURI( ));
-//    case CONTENT_TYPE_TEXTURE:
-//        return boost::make_shared<Texture>( content.getURI( ));
-//#if ENABLE_PDF_SUPPORT
-//    case CONTENT_TYPE_PDF:
-//        return boost::make_shared<PDF>( content.getURI( ));
-//#endif
-    default:
-        return WallContentPtr();
-    }
-}
+    const QRectF& window = _contentWindow.getDisplayCoordinates();
 
-void WallContent::setQmlItem( ContentItem* qmlItem )
-{
-    _qmlItem = qmlItem;
+    const qreal w = window.width() / contentRect.width();
+    const qreal h = window.height() / contentRect.height();
+
+    const qreal posX = -contentRect.x() / contentRect.width();
+    const qreal posY = -contentRect.y() / contentRect.height();
+
+    return QRectF( posX, posY, w, h );
 }

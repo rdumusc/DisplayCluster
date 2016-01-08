@@ -60,6 +60,7 @@ class ContentSynchronizer : public QObject
                 NOTIFY sourceParamsChanged )
     Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
     Q_PROPERTY( QList<QObject*> tiles READ getTiles NOTIFY tilesChanged )
+    Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesChanged )
     Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
 public:
@@ -72,6 +73,9 @@ public:
     /** Synchronize the Content. */
     virtual void sync( WallToWallChannel& channel ) = 0;
 
+    /** Update the Tiles based on the current window parameters. */
+    virtual void updateTiles( const ContentWindow& window ) = 0;
+
     /** Get the additional source parameters. */
     virtual QString getSourceParams() const = 0;
 
@@ -80,6 +84,9 @@ public:
 
     /** Get the list of tiles that compose the content. */
     virtual QList<QObject*> getTiles() const = 0;
+
+    /** The total area covered by the tiles (may depend on current LOD). */
+    virtual QSize getTilesArea() const = 0;
 
     /** Get statistics about this Content. */
     virtual QString getStatistics() const = 0;
@@ -92,7 +99,7 @@ signals:
     /** Notifier for the sourceParams property. */
     void sourceParamsChanged();
 
-    /** Notifier for the tiles property. */
+    /** Notifier for the tiles properties. */
     void tilesChanged();
 
     /** Notifier for the statistics property. */

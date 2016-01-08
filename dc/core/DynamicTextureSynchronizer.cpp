@@ -37,71 +37,84 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentItem.h"
+#include "DynamicTextureSynchronizer.h"
 
-#include "log.h"
-#include "WallContent.h"
+#include "ContentWindow.h"
+#include "Tile.h"
+#include "ZoomHelper.h"
 
-#include <QtGui/QPainter>
+#include <QTextStream>
 
-#include <GL/gl.h>
-
-ContentItem::ContentItem( QQuickItem* parentItem_ )
-    : QQuickPaintedItem( parentItem_ )
-    , wallContent_( 0 )
-    , role_( ROLE_CONTENT )
-{}
-
-void ContentItem::paint( QPainter* painter )
+DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
+    : _reader( uri )
+    , _lod( 0 )
 {
-    painter->beginNativePainting();
-
-    glPushMatrix();
-    glScalef( width(), height(), 1.f );
-
-    switch ( role_ )
-    {
-    case ROLE_CONTENT:
-        wallContent_->render();
-        break;
-    case ROLE_PREVIEW:
-        wallContent_->renderPreview();
-        break;
-    default:
-        put_flog( LOG_ERROR, "Unsupported ContentItem::Role : ", role_ );
-        break;
-    }
-
-    glPopMatrix();
-
-    painter->endNativePainting();
+    _updateTiles( _reader.getMaxLod( ));
 }
 
-void ContentItem::setWallContent( WallContent* wallContent )
+void DynamicTextureSynchronizer::sync( WallToWallChannel& channel )
 {
-    wallContent_ = wallContent;
+    Q_UNUSED( channel );
 }
 
-ContentItem::Role ContentItem::getRole() const
+void DynamicTextureSynchronizer::updateTiles( const ContentWindow& window )
 {
-    return role_;
+    const QRectF contentRect = ZoomHelper( window ).getContentRect();
+    const auto lod = _reader.getLod( contentRect.size().toSize( ));
+    _updateTiles( lod );
 }
 
-QRectF ContentItem::getSceneRect() const
+QString DynamicTextureSynchronizer::getSourceParams() const
 {
-    return mapRectToScene( boundingRect( ));
+    return QString();
 }
 
-bool ContentItem::isAnimating() const
+bool DynamicTextureSynchronizer::allowsTextureCaching() const
 {
-    return property("animating").toBool();
+    return true;
 }
 
-void ContentItem::setRole( const Role arg )
+QList<QObject*> DynamicTextureSynchronizer::getTiles() const
 {
-    if( role_ == arg )
+    return _tiles;
+}
+
+QSize DynamicTextureSynchronizer::getTilesArea() const
+{
+    return _tilesArea.size();
+}
+
+QString DynamicTextureSynchronizer::getStatistics() const
+{
+    QString stats;
+    QTextStream stream( &stats );
+    stream << "LOD:  " << _lod << "/" << _reader.getMaxLod();
+    stream << "  res: " << _tilesArea.width() << "x" << _tilesArea.height();
+    return stats;
+}
+
+void DynamicTextureSynchronizer::_updateTiles( const uint lod )
+{
+    if( lod == _lod && !_tiles.empty( ))
         return;
 
-    role_ = arg;
-    emit roleChanged( arg );
+    _lod = lod;
+    _tiles.clear();
+    _tilesArea = QRect();
+
+    const QSize tilesCount = _reader.getTilesCount( _lod );
+    const int startIndex = _reader.getFirstTileIndex( _lod );
+
+    for( int y = 0; y < tilesCount.height(); ++y )
+    {
+        for( int x = 0; x < tilesCount.width(); ++x )
+        {
+            const int i = startIndex + y * tilesCount.width() + x;
+            const QRect coord = _reader.getTileCoord( _lod, x, y );
+            _tiles.push_back( new Tile( i, coord, this ));
+            _tilesArea = _tilesArea.united( coord );
+        }
+    }
+    emit tilesChanged();
+    emit statisticsChanged();
 }

@@ -94,8 +94,8 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   TestPattern.h
   TextureContent.h
   TextureProvider.h
-  WallContent.h
   ZoomInteractionDelegate.h
+  ZoomHelper.h
   configuration/Configuration.h
   configuration/MasterConfiguration.h
   configuration/WallConfiguration.h
@@ -121,13 +121,13 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   ContentAction.h
   ContentActionsModel.h
   ContentInteractionDelegate.h
-  ContentItem.h
   ContentSynchronizer.h
   ContentWindow.h
   ContentWindowController.h
   Coordinates.h
   DisplayGroup.h
   DisplayGroupRenderer.h
+  DynamicTextureSynchronizer.h
   Markers.h
   MarkerRenderer.h
   MasterFromWallChannel.h
@@ -171,7 +171,6 @@ list(APPEND DCCORE_SOURCES
   ContentFactory.cpp
   ContentLoader.cpp
   ContentType.cpp
-  ContentItem.cpp
   ContentInteractionDelegate.cpp
   ContentSynchronizer.cpp
   ContentWindow.cpp
@@ -181,6 +180,7 @@ list(APPEND DCCORE_SOURCES
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
   DynamicTextureContent.cpp
+  DynamicTextureSynchronizer.cpp
   ElapsedTimer.cpp
   FFMPEGFrame.cpp
   FFMPEGMovie.cpp
@@ -229,7 +229,6 @@ list(APPEND DCCORE_SOURCES
   TestPattern.cpp
   TextureContent.cpp
   TextureProvider.cpp
-  WallContent.cpp
   WallFromMasterChannel.cpp
   WallScene.cpp
   WallToMasterChannel.cpp
@@ -237,6 +236,7 @@ list(APPEND DCCORE_SOURCES
   WallWindow.cpp
   WebbrowserCommandHandler.cpp
   ZoomInteractionDelegate.cpp
+  ZoomHelper.cpp
   configuration/Configuration.cpp
   configuration/MasterConfiguration.cpp
   configuration/WallConfiguration.cpp

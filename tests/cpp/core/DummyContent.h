@@ -51,8 +51,9 @@ public:
     DummyContent(const QString& uri = "") : Content(uri), dummyParam_(0) {}
 
     virtual CONTENT_TYPE getType() const { return CONTENT_TYPE_ANY; }
-
     virtual bool readMetadata() { return true; }
+    virtual QString getProviderId() const { return QString(); }
+    virtual QString getSourceImage() const { return QString(); }
 
     int dummyParam_;
 

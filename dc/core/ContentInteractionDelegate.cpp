@@ -48,18 +48,10 @@ ContentInteractionDelegate::ContentInteractionDelegate( ContentWindow& contentWi
 
 ContentInteractionDelegate::~ContentInteractionDelegate() {}
 
-QRectF ContentInteractionDelegate::getWindowCoord() const
-{
-    if( _contentWindow.isFocused( ))
-        return _contentWindow.getFocusedCoordinates();
-
-    return _contentWindow.getCoordinates();
-}
-
 QPointF
 ContentInteractionDelegate::getNormalizedPoint( const QPointF& point ) const
 {
-    const QRectF& window = getWindowCoord();
+    const QRectF& window = _contentWindow.getDisplayCoordinates();
     return QPointF( point.x() / window.width(),
                     point.y() / window.height( ));
 }

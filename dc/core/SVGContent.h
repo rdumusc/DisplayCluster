@@ -54,7 +54,10 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
-    /** Get the image used for rendering in qml. */
+    /** @copydoc Content::getProviderId */
+    QString getProviderId() const final;
+
+    /** @copydoc Content::getSourceImage */
     QString getSourceImage() const override;
 
     /**

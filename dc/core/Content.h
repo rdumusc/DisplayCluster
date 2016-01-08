@@ -87,10 +87,10 @@ public:
     virtual CONTENT_TYPE getType() const = 0;
 
     /** Get the ID of the image provider for this content. */
-    virtual QString getProviderId() const { return QString( "none" ); }
+    virtual QString getProviderId() const = 0;
 
     /** Get the source image url used by the QML engine for rendering. */
-    virtual QString getSourceImage() const { return QString( "error" ); }
+    virtual QString getSourceImage() const = 0;
 
     /**
      * Read content metadata from the data source.

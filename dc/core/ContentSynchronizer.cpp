@@ -40,7 +40,9 @@
 #include "ContentSynchronizer.h"
 
 #include "Content.h"
+
 #include "BasicSynchronizer.h"
+#include "DynamicTextureSynchronizer.h"
 #include "MovieSynchronizer.h"
 #include "PixelStreamSynchronizer.h"
 
@@ -55,6 +57,8 @@ ContentSynchronizer::create( ContentPtr content,
 {
     switch( content->getType( ))
     {
+    case CONTENT_TYPE_DYNAMIC_TEXTURE:
+        return make_unique<DynamicTextureSynchronizer>( content->getURI( ));
     case CONTENT_TYPE_MOVIE:
         return make_unique<MovieSynchronizer>(
                    content->getURI(), dynamic_cast<MovieProvider&>( provider ));

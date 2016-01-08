@@ -37,57 +37,53 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef WALLCONTENT_H
-#define WALLCONTENT_H
+#ifndef DYNAMICTEXTURESYNCHRONIZER_H
+#define DYNAMICTEXTURESYNCHRONIZER_H
 
-#include "types.h"
+#include "ContentSynchronizer.h"
 
-#include "ContentItem.h"
+#include "DynamicTexture.h" // member
 
 /**
- * A content to be rendered by Wall processes.
- *
- * An implementation must exist for every valid ContentType.
+ * A synchronizer which provides the list of Tiles for DynamicTextures.
  */
-class WallContent
+class DynamicTextureSynchronizer : public ContentSynchronizer
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( DynamicTextureSynchronizer )
+
 public:
-    /** Destructor. */
-    virtual ~WallContent();
+    /** Constructor */
+    explicit DynamicTextureSynchronizer( const QString& uri );
 
-    /** Render the content. */
-    virtual void render() = 0;
+    /** @copydoc ContentSynchronizer::sync */
+    void sync( WallToWallChannel& channel ) override;
 
-    /** Render the preview ( whole object at low resolution.). */
-    virtual void renderPreview() = 0;
+    /** @copydoc ContentSynchronizer::updateTiles */
+    void updateTiles( const ContentWindow& window ) override;
 
-    /** Update internal state before rendering. */
-    virtual void preRenderUpdate( ContentWindowPtr window,
-                                  const QRect& visibleWallArea ) = 0;
+    /** @copydoc ContentSynchronizer::getSourceParams */
+    QString getSourceParams() const override;
 
-    /** Optional synchronization step before rendering. */
-    virtual void preRenderSync( WallToWallChannel& wallToWallChannel )
-    {
-        Q_UNUSED( wallToWallChannel )
-    }
+    /** @copydoc ContentSynchronizer::allowsTextureCaching */
+    bool allowsTextureCaching() const override;
 
-    /** Optional synchronization step after rendering. */
-    virtual void postRenderSync( WallToWallChannel& wallToWallChannel )
-    {
-        Q_UNUSED( wallToWallChannel )
-    }
+    /** @copydoc ContentSynchronizer::getTiles */
+    QList<QObject*> getTiles() const override;
 
-    /** Set a reference to the Qml item using this content. */
-    void setQmlItem( ContentItem* content );
+    /** @copydoc ContentSynchronizer::getTilesArea */
+    QSize getTilesArea() const override;
 
-    /** Create an object corresponding to the given content. */
-    static WallContentPtr create( const Content& content );
+    /** @copydoc ContentSynchronizer::getStatistics */
+    QString getStatistics() const override;
 
-protected:
-    /** Constructor. */
-    WallContent();
+private:
+    QList<QObject*> _tiles;
+    DynamicTexture _reader;
+    uint _lod;
+    QRect _tilesArea;
 
-    ContentItem* _qmlItem;
+    void _updateTiles( uint lod );
 };
 
-#endif // WALLCONTENT_H
+#endif

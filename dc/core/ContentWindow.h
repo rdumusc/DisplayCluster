@@ -185,6 +185,10 @@ public:
     void setFocusedCoordinates( const QRectF& coordinates );
 
 
+    /** @return the actual coordinates of this window (normal or focused). */
+    const QRectF& getDisplayCoordinates() const;
+
+
     /** Set the current state. */
     bool setState( const ContentWindow::WindowState state );
 

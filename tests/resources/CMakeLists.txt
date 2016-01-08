@@ -19,6 +19,7 @@ set(TEST_RESOURCES
   state_v3_noTitles.dcx
   state_v4.dcx
   wall.png
+  dynamictexture.pyr
 )
 
 foreach(FILE ${TEST_RESOURCES})

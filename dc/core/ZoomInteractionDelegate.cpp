@@ -40,6 +40,7 @@
 
 #include "ZoomInteractionDelegate.h"
 #include "ContentWindow.h"
+#include "ZoomHelper.h"
 
 #include <QTransform>
 
@@ -63,10 +64,10 @@ void ZoomInteractionDelegate::pan( const QPointF position, const QPointF delta )
 void ZoomInteractionDelegate::pinch( QPointF position,
                                      const qreal pixelDelta )
 {
-    const QRectF& zoomRect = _contentWindow.getContent()->getZoomRect();
-    QRectF contentRect = _toContentRect( zoomRect );
+    const ZoomHelper zoomHelper( _contentWindow );
+    QRectF contentRect = zoomHelper.getContentRect();
 
-    position -= getWindowCoord().topLeft();
+    position -= _contentWindow.getDisplayCoordinates().topLeft();
 
     QSizeF newSize = contentRect.size();
     newSize.scale( newSize.width() + pixelDelta,
@@ -77,19 +78,19 @@ void ZoomInteractionDelegate::pinch( QPointF position,
     contentRect = ContentWindowController::scaleRectAroundPosition( contentRect,
                                                                     position,
                                                                     newSize );
-    _checkAndApply( _toZoomRect( contentRect ));
+    _checkAndApply( zoomHelper.toZoomRect( contentRect ));
 }
 
 void ZoomInteractionDelegate::adjustZoomToContentAspectRatio()
 {
-    const QRectF& zoomRect = _contentWindow.getContent()->getZoomRect();
-    QRectF contentRect = _toContentRect( zoomRect );
+    const ZoomHelper zoomHelper( _contentWindow );
+    QRectF contentRect = zoomHelper.getContentRect();
     QSizeF contentSize = _contentWindow.getContent()->getDimensions();
     contentSize = contentSize / contentSize.width();
     contentSize.scale( contentRect.size(), Qt::KeepAspectRatio );
     contentRect.setSize( contentSize );
 
-    _checkAndApply( _toZoomRect( contentRect ));
+    _checkAndApply( zoomHelper.toZoomRect( contentRect ));
 }
 
 void ZoomInteractionDelegate::_checkAndApply( QRectF zoomRect )
@@ -149,14 +150,14 @@ QSizeF getMaxContentSize( ContentWindow& window )
 QSizeF ZoomInteractionDelegate::_getMaxZoom() const
 {
     const QSizeF content( getMaxContentSize( _contentWindow ));
-    const QSizeF window( getWindowCoord().size( ));
+    const QSizeF window( _contentWindow.getDisplayCoordinates().size( ));
     return QSizeF( window.width() / content.width(),
                    window.height() / content.height( ));
 }
 
 QSizeF ZoomInteractionDelegate::_getMinZoom() const
 {
-    const QSizeF window( getWindowCoord().size( ));
+    const QSizeF window( _contentWindow.getDisplayCoordinates().size( ));
     QSizeF content( _contentWindow.getContent()->getDimensions( ));
     content.scale( window, Qt::KeepAspectRatioByExpanding );
     const qreal windowAR = window.width() / window.height();
@@ -165,29 +166,4 @@ QSizeF ZoomInteractionDelegate::_getMinZoom() const
     if( contentAR > windowAR )
         return QSizeF( MIN_ZOOM * window.width() / content.width(), MIN_ZOOM );
     return QSizeF( MIN_ZOOM, MIN_ZOOM * window.height() / content.height( ));
-}
-
-QRectF ZoomInteractionDelegate::_toContentRect( const QRectF& zoomRect ) const
-{
-    const QRectF& window = getWindowCoord();
-
-    const qreal w = window.width() / zoomRect.width();
-    const qreal h = window.height() / zoomRect.height();
-
-    const qreal posX = -zoomRect.x() * w;
-    const qreal posY = -zoomRect.y() * h;
-
-    return QRectF( posX, posY, w, h );
-}
-
-QRectF ZoomInteractionDelegate::_toZoomRect( const QRectF& contentRect ) const
-{
-    const QRectF& window = getWindowCoord();
-    const qreal w = window.width() / contentRect.width();
-    const qreal h = window.height() / contentRect.height();
-
-    const qreal posX = -contentRect.x() / contentRect.width();
-    const qreal posY = -contentRect.y() / contentRect.height();
-
-    return QRectF( posX, posY, w, h );
 }

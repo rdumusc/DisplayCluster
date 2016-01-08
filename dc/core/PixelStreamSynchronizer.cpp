@@ -66,6 +66,11 @@ void PixelStreamSynchronizer::sync( WallToWallChannel& channel )
     Q_UNUSED( channel );
 }
 
+void PixelStreamSynchronizer::updateTiles( const ContentWindow& window )
+{
+    Q_UNUSED( window );
+}
+
 QString PixelStreamSynchronizer::getSourceParams() const
 {
     return QString( "?%1" ).arg( _frameIndex );
@@ -79,6 +84,11 @@ bool PixelStreamSynchronizer::allowsTextureCaching() const
 QList<QObject*> PixelStreamSynchronizer::getTiles() const
 {
     return _updater->getTiles();
+}
+
+QSize PixelStreamSynchronizer::getTilesArea() const
+{
+    return QSize();
 }
 
 QString PixelStreamSynchronizer::getStatistics() const

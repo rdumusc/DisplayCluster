@@ -37,56 +37,26 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENTITEM_H
-#define CONTENTITEM_H
+#ifndef ZOOMHELPER_H
+#define ZOOMHELPER_H
 
 #include "types.h"
 
-#include <QQuickPaintedItem>
-
 /**
- * Render a Content in Qml.
+ * A helper class to convert zoom rectangle to and from scene coordinates.
  */
-class ContentItem : public QQuickPaintedItem
+class ZoomHelper
 {
-    Q_OBJECT
-    Q_PROPERTY( Role role READ getRole WRITE setRole NOTIFY roleChanged )
-
 public:
-    enum Role
-    {
-        ROLE_CONTENT,
-        ROLE_PREVIEW
-    };
-    Q_ENUMS( Role )
+    ZoomHelper( const ContentWindow& window );
 
-    /** Constructor. */
-    explicit ContentItem( QQuickItem* parentItem = 0  );
+    QRectF getContentRect() const;
 
-    /** Draw call, reimplemented from QQuickPaintedItem. */
-    void paint( QPainter* painter ) override;
-
-    /** Set the factory object to be rendered. */
-    void setWallContent( WallContent* wallContent );
-
-    /** Get the role of this item. */
-    Role getRole() const;
-
-    /** Get the scene coordinates of the item. */
-    QRectF getSceneRect() const;
-
-    /** Check if the item's size or position is being animated from QML. */
-    bool isAnimating() const;
-
-public slots:
-    void setRole( Role arg );
-
-signals:
-    void roleChanged( Role arg );
+    QRectF toContentRect( const QRectF& zoomRect ) const;
+    QRectF toZoomRect( const QRectF& contentRect ) const;
 
 private:
-    WallContent* wallContent_;
-    Role role_;
+    const ContentWindow& _contentWindow;
 };
 
-#endif // CONTENTITEM_H
+#endif // ZOOMHELPER_H

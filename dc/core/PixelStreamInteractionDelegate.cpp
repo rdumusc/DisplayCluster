@@ -193,7 +193,7 @@ bool PixelStreamInteractionDelegate::hasEventReceivers() const
 
 void PixelStreamInteractionDelegate::_sendSizeChangedEvent()
 {
-    const QRectF& win = getWindowCoord();
+    const QRectF& win = _contentWindow.getDisplayCoordinates();
 
     deflect::Event deflectEvent;
     deflectEvent.type = deflect::Event::EVT_VIEW_SIZE_CHANGED;
@@ -215,7 +215,7 @@ deflect::Event PixelStreamInteractionDelegate::_getNormEvent( const QPointF&
     // Should also work for the same reason as QTapGesture, but untested:
     // QTapAndHoldGesture, QPanGesture
 
-    const QRectF& win = getWindowCoord();
+    const QRectF& win = _contentWindow.getDisplayCoordinates();
 
     deflect::Event deflectEvent;
     deflectEvent.mouseLeft = true;

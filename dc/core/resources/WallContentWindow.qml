@@ -45,8 +45,8 @@ BaseContentWindow {
                 }
             }
             transform: Scale {
-                xScale: contentItemArea.width / contentwindow.content.size.width
-                yScale: contentItemArea.height / contentwindow.content.size.height
+                xScale: contentItemArea.width / (contentsync.tilesArea.width > 0 ? contentsync.tilesArea.width : contentwindow.content.size.width)
+                yScale: contentItemArea.height / (contentsync.tilesArea.height > 0 ? contentsync.tilesArea.height : contentwindow.content.size.height)
             }
         }
     }

@@ -51,6 +51,11 @@ void BasicSynchronizer::sync( WallToWallChannel& channel )
     Q_UNUSED( channel );
 }
 
+void BasicSynchronizer::updateTiles( const ContentWindow& window )
+{
+    Q_UNUSED( window );
+}
+
 QString BasicSynchronizer::getSourceParams() const
 {
     return QString();
@@ -64,6 +69,11 @@ bool BasicSynchronizer::allowsTextureCaching() const
 QList<QObject*> BasicSynchronizer::getTiles() const
 {
     return _tiles;
+}
+
+QSize BasicSynchronizer::getTilesArea() const
+{
+    return QSize();
 }
 
 QString BasicSynchronizer::getStatistics() const
