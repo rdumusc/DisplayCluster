@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,39 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentSynchronizer.h"
-
-#include "Content.h"
-
-#include "BasicSynchronizer.h"
-#include "DynamicTextureSynchronizer.h"
-#include "MovieSynchronizer.h"
-#include "PixelStreamSynchronizer.h"
 #include "VectorialSynchronizer.h"
 
-#include "MovieProvider.h"
-#include "PixelStreamProvider.h"
+#include "ContentWindow.h"
+#include "ImageProviderStringifier.h"
 
-ContentSynchronizer::~ContentSynchronizer() {}
-
-ContentSynchronizerPtr
-ContentSynchronizer::create( ContentPtr content,
-                             QQmlImageProviderBase& provider )
+void VectorialSynchronizer::updateTiles( const ContentWindow& window )
 {
-    switch( content->getType( ))
+    // Legacy solution. A list of tiles with different LODs might bring
+    // better interactive performances and allow for texture caching.
+    ContentPtr content = window.getContent();
+    if( _contentZoom != content->getZoomRect() )
     {
-    case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return make_unique<DynamicTextureSynchronizer>( content->getURI( ));
-    case CONTENT_TYPE_MOVIE:
-        return make_unique<MovieSynchronizer>(
-                   content->getURI(), dynamic_cast<MovieProvider&>( provider ));
-    case CONTENT_TYPE_PIXEL_STREAM:
-        return make_unique<PixelStreamSynchronizer>(
-             content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
-    case CONTENT_TYPE_PDF:
-    case CONTENT_TYPE_SVG:
-        return make_unique<VectorialSynchronizer>();
-    default:
-        return make_unique<BasicSynchronizer>();
+        _contentZoom = content->getZoomRect();
+        emit sourceParamsChanged();
     }
+}
+
+QString VectorialSynchronizer::getSourceParams() const
+{
+    if( _contentZoom.isValid( ))
+        return QString( '#' ) + stringify( _contentZoom );
+    return QString();
+}
+
+bool VectorialSynchronizer::allowsTextureCaching() const
+{
+    return false;
 }

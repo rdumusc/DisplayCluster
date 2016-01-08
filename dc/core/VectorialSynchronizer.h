@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,39 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentSynchronizer.h"
-
-#include "Content.h"
+#ifndef VECTORIALSYNCHRONIZER_H
+#define VECTORIALSYNCHRONIZER_H
 
 #include "BasicSynchronizer.h"
-#include "DynamicTextureSynchronizer.h"
-#include "MovieSynchronizer.h"
-#include "PixelStreamSynchronizer.h"
-#include "VectorialSynchronizer.h"
 
-#include "MovieProvider.h"
-#include "PixelStreamProvider.h"
-
-ContentSynchronizer::~ContentSynchronizer() {}
-
-ContentSynchronizerPtr
-ContentSynchronizer::create( ContentPtr content,
-                             QQmlImageProviderBase& provider )
+/**
+ * Synchonrizer for vectorial contents.
+ */
+class VectorialSynchronizer : public BasicSynchronizer
 {
-    switch( content->getType( ))
-    {
-    case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return make_unique<DynamicTextureSynchronizer>( content->getURI( ));
-    case CONTENT_TYPE_MOVIE:
-        return make_unique<MovieSynchronizer>(
-                   content->getURI(), dynamic_cast<MovieProvider&>( provider ));
-    case CONTENT_TYPE_PIXEL_STREAM:
-        return make_unique<PixelStreamSynchronizer>(
-             content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
-    case CONTENT_TYPE_PDF:
-    case CONTENT_TYPE_SVG:
-        return make_unique<VectorialSynchronizer>();
-    default:
-        return make_unique<BasicSynchronizer>();
-    }
-}
+    Q_OBJECT
+    Q_DISABLE_COPY( VectorialSynchronizer )
+
+public:
+    /** Constructor */
+    VectorialSynchronizer() = default;
+
+    /** @copydoc ContentSynchronizer::updateTiles */
+    void updateTiles( const ContentWindow& window ) override;
+
+    /** @copydoc ContentSynchronizer::getSourceParams */
+    QString getSourceParams() const override;
+
+    /** @copydoc ContentSynchronizer::allowsTextureCaching */
+    bool allowsTextureCaching() const override;
+
+private:
+    QRectF _contentZoom;
+};
+
+#endif // VECTORIALSYNCHRONIZER_H

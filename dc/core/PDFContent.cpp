@@ -41,7 +41,6 @@
 
 #include "PDF.h"
 #include "PDFProvider.h"
-#include "ImageProviderStringifier.h"
 
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
@@ -85,7 +84,6 @@ QString PDFContent::getSourceImage() const
     QTextStream stream( &source );
     stream << PDFProvider::ID << "/" << _uri;
     stream << "#" << _pageNumber;
-    stream << "#" << stringify( _zoomRect );
     return source;
 }
 

@@ -9,7 +9,6 @@ BaseContentWindow {
     color: options.alphaBlending ? "transparent" : "black"
 
     property string imagesource: "image://" + contentwindow.content.sourceImage
-                                 + contentsync.sourceParams
 
     Item {
         id: contentItemArea
@@ -32,7 +31,7 @@ BaseContentWindow {
                     height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
 
                     property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
-                    source: imagesource + tileIndex
+                    source: imagesource + contentsync.sourceParams + tileIndex
 
                     cache: contentsync.allowsTextureCaching
 

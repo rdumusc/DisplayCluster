@@ -144,6 +144,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   QmlControlPanel.h
   RenderController.h
   Tile.h
+  VectorialSynchronizer.h
   WallFromMasterChannel.h
   WallScene.h
   WallWindow.h
@@ -229,6 +230,7 @@ list(APPEND DCCORE_SOURCES
   TestPattern.cpp
   TextureContent.cpp
   TextureProvider.cpp
+  VectorialSynchronizer.cpp
   WallFromMasterChannel.cpp
   WallScene.cpp
   WallToMasterChannel.cpp

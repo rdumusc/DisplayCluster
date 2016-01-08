@@ -60,7 +60,7 @@ QImage PDFProvider::requestImage( const QString& id, QSize* size,
                                   const QSize& requestedSize )
 {
     QStringList list = id.split("#");
-    if( list.size() != 2 )
+    if( list.size() < 2 )
         return QImage();
 
     PDF pdf( list.at( 0 ));
