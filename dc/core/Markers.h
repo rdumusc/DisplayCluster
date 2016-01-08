@@ -46,37 +46,49 @@
 
 #include <QObject>
 #include <QPointF>
+#include <QtCore/QAbstractListModel>
 #include <map>
 
 #include <boost/serialization/access.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/serialization/map.hpp>
 
-typedef std::map<int, QPointF> MarkersMap;
-
 /**
  * Store Markers to display user interaction.
  */
-class Markers : public QObject, public boost::enable_shared_from_this<Markers>
+class Markers : public QAbstractListModel,
+                public boost::enable_shared_from_this<Markers>
 {
     Q_OBJECT
 
 public:
-    /** Constructor */
-    Markers();
 
-    /** Get all the markers. */
-    const MarkersMap& getMarkers() const;
+    enum MarkerRoles
+    {
+        XPOSITION_ROLE = Qt::UserRole,
+        YPOSITION_ROLE
+    };
+
+    /** Constructor */
+    Markers( QObject* parentObject = 0 );
+
+    QVariant data( const QModelIndex& index, int role ) const override;
+    int rowCount( const QModelIndex& parent = QModelIndex( )) const override;
+    QHash<int, QByteArray> roleNames() const override;
 
 public slots:
-    void addMarker( int id, QPointF position );
-    void updateMarker( int id, QPointF position );
+    void addMarker( int id, const QPointF& position );
+    void updateMarker( int id, const QPointF& position );
     void removeMarker( int id );
 
 signals:
     void updated( MarkersPtr markers );
 
 private:
+    typedef std::pair<int, QPointF> Marker;
+    typedef std::vector<Marker> MarkersVector;
+
+    MarkersVector::iterator _findMarker( const int id );
     Q_DISABLE_COPY( Markers )
 
     friend class boost::serialization::access;
@@ -87,7 +99,7 @@ private:
         ar & _markers;
     }
 
-    MarkersMap _markers;
+    MarkersVector _markers;
 };
 
 #endif // MARKERS_H

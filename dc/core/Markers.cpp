@@ -39,38 +39,82 @@
 
 #include "Markers.h"
 
-Markers::Markers()
+Markers::Markers( QObject* parent_ )
+    : QAbstractListModel( parent_ )
+{}
+
+QVariant Markers::data( const QModelIndex& index_, const int role ) const
 {
+    if( index_.row() < 0 || index_.row() >= rowCount() || !index_.isValid( ))
+        return QVariant();
+
+    switch ( role )
+    {
+        case XPOSITION_ROLE:
+            return QVariant( _markers[index_.row()].second.x( ));
+        case YPOSITION_ROLE:
+            return QVariant( _markers[index_.row()].second.y( ));
+    }
+    return QVariant();
 }
 
-const MarkersMap& Markers::getMarkers() const
+int Markers::rowCount( const QModelIndex& parent_ ) const
 {
-    return _markers;
+    Q_UNUSED( parent_ );
+    return _markers.size();
 }
 
-void Markers::addMarker( const int id, const QPointF position )
+QHash<int, QByteArray> Markers::roleNames() const
 {
-    if( _markers.count( id ))
+    QHash<int, QByteArray> roles;
+    roles[ XPOSITION_ROLE ] = "xposition";
+    roles[ YPOSITION_ROLE ] = "yposition";
+    return roles;
+}
+
+void Markers::addMarker( const int id, const QPointF& position )
+{
+    if( _findMarker( id ) != _markers.end( ))
         return;
 
-    _markers[id] = position;
+    const int markerIndex = _markers.size();
+    beginInsertRows( QModelIndex(), markerIndex, markerIndex );
+    _markers.push_back( Marker( id, position ));
+    endInsertRows();
     emit( updated( shared_from_this( )));
 }
 
-void Markers::updateMarker( const int id, const QPointF position )
+void Markers::updateMarker( const int id, const QPointF& position )
 {
-    if( !_markers.count( id ))
+    auto it = _findMarker( id );
+
+    if( it  == _markers.end())
         return;
 
-    _markers[id] = position;
+    it->second = position;
     emit( updated( shared_from_this( )));
+
+    const int markerIndex = it - _markers.begin();
+    emit dataChanged( createIndex( markerIndex, 0 ), createIndex( markerIndex, 0 ));
 }
 
 void Markers::removeMarker( const int id )
 {
-    if( !_markers.count( id ))
+    auto it = _findMarker( id );
+
+    if( it  == _markers.end())
         return;
 
-    _markers.erase( id );
+    const int markerIndex = it - _markers.begin();
+    beginRemoveRows( QModelIndex(), markerIndex, markerIndex );
+    _markers.erase( it );
+    endRemoveRows();
     emit( updated( shared_from_this( )));
+}
+
+Markers::MarkersVector::iterator Markers::_findMarker( const int id )
+{
+   auto it = std::find_if( _markers.begin(), _markers.end(), [&id]( const Marker& marker )
+             { return marker.first == id; });
+   return it;
 }

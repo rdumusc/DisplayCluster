@@ -59,4 +59,9 @@ var fpsFontSize = 32;
 var fpsFontColor = "blue";
 var fpsX = 10;
 var fpsY = 10;
-var fpsZ = 1000;
+var overlayZ = 1000;
+
+var touchPointMarkerCenterColor = "white"
+var touchPointMarkerBorderColor = "red"
+var touchPointMarkerSize = 18
+var touchPointMarkerBorderSize = 2

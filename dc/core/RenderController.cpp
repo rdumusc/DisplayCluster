@@ -41,7 +41,6 @@
 
 #include "RenderContext.h"
 #include "DisplayGroupRenderer.h"
-#include "MarkerRenderer.h"
 
 #include "DisplayGroup.h"
 #include "Options.h"
@@ -64,10 +63,8 @@ RenderController::RenderController( RenderContextPtr renderContext )
                                        &WallWindow::setDisplayGroup,
                                        _renderContext->getWindow(), _1 ));
 
-    MarkerRenderer& markers =
-            _renderContext->getWindow()->getScene().getMarkersRenderer();
-    _syncMarkers.setCallback( boost::bind( &MarkerRenderer::setMarkers,
-                                           &markers, _1 ));
+    _syncMarkers.setCallback( boost::bind( &WallWindow::setMarkers,
+                                           _renderContext->getWindow(), _1 ));
 
     _syncOptions.setCallback( boost::bind(
                                   &WallWindow::setRenderOptions,
