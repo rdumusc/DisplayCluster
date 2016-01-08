@@ -63,6 +63,9 @@ public:
     /** @copydoc Content::getSourceImage */
     QString getSourceImage() const final;
 
+    /** @copydoc Content::isVectorial */
+    bool isVectorial() const final { return true; }
+
     /**
      * Reaad PDF informations from the source URI.
      * @return true on success, false if the URI is invalid or an error occured.

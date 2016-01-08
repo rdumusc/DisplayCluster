@@ -60,6 +60,9 @@ public:
     /** @copydoc Content::getSourceImage */
     QString getSourceImage() const override;
 
+    /** @copydoc Content::isVectorial */
+    bool isVectorial() const final { return true; }
+
     /**
      * Read SVG metadata.
      * @return true on success, false if the URI is invalid or an error occured.

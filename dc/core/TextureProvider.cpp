@@ -59,7 +59,10 @@ QImage TextureProvider::requestImage( const QString& id, QSize* size,
     QImage image;
     if( params.length() == 1 )
     {
-        image = QImage( params[0] );
+        if( params[0].endsWith( ".pyr" ))
+            image = DynamicTexture( params[0] ).getRootImage();
+        else
+            image = QImage( params[0] );
     }
     else if( params.length() == 2 )
     {

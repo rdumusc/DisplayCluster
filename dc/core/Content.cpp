@@ -62,6 +62,11 @@ const QString& Content::getURI() const
     return _uri;
 }
 
+bool Content::isVectorial() const
+{
+    return false;
+}
+
 QSize Content::getDimensions() const
 {
     return _size;
