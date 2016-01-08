@@ -45,7 +45,6 @@
 WallConfiguration::WallConfiguration(const QString &filename, const int processIndex)
     : Configuration(filename)
     , processIndex_( processIndex )
-    , screenCountForCurrentProcess_(0)
 {
     loadWallSettings(processIndex);
 }
@@ -76,36 +75,24 @@ void WallConfiguration::loadWallSettings(const int processIndex)
 
     // get number of tiles for my process
     query.setQuery( QString("string(count(//process[%1]/screen))").arg(xpathIndex) );
-    if (query.evaluateTo(&queryResult))
-        screenCountForCurrentProcess_ = queryResult.toInt();
+    if( !query.evaluateTo( &queryResult ) || queryResult.toInt() != 1 )
+        throw std::runtime_error( "Expect exactly one screen per process" );
 
-    // populate parameters for each screen
-    for(int i=1; i<=screenCountForCurrentProcess_; ++i)
-    {
-        QPoint screenPosition;
+    query.setQuery( QString("string(//process[%1]/screen/@x)").arg(xpathIndex));
+    if(query.evaluateTo(&queryResult))
+        screenPosition_.setX(queryResult.toInt());
 
-        query.setQuery( QString("string(//process[%1]/screen[%2]/@x)").arg(xpathIndex).arg(i) );
-        if(query.evaluateTo(&queryResult))
-            screenPosition.setX(queryResult.toInt());
+    query.setQuery( QString("string(//process[%1]/screen/@y)").arg(xpathIndex));
+    if(query.evaluateTo(&queryResult))
+        screenPosition_.setY(queryResult.toInt());
 
-        query.setQuery( QString("string(//process[%1]/screen[%2]/@y)").arg(xpathIndex).arg(i) );
-        if(query.evaluateTo(&queryResult))
-            screenPosition.setY(queryResult.toInt());
+    query.setQuery( QString("string(//process[%1]/screen/@i)").arg(xpathIndex));
+    if(query.evaluateTo(&queryResult))
+        screenGlobalIndex_.setX(queryResult.toInt());
 
-        screenPosition_.push_back(screenPosition);
-
-        QPoint screenIndex;
-
-        query.setQuery( QString("string(//process[%1]/screen[%2]/@i)").arg(xpathIndex).arg(i) );
-        if(query.evaluateTo(&queryResult))
-            screenIndex.setX(queryResult.toInt());
-
-        query.setQuery( QString("string(//process[%1]/screen[%2]/@j)").arg(xpathIndex).arg(i) );
-        if(query.evaluateTo(&queryResult))
-            screenIndex.setY(queryResult.toInt());
-
-        screenGlobalIndex_.push_back(screenIndex);
-    }
+    query.setQuery( QString("string(//process[%1]/screen/@j)").arg(xpathIndex));
+    if(query.evaluateTo(&queryResult))
+        screenGlobalIndex_.setY(queryResult.toInt());
 }
 
 const QString& WallConfiguration::getHost() const
@@ -118,19 +105,14 @@ const QString& WallConfiguration::getDisplay() const
     return display_;
 }
 
-int WallConfiguration::getScreenCount() const
+const QPoint& WallConfiguration::getGlobalScreenIndex() const
 {
-    return screenCountForCurrentProcess_;
+    return screenGlobalIndex_;
 }
 
-const QPoint& WallConfiguration::getGlobalScreenIndex( int screenIndex ) const
+const QPoint& WallConfiguration::getWindowPos() const
 {
-    return screenGlobalIndex_.at( screenIndex );
-}
-
-const QPoint& WallConfiguration::getWindowPos( int screenIndex ) const
-{
-    return screenPosition_.at( screenIndex );
+    return screenPosition_;
 }
 
 int WallConfiguration::getProcessIndex() const

@@ -54,12 +54,9 @@ class WallWindow : public QQuickView
 public:
     /**
      * Create a wall window.
-     * @param engine optional QML engine from another WallWindow for sharing
+     * @param the area of the wall that this window shows
      */
-    WallWindow( QQmlEngine* engine = nullptr );
-
-    /** Get the OpenGL context. */
-    QOpenGLContext& getGLContext();
+    WallWindow( const QRect& wallArea );
 
     /** Get the scene that this window renders. */
     WallScene& getScene();
@@ -76,6 +73,18 @@ public:
     /** Block all the update() and repaint() calls. */
     void setBlockDrawCalls( bool enable );
 
+    /** Update and synchronize scene objects before rendering a frame. */
+    void preRenderUpdate( WallToWallChannel& wallChannel );
+
+    /** Set new render options. */
+    void setRenderOptions( OptionsPtr options );
+
+    /** Set new display group. */
+    void setDisplayGroup( DisplayGroupPtr displayGroup );
+
+    /** @return the pixel stream provider. */
+    PixelStreamProvider& getPixelStreamProvider();
+
 //    /** Check if the window is exposed in the window system. */
 //    bool isExposed() const;
 
@@ -86,7 +95,7 @@ private:
 //    /** Reimplemented from QGraphicsView to block unsolicited draw calls. */
 //    void paintEvent( QPaintEvent* event ) override;
 
-    std::unique_ptr<QOpenGLContext> _glContext;
+    const QRect _wallArea;
     std::unique_ptr<WallScene> _scene;
     TestPatternPtr _testPattern;
     bool _blockUpdates;

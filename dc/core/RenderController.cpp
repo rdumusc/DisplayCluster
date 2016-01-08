@@ -61,19 +61,17 @@ RenderController::RenderController( RenderContextPtr renderContext )
     , _syncOptions( boost::make_shared<Options>( ))
 {
     _syncDisplayGroup.setCallback( boost::bind(
-                                       &RenderController::_setDisplayGroup,
-                                       this, _1 ));
+                                       &WallWindow::setDisplayGroup,
+                                       _renderContext->getWindow(), _1 ));
 
-    for( WallWindowPtr window : _renderContext->getWindows( ))
-    {
-        MarkerRenderer& markers = window->getScene().getMarkersRenderer();
-        _syncMarkers.setCallback( boost::bind( &MarkerRenderer::setMarkers,
-                                               &markers, _1 ));
+    MarkerRenderer& markers =
+            _renderContext->getWindow()->getScene().getMarkersRenderer();
+    _syncMarkers.setCallback( boost::bind( &MarkerRenderer::setMarkers,
+                                           &markers, _1 ));
 
-        _syncOptions.setCallback( boost::bind(
-                                      &RenderController::_setRenderOptions,
-                                      this, _1 ));
-    }
+    _syncOptions.setCallback( boost::bind(
+                                  &WallWindow::setRenderOptions,
+                                  _renderContext->getWindow(), _1 ));
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const
@@ -88,13 +86,7 @@ void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
 
     _synchronizeObjects( versionCheckFunc );
 
-    _renderContext->getMovieProvider().update( wallChannel );
-    _renderContext->getPixelStreamProvider().update( wallChannel );
-
-    const QRect& visibleWallArea = _renderContext->getVisibleWallArea();
-    for( WallWindowPtr window : _renderContext->getWindows( ))
-        window->getScene().getDisplayGroupRenderer().preRenderUpdate(
-                    wallChannel, visibleWallArea );
+    _renderContext->getWindow()->preRenderUpdate( wallChannel );
 }
 
 bool RenderController::quitRendering() const
@@ -129,23 +121,4 @@ void RenderController::_synchronizeObjects( const SyncFunction&
     _syncDisplayGroup.sync( versionCheckFunc );
     _syncMarkers.sync( versionCheckFunc );
     _syncOptions.sync( versionCheckFunc );
-}
-
-void RenderController::_setRenderOptions( OptionsPtr options )
-{
-    _renderContext->setBackgroundColor( options->getBackgroundColor( ));
-    _renderContext->displayTestPattern( options->getShowTestPattern( ));
-
-    for( WallWindowPtr window : _renderContext->getWindows( ))
-    {
-        window->getScene().displayMarkers( options->getShowTouchPoints( ));
-        window->getScene().getDisplayGroupRenderer().setRenderingOptions(
-                    options );
-    }
-}
-
-void RenderController::_setDisplayGroup( DisplayGroupPtr displayGroup )
-{
-    for( WallWindowPtr window : _renderContext->getWindows( ))
-        window->getScene().setDisplayGroup( displayGroup );
 }

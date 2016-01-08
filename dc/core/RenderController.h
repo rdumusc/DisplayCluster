@@ -83,8 +83,6 @@ private:
     SwapSyncObject<MarkersPtr> _syncMarkers;
 
     void _synchronizeObjects( const SyncFunction& versionCheckFunc );
-    void _setRenderOptions( OptionsPtr options );
-    void _setDisplayGroup( DisplayGroupPtr displayGroup );
 };
 
 #endif // RENDERCONTROLLER_H

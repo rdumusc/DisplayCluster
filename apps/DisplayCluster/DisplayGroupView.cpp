@@ -45,6 +45,7 @@
 
 #include <QQmlComponent>
 #include <QQmlContext>
+#include <QQmlEngine>
 #include <QQuickItem>
 
 #define VIEW_MARGIN 0.05

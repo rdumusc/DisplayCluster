@@ -69,18 +69,14 @@ public:
      */
     const QString& getDisplay() const;
 
-    /** Get the number of screens/GLWindows this process has to manage. */
-    int getScreenCount() const;
-
     /**
      * Get the global index for the screen.
-     * @param screenIndex index in the range [0,getScreenCount()-1]
      * @return index starting at {0,0} from the top-left
      */
-    const QPoint& getGlobalScreenIndex( int screenIndex ) const;
+    const QPoint& getGlobalScreenIndex() const;
 
-    /** Get the coordinates of a screen in pixel units. */
-    const QPoint& getWindowPos( int screenIndex ) const;
+    /** Get the coordinates of the screen in pixel units. */
+    const QPoint& getWindowPos() const;
 
     /** Get the index of the process. */
     int getProcessIndex() const;
@@ -90,9 +86,8 @@ private:
     QString display_;
 
     const int processIndex_;
-    int screenCountForCurrentProcess_;
-    std::vector<QPoint> screenPosition_;
-    std::vector<QPoint> screenGlobalIndex_;
+    QPoint screenPosition_;
+    QPoint screenGlobalIndex_;
 
     void loadWallSettings(const int processIndex);
 };

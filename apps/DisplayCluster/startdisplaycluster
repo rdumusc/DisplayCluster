@@ -70,7 +70,7 @@ if(DC_BIN is None):
 if args.config:
     DC_CONFIG_FILE = args.config
 else:
-    DC_CONFIG_FILE = DC_PATH + '/share/DisplayCluster/examples/configuration.xml'
+    DC_CONFIG_FILE = DC_PATH + '/share/DisplayCluster/examples/configuration_1x3.xml'
 
 # set the Python path so the pydc module can be found
 if 'PYTHONPATH' not in os.environ:
