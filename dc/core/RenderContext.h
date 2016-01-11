@@ -59,9 +59,6 @@ public:
     /** Render and swap the wall window. */
     void updateWindow();
 
-    /** Swap GL buffers on all windows. */
-    void swapBuffers();
-
     /** @return the wall window that this context manages. */
     WallWindowPtr getWindow() { return _window; }
 

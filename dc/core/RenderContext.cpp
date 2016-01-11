@@ -74,17 +74,3 @@ void RenderContext::updateWindow()
 {
     _window->update();
 }
-
-void RenderContext::swapBuffers()
-{
-//    BOOST_FOREACH( WallWindowPtr window, windows_ )
-//    {
-//        if( !window->isExposed( ))
-//            continue;
-
-//        QGLWidget* glContext = static_cast<QGLWidget*>( window->viewport( ));
-//        glContext->makeCurrent();
-//        glContext->swapBuffers();
-//        glFlush();
-//    }
-}
