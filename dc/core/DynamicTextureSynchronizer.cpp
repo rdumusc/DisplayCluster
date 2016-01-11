@@ -52,12 +52,7 @@ DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
     _updateTiles( _reader.getMaxLod( ));
 }
 
-void DynamicTextureSynchronizer::sync( WallToWallChannel& channel )
-{
-    Q_UNUSED( channel );
-}
-
-void DynamicTextureSynchronizer::updateTiles( const ContentWindow& window )
+void DynamicTextureSynchronizer::update( const ContentWindow& window )
 {
     const QRectF contentRect = ZoomHelper( window ).getContentRect();
     const auto lod = _reader.getLod( contentRect.size().toSize( ));

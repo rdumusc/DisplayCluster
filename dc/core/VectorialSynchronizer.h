@@ -54,8 +54,8 @@ public:
     /** Constructor */
     VectorialSynchronizer() = default;
 
-    /** @copydoc ContentSynchronizer::updateTiles */
-    void updateTiles( const ContentWindow& window ) override;
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window ) override;
 
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;

@@ -46,12 +46,7 @@ BasicSynchronizer::BasicSynchronizer()
     _tiles.push_back( new Tile( -1, QRect(), this ));
 }
 
-void BasicSynchronizer::sync( WallToWallChannel& channel )
-{
-    Q_UNUSED( channel );
-}
-
-void BasicSynchronizer::updateTiles( const ContentWindow& window )
+void BasicSynchronizer::update( const ContentWindow& window )
 {
     Q_UNUSED( window );
 }

@@ -109,8 +109,6 @@ void WallWindow::preRenderUpdate( WallToWallChannel& wallChannel )
 
     movieProvider->update( wallChannel );
     pixelStreamProvider.update( wallChannel );
-    getScene().getDisplayGroupRenderer().preRenderUpdate( wallChannel,
-                                                          _wallArea );
 }
 
 void WallWindow::setRenderOptions( OptionsPtr options )

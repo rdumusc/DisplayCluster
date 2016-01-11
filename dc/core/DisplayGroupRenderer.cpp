@@ -141,17 +141,6 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
     }
 }
 
-void DisplayGroupRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
-                                            const QRect& visibleWallArea )
-{
-    foreach( QmlWindowPtr window, _windowItems )
-    {
-        window->preRenderUpdate( wallChannel, visibleWallArea );
-    }
-    if( _backgroundWindowItem )
-        _backgroundWindowItem->preRenderUpdate( wallChannel, visibleWallArea );
-}
-
 void DisplayGroupRenderer::_createDisplayGroupQmlItem( QQuickItem& parentItem )
 {
     _engine.rootContext()->setContextProperty( "displaygroup",

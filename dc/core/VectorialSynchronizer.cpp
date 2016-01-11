@@ -42,7 +42,7 @@
 #include "ContentWindow.h"
 #include "ImageProviderStringifier.h"
 
-void VectorialSynchronizer::updateTiles( const ContentWindow& window )
+void VectorialSynchronizer::update( const ContentWindow& window )
 {
     // Legacy solution. A list of tiles with different LODs might bring
     // better interactive performances and allow for texture caching.

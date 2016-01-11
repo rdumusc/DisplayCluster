@@ -42,6 +42,7 @@
 #include "FFMPEGFrame.h"
 #include "FFMPEGPicture.h"
 #include "FFMPEGMovie.h"
+#include "MovieContent.h"
 #include "WallToWallChannel.h"
 #include "log.h"
 
@@ -65,11 +66,18 @@ MovieUpdater::MovieUpdater( const QString& uri )
 
 MovieUpdater::~MovieUpdater() {}
 
+void MovieUpdater::sync( const MovieContent& movie )
+{
+    _paused = movie.getControlState() & STATE_PAUSED;
+    _loop = movie.getControlState() & STATE_LOOP;
+}
+
 void MovieUpdater::update( WallToWallChannel& channel )
 {
     if( !_ffmpegMovie->isValid( ))
         return;
 
+    _timer.setCurrentTime( channel.getTime( ));
     if( !_paused )
     {
         _updateTimestamp( channel );
@@ -114,8 +122,6 @@ double MovieUpdater::_getDelay() const
 
 void MovieUpdater::_updateTimestamp( WallToWallChannel& channel )
 {
-    _timer.setCurrentTime( channel.getTime( ));
-
     // Don't increment the timestamp until all the processes have caught up
     const bool isInSync = _getDelay() <= _ffmpegMovie->getFrameDuration();
     if( !channel.allReady( !_isVisible || isInSync ))
