@@ -63,7 +63,10 @@ RenderContext::RenderContext( const WallConfiguration& configuration )
     _window->setSource( QML_BACKGROUND_URL );
 
     if( configuration.getFullscreen( ))
+    {
+        _window->setCursor( Qt::BlankCursor );
         _window->showFullScreen();
+    }
     else
         _window->show();
 
