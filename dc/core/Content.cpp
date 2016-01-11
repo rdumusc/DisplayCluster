@@ -48,13 +48,13 @@ qreal Content::_maxScale = 3.0;
 Content::Content( const QString& uri )
     : _uri( uri )
     , _zoomRect( UNIT_RECTF )
-    , _actions( new ContentActionsModel( this ))
+    , _actions( this )
 {
 }
 
 Content::Content()
     : _zoomRect( UNIT_RECTF )
-    , _actions( 0 )
+    , _actions( this )
 {}
 
 const QString& Content::getURI() const
@@ -160,5 +160,5 @@ void Content::setZoomRect( const QRectF& zoomRect )
 
 ContentActionsModel* Content::getActions()
 {
-    return _actions;
+    return &_actions;
 }
