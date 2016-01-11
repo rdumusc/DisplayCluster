@@ -55,9 +55,8 @@ public:
     /**
      * Constructor
      * @param configuration The configuration to get information from
-     * @param tileIndex The tile index of the display
      */
-    TestPattern( const WallConfiguration& configuration, const int tileIndex );
+    TestPattern( const WallConfiguration& configuration );
 
     /** Render the test pattern. */
     void paint( QPainter* painter ) final;

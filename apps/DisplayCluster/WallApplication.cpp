@@ -46,6 +46,7 @@
 #include "WallFromMasterChannel.h"
 #include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
+#include "WallWindow.h"
 
 #include "configuration/WallConfiguration.h"
 
@@ -55,12 +56,19 @@
 #include <stdexcept>
 
 #include <boost/bind.hpp>
+#include <QOpenGLContext>
+#if QT_VERSION >= 0x050300
+#  include <QOpenGLFunctions>
+#else
+#  include <QOpenGLFunctions_1_0>
+#endif
 
 WallApplication::WallApplication( int& argc_, char** argv_,
                                   MPIChannelPtr worldChannel,
                                   MPIChannelPtr wallChannel )
     : QApplication( argc_, argv_ )
-    , wallChannel_( new WallToWallChannel( wallChannel ))
+    , _wallChannel( new WallToWallChannel( wallChannel ))
+    , _renderedFrames( 0 )
 {
     CommandLineParameters options( argc_, argv_ );
     if( options.getHelp( ))
@@ -76,18 +84,18 @@ WallApplication::WallApplication( int& argc_, char** argv_,
 
 WallApplication::~WallApplication()
 {
-    mpiReceiveThread_.quit();
-    mpiReceiveThread_.wait();
+    _mpiReceiveThread.quit();
+    _mpiReceiveThread.wait();
 
-    mpiSendThread_.quit();
-    mpiSendThread_.wait();
+    _mpiSendThread.quit();
+    _mpiSendThread.wait();
 }
 
 bool WallApplication::createConfig( const QString& filename, const int rank )
 {
     try
     {
-        config_.reset( new WallConfiguration( filename, rank ));
+        _config.reset( new WallConfiguration( filename, rank ));
     }
     catch( const std::runtime_error& e )
     {
@@ -103,7 +111,7 @@ void WallApplication::initRenderContext()
 
     try
     {
-        renderContext_.reset( new RenderContext( *config_ ));
+        _renderContext.reset( new RenderContext( *_config ));
     }
     catch( const std::runtime_error& e )
     {
@@ -112,49 +120,49 @@ void WallApplication::initRenderContext()
         throw std::runtime_error( "WallApplication: initialization failed." );
     }
 
-    renderController_.reset( new RenderController( renderContext_ ));
+    _renderController.reset( new RenderController( _renderContext ));
 }
 
 void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 {
-    fromMasterChannel_.reset( new WallFromMasterChannel( worldChannel ));
-    toMasterChannel_.reset( new WallToMasterChannel( worldChannel ));
+    _fromMasterChannel.reset( new WallFromMasterChannel( worldChannel ));
+    _toMasterChannel.reset( new WallToMasterChannel( worldChannel ));
 
-    fromMasterChannel_->moveToThread( &mpiReceiveThread_ );
-    toMasterChannel_->moveToThread( &mpiSendThread_ );
+    _fromMasterChannel->moveToThread( &_mpiReceiveThread );
+    _toMasterChannel->moveToThread( &_mpiSendThread );
 
-    connect( fromMasterChannel_.get(), SIGNAL( receivedQuit( )),
-             renderController_.get(), SLOT( updateQuit( )));
+    connect( _fromMasterChannel.get(), SIGNAL( receivedQuit( )),
+             _renderController.get(), SLOT( updateQuit( )));
 
-    connect( fromMasterChannel_.get(), SIGNAL( received( DisplayGroupPtr )),
-             renderController_.get(), SLOT( updateDisplayGroup( DisplayGroupPtr )));
+    connect( _fromMasterChannel.get(), SIGNAL( received( DisplayGroupPtr )),
+             _renderController.get(), SLOT( updateDisplayGroup( DisplayGroupPtr )));
 
-    connect( fromMasterChannel_.get(), SIGNAL( received( OptionsPtr )),
-             renderController_.get(), SLOT( updateOptions( OptionsPtr )));
+    connect( _fromMasterChannel.get(), SIGNAL( received( OptionsPtr )),
+             _renderController.get(), SLOT( updateOptions( OptionsPtr )));
 
-    connect( fromMasterChannel_.get(), SIGNAL( received( MarkersPtr )),
-             renderController_.get(), SLOT( updateMarkers( MarkersPtr )));
+    connect( _fromMasterChannel.get(), SIGNAL( received( MarkersPtr )),
+             _renderController.get(), SLOT( updateMarkers( MarkersPtr )));
 
-    connect( fromMasterChannel_.get(),
+    connect( _fromMasterChannel.get(),
              SIGNAL( received( deflect::FramePtr )),
-             &renderContext_->getPixelStreamProvider(),
+             &_renderContext->getWindow()->getPixelStreamProvider(),
              SLOT( setNewFrame( deflect::FramePtr )));
 
-    if( wallChannel_->getRank() == 0 )
+    if( _wallChannel->getRank() == 0 )
     {
-        connect( &renderContext_->getPixelStreamProvider(),
+        connect( &_renderContext->getWindow()->getPixelStreamProvider(),
                  SIGNAL( requestFrame( QString )),
-                 toMasterChannel_.get(), SLOT( sendRequestFrame( QString )));
+                 _toMasterChannel.get(), SLOT( sendRequestFrame( QString )));
     }
 
-    connect( fromMasterChannel_.get(), SIGNAL( receivedQuit( )),
-             toMasterChannel_.get(), SLOT( sendQuit( )));
+    connect( _fromMasterChannel.get(), SIGNAL( receivedQuit( )),
+             _toMasterChannel.get(), SLOT( sendQuit( )));
 
-    connect( &mpiReceiveThread_, SIGNAL( started( )),
-             fromMasterChannel_.get(), SLOT( processMessages( )));
+    connect( &_mpiReceiveThread, SIGNAL( started( )),
+             _fromMasterChannel.get(), SLOT( processMessages( )));
 
-    mpiReceiveThread_.start();
-    mpiSendThread_.start();
+    _mpiReceiveThread.start();
+    _mpiSendThread.start();
 }
 
 void WallApplication::startRendering()
@@ -163,21 +171,54 @@ void WallApplication::startRendering()
     // Must be a queued connection to avoid infinite recursion.
     connect( this, SIGNAL( frameFinished( )),
              this, SLOT( renderFrame( )), Qt::QueuedConnection );
+
+    // swap sync; afterRendering signal is emitted before swapBuffers
+    connect( _renderContext->getWindow().get(), &WallWindow::afterRendering,
+             [this]()
+    {
+        auto gl = _renderContext->getWindow()->openglContext();
+#if QT_VERSION >= 0x050300
+        gl->functions()->glFinish();
+#else
+        auto funcs = gl->versionFunctions< QOpenGLFunctions_1_0 >();
+        funcs->initializeOpenGLFunctions();
+        funcs->glFinish();
+#endif
+        if( _renderedFrames == 0 )
+            _wallChannel->globalBarrier();
+        ++_renderedFrames;
+    });
+
+    // trigger new renderloop after rendering & swap or quit application
+    connect( _renderContext->getWindow().get(), &WallWindow::frameSwapped,
+             [this]()
+    {
+        auto gl = _renderContext->getWindow()->openglContext();
+#if QT_VERSION >= 0x050300
+        gl->functions()->glFlush();
+#else
+        auto funcs = gl->versionFunctions< QOpenGLFunctions_1_0 >();
+        funcs->initializeOpenGLFunctions();
+        funcs->glFlush();
+#endif
+        // expose event also causes swap, but don't trigger new frames in that
+        // case to not messup/deadlock swap- and object-sync
+        if( _renderedFrames == 1 )
+        {
+            if( _renderController->quitRendering( ))
+                quit();
+           else
+                emit frameFinished();
+        }
+    });
+
     renderFrame();
 }
 
 void WallApplication::renderFrame()
 {
-    wallChannel_->synchronizeClock();
-
-    renderController_->preRenderUpdate( *wallChannel_ );
-
-    wallChannel_->globalBarrier();
-    renderContext_->updateGLWindows();
-    renderContext_->swapBuffers();
-
-    if( renderController_->quitRendering( ))
-        quit();
-
-    emit( frameFinished( ));
+    _renderedFrames = 0;
+    _wallChannel->synchronizeClock();
+    _renderController->preRenderUpdate( *_wallChannel );
+    _renderContext->updateWindow();
 }

@@ -82,16 +82,18 @@ private slots:
     void renderFrame();
 
 private:
-    boost::scoped_ptr<WallConfiguration> config_;
-    RenderContextPtr renderContext_;
-    boost::scoped_ptr<RenderController> renderController_;
+    boost::scoped_ptr<WallConfiguration> _config;
+    RenderContextPtr _renderContext;
+    boost::scoped_ptr<RenderController> _renderController;
 
-    boost::scoped_ptr<WallFromMasterChannel> fromMasterChannel_;
-    boost::scoped_ptr<WallToMasterChannel> toMasterChannel_;
-    boost::scoped_ptr<WallToWallChannel> wallChannel_;
+    boost::scoped_ptr<WallFromMasterChannel> _fromMasterChannel;
+    boost::scoped_ptr<WallToMasterChannel> _toMasterChannel;
+    boost::scoped_ptr<WallToWallChannel> _wallChannel;
 
-    QThread mpiSendThread_;
-    QThread mpiReceiveThread_;
+    QThread _mpiSendThread;
+    QThread _mpiReceiveThread;
+
+    size_t _renderedFrames;
 
     bool createConfig(const QString& filename, const int rank);
     void initRenderContext();

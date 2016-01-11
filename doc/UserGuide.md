@@ -19,7 +19,7 @@ A single xml configuration file is required to launch the application. It
 defines the number of processes to launch, the hosts on which they have to run
 and the list of windows that each one of them will display.
 
-\include examples/configuration.xml
+\include examples/configuration_1x3.xml
 
 More examples can be found in the examples folder of the source directory, or
 installed under ${install_prefix}/share/DisplayCluster/examples.

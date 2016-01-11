@@ -45,8 +45,6 @@
 
 #include "glxDisplay.h"
 
-#define CONFIG_TEST_FILENAME "configuration.xml"
-
 // We need a global fixture because a bug in QApplication prevents
 // deleting then recreating a QApplication in the same process.
 // https://bugreports.qt-project.org/browse/QTBUG-7104

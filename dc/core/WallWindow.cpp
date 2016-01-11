@@ -39,23 +39,41 @@
 
 #include "WallWindow.h"
 
+#include "DisplayGroupRenderer.h"
+#include "Options.h"
 #include "TestPattern.h"
 #include "WallScene.h"
 
-WallWindow::WallWindow( QQmlEngine* engine_ )
-    : QQuickView( engine_, nullptr )
-    , _glContext( new QOpenGLContext )
+#include "config.h"
+#include "MovieProvider.h"
+#if ENABLE_PDF_SUPPORT
+#  include "PDFProvider.h"
+#endif
+#include "PixelStreamProvider.h"
+#include "SVGProvider.h"
+#include "TextureProvider.h"
+
+#include <QQmlEngine>
+
+WallWindow::WallWindow( const QRect& wallArea )
+    : QQuickView()
+    , _wallArea( wallArea )
     , _blockUpdates( false )
     , _isExposed( false )
 {
     setSurfaceType( QWindow::OpenGLSurface );
     setResizeMode( SizeRootObjectToView );
     setFlags( Qt::FramelessWindowHint );
-}
+    resize( wallArea.size( ));
 
-QOpenGLContext& WallWindow::getGLContext()
-{
-    return *_glContext;
+    engine()->addImageProvider( MovieProvider::ID, new MovieProvider );
+#if ENABLE_PDF_SUPPORT
+    engine()->addImageProvider( PDFProvider::ID, new PDFProvider );
+#endif
+    engine()->addImageProvider( PixelStreamProvider::ID,
+                              new PixelStreamProvider );
+    engine()->addImageProvider( SVGProvider::ID, new SVGProvider );
+    engine()->addImageProvider( TextureProvider::ID, new TextureProvider);
 }
 
 WallScene& WallWindow::getScene()
@@ -81,6 +99,39 @@ TestPatternPtr WallWindow::getTestPattern()
 void WallWindow::setBlockDrawCalls( const bool enable )
 {
     _blockUpdates = enable;
+}
+
+void WallWindow::preRenderUpdate( WallToWallChannel& wallChannel )
+{
+    auto movieProvider = dynamic_cast< MovieProvider* >
+            ( engine()->imageProvider( MovieProvider::ID ));
+    auto& pixelStreamProvider = getPixelStreamProvider();
+
+    movieProvider->update( wallChannel );
+    pixelStreamProvider.update( wallChannel );
+    getScene().getDisplayGroupRenderer().preRenderUpdate( wallChannel,
+                                                          _wallArea );
+}
+
+void WallWindow::setRenderOptions( OptionsPtr options )
+{
+    setColor( options->getBackgroundColor( ));
+    getTestPattern()->setVisible( options->getShowTestPattern( ));
+
+    getScene().displayMarkers( options->getShowTouchPoints( ));
+    getScene().getDisplayGroupRenderer().setRenderingOptions( options );
+}
+
+void WallWindow::setDisplayGroup( DisplayGroupPtr displayGroup )
+{
+    getScene().setDisplayGroup( displayGroup );
+}
+
+PixelStreamProvider& WallWindow::getPixelStreamProvider()
+{
+    auto pixelStreamProvider = dynamic_cast< PixelStreamProvider* >
+            ( engine()->imageProvider( PixelStreamProvider::ID ));
+    return *pixelStreamProvider;
 }
 
 //bool WallWindow::isExposed() const

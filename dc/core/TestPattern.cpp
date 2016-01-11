@@ -49,12 +49,11 @@
 #define LINE_WIDTH  10
 #define TEXT_POS_X  50
 
-TestPattern::TestPattern( const WallConfiguration& configuration,
-                          const int tileIndex )
+TestPattern::TestPattern( const WallConfiguration& configuration )
     : wallSize_( configuration.getTotalSize( ))
 {
     setVisible( false );
-    const QPoint globalScreenIndex = configuration.getGlobalScreenIndex( tileIndex );
+    const QPoint globalScreenIndex = configuration.getGlobalScreenIndex();
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
 
     windowRect_ = configuration.getScreenRect( globalScreenIndex );

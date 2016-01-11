@@ -48,7 +48,6 @@
 #include <QGesture>
 #include <QGestureEvent>
 
-#include <QQmlEngine>
 #include <QQuickView>
 
 /**

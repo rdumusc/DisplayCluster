@@ -76,6 +76,8 @@ QImage MovieProvider::requestImage( const QString& id, QSize* size,
 
     if( !requestedSize.isEmpty( ))
         image = image.scaled( requestedSize );
+    else
+        image = image.copy();
 
     *size = image.size();
     return image;

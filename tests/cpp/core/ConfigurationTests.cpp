@@ -96,11 +96,8 @@ BOOST_AUTO_TEST_CASE( test_wall_configuration )
     WallConfiguration config( CONFIG_TEST_FILENAME, 1 );
 
     BOOST_CHECK_EQUAL( config.getDisplay().toStdString(), CONFIG_EXPECTED_DISPLAY );
-    BOOST_CHECK( config.getGlobalScreenIndex( 0 ) == QPoint( 0,0 ) );
-    BOOST_CHECK_EQUAL( config.getHost().toStdString(), CONFIG_EXPECTED_HOST_NAME );
-
-    BOOST_CHECK_EQUAL( config.getScreenCount(), 1 );
-}
+    BOOST_CHECK( config.getGlobalScreenIndex() == QPoint( 0,0 ) );
+    BOOST_CHECK_EQUAL( config.getHost().toStdString(), CONFIG_EXPECTED_HOST_NAME );}
 
 BOOST_AUTO_TEST_CASE( test_master_configuration )
 {

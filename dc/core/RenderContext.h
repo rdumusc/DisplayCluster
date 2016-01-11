@@ -41,60 +41,30 @@
 
 #include "types.h"
 
-#include <QRectF>
 #include <QColor>
-#include <QFont>
-
-#include <QQmlEngine>
-#include <QQuickItem>
 
 /**
- * A render context composed of multiple GL windows.
+ * A render context composed of a WallWindow aka QQuickView.
  */
 class RenderContext
 {
 public:
     /**
-     * Create a new RenderContext and initialize the GLWindows.
+     * Create a new RenderContext and initialize the WallWindow.
      * @param configuration The configuration that describes the window settings
      * @throw std::runtime_error if the context initialization failed.
      */
     RenderContext( const WallConfiguration& configuration );
 
-    /** Get the area of the wall which is visible in this context. */
-    const QRect& getVisibleWallArea() const;
+    /** Render and swap the wall window. */
+    void updateWindow();
 
-    /** Set the background color of all windows. */
-    void setBackgroundColor( const QColor& color );
-
-    /** Render GL objects on all windows. */
-    void updateGLWindows();
-
-    /** Swap GL buffers on all windows. */
-    void swapBuffers();
-
-    /** Get access to the scene object. */
-    const QSize& getWallSize() const;
-
-    /** Get the movie provider. */
-    MovieProvider& getMovieProvider();
-
-    /** Get the pixel stream provider. */
-    PixelStreamProvider& getPixelStreamProvider();
-
-    /** Display or hide the test pattern. */
-    void displayTestPattern( bool value );
-
-    /** Get access to the windows. */
-    WallWindowPtrs getWindows();
+    /** @return the wall window that this context manages. */
+    WallWindowPtr getWindow() { return _window; }
 
 private:
-    void setupOpenGLWindows( const WallConfiguration& config );
-
-    WallWindowPtrs _windows;
-
+    WallWindowPtr _window;
     QSize _wallSize;
-    QRect _visibleWallArea;
 };
 
 #endif
