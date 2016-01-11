@@ -40,7 +40,6 @@
 #include "ContentWindow.h"
 #include "ContentWindowController.h"
 #include "ContentActionsModel.h"
-#include "ContentItem.h"
 #include "ContentInteractionDelegate.h"
 #include "QmlControlPanel.h"
 
@@ -58,8 +57,6 @@ struct QmlTypeRegistration
     {
         qmlRegisterType<ContentActionsModel>(
                     QML_MODULE, 1, 0, "ContentActionsModel");
-        qmlRegisterType<ContentItem>(
-                    QML_MODULE, 1, 0, "ContentItem");
 
         qmlRegisterUncreatableType<Content>(
                     QML_MODULE, 1, 0, "Content",

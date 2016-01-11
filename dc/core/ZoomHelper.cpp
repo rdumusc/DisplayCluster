@@ -37,67 +37,41 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXELSTREAMSYNCHRONIZER_H
-#define PIXELSTREAMSYNCHRONIZER_H
+#include "ZoomHelper.h"
 
-#include "ContentSynchronizer.h"
-#include "FpsCounter.h"
+#include "ContentWindow.h"
 
-#include <QObject>
+ZoomHelper::ZoomHelper( const ContentWindow& window )
+    : _contentWindow( window )
+{}
 
-/**
- * Synchronizes a PixelStream between different QML windows.
- *
- * The PixelStreamSynchronizer serves as an interface between the
- * PixelStreamProvider and the QML rendering, to inform it when new frames are
- * ready and swap them synchronously.
- */
-class PixelStreamSynchronizer : public ContentSynchronizer
+QRectF ZoomHelper::getContentRect() const
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( PixelStreamSynchronizer )
+    return toContentRect( _contentWindow.getContent()->getZoomRect( ));
+}
 
-public:
-    /**
-     * Construct a synchronizer for a stream, opening it in the provider.
-     * @param uri The uri of the movie to open.
-     * @param provider The PixelStreamProvider where the stream will be opened.
-     */
-    PixelStreamSynchronizer( const QString& uri,
-                             PixelStreamProvider& provider );
+QRectF ZoomHelper::toContentRect( const QRectF& zoomRect ) const
+{
+    const QRectF& window = _contentWindow.getDisplayCoordinates();
 
-    /** Destruct the synchronizer and close the stream in the provider. */
-    ~PixelStreamSynchronizer();
+    const qreal w = window.width() / zoomRect.width();
+    const qreal h = window.height() / zoomRect.height();
 
-    /** @copydoc ContentSynchronizer::sync */
-    void sync( WallToWallChannel& channel ) override;
+    const qreal posX = -zoomRect.x() * w;
+    const qreal posY = -zoomRect.y() * h;
 
-    /** @copydoc ContentSynchronizer::updateTiles */
-    void updateTiles( const ContentWindow& window ) override;
+    return QRectF( posX, posY, w, h );
+}
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
+QRectF ZoomHelper::toZoomRect( const QRectF& contentRect ) const
+{
+    const QRectF& window = _contentWindow.getDisplayCoordinates();
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
+    const qreal w = window.width() / contentRect.width();
+    const qreal h = window.height() / contentRect.height();
 
-    /** @copydoc ContentSynchronizer::getTiles */
-    QList<QObject*> getTiles() const override;
+    const qreal posX = -contentRect.x() / contentRect.width();
+    const qreal posY = -contentRect.y() / contentRect.height();
 
-    /** @copydoc ContentSynchronizer::getTilesArea */
-    QSize getTilesArea() const override;
-
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
-
-private:
-    QString _uri;
-    PixelStreamProvider& _provider;
-    PixelStreamUpdaterSharedPtr _updater;
-    uint _frameIndex;
-    FpsCounter _fpsCounter;
-
-    void onPictureUpdated( uint frameIndex );
-};
-
-#endif
+    return QRectF( posX, posY, w, h );
+}

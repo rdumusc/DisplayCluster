@@ -37,71 +37,53 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentItem.h"
+#ifndef DYNAMICTEXTURESYNCHRONIZER_H
+#define DYNAMICTEXTURESYNCHRONIZER_H
 
-#include "log.h"
-#include "WallContent.h"
+#include "ContentSynchronizer.h"
 
-#include <QtGui/QPainter>
+#include "DynamicTexture.h" // member
 
-#include <GL/gl.h>
-
-ContentItem::ContentItem( QQuickItem* parentItem_ )
-    : QQuickPaintedItem( parentItem_ )
-    , wallContent_( 0 )
-    , role_( ROLE_CONTENT )
-{}
-
-void ContentItem::paint( QPainter* painter )
+/**
+ * A synchronizer which provides the list of Tiles for DynamicTextures.
+ */
+class DynamicTextureSynchronizer : public ContentSynchronizer
 {
-    painter->beginNativePainting();
+    Q_OBJECT
+    Q_DISABLE_COPY( DynamicTextureSynchronizer )
 
-    glPushMatrix();
-    glScalef( width(), height(), 1.f );
+public:
+    /** Constructor */
+    explicit DynamicTextureSynchronizer( const QString& uri );
 
-    switch ( role_ )
-    {
-    case ROLE_CONTENT:
-        wallContent_->render();
-        break;
-    case ROLE_PREVIEW:
-        wallContent_->renderPreview();
-        break;
-    default:
-        put_flog( LOG_ERROR, "Unsupported ContentItem::Role : ", role_ );
-        break;
-    }
+    /** @copydoc ContentSynchronizer::sync */
+    void sync( WallToWallChannel& channel ) override;
 
-    glPopMatrix();
+    /** @copydoc ContentSynchronizer::updateTiles */
+    void updateTiles( const ContentWindow& window ) override;
 
-    painter->endNativePainting();
-}
+    /** @copydoc ContentSynchronizer::getSourceParams */
+    QString getSourceParams() const override;
 
-void ContentItem::setWallContent( WallContent* wallContent )
-{
-    wallContent_ = wallContent;
-}
+    /** @copydoc ContentSynchronizer::allowsTextureCaching */
+    bool allowsTextureCaching() const override;
 
-ContentItem::Role ContentItem::getRole() const
-{
-    return role_;
-}
+    /** @copydoc ContentSynchronizer::getTiles */
+    QList<QObject*> getTiles() const override;
 
-QRectF ContentItem::getSceneRect() const
-{
-    return mapRectToScene( boundingRect( ));
-}
+    /** @copydoc ContentSynchronizer::getTilesArea */
+    QSize getTilesArea() const override;
 
-bool ContentItem::isAnimating() const
-{
-    return property("animating").toBool();
-}
+    /** @copydoc ContentSynchronizer::getStatistics */
+    QString getStatistics() const override;
 
-void ContentItem::setRole( const Role arg )
-{
-    if( role_ == arg )
-        return;
+private:
+    QList<QObject*> _tiles;
+    DynamicTexture _reader;
+    uint _lod;
+    QRect _tilesArea;
 
-    role_ = arg;
-    emit roleChanged( arg );
-}
+    void _updateTiles( uint lod );
+};
+
+#endif

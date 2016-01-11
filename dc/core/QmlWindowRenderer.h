@@ -42,8 +42,6 @@
 
 #include "types.h"
 
-#include <QGraphicsObject>
-
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQuickItem>

@@ -39,13 +39,9 @@
 #ifndef DYNAMIC_TEXTURE_H
 #define DYNAMIC_TEXTURE_H
 
-#include "WallContent.h"
-
-#include "GLTexture2D.h"
-#include "GLQuad.h"
+#include "types.h"
 
 #include <QImage>
-#include <QFuture>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -59,8 +55,7 @@
  * (2) Direct reading from a large image
  * @see generateImagePyramid()
  */
-class DynamicTexture : public boost::enable_shared_from_this<DynamicTexture>,
-        public WallContent
+class DynamicTexture : public boost::enable_shared_from_this<DynamicTexture>
 {
 public:
     /**
@@ -77,9 +72,6 @@ public:
                     const QRectF& parentCoordinates = QRectF(),
                     const int childIndex = 0 );
 
-    /** Destructor */
-    ~DynamicTexture();
-
     /** The exension of pyramid metadata files */
     static const QString pyramidFileExtension;
 
@@ -89,21 +81,29 @@ public:
     /** Get the size of the full resolution texture */
     const QSize& getSize() const;
 
-    /** Render the dynamic texture. */
-    void render() override;
-
-    /** Render the preview. */
-    void renderPreview() override;
-
-    /** Pre render step. */
-    void preRenderUpdate( ContentWindowPtr window,
-                          const QRect& wallArea ) override;
-
-    /** Post render step. */
-    void postRenderSync( WallToWallChannel& wallToWallChannel ) override;
-
     /** Get the root image of the pyramid. */
     QImage getRootImage() const;
+
+    /** Get the max LOD level (top of pyramid, lowest resolution). */
+    uint getMaxLod() const;
+
+    /**
+     * Get the appropriate LOD for a given display size.
+     * @param targetDisplaySize The size at which the content will be displayed.
+     */
+    uint getLod( const QSize& targetDisplaySize ) const;
+
+    /** Get the number of tile at the given lod. */
+    QSize getTilesCount( uint lod ) const;
+
+    /** Get the index of the first tile of the given lod. */
+    int getFirstTileIndex( uint lod ) const;
+
+    /** Get the coordinates in pixels of a specific tile. */
+    QRect getTileCoord( uint lod, uint x, uint y ) const;
+
+    /** Get the tile filename for a given tile index. */
+    QString getTileFilename( uint tileIndex ) const;
 
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
@@ -111,22 +111,6 @@ public:
      *        will be created.
      */
     bool generateImagePyramid( const QString& outputFolder );
-
-    /**
-     * Load the image for this part of the texture
-     * @throw boost::bad_weak_ptr exception if a parent object is deleted during
-     *        thread execution
-     * @internal asynchronous loading thread needs access to this method
-     */
-    void loadImage();
-
-    /**
-     * Decrement the global count of loading threads.
-     * @throw boost::bad_weak_ptr exception if a parent object is deleted during
-     *        thread execution
-     * @internal asynchronous loading thread needs access to this method
-     */
-    void decrementGlobalThreadCount();
 
 private:
     /* for root only: */
@@ -136,9 +120,6 @@ private:
 
     QString imagePyramidPath_;
     bool useImagePyramid_;
-
-    int threadCount_;
-    QMutex threadCountMutex_;
 
     QImage fullscaleImage_;
 
@@ -154,38 +135,13 @@ private:
     std::vector<int> treePath_; // To construct the image name for each object
     int depth_; // The depth of the object in the image pyramid
 
-    mutable QFuture<void> loadImageThread_;
-    bool loadImageThreadStarted_;
-
     QSize imageSize_; // full scale image dimensions
     QImage scaledImage_; // for texture upload to GPU
-    GLTexture2D texture_;
-    GLQuad quad_;
-    GLQuad quadBorder_;
 
     std::vector<DynamicTexturePtr> children_; // Children in the image pyramid
-    bool renderedChildren_; // Used for garbage-collecting unused child objects
 
-    bool isVisibleInCurrentGLView();
-    bool isResolutionSufficientForCurrentGLView();
-    bool canHaveChildren();
-
-    /** Recursively clear children which have not been rendered recently. */
-    void clearOldChildren(); // @All
-
-    /**
-     * Render the dynamic texture.
-     * @param texCoords The area of the full scale texture to render
-     */
-    void render( const QRectF& texCoords );
-
-    /**
-     * Render the dynamic texture.
-     * This function is also called from child objects to render a low-res
-     * texture when the high-res one is not loaded yet.
-     * @param texCoords The area of the full scale texture to render
-     */
-    void drawTexture( const QRectF& texCoords ); // @All
+    void _loadImage();
+    bool _canHaveChildren();
 
     /** Is this object the root element. */
     bool isRoot() const;  // @All
@@ -213,35 +169,9 @@ private:
 
     QRectF getImageRegionInParentImage( const QRectF& imageRegion ) const;
 
-    void loadImageAsync(); // @All
     bool loadFullResImage(); // @Root only
     QImage getImageFromParent( const QRectF& imageRegion,
                                DynamicTexture* start ); // @Child only
-    void generateTexture(); // @All
-
-    void renderChildren( const QRectF& texCoords ); // @All
-    void renderTextureBorder(); // @All
-    void renderTexturedUnitQuad( const QRectF& texCoords ); // @All
-
-    bool getThreadsDoneDescending(); // @Root
-
-
-    int getGlobalThreadCount(); // @Root
-    void incrementGlobalThreadCount(); // @Root
-
-    // @TODO-Remove
-    QRect getRootImageCoordinates( float x, float y, float w, float h );
-
-    // @TODO-Remove
-    /**
-     * Get the region spanned by a unit rectangle {(0;0),(1;1)} in the current
-     * GL view.
-     * The region is in screen coordinates with the origin at the viewport's
-     * top-left corner.
-     * @param clampToViewportBorders Clamp to the visible part of the region.
-     * @return The region in pixel units.
-     */
-    static QRectF getProjectedPixelRect( const bool clampToViewportBorders );
 };
 
 #endif

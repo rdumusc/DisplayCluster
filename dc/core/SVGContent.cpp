@@ -39,7 +39,6 @@
 #include "SVGContent.h"
 
 #include "SVGProvider.h"
-#include "ImageProviderStringifier.h"
 
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
@@ -57,9 +56,14 @@ CONTENT_TYPE SVGContent::getType() const
     return CONTENT_TYPE_SVG;
 }
 
+QString SVGContent::getProviderId() const
+{
+    return SVGProvider::ID;
+}
+
 QString SVGContent::getSourceImage() const
 {
-    return SVGProvider::ID + "/" + _uri + "#" + stringify( _zoomRect );
+    return SVGProvider::ID + "/" + _uri;
 }
 
 bool SVGContent::readMetadata()

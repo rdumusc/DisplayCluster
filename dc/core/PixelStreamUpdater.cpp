@@ -163,7 +163,7 @@ void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
     for( size_t i = _tiles.size(); i < segments.size(); ++i )
         _tiles.push_back( new Tile( i, toRect( segments[i].parameters ), this));
 
-    // Or remove objects it if it is bigger
+    // Or remove objects if it is bigger
     const size_t removeCount = _tiles.size() - segments.size();
     for( size_t i = 0; i < removeCount; ++i )
     {

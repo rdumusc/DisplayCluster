@@ -40,6 +40,7 @@
 
 #include "DynamicTexture.h"
 #include "serializationHelpers.h"
+#include "TextureProvider.h"
 
 #include <boost/serialization/export.hpp>
 #include <QtCore/QFileInfo>
@@ -65,6 +66,16 @@ bool DynamicTextureContent::readMetadata()
     const DynamicTexture dynamicTexture( getURI( ));
     _size = dynamicTexture.getSize();
     return true;
+}
+
+QString DynamicTextureContent::getProviderId() const
+{
+    return TextureProvider::ID;
+}
+
+QString DynamicTextureContent::getSourceImage() const
+{
+    return getProviderId() + QString("/") + _uri;
 }
 
 const QStringList& DynamicTextureContent::getSupportedExtensions()

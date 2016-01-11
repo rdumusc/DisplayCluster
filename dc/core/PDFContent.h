@@ -57,8 +57,14 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
-    /** Get the source image url used by the QML engine for rendering. */
+    /** @copydoc Content::getProviderId */
+    QString getProviderId() const final;
+
+    /** @copydoc Content::getSourceImage */
     QString getSourceImage() const final;
+
+    /** @copydoc Content::isVectorial */
+    bool isVectorial() const final { return true; }
 
     /**
      * Reaad PDF informations from the source URI.

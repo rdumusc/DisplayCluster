@@ -70,8 +70,6 @@ private:
     void _constraintPosition( QRectF& zoomRect ) const;
     QSizeF _getMaxZoom() const;
     QSizeF _getMinZoom() const;
-    QRectF _toContentRect( const QRectF& zoomRect ) const;
-    QRectF _toZoomRect( const QRectF& contentRect ) const;
 };
 
 #endif // ZOOMINTERACTIONDELEGATE_H

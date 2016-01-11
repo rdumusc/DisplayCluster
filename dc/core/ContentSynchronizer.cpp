@@ -40,9 +40,12 @@
 #include "ContentSynchronizer.h"
 
 #include "Content.h"
+
 #include "BasicSynchronizer.h"
+#include "DynamicTextureSynchronizer.h"
 #include "MovieSynchronizer.h"
 #include "PixelStreamSynchronizer.h"
+#include "VectorialSynchronizer.h"
 
 #include "MovieProvider.h"
 #include "PixelStreamProvider.h"
@@ -55,12 +58,17 @@ ContentSynchronizer::create( ContentPtr content,
 {
     switch( content->getType( ))
     {
+    case CONTENT_TYPE_DYNAMIC_TEXTURE:
+        return make_unique<DynamicTextureSynchronizer>( content->getURI( ));
     case CONTENT_TYPE_MOVIE:
         return make_unique<MovieSynchronizer>(
                    content->getURI(), dynamic_cast<MovieProvider&>( provider ));
     case CONTENT_TYPE_PIXEL_STREAM:
         return make_unique<PixelStreamSynchronizer>(
              content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
+    case CONTENT_TYPE_PDF:
+    case CONTENT_TYPE_SVG:
+        return make_unique<VectorialSynchronizer>();
     default:
         return make_unique<BasicSynchronizer>();
     }

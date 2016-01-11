@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,57 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef WALLCONTENT_H
-#define WALLCONTENT_H
+#ifndef VECTORIALSYNCHRONIZER_H
+#define VECTORIALSYNCHRONIZER_H
 
-#include "types.h"
-
-#include "ContentItem.h"
+#include "BasicSynchronizer.h"
 
 /**
- * A content to be rendered by Wall processes.
- *
- * An implementation must exist for every valid ContentType.
+ * Synchonrizer for vectorial contents.
  */
-class WallContent
+class VectorialSynchronizer : public BasicSynchronizer
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( VectorialSynchronizer )
+
 public:
-    /** Destructor. */
-    virtual ~WallContent();
+    /** Constructor */
+    VectorialSynchronizer() = default;
 
-    /** Render the content. */
-    virtual void render() = 0;
+    /** @copydoc ContentSynchronizer::updateTiles */
+    void updateTiles( const ContentWindow& window ) override;
 
-    /** Render the preview ( whole object at low resolution.). */
-    virtual void renderPreview() = 0;
+    /** @copydoc ContentSynchronizer::getSourceParams */
+    QString getSourceParams() const override;
 
-    /** Update internal state before rendering. */
-    virtual void preRenderUpdate( ContentWindowPtr window,
-                                  const QRect& visibleWallArea ) = 0;
+    /** @copydoc ContentSynchronizer::allowsTextureCaching */
+    bool allowsTextureCaching() const override;
 
-    /** Optional synchronization step before rendering. */
-    virtual void preRenderSync( WallToWallChannel& wallToWallChannel )
-    {
-        Q_UNUSED( wallToWallChannel )
-    }
-
-    /** Optional synchronization step after rendering. */
-    virtual void postRenderSync( WallToWallChannel& wallToWallChannel )
-    {
-        Q_UNUSED( wallToWallChannel )
-    }
-
-    /** Set a reference to the Qml item using this content. */
-    void setQmlItem( ContentItem* content );
-
-    /** Create an object corresponding to the given content. */
-    static WallContentPtr create( const Content& content );
-
-protected:
-    /** Constructor. */
-    WallContent();
-
-    ContentItem* _qmlItem;
+private:
+    QRectF _contentZoom;
 };
 
-#endif // WALLCONTENT_H
+#endif // VECTORIALSYNCHRONIZER_H

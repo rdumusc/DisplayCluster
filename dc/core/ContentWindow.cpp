@@ -184,6 +184,11 @@ void ContentWindow::setFocusedCoordinates( const QRectF& coordinates )
     emit focusedCoordinatesChanged();
 }
 
+const QRectF& ContentWindow::getDisplayCoordinates() const
+{
+    return isFocused() ? getFocusedCoordinates() : getCoordinates();
+}
+
 void ContentWindow::setFocused( const bool value )
 {
     if( focused_ == value )

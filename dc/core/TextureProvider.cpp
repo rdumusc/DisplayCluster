@@ -40,6 +40,7 @@
 #include "TextureProvider.h"
 
 #include "log.h"
+#include "DynamicTexture.h"
 
 const QString TextureProvider::ID( "texture" );
 
@@ -53,7 +54,29 @@ TextureProvider::~TextureProvider() {}
 QImage TextureProvider::requestImage( const QString& id, QSize* size,
                                       const QSize& /*requestedSize*/ )
 {
-    const QImage image( id );
+    const QStringList params = id.split( "?" );
+
+    QImage image;
+    if( params.length() == 1 )
+    {
+        if( params[0].endsWith( ".pyr" ))
+            image = DynamicTexture( params[0] ).getRootImage();
+        else
+            image = QImage( params[0] );
+    }
+    else if( params.length() == 2 )
+    {
+        const QString& pyramidFile = params[0];
+
+        bool ok = false;
+        const int tileIndex = params[1].toInt( &ok );
+        if( !ok )
+            return QImage();
+
+        const DynamicTexture reader( pyramidFile );
+        image = QImage( reader.getTileFilename( tileIndex ));
+    }
+
     if( image.isNull( ))
     {
         put_flog( LOG_ERROR, "error loading: '%s'",

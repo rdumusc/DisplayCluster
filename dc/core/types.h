@@ -76,7 +76,6 @@ class QmlWindowRenderer;
 class Renderable;
 class RenderContext;
 class TestPattern;
-class WallContent;
 class WallWindow;
 class WallConfiguration;
 class WallToWallChannel;
@@ -102,7 +101,6 @@ typedef boost::shared_ptr< QmlWindowRenderer > QmlWindowPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< RenderContext > RenderContextPtr;
 typedef boost::shared_ptr< TestPattern > TestPatternPtr;
-typedef boost::shared_ptr< WallContent > WallContentPtr;
 typedef boost::shared_ptr< WallWindow > WallWindowPtr;
 
 typedef std::set< ContentWindowPtr > ContentWindowSet;

@@ -75,6 +75,7 @@ class Content : public QObject
     Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
     Q_PROPERTY( QSize size READ getDimensions CONSTANT )
     Q_PROPERTY( QString sourceImage READ getSourceImage CONSTANT )
+    Q_PROPERTY( bool vectorial READ isVectorial CONSTANT )
 
 public:
     /** Constructor **/
@@ -87,10 +88,13 @@ public:
     virtual CONTENT_TYPE getType() const = 0;
 
     /** Get the ID of the image provider for this content. */
-    virtual QString getProviderId() const { return QString( "none" ); }
+    virtual QString getProviderId() const = 0;
 
     /** Get the source image url used by the QML engine for rendering. */
-    virtual QString getSourceImage() const { return QString( "error" ); }
+    virtual QString getSourceImage() const = 0;
+
+    /** Check if the content is vectorial, used for zoom handling in QML. */
+    virtual bool isVectorial() const;
 
     /**
      * Read content metadata from the data source.

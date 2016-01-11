@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,48 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "WallContent.h"
+#include "VectorialSynchronizer.h"
 
-#include "config.h"
-#include "Content.h"
+#include "ContentWindow.h"
+#include "ImageProviderStringifier.h"
 
-#include "DynamicTexture.h"
-
-#include <boost/make_shared.hpp>
-
-WallContent::WallContent()
-    : _qmlItem( 0 )
+void VectorialSynchronizer::updateTiles( const ContentWindow& window )
 {
-}
-
-WallContent::~WallContent()
-{
-}
-
-WallContentPtr WallContent::create( const Content& content )
-{
-    switch( content.getType( ))
+    // Legacy solution. A list of tiles with different LODs might bring
+    // better interactive performances and allow for texture caching.
+    ContentPtr content = window.getContent();
+    if( _contentZoom != content->getZoomRect() )
     {
-    case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return boost::make_shared<DynamicTexture>( content.getURI( ));
-//    case CONTENT_TYPE_MOVIE:
-//        return boost::make_shared<Movie>( content.getURI( ));
-//    case CONTENT_TYPE_PIXEL_STREAM:
-//        return boost::make_shared<PixelStream>( content.getURI( ));
-//    case CONTENT_TYPE_SVG:
-//        return boost::make_shared<SVG>( content.getURI( ));
-//    case CONTENT_TYPE_TEXTURE:
-//        return boost::make_shared<Texture>( content.getURI( ));
-//#if ENABLE_PDF_SUPPORT
-//    case CONTENT_TYPE_PDF:
-//        return boost::make_shared<PDF>( content.getURI( ));
-//#endif
-    default:
-        return WallContentPtr();
+        _contentZoom = content->getZoomRect();
+        emit sourceParamsChanged();
     }
 }
 
-void WallContent::setQmlItem( ContentItem* qmlItem )
+QString VectorialSynchronizer::getSourceParams() const
 {
-    _qmlItem = qmlItem;
+    if( _contentZoom.isValid( ))
+        return QString( '#' ) + stringify( _contentZoom );
+    return QString();
+}
+
+bool VectorialSynchronizer::allowsTextureCaching() const
+{
+    return false;
 }

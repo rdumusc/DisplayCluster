@@ -37,67 +37,84 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXELSTREAMSYNCHRONIZER_H
-#define PIXELSTREAMSYNCHRONIZER_H
+#include "DynamicTextureSynchronizer.h"
 
-#include "ContentSynchronizer.h"
-#include "FpsCounter.h"
+#include "ContentWindow.h"
+#include "Tile.h"
+#include "ZoomHelper.h"
 
-#include <QObject>
+#include <QTextStream>
 
-/**
- * Synchronizes a PixelStream between different QML windows.
- *
- * The PixelStreamSynchronizer serves as an interface between the
- * PixelStreamProvider and the QML rendering, to inform it when new frames are
- * ready and swap them synchronously.
- */
-class PixelStreamSynchronizer : public ContentSynchronizer
+DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
+    : _reader( uri )
+    , _lod( 0 )
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( PixelStreamSynchronizer )
+    _updateTiles( _reader.getMaxLod( ));
+}
 
-public:
-    /**
-     * Construct a synchronizer for a stream, opening it in the provider.
-     * @param uri The uri of the movie to open.
-     * @param provider The PixelStreamProvider where the stream will be opened.
-     */
-    PixelStreamSynchronizer( const QString& uri,
-                             PixelStreamProvider& provider );
+void DynamicTextureSynchronizer::sync( WallToWallChannel& channel )
+{
+    Q_UNUSED( channel );
+}
 
-    /** Destruct the synchronizer and close the stream in the provider. */
-    ~PixelStreamSynchronizer();
+void DynamicTextureSynchronizer::updateTiles( const ContentWindow& window )
+{
+    const QRectF contentRect = ZoomHelper( window ).getContentRect();
+    const auto lod = _reader.getLod( contentRect.size().toSize( ));
+    _updateTiles( lod );
+}
 
-    /** @copydoc ContentSynchronizer::sync */
-    void sync( WallToWallChannel& channel ) override;
+QString DynamicTextureSynchronizer::getSourceParams() const
+{
+    return QString();
+}
 
-    /** @copydoc ContentSynchronizer::updateTiles */
-    void updateTiles( const ContentWindow& window ) override;
+bool DynamicTextureSynchronizer::allowsTextureCaching() const
+{
+    return true;
+}
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
+QList<QObject*> DynamicTextureSynchronizer::getTiles() const
+{
+    return _tiles;
+}
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
+QSize DynamicTextureSynchronizer::getTilesArea() const
+{
+    return _tilesArea.size();
+}
 
-    /** @copydoc ContentSynchronizer::getTiles */
-    QList<QObject*> getTiles() const override;
+QString DynamicTextureSynchronizer::getStatistics() const
+{
+    QString stats;
+    QTextStream stream( &stats );
+    stream << "LOD:  " << _lod << "/" << _reader.getMaxLod();
+    stream << "  res: " << _tilesArea.width() << "x" << _tilesArea.height();
+    return stats;
+}
 
-    /** @copydoc ContentSynchronizer::getTilesArea */
-    QSize getTilesArea() const override;
+void DynamicTextureSynchronizer::_updateTiles( const uint lod )
+{
+    if( lod == _lod && !_tiles.empty( ))
+        return;
 
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
+    _lod = lod;
+    _tiles.clear();
+    _tilesArea = QRect();
 
-private:
-    QString _uri;
-    PixelStreamProvider& _provider;
-    PixelStreamUpdaterSharedPtr _updater;
-    uint _frameIndex;
-    FpsCounter _fpsCounter;
+    const QSize tilesCount = _reader.getTilesCount( _lod );
+    const int startIndex = _reader.getFirstTileIndex( _lod );
 
-    void onPictureUpdated( uint frameIndex );
-};
-
-#endif
+    for( int y = 0; y < tilesCount.height(); ++y )
+    {
+        for( int x = 0; x < tilesCount.width(); ++x )
+        {
+            const int i = startIndex + y * tilesCount.width() + x;
+            const QRect coord = _reader.getTileCoord( _lod, x, y );
+            _tiles.push_back( new Tile( i, coord, this ));
+            _tilesArea = _tilesArea.united( coord );
+        }
+    }
+    emit tilesChanged();
+    emit statisticsChanged();
+}

@@ -54,6 +54,11 @@ CONTENT_TYPE TextureContent::getType() const
     return CONTENT_TYPE_TEXTURE;
 }
 
+QString TextureContent::getProviderId() const
+{
+    return TextureProvider::ID;
+}
+
 QString TextureContent::getSourceImage() const
 {
     return TextureProvider::ID + "/" + _uri;

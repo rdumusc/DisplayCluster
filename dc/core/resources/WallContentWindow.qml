@@ -9,7 +9,6 @@ BaseContentWindow {
     color: options.alphaBlending ? "transparent" : "black"
 
     property string imagesource: "image://" + contentwindow.content.sourceImage
-                                 + contentsync.sourceParams
 
     Item {
         id: contentItemArea
@@ -18,6 +17,7 @@ BaseContentWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width - 2 * windowRect.border.width
         height: parent.height - windowRect.border.width - (titleBar.visible ? titleBar.height : windowRect.border.width)
+        clip: true
 
         Item {
             id: contentItem
@@ -32,7 +32,7 @@ BaseContentWindow {
                     height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
 
                     property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
-                    source: imagesource + tileIndex
+                    source: imagesource + contentsync.sourceParams + tileIndex
 
                     cache: contentsync.allowsTextureCaching
 
@@ -44,16 +44,31 @@ BaseContentWindow {
                     }
                 }
             }
-            transform: Scale {
-                xScale: contentItemArea.width / contentwindow.content.size.width
-                yScale: contentItemArea.height / contentwindow.content.size.height
-            }
+            transform: [
+                // Adjust tiles to content area
+                Scale {
+                    xScale: contentItemArea.width / (contentsync.tilesArea.width > 0 ? contentsync.tilesArea.width : contentwindow.content.size.width)
+                    yScale: contentItemArea.height / (contentsync.tilesArea.height > 0 ? contentsync.tilesArea.height : contentwindow.content.size.height)
+                },
+                // Apply content zoom (except for vectorial types)
+                Translate {
+                    x: contentwindow.content.vectorial ? 0 : -contentwindow.content.zoomRect.x * contentItemArea.width
+                    y: contentwindow.content.vectorial ? 0 : -contentwindow.content.zoomRect.y * contentItemArea.height
+                },
+                Scale {
+                    xScale: contentwindow.content.vectorial ? 1.0 : 1.0 / contentwindow.content.zoomRect.width
+                    yScale: contentwindow.content.vectorial ? 1.0 : 1.0 / contentwindow.content.zoomRect.height
+                }
+            ]
         }
     }
 
     ZoomContext {
         id: zoomContext
-        image.source: visible ? imagesource : ""
+        // vectorial content types store the zoom region in
+        // contentsync.sourceParams, which must be excluded for the zoom context
+        property string sourceparams: contentwindow.content.vectorial ? "" : contentsync.sourceParams
+        image.source: visible ? imagesource + sourceparams : ""
         image.cache: contentsync.allowsTextureCaching
     }
 

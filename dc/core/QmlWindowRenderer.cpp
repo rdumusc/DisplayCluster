@@ -39,13 +39,10 @@
 
 #include "QmlWindowRenderer.h"
 
-#include "ContentItem.h"
 #include "ContentSynchronizer.h"
 #include "ContentWindow.h"
 
 #include <QQmlComponent>
-
-#include <QGraphicsScene>
 
 namespace
 {
@@ -94,7 +91,10 @@ void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
                                          const QRect& /*visibleWallArea*/ )
 {
     if( _contentSynchronizer )
+    {
         _contentSynchronizer->sync( wallChannel );
+        _contentSynchronizer->updateTiles( *contentWindow_ );
+    }
 }
 
 ContentWindowPtr QmlWindowRenderer::getContentWindow()

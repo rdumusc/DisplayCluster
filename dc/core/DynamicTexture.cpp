@@ -39,46 +39,30 @@
 #include "DynamicTexture.h"
 
 #include "log.h"
-#include "ContentWindow.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
 
 #include <QDir>
 #include <QImageReader>
-#include <QtConcurrentRun>
-
-#ifdef __APPLE__
-    #include <OpenGL/glu.h>
-    // glu functions deprecated in 10.9
-#   pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#   pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else
-    #include <GL/glu.h>
-#endif
 
 #define TEXTURE_SIZE 512
-
-#undef DYNAMIC_TEXTURE_SHOW_BORDER // define this to show borders around image tiles
-
-const QString DynamicTexture::pyramidFileExtension = QString( "pyr" );
-const QString DynamicTexture::pyramidFolderSuffix = QString( ".pyramid/" );
 
 namespace
 {
 const QString PYRAMID_METADATA_FILE_NAME( "pyramid.pyr" );
 }
 
+const QString DynamicTexture::pyramidFileExtension = QString( "pyr" );
+const QString DynamicTexture::pyramidFolderSuffix = QString( ".pyramid/" );
+
 DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
                                const QRectF& parentCoordinates, const int childIndex)
     : uri_(uri)
     , useImagePyramid_(false)
-    , threadCount_(0)
     , parent_(parent)
     , imageCoordsInParentImage_(parentCoordinates)
     , depth_(0)
-    , loadImageThreadStarted_(false)
-    , renderedChildren_(false)
 {
     // if we're a child...
     if(parent)
@@ -104,10 +88,6 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
         else
             readFullImageMetadata(uri_);
     }
-}
-
-DynamicTexture::~DynamicTexture()
-{
 }
 
 bool DynamicTexture::isRoot() const
@@ -169,12 +149,18 @@ bool DynamicTexture::readPyramidMetadataFromFile( const QString& uri )
 
 bool DynamicTexture::determineImageExtension( const QString& imagePyramidPath )
 {
+    QString extension;
     const QFileInfoList pyramidRootFiles =
             QDir( imagePyramidPath ).entryInfoList( QStringList( "0.*" ));
-    if( pyramidRootFiles.empty( ))
-        return false;
+    if( !pyramidRootFiles.empty( ))
+        extension = pyramidRootFiles.first().suffix();
+    else
+    {
+        QString path( imagePyramidPath );
+        path.remove( pyramidFolderSuffix );
+        extension = path.split(".").last();
+    }
 
-    const QString extension = pyramidRootFiles.first().suffix();
     if( !QImageReader().supportedImageFormats().contains( extension.toLatin1( )))
         return false;
 
@@ -232,7 +218,7 @@ QString DynamicTexture::getPyramidImageFilename() const
 
 bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
 {
-    loadImage(); // load this object's scaledImage_
+    _loadImage(); // load this object's scaledImage_
 
     const QString filename = pyramidFolder + getPyramidImageFilename();
     put_flog( LOG_DEBUG, "saving: '%s'", filename.toLocal8Bit().constData( ));
@@ -242,7 +228,7 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     scaledImage_ = QImage(); // no longer need scaled image
 
     // recursively generate and save children images
-    if( canHaveChildren( ))
+    if( _canHaveChildren( ))
     {
         QRectF imageBounds[4];
         imageBounds[0] = QRectF( 0.0, 0.0, 0.5, 0.5 );
@@ -261,37 +247,6 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     return true;
 }
 
-void loadImageInThread( DynamicTexturePtr dynamicTexture )
-{
-    try
-    {
-        dynamicTexture->loadImage();
-        dynamicTexture->decrementGlobalThreadCount();
-    }
-    catch( const boost::bad_weak_ptr& )
-    {
-        put_flog( LOG_DEBUG, "Parent image deleted during image loading" );
-    }
-}
-
-void DynamicTexture::loadImageAsync()
-{
-    // only start the thread if this DynamicTexture tree has one available
-    // each DynamicTexture tree is limited to (maxThreads - 2) threads, where
-    // the max is determined by the global QThreadPool instance
-    // we increase responsiveness / interactivity by not queuing up image loading
-    // const int maxThreads = std::max(QThreadPool::globalInstance()->maxThreadCount() - 2, 1);
-    // todo: this doesn't perform well with too many threads; restricting to 1 thread for now
-    const int maxThreads = 1;
-
-    if(getGlobalThreadCount() < maxThreads)
-    {
-        loadImageThreadStarted_ = true;
-        incrementGlobalThreadCount();
-        loadImageThread_ = QtConcurrent::run(loadImageInThread, shared_from_this());
-    }
-}
-
 bool DynamicTexture::loadFullResImage()
 {
     if( !fullscaleImage_.load( uri_ ))
@@ -304,7 +259,7 @@ bool DynamicTexture::loadFullResImage()
     return true;
 }
 
-void DynamicTexture::loadImage()
+void DynamicTexture::_loadImage()
 {
     if(isRoot())
     {
@@ -348,62 +303,7 @@ void DynamicTexture::loadImage()
 
 const QSize& DynamicTexture::getSize() const
 {
-    if( imageSize_.isEmpty() && loadImageThreadStarted_ )
-        loadImageThread_.waitForFinished();
-
     return imageSize_;
-}
-
-void DynamicTexture::render()
-{
-    assert( isRoot( ));
-
-    render( zoomRect_ );
-}
-
-void DynamicTexture::renderPreview()
-{
-    render( UNIT_RECTF );
-}
-
-void DynamicTexture::render( const QRectF& texCoords )
-{
-    if( !isVisibleInCurrentGLView( ))
-        return;
-
-    if( canHaveChildren() && !isResolutionSufficientForCurrentGLView( ))
-    {
-        renderChildren( texCoords );
-        renderedChildren_ = true;
-        return;
-    }
-
-    // Normal rendering: load the texture if not already available
-    if( !loadImageThreadStarted_ )
-        loadImageAsync();
-
-    drawTexture( texCoords );
-}
-
-void DynamicTexture::preRenderUpdate( ContentWindowPtr window,
-                                      const QRect& wallArea )
-{
-    assert( isRoot( ));
-
-    if( !QRectF( wallArea ).intersects( _qmlItem->getSceneRect( )))
-        return;
-
-    // Root needs to always have a texture for renderInParent()
-    if( !loadImageThreadStarted_ )
-        loadImageAsync();
-
-    zoomRect_ = window->getContent()->getZoomRect();
-}
-
-void DynamicTexture::postRenderSync( WallToWallChannel& )
-{
-    clearOldChildren();
-    renderedChildren_ = false;
 }
 
 QImage DynamicTexture::getRootImage() const
@@ -411,73 +311,102 @@ QImage DynamicTexture::getRootImage() const
     return QImage( imagePyramidPath_+ '/' + getPyramidImageFilename( ));
 }
 
-bool DynamicTexture::isVisibleInCurrentGLView()
+uint DynamicTexture::getMaxLod() const
 {
-    // TODO This objects visibility should be determined by using the GLWindow
-    // as a pre-render step, not retro-fitted in here!
-    const QRectF screenRect = getProjectedPixelRect(true);
-    return screenRect.width()*screenRect.height() > 0.;
+    uint maxLod = 0;
+    int maxDim = std::max( imageSize_.width(), imageSize_.height( ));
+    while( maxDim > TEXTURE_SIZE )
+    {
+        maxDim = maxDim >> 1;
+        ++maxLod;
+    }
+    return maxLod;
 }
 
-bool DynamicTexture::isResolutionSufficientForCurrentGLView()
+uint DynamicTexture::getLod( const QSize& targetDisplaySize ) const
 {
-    const QRectF fullRect = getProjectedPixelRect(false);
-    return fullRect.width() <= TEXTURE_SIZE && fullRect.height() <= TEXTURE_SIZE;
+    uint lod = 0;
+    QSize nextLOD = imageSize_ / 2;
+    const uint maxLod = getMaxLod();
+    while( targetDisplaySize.width() < nextLOD.width() &&
+           targetDisplaySize.height() < nextLOD.height( ) &&
+           lod < maxLod )
+    {
+        nextLOD = nextLOD / 2;
+        ++lod;
+    }
+    return lod;
 }
 
-bool DynamicTexture::canHaveChildren()
+QString DynamicTexture::getTileFilename( const uint tileIndex ) const
+{
+    uint lod = 0;
+    uint firstTileIndex = getFirstTileIndex( lod );
+    while( tileIndex < firstTileIndex )
+        firstTileIndex = getFirstTileIndex( ++lod );
+
+    const int index = tileIndex - firstTileIndex;
+    const QSize tilesCount = getTilesCount( lod );
+
+    int x = index % tilesCount.width();
+    int y = index / tilesCount.width();
+
+    QString filename = QString( ".%1" ).arg( imageExtension_ );
+
+    const uint maxLod = getMaxLod();
+    while( ++lod <= maxLod )
+    {
+        // The indices go in the order: 0-1
+        //                              3-2
+        int i = 0;
+        if( y % 2 )
+            i = 3 - x % 2;
+        else
+            i = x % 2;
+
+        filename.prepend( QString::number( i )).prepend( '-' );
+        x = x >> 1;
+        y = y >> 1;
+    }
+    filename.prepend( '0' );
+    filename.prepend( imagePyramidPath_ );
+    return filename;
+}
+
+int DynamicTexture::getFirstTileIndex( const uint lod ) const
+{
+    const uint maxLod = getMaxLod();
+
+    if( lod == maxLod )
+        return 0;
+
+    const int nextLod = lod + 1;
+    return std::pow( 4, maxLod - nextLod ) + getFirstTileIndex( nextLod );
+}
+
+QRect
+DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
+{
+    Q_UNUSED( lod );
+
+    // All tiles have the same size in the current implementation, but this is
+    // likely to change in the future
+    const QSize size = imageSize_.scaled( TEXTURE_SIZE, TEXTURE_SIZE,
+                                          Qt::KeepAspectRatio );
+    return QRect( QPoint( x * size.width(), y * size.height( )), size );
+}
+
+QSize DynamicTexture::getTilesCount( const uint lod ) const
+{
+    const int maxDim = std::max( imageSize_.width(), imageSize_.height( ));
+    const int tiles = std::ceil( (float)(maxDim >> lod) / TEXTURE_SIZE );
+    return QSize( tiles, tiles );
+}
+
+bool DynamicTexture::_canHaveChildren()
 {
     return (getRoot()->imageSize_.width() / (1 << depth_) > TEXTURE_SIZE ||
             getRoot()->imageSize_.height() / (1 << depth_) > TEXTURE_SIZE);
-}
-
-void DynamicTexture::drawTexture(const QRectF& texCoords)
-{
-    if(!texture_.isValid() && loadImageThreadStarted_ && loadImageThread_.isFinished())
-        generateTexture();
-
-    if(texture_.isValid())
-    {
-#ifdef DYNAMIC_TEXTURE_SHOW_BORDER
-        renderTextureBorder();
-#endif
-        renderTexturedUnitQuad(texCoords);
-    }
-    else
-    {
-        // If we don't yet have a texture, try to render from parent's texture
-        DynamicTexturePtr parent = parent_.lock();
-        if(parent)
-            parent->drawTexture(getImageRegionInParentImage(texCoords));
-    }
-}
-
-void DynamicTexture::renderTextureBorder()
-{
-    glPushAttrib( GL_CURRENT_BIT );
-
-    glColor4f( 0.f, 1.f, 0.f, 1.f );
-
-    quadBorder_.setRenderMode( GL_LINE_LOOP );
-    quadBorder_.render();
-
-    glPopAttrib();
-}
-
-void DynamicTexture::renderTexturedUnitQuad( const QRectF& texCoords )
-{
-    quad_.setTexCoords( texCoords );
-    quad_.render();
-}
-
-void DynamicTexture::clearOldChildren()
-{
-    if(!renderedChildren_ && !children_.empty() && getThreadsDoneDescending())
-        children_.clear();
-
-    // run on my children (if i still have any)
-    for(unsigned int i=0; i<children_.size(); i++)
-        children_[i]->clearOldChildren();
 }
 
 bool DynamicTexture::makeFolder( const QString& folder )
@@ -501,8 +430,6 @@ bool DynamicTexture::generateImagePyramid( const QString& outputFolder )
     const QString imageName( QFileInfo( uri_ ).fileName( ));
     const QString pyramidFolder( QDir( outputFolder ).absolutePath() +
                                  "/" + imageName + pyramidFolderSuffix );
-    if( loadImageThreadStarted_ )
-        loadImageThread_.waitForFinished();
 
     if( !makeFolder( pyramidFolder ))
         return false;
@@ -513,49 +440,12 @@ bool DynamicTexture::generateImagePyramid( const QString& outputFolder )
     return writePyramidImagesRecursive( pyramidFolder );
 }
 
-void DynamicTexture::decrementGlobalThreadCount()
-{
-    if(isRoot())
-    {
-        QMutexLocker locker(&threadCountMutex_);
-        threadCount_ = threadCount_ - 1;
-    }
-    else
-    {
-        return getRoot()->decrementGlobalThreadCount();
-    }
-}
-
 DynamicTexturePtr DynamicTexture::getRoot()
 {
     if(isRoot())
         return shared_from_this();
     else
         return DynamicTexturePtr(parent_)->getRoot();
-}
-
-QRect DynamicTexture::getRootImageCoordinates(float x, float y, float w, float h)
-{
-    if(isRoot())
-    {
-        // if necessary, block and wait for image loading to complete
-        if( loadImageThreadStarted_ && !loadImageThread_.isFinished( ))
-            loadImageThread_.waitForFinished();
-
-        return QRect(x*imageSize_.width(), y*imageSize_.height(),
-                     w*imageSize_.width(), h*imageSize_.height());
-    }
-    else
-    {
-        DynamicTexturePtr parent = parent_.lock();
-
-        float pX = imageCoordsInParentImage_.x() + x * imageCoordsInParentImage_.width();
-        float pY = imageCoordsInParentImage_.y() + y * imageCoordsInParentImage_.height();
-        float pW = w * imageCoordsInParentImage_.width();
-        float pH = h * imageCoordsInParentImage_.height();
-
-        return parent->getRootImageCoordinates(pX, pY, pW, pH);
-    }
 }
 
 QRectF DynamicTexture::getImageRegionInParentImage(const QRectF& imageRegion) const
@@ -588,10 +478,6 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
                     getImageRegionInParentImage( imageRegion ), this );
     }
 
-    // wait for the load image thread to complete if it's in progress
-    if(loadImageThreadStarted_ && !loadImageThread_.isFinished())
-        loadImageThread_.waitForFinished();
-
     if(!fullscaleImage_.isNull())
     {
         // we have a valid image, return the clipped image
@@ -611,163 +497,4 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
         DynamicTexturePtr parent = parent_.lock();
         return parent->getImageFromParent(getImageRegionInParentImage(imageRegion), start);
     }
-}
-
-void DynamicTexture::generateTexture()
-{
-    texture_.init( scaledImage_, GL_BGRA );
-
-    quad_.setTexture( texture_.getTextureId( ));
-    quad_.enableAlphaBlending( scaledImage_.hasAlphaChannel( ));
-
-    scaledImage_ = QImage(); // no longer need the source image
-}
-
-void DynamicTexture::renderChildren(const QRectF& texCoords)
-{
-    // children rectangles
-    const float inf = 1000000.;
-
-    // texture rectangle a child quadrant may contain
-    QRectF textureBounds[4];
-    textureBounds[0].setCoords(-inf,-inf, 0.5,0.5);
-    textureBounds[1].setCoords(0.5,-inf, inf,0.5);
-    textureBounds[2].setCoords(0.5,0.5, inf,inf);
-    textureBounds[3].setCoords(-inf,0.5, 0.5,inf);
-
-    // image rectange a child quadrant contains
-    QRectF imageBounds[4];
-    imageBounds[0] = QRectF(0.,0.,0.5,0.5);
-    imageBounds[1] = QRectF(0.5,0.,0.5,0.5);
-    imageBounds[2] = QRectF(0.5,0.5,0.5,0.5);
-    imageBounds[3] = QRectF(0.,0.5,0.5,0.5);
-
-    // see if we need to generate children
-    if(children_.empty())
-    {
-        for(unsigned int i=0; i<4; i++)
-        {
-            DynamicTexturePtr child(new DynamicTexture("", shared_from_this(), imageBounds[i], i));
-            children_.push_back(child);
-        }
-    }
-
-    // render children
-    for(unsigned int i=0; i<children_.size(); i++)
-    {
-        // portion of texture for this child
-        const QRectF childTextureRect = texCoords.intersected(textureBounds[i]);
-
-        // translate and scale to child texture coordinates
-        const QRectF childTextureRectTranslated = childTextureRect.translated(-imageBounds[i].x(), -imageBounds[i].y());
-
-        const QRectF childTextureRectTranslatedAndScaled(childTextureRectTranslated.x() / imageBounds[i].width(),
-                                                         childTextureRectTranslated.y() / imageBounds[i].height(),
-                                                         childTextureRectTranslated.width() / imageBounds[i].width(),
-                                                         childTextureRectTranslated.height() / imageBounds[i].height());
-
-        // find rendering position based on portion of textureRect we occupy
-        // recall the parent object (this one) is rendered as a (0,0,1,1) rectangle
-        const QRectF renderRect((childTextureRect.x()-texCoords.x()) / texCoords.width(),
-                                (childTextureRect.y()-texCoords.y()) / texCoords.height(),
-                                childTextureRect.width() / texCoords.width(),
-                                childTextureRect.height() / texCoords.height());
-
-        glPushMatrix();
-        glTranslatef(renderRect.x(), renderRect.y(), 0.);
-        glScalef(renderRect.width(), renderRect.height(), 1.);
-
-        children_[i]->render(childTextureRectTranslatedAndScaled);
-
-        glPopMatrix();
-    }
-}
-
-bool DynamicTexture::getThreadsDoneDescending()
-{
-    if(!loadImageThread_.isFinished())
-        return false;
-
-    for(unsigned int i=0; i<children_.size(); i++)
-    {
-        if(!children_[i]->getThreadsDoneDescending())
-            return false;
-    }
-
-    return true;
-}
-
-int DynamicTexture::getGlobalThreadCount()
-{
-    if(isRoot())
-    {
-        QMutexLocker locker(&threadCountMutex_);
-        return threadCount_;
-    }
-    else
-    {
-        return getRoot()->getGlobalThreadCount();
-    }
-}
-
-void DynamicTexture::incrementGlobalThreadCount()
-{
-    if(isRoot())
-    {
-        QMutexLocker locker(&threadCountMutex_);
-        threadCount_ = threadCount_ + 1;
-    }
-    else
-    {
-        return getRoot()->incrementGlobalThreadCount();
-    }
-}
-
-QRectF DynamicTexture::getProjectedPixelRect( const bool clampToViewportBorders )
-{
-    // get four corners in object space (recall we're in normalized 0->1 coord)
-    const double corners[4][3] =
-    {
-        {0.,0.,0.},
-        {1.,0.,0.},
-        {1.,1.,0.},
-        {0.,1.,0.}
-    };
-
-    // get four corners in screen space
-    GLdouble modelview[16];
-    glGetDoublev( GL_MODELVIEW_MATRIX, modelview );
-
-    GLdouble projection[16];
-    glGetDoublev( GL_PROJECTION_MATRIX, projection );
-
-    GLint viewport[4];
-    glGetIntegerv( GL_VIEWPORT, viewport );
-
-    GLdouble xWin[4][3];
-
-    for(size_t i=0; i<4; i++)
-    {
-        gluProject( corners[i][0], corners[i][1], corners[i][2],
-                    modelview, projection, viewport,
-                    &xWin[i][0], &xWin[i][1], &xWin[i][2] );
-
-        const GLdouble viewportWidth = (GLdouble)viewport[2];
-        const GLdouble viewportHeight = (GLdouble)viewport[3];
-
-        // The GL coordinates system origin is at the bottom-left corner with
-        // the y-axis pointing upwards. For the QRect, we want the origin at
-        // the top of the viewport with the y-axis pointing downwards.
-        xWin[i][1] = viewportHeight - xWin[i][1];
-
-        if( clampToViewportBorders )
-        {
-            xWin[i][0] = std::min( std::max( xWin[i][0], 0. ), viewportWidth );
-            xWin[i][1] = std::min( std::max( xWin[i][1], 0. ), viewportHeight );
-        }
-    }
-
-    const QPointF topleft( xWin[0][0], xWin[0][1] );
-    const QPointF bottomright( xWin[2][0], xWin[2][1] );
-    return QRectF( topleft, bottomright );
 }
