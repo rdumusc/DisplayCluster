@@ -271,6 +271,7 @@ void ContentWindow::setControlsVisible( const bool value )
 void ContentWindow::init()
 {
     connect( content_.get(), SIGNAL( modified( )), SIGNAL( contentModified( )));
+    content_->createActions();
     createInteractionDelegate();
 }
 

@@ -11,7 +11,7 @@ Rectangle {
     property bool animating: widthAnimation.running || heightAnimation.running
                              || unfocusTransition.running
     property real heightOffset: titleBar.visible ? titleBar.height : 0
-    property real yOffset: 0.5 * heightOffset
+    property real yOffset: isBackground ? 0.0 : 0.5 * heightOffset
 
     border.color: Style.windowBorderDefaultColor
     border.width: options.showWindowBorders && !isBackground ? Style.windowBorderWidth : 0

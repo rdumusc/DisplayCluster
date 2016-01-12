@@ -82,7 +82,7 @@ private slots:
     void pause();
 
 private:
-    void createActions();
+    void createActions() override;
 
     friend class boost::serialization::access;
 

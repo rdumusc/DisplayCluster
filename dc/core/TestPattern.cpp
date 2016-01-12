@@ -72,6 +72,7 @@ TestPattern::TestPattern( const WallConfiguration& configuration,
 
 void TestPattern::paint( QPainter* painter )
 {
+    painter->setRenderHint( QPainter::Antialiasing );
     renderCrossPattern( painter );
     renderLabels( painter );
 }

@@ -57,7 +57,6 @@ MovieContent::MovieContent( const QString& uri )
     : Content( uri )
     , controlState_( STATE_LOOP )
 {
-    createActions();
 }
 
 MovieContent::MovieContent()
