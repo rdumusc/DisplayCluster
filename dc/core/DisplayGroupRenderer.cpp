@@ -63,7 +63,8 @@ const int BACKGROUND_STACKING_ORDER = -1;
 
 DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
                                             const QPoint& pos )
-    : _engine( *parentWindow.engine( ))
+    : QObject( &parentWindow )
+    , _engine( *parentWindow.engine( ))
     , _displayGroup( new DisplayGroup( QSize( )))
     , _displayGroupItem( 0 )
     , _options( new Options )

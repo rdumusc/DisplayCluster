@@ -42,7 +42,8 @@
 #include "configuration/WallConfiguration.h"
 
 #include <QFont>
-#include <QtOpenGL/qgl.h>
+#include <QPainter>
+#include <QPen>
 
 #define FONT_SIZE   24
 #define LINE_WIDTH  10

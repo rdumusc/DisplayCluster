@@ -53,7 +53,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentFactory.h
   ContentLoader.h
   ContentType.h
-  Drawable.h
   DynamicTexture.h
   DynamicTextureContent.h
   ElapsedTimer.h
@@ -64,8 +63,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   FFMPEGVideoStream.h
   FileCommandHandler.h
   FpsCounter.h
-  GLQuad.h
-  GLTexture2D.h
   gestures/DoubleTapGestureRecognizer.h
   gestures/PanGesture.h
   gestures/PanGestureRecognizer.h
@@ -81,7 +78,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamContent.h
   QmlWindowRenderer.h
   qmlUtils.h
-  Renderable.h
   SessionCommandHandler.h
   State.h
   StatePreview.h
@@ -142,7 +138,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   Tile.h
   VectorialSynchronizer.h
   WallFromMasterChannel.h
-  WallScene.h
   WallWindow.h
   WallToMasterChannel.h
   WallToWallChannel.h
@@ -186,8 +181,6 @@ list(APPEND DCCORE_SOURCES
   FFMPEGVideoStream.cpp
   FileCommandHandler.cpp
   FpsCounter.cpp
-  GLQuad.cpp
-  GLTexture2D.cpp
   LayoutEngine.cpp
   ImageProviderStringifier.cpp
   log.cpp
@@ -224,7 +217,6 @@ list(APPEND DCCORE_SOURCES
   TextureProvider.cpp
   VectorialSynchronizer.cpp
   WallFromMasterChannel.cpp
-  WallScene.cpp
   WallToMasterChannel.cpp
   WallToWallChannel.cpp
   WallWindow.cpp

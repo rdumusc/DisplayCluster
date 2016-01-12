@@ -42,8 +42,6 @@
 
 #include "types.h"
 
-#include "WallScene.h"
-
 #include <QQuickView>
 
 class WallWindow : public QQuickView
@@ -58,8 +56,8 @@ public:
      */
     WallWindow( const WallConfiguration& config );
 
-    /** Get the scene that this window renders. */
-    WallScene& getScene();
+    /** @return the display group renderer. */
+    DisplayGroupRenderer& getDisplayGroupRenderer();
 
     /** Update and synchronize scene objects before rendering a frame. */
     void preRenderUpdate( WallToWallChannel& wallChannel );
@@ -77,7 +75,7 @@ public:
     PixelStreamProvider& getPixelStreamProvider();
 
 private:
-    std::unique_ptr<WallScene> _scene;
+    DisplayGroupRenderer* _displayGroupRenderer;
     TestPattern* _testPattern;
 };
 

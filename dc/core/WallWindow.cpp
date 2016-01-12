@@ -42,7 +42,6 @@
 #include "DisplayGroupRenderer.h"
 #include "Options.h"
 #include "TestPattern.h"
-#include "WallScene.h"
 
 #include "configuration/WallConfiguration.h"
 
@@ -64,6 +63,8 @@ const QUrl QML_BACKGROUND_URL( "qrc:/qml/core/Background.qml" );
 
 WallWindow::WallWindow( const WallConfiguration& config )
     : QQuickView()
+    , _displayGroupRenderer( nullptr )
+    , _testPattern( nullptr )
 {
     engine()->addImageProvider( MovieProvider::ID, new MovieProvider );
 #if ENABLE_PDF_SUPPORT
@@ -85,8 +86,9 @@ WallWindow::WallWindow( const WallConfiguration& config )
     setFlags( Qt::FramelessWindowHint );
 
     setSource( QML_BACKGROUND_URL );
-    _scene = make_unique< WallScene >( *this, screenRect.topLeft( ));
 
+    _displayGroupRenderer = new DisplayGroupRenderer( *this,
+                                                      screenRect.topLeft( ));
     _testPattern = new TestPattern( config, rootObject( ));
     _testPattern->setPosition( -screenRect.topLeft( ));
 
@@ -99,9 +101,9 @@ WallWindow::WallWindow( const WallConfiguration& config )
         show();
 }
 
-WallScene& WallWindow::getScene()
+DisplayGroupRenderer& WallWindow::getDisplayGroupRenderer()
 {
-    return *_scene;
+    return *_displayGroupRenderer;
 }
 
 void WallWindow::preRenderUpdate( WallToWallChannel& wallChannel )
@@ -120,17 +122,17 @@ void WallWindow::setRenderOptions( OptionsPtr options )
                                             : options->getBackgroundColor( ));
     _testPattern->setVisible( options->getShowTestPattern( ));
 
-    getScene().getDisplayGroupRenderer().setRenderingOptions( options );
+    _displayGroupRenderer->setRenderingOptions( options );
 }
 
 void WallWindow::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
-    getScene().setDisplayGroup( displayGroup );
+    _displayGroupRenderer->setDisplayGroup( displayGroup );
 }
 
 void WallWindow::setMarkers( MarkersPtr markers )
 {
-    getScene().getDisplayGroupRenderer().setMarkers( markers );
+    _displayGroupRenderer->setMarkers( markers );
 }
 
 PixelStreamProvider& WallWindow::getPixelStreamProvider()
