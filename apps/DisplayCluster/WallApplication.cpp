@@ -43,6 +43,7 @@
 #include "CommandLineParameters.h"
 
 #include "MPIChannel.h"
+#include "RenderController.h"
 #include "WallFromMasterChannel.h"
 #include "WallToMasterChannel.h"
 #include "WallToWallChannel.h"
@@ -51,7 +52,6 @@
 #include "configuration/WallConfiguration.h"
 
 #include "PixelStreamProvider.h"
-#include "RenderContext.h"
 
 #include <stdexcept>
 
@@ -77,7 +77,7 @@ WallApplication::WallApplication( int& argc_, char** argv_,
     if ( !createConfig( options.getConfigFilename(), worldChannel->getRank( )))
         throw std::runtime_error(" WallApplication: initialization failed." );
 
-    initRenderContext();
+    initWallWindow();
     initMPIConnection( worldChannel );
     startRendering();
 }
@@ -105,22 +105,20 @@ bool WallApplication::createConfig( const QString& filename, const int rank )
     return true;
 }
 
-void WallApplication::initRenderContext()
+void WallApplication::initWallWindow()
 {
-    connect( this, SIGNAL( lastWindowClosed( )), this, SLOT( quit( )));
-
     try
     {
-        _renderContext.reset( new RenderContext( *_config ));
+        _window = new WallWindow( *_config );
     }
     catch( const std::runtime_error& e )
     {
-        put_flog( LOG_FATAL, "Error creating the RenderContext: '%s'",
+        put_flog( LOG_FATAL, "Error creating WallWindow: '%s'",
                   e.what( ));
         throw std::runtime_error( "WallApplication: initialization failed." );
     }
 
-    _renderController.reset( new RenderController( _renderContext ));
+    _renderController.reset( new RenderController( *_window ));
 }
 
 void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
@@ -145,12 +143,12 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 
     connect( _fromMasterChannel.get(),
              SIGNAL( received( deflect::FramePtr )),
-             &_renderContext->getWindow()->getPixelStreamProvider(),
+             &_window->getPixelStreamProvider(),
              SLOT( setNewFrame( deflect::FramePtr )));
 
     if( _wallChannel->getRank() == 0 )
     {
-        connect( &_renderContext->getWindow()->getPixelStreamProvider(),
+        connect( &_window->getPixelStreamProvider(),
                  SIGNAL( requestFrame( QString )),
                  _toMasterChannel.get(), SLOT( sendRequestFrame( QString )));
     }
@@ -173,10 +171,9 @@ void WallApplication::startRendering()
              this, SLOT( renderFrame( )), Qt::QueuedConnection );
 
     // swap sync; afterRendering signal is emitted before swapBuffers
-    connect( _renderContext->getWindow().get(), &WallWindow::afterRendering,
-             [this]()
+    connect( _window, &WallWindow::afterRendering, [this]()
     {
-        auto gl = _renderContext->getWindow()->openglContext();
+        auto gl = _window->openglContext();
 #if QT_VERSION >= 0x050300
         gl->functions()->glFinish();
 #else
@@ -190,10 +187,9 @@ void WallApplication::startRendering()
     });
 
     // trigger new renderloop after rendering & swap or quit application
-    connect( _renderContext->getWindow().get(), &WallWindow::frameSwapped,
-             [this]()
+    connect( _window, &WallWindow::frameSwapped, [this]()
     {
-        auto gl = _renderContext->getWindow()->openglContext();
+        auto gl = _window->openglContext();
 #if QT_VERSION >= 0x050300
         gl->functions()->glFlush();
 #else
@@ -206,7 +202,7 @@ void WallApplication::startRendering()
         if( _renderedFrames == 1 )
         {
             if( _renderController->quitRendering( ))
-                quit();
+                _window->deleteLater();
            else
                 emit frameFinished();
         }
@@ -220,5 +216,5 @@ void WallApplication::renderFrame()
     _renderedFrames = 0;
     _wallChannel->synchronizeClock();
     _renderController->preRenderUpdate( *_wallChannel );
-    _renderContext->updateWindow();
+    _window->update();
 }

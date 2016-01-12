@@ -45,7 +45,6 @@
 #include "WallScene.h"
 
 #include <QQuickView>
-#include <QOpenGLContext>
 
 class WallWindow : public QQuickView
 {
@@ -54,24 +53,19 @@ class WallWindow : public QQuickView
 public:
     /**
      * Create a wall window.
-     * @param the area of the wall that this window shows
+     * @param config the wall configuration to setup this window wrt position,
+     *               size, etc.
      */
-    WallWindow( const QRect& wallArea );
+    WallWindow( const WallConfiguration& config );
 
     /** Get the scene that this window renders. */
     WallScene& getScene();
-
-    /** Create the scene, must happen after the setSource() or setContent(). */
-    void createScene( const QPoint& pos );
 
     /** Set the test pattern. */
     void setTestPattern( TestPatternPtr testPattern );
 
     /** Get the test pattern */
     TestPatternPtr getTestPattern();
-
-    /** Block all the update() and repaint() calls. */
-    void setBlockDrawCalls( bool enable );
 
     /** Update and synchronize scene objects before rendering a frame. */
     void preRenderUpdate( WallToWallChannel& wallChannel );
@@ -88,21 +82,9 @@ public:
     /** @return the pixel stream provider. */
     PixelStreamProvider& getPixelStreamProvider();
 
-//    /** Check if the window is exposed in the window system. */
-//    bool isExposed() const;
-
 private:
-//    /** Reimplemented from QGraphicsView to draw the test pattern */
-//    void drawForeground( QPainter* painter, const QRectF& rect ) override;
-
-//    /** Reimplemented from QGraphicsView to block unsolicited draw calls. */
-//    void paintEvent( QPaintEvent* event ) override;
-
-    const QRect _wallArea;
     std::unique_ptr<WallScene> _scene;
     TestPatternPtr _testPattern;
-    bool _blockUpdates;
-    bool _isExposed;
 };
 
 #endif // WALLWINDOW_H

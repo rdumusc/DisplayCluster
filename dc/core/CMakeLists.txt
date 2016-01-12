@@ -82,7 +82,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   QmlWindowRenderer.h
   qmlUtils.h
   Renderable.h
-  RenderContext.h
   SessionCommandHandler.h
   State.h
   StatePreview.h
@@ -213,7 +212,6 @@ list(APPEND DCCORE_SOURCES
   QmlControlPanel.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
-  RenderContext.cpp
   RenderController.cpp
   SessionCommandHandler.cpp
   State.cpp

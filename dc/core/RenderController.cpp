@@ -39,7 +39,6 @@
 
 #include "RenderController.h"
 
-#include "RenderContext.h"
 #include "DisplayGroupRenderer.h"
 
 #include "DisplayGroup.h"
@@ -53,22 +52,18 @@
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 
-RenderController::RenderController( RenderContextPtr renderContext )
-    : _renderContext( renderContext )
+RenderController::RenderController( WallWindow& window )
+    : _window( window )
     , _syncQuit( false )
     , _syncDisplayGroup( boost::make_shared<DisplayGroup>( QSize( )))
     , _syncOptions( boost::make_shared<Options>( ))
 {
-    _syncDisplayGroup.setCallback( boost::bind(
-                                       &WallWindow::setDisplayGroup,
-                                       _renderContext->getWindow(), _1 ));
-
+    _syncDisplayGroup.setCallback( boost::bind( &WallWindow::setDisplayGroup,
+                                                &_window, _1 ));
     _syncMarkers.setCallback( boost::bind( &WallWindow::setMarkers,
-                                           _renderContext->getWindow(), _1 ));
-
-    _syncOptions.setCallback( boost::bind(
-                                  &WallWindow::setRenderOptions,
-                                  _renderContext->getWindow(), _1 ));
+                                           &_window, _1 ));
+    _syncOptions.setCallback( boost::bind( &WallWindow::setRenderOptions,
+                                           &_window, _1 ));
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const
@@ -83,7 +78,7 @@ void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
 
     _synchronizeObjects( versionCheckFunc );
 
-    _renderContext->getWindow()->preRenderUpdate( wallChannel );
+    _window.preRenderUpdate( wallChannel );
 }
 
 bool RenderController::quitRendering() const
