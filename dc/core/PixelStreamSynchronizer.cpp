@@ -61,12 +61,7 @@ PixelStreamSynchronizer::~PixelStreamSynchronizer()
     _provider.close( _uri );
 }
 
-void PixelStreamSynchronizer::sync( WallToWallChannel& channel )
-{
-    Q_UNUSED( channel );
-}
-
-void PixelStreamSynchronizer::updateTiles( const ContentWindow& window )
+void PixelStreamSynchronizer::update( const ContentWindow& window )
 {
     Q_UNUSED( window );
 }

@@ -66,8 +66,8 @@ public:
     /** Destruct the synchronizer and close the movie in the provider. */
     ~MovieSynchronizer();
 
-    /** @copydoc ContentSynchronizer::sync */
-    void sync( WallToWallChannel& channel ) override;
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window ) override;
 
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;

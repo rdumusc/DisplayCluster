@@ -163,7 +163,7 @@ protected:
         ar & _size.rheight();
         ar & _zoomRect;
         ar & _actions;
-        _actions->setParent( this );
+        _actions.setParent( this );
     }
 
     /** Serialize for saving to an xml file */
@@ -198,7 +198,7 @@ protected:
     QString _uri;
     QSize _size;
     QRectF _zoomRect;
-    ContentActionsModel* _actions;
+    ContentActionsModel _actions;
     deflect::SizeHints _sizeHints;
     static qreal _maxScale;
 };

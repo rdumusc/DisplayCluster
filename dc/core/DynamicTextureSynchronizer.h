@@ -56,11 +56,8 @@ public:
     /** Constructor */
     explicit DynamicTextureSynchronizer( const QString& uri );
 
-    /** @copydoc ContentSynchronizer::sync */
-    void sync( WallToWallChannel& channel ) override;
-
     /** @copydoc ContentSynchronizer::updateTiles */
-    void updateTiles( const ContentWindow& window ) override;
+    void update( const ContentWindow& window ) override;
 
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;

@@ -135,5 +135,5 @@ void MovieContent::createActions()
     playPauseAction->setChecked( controlState_ & STATE_PAUSED );
     connect( playPauseAction, SIGNAL( checked( )), this, SLOT( pause( )));
     connect( playPauseAction, SIGNAL( unchecked( )), this, SLOT( play( )));
-    _actions->add( playPauseAction );
+    _actions.add( playPauseAction );
 }

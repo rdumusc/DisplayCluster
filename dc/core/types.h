@@ -65,6 +65,7 @@ class FFMPEGVideoFrameConverter;
 class MarkerRenderer;
 class Markers;
 class MasterConfiguration;
+class MovieContent;
 class MovieProvider;
 class MovieUpdater;
 class MPIChannel;

@@ -53,58 +53,49 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
                                       QQuickItem& parentItem,
                                       ContentWindowPtr contentWindow,
                                       const bool isBackground )
-    : contentWindow_( contentWindow )
-    , windowContext_( new QQmlContext( engine.rootContext( )))
-    , windowItem_( 0 )
+    : _contentWindow( contentWindow )
+    , _windowContext( new QQmlContext( engine.rootContext( )))
+    , _windowItem( 0 )
 {
-    windowContext_->setContextProperty( "contentwindow", contentWindow_.get( ));
+    _windowContext->setContextProperty( "contentwindow", _contentWindow.get( ));
 
-    auto content = contentWindow_->getContent();
+    auto content = _contentWindow->getContent();
     auto provider = engine.imageProvider( content->getProviderId( ));
     _contentSynchronizer = ContentSynchronizer::create( content, *provider );
-    windowContext_->setContextProperty( "contentsync",
+    _windowContext->setContextProperty( "contentsync",
                                         _contentSynchronizer.get( ));
 
-    windowItem_ = createQmlItem( QML_WINDOW_URL );
-    windowItem_->setParentItem( &parentItem );
-    windowItem_->setProperty( "isBackground", isBackground );
+    _windowItem = createQmlItem( QML_WINDOW_URL );
+    _windowItem->setParentItem( &parentItem );
+    _windowItem->setProperty( "isBackground", isBackground );
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
 {
-    delete windowItem_;
+    delete _windowItem;
 }
 
 void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
 {
     // Could be optimized by checking for changes before updating the context
-    windowContext_->setContextProperty( "contentwindow", contentWindow.get( ));
-    contentWindow_ = contentWindow;
+    _windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
+    _contentWindow = contentWindow;
+    _contentSynchronizer->update( *_contentWindow );
 }
 
 void QmlWindowRenderer::setStackingOrder( const int value )
 {
-    windowItem_->setProperty( "stackingOrder", value );
-}
-
-void QmlWindowRenderer::preRenderUpdate( WallToWallChannel& wallChannel,
-                                         const QRect& /*visibleWallArea*/ )
-{
-    if( _contentSynchronizer )
-    {
-        _contentSynchronizer->sync( wallChannel );
-        _contentSynchronizer->updateTiles( *contentWindow_ );
-    }
+    _windowItem->setProperty( "stackingOrder", value );
 }
 
 ContentWindowPtr QmlWindowRenderer::getContentWindow()
 {
-    return contentWindow_;
+    return _contentWindow;
 }
 
 QQuickItem* QmlWindowRenderer::createQmlItem( const QUrl& url )
 {
-    QQmlComponent component( windowContext_->engine(), url );
+    QQmlComponent component( _windowContext->engine(), url );
     if( component.isError( ))
     {
         QList<QQmlError> errorList = component.errors();
@@ -112,6 +103,6 @@ QQuickItem* QmlWindowRenderer::createQmlItem( const QUrl& url )
             qWarning() << error.url() << error.line() << error;
         return 0;
     }
-    QObject* qmlObject = component.create( windowContext_.get( ));
+    QObject* qmlObject = component.create( _windowContext.get( ));
     return qobject_cast<QQuickItem*>( qmlObject );
 }

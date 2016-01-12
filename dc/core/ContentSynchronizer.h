@@ -70,11 +70,8 @@ public:
     /** Virtual destructor */
     virtual ~ContentSynchronizer();
 
-    /** Synchronize the Content. */
-    virtual void sync( WallToWallChannel& channel ) = 0;
-
-    /** Update the Tiles based on the current window parameters. */
-    virtual void updateTiles( const ContentWindow& window ) = 0;
+    /** Update the Content. */
+    virtual void update( const ContentWindow& window ) = 0;
 
     /** Get the additional source parameters. */
     virtual QString getSourceParams() const = 0;

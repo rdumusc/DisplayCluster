@@ -69,9 +69,6 @@ public:
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
 
-    void preRenderUpdate( WallToWallChannel& wallChannel,
-                          const QRect& visibleWallArea );
-
 public slots:
     /** Set the DisplayGroup to render, replacing the previous one. */
     void setDisplayGroup( DisplayGroupPtr displayGroup );

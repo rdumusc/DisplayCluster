@@ -65,18 +65,15 @@ public:
 
     void setStackingOrder( int value );
 
-    void preRenderUpdate( WallToWallChannel& wallChannel,
-                          const QRect& visibleWallArea );
-
     /** Get the ContentWindow. */
     ContentWindowPtr getContentWindow();
 
 private:
     Q_DISABLE_COPY( QmlWindowRenderer )
 
-    ContentWindowPtr contentWindow_;
-    std::unique_ptr<QQmlContext> windowContext_;
-    QQuickItem* windowItem_;
+    ContentWindowPtr _contentWindow;
+    std::unique_ptr<QQmlContext> _windowContext;
+    QQuickItem* _windowItem;
     std::unique_ptr<ContentSynchronizer> _contentSynchronizer;
 
     QQuickItem* createQmlItem( const QUrl& url );

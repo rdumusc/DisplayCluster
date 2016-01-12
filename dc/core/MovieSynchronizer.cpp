@@ -39,6 +39,8 @@
 
 #include "MovieSynchronizer.h"
 
+#include "ContentWindow.h"
+#include "MovieContent.h"
 #include "MovieProvider.h"
 #include "MovieUpdater.h"
 
@@ -58,9 +60,9 @@ MovieSynchronizer::~MovieSynchronizer()
     _provider.close( _uri );
 }
 
-void MovieSynchronizer::sync( WallToWallChannel& channel )
+void MovieSynchronizer::update( const ContentWindow& window )
 {
-    Q_UNUSED( channel );
+    _updater->sync( static_cast< const MovieContent& >( *window.getContent( )));
 }
 
 QString MovieSynchronizer::getSourceParams() const

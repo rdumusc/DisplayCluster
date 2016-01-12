@@ -59,6 +59,7 @@ public:
     explicit MovieUpdater( const QString& uri );
     ~MovieUpdater();
 
+    void sync( const MovieContent& movie );
     void update( WallToWallChannel& channel );
 
     PicturePtr getPicture();

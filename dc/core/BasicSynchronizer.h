@@ -54,11 +54,8 @@ public:
     /** Constructor */
     BasicSynchronizer();
 
-    /** @copydoc ContentSynchronizer::sync */
-    void sync( WallToWallChannel& channel ) override;
-
-    /** @copydoc ContentSynchronizer::updateTiles */
-    void updateTiles( const ContentWindow& window ) override;
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window ) override;
 
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;
