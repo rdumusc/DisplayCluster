@@ -55,7 +55,7 @@ class RenderController : public QObject
 
 public:
     /** Constructor */
-    RenderController( RenderContextPtr renderContext );
+    RenderController( WallWindow& window );
 
     /** Get the DisplayGroup */
     DisplayGroupPtr getDisplayGroup() const;
@@ -75,7 +75,7 @@ public slots:
 private:
     Q_DISABLE_COPY( RenderController )
 
-    RenderContextPtr _renderContext;
+    WallWindow& _window;
 
     SwapSyncObject<bool> _syncQuit;
     SwapSyncObject<DisplayGroupPtr> _syncDisplayGroup;

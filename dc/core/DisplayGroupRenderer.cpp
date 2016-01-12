@@ -42,7 +42,6 @@
 #include "DisplayGroup.h"
 #include "ContentWindow.h"
 #include "ContentWindowController.h"
-#include "RenderContext.h"
 #include "Options.h"
 #include "Markers.h"
 #include "WallWindow.h"

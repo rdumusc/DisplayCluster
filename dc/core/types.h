@@ -75,7 +75,6 @@ class PixelStreamUpdater;
 class PixelStreamWindowManager;
 class QmlWindowRenderer;
 class Renderable;
-class RenderContext;
 class TestPattern;
 class WallWindow;
 class WallConfiguration;
@@ -100,7 +99,6 @@ typedef boost::shared_ptr< Options > OptionsPtr;
 typedef std::shared_ptr< PixelStreamUpdater > PixelStreamUpdaterSharedPtr;
 typedef boost::shared_ptr< QmlWindowRenderer > QmlWindowPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
-typedef boost::shared_ptr< RenderContext > RenderContextPtr;
 typedef boost::shared_ptr< TestPattern > TestPatternPtr;
 typedef boost::shared_ptr< WallWindow > WallWindowPtr;
 

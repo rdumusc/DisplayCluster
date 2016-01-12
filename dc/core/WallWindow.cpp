@@ -44,6 +44,8 @@
 #include "TestPattern.h"
 #include "WallScene.h"
 
+#include "configuration/WallConfiguration.h"
+
 #include "config.h"
 #include "MovieProvider.h"
 #if ENABLE_PDF_SUPPORT
@@ -55,17 +57,14 @@
 
 #include <QQmlEngine>
 
-WallWindow::WallWindow( const QRect& wallArea )
-    : QQuickView()
-    , _wallArea( wallArea )
-    , _blockUpdates( false )
-    , _isExposed( false )
+namespace
 {
-    setSurfaceType( QWindow::OpenGLSurface );
-    setResizeMode( SizeRootObjectToView );
-    setFlags( Qt::FramelessWindowHint );
-    resize( wallArea.size( ));
+const QUrl QML_BACKGROUND_URL( "qrc:/qml/core/Background.qml" );
+}
 
+WallWindow::WallWindow( const WallConfiguration& config )
+    : QQuickView()
+{
     engine()->addImageProvider( MovieProvider::ID, new MovieProvider );
 #if ENABLE_PDF_SUPPORT
     engine()->addImageProvider( PDFProvider::ID, new PDFProvider );
@@ -74,16 +73,33 @@ WallWindow::WallWindow( const QRect& wallArea )
                               new PixelStreamProvider );
     engine()->addImageProvider( SVGProvider::ID, new SVGProvider );
     engine()->addImageProvider( TextureProvider::ID, new TextureProvider);
+
+    const QPoint& screenIndex = config.getGlobalScreenIndex();
+    const QRect& screenRect = config.getScreenRect( screenIndex );
+    const QPoint& windowPos = config.getWindowPos();
+
+    setPosition( windowPos );
+    resize( screenRect.size( ));
+    setTestPattern( TestPatternPtr( new TestPattern( config )));
+    setSurfaceType( QWindow::OpenGLSurface );
+    setResizeMode( SizeRootObjectToView );
+    setFlags( Qt::FramelessWindowHint );
+
+    setSource( QML_BACKGROUND_URL );
+    _scene = make_unique< WallScene >( *this, screenRect.topLeft( ));
+
+    if( config.getFullscreen( ))
+    {
+        setCursor( Qt::BlankCursor );
+        showFullScreen();
+    }
+    else
+        show();
 }
 
 WallScene& WallWindow::getScene()
 {
     return *_scene;
-}
-
-void WallWindow::createScene( const QPoint& pos )
-{
-    _scene = make_unique<WallScene>( *this, pos );
 }
 
 void WallWindow::setTestPattern( TestPatternPtr testPattern )
@@ -94,11 +110,6 @@ void WallWindow::setTestPattern( TestPatternPtr testPattern )
 TestPatternPtr WallWindow::getTestPattern()
 {
     return _testPattern;
-}
-
-void WallWindow::setBlockDrawCalls( const bool enable )
-{
-    _blockUpdates = enable;
 }
 
 void WallWindow::preRenderUpdate( WallToWallChannel& wallChannel )
@@ -135,29 +146,3 @@ PixelStreamProvider& WallWindow::getPixelStreamProvider()
             ( engine()->imageProvider( PixelStreamProvider::ID ));
     return *pixelStreamProvider;
 }
-
-//bool WallWindow::isExposed() const
-//{
-//    return isExposed_;
-//}
-
-//void WallWindow::drawForeground( QPainter* painter, const QRectF& rect_ )
-//{
-//    if( testPattern_ && testPattern_->isVisible( ))
-//    {
-//        testPattern_->draw( painter, rect_ );
-//        return;
-//    }
-
-//    QGraphicsView::drawForeground( painter, rect_ );
-//}
-
-//void WallWindow::paintEvent( QPaintEvent* event_ )
-//{
-//    if( blockUpdates_ )
-//        return;
-
-//    isExposed_ = true;
-
-//    QGraphicsView::paintEvent( event_ );
-//}

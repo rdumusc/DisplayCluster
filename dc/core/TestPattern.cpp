@@ -39,7 +39,6 @@
 
 #include "TestPattern.h"
 
-#include "RenderContext.h"
 #include "configuration/WallConfiguration.h"
 
 #include <QFont>

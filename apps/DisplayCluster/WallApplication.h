@@ -41,14 +41,12 @@
 #define WALLAPPLICATION_H
 
 #include "types.h"
-#include "SwapSyncObject.h"
-#include "RenderController.h"
 
 #include <QApplication>
 #include <QThread>
 #include <boost/scoped_ptr.hpp>
 
-class RenderContext;
+class RenderController;
 class WallFromMasterChannel;
 class WallToMasterChannel;
 class WallToWallChannel;
@@ -69,7 +67,8 @@ public:
      * @param wallChannel The wall MPI channel
      * @throw std::runtime_error if an error occured during initialization
      */
-    WallApplication(int &argc, char **argv, MPIChannelPtr worldChannel, MPIChannelPtr wallChannel);
+    WallApplication( int &argc, char **argv, MPIChannelPtr worldChannel,
+                     MPIChannelPtr wallChannel);
 
     /** Destructor */
     virtual ~WallApplication();
@@ -83,7 +82,7 @@ private slots:
 
 private:
     boost::scoped_ptr<WallConfiguration> _config;
-    RenderContextPtr _renderContext;
+    WallWindow* _window;
     boost::scoped_ptr<RenderController> _renderController;
 
     boost::scoped_ptr<WallFromMasterChannel> _fromMasterChannel;
@@ -96,7 +95,7 @@ private:
     size_t _renderedFrames;
 
     bool createConfig(const QString& filename, const int rank);
-    void initRenderContext();
+    void initWallWindow();
     void initMPIConnection(MPIChannelPtr worldChannel);
 
     void startRendering();
