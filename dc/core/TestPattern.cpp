@@ -48,36 +48,37 @@
 #define LINE_WIDTH  10
 #define TEXT_POS_X  50
 
-TestPattern::TestPattern( const WallConfiguration& configuration )
-    : wallSize_( configuration.getTotalSize( ))
+TestPattern::TestPattern( const WallConfiguration& configuration,
+                          QQuickItem* parent_ )
+    : QQuickPaintedItem( parent_ )
+    , _wallSize( configuration.getTotalSize( ))
 {
     setVisible( false );
+    setSize( configuration.getTotalSize( ));
+
     const QPoint globalScreenIndex = configuration.getGlobalScreenIndex();
     const QString fullsceenMode = configuration.getFullscreen() ? "True" : "False";
 
-    windowRect_ = configuration.getScreenRect( globalScreenIndex );
+    _windowRect = configuration.getScreenRect( globalScreenIndex );
 
-    labels_.push_back(QString("Rank: %1").arg(configuration.getProcessIndex()));
-    labels_.push_back(QString("Host: %1").arg(configuration.getHost()));
-    labels_.push_back(QString("Display: %1").arg(configuration.getDisplay()));
-    labels_.push_back(QString("Tile coordinates: (%1,%2)").arg(globalScreenIndex.x()).arg(globalScreenIndex.y()));
-    labels_.push_back(QString("Resolution: %1 x %2").arg(configuration.getScreenWidth()).arg(configuration.getScreenHeight()));
-    labels_.push_back(QString("Fullscreen mode: %1").arg(fullsceenMode));
+    _labels.push_back(QString("Rank: %1").arg(configuration.getProcessIndex()));
+    _labels.push_back(QString("Host: %1").arg(configuration.getHost()));
+    _labels.push_back(QString("Display: %1").arg(configuration.getDisplay()));
+    _labels.push_back(QString("Tile coordinates: (%1,%2)").arg(globalScreenIndex.x()).arg(globalScreenIndex.y()));
+    _labels.push_back(QString("Resolution: %1 x %2").arg(configuration.getScreenWidth()).arg(configuration.getScreenHeight()));
+    _labels.push_back(QString("Fullscreen mode: %1").arg(fullsceenMode));
 }
 
 void TestPattern::paint( QPainter* painter )
 {
-    painter->setBrush( Qt::black );
-    painter->drawRect( windowRect_ );
-
     renderCrossPattern( painter );
     renderLabels( painter );
 }
 
 void TestPattern::renderCrossPattern( QPainter* painter )
 {
-    const qreal h = wallSize_.height();
-    const qreal w = wallSize_.width();
+    const qreal h = _wallSize.height();
+    const qreal w = _wallSize.width();
 
     QPen pen;
     pen.setWidth( LINE_WIDTH );
@@ -94,7 +95,7 @@ void TestPattern::renderCrossPattern( QPainter* painter )
 
 void TestPattern::renderLabels( QPainter* painter )
 {
-    const QPoint offset = windowRect_.topLeft();
+    const QPoint offset = _windowRect.topLeft();
 
     QFont textFont;
     textFont.setPixelSize( FONT_SIZE );
@@ -102,7 +103,7 @@ void TestPattern::renderLabels( QPainter* painter )
     painter->setPen( QColor( Qt::white ));
 
     unsigned int pos = 0;
-    foreach( QString label, labels_ )
+    foreach( QString label, _labels )
         painter->drawText( QPoint( TEXT_POS_X, ++pos * FONT_SIZE ) + offset,
                            label );
 }

@@ -61,12 +61,6 @@ public:
     /** Get the scene that this window renders. */
     WallScene& getScene();
 
-    /** Set the test pattern. */
-    void setTestPattern( TestPatternPtr testPattern );
-
-    /** Get the test pattern */
-    TestPatternPtr getTestPattern();
-
     /** Update and synchronize scene objects before rendering a frame. */
     void preRenderUpdate( WallToWallChannel& wallChannel );
 
@@ -84,7 +78,7 @@ public:
 
 private:
     std::unique_ptr<WallScene> _scene;
-    TestPatternPtr _testPattern;
+    TestPattern* _testPattern;
 };
 
 #endif // WALLWINDOW_H

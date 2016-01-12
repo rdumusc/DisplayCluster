@@ -80,13 +80,15 @@ WallWindow::WallWindow( const WallConfiguration& config )
 
     setPosition( windowPos );
     resize( screenRect.size( ));
-    setTestPattern( TestPatternPtr( new TestPattern( config )));
     setSurfaceType( QWindow::OpenGLSurface );
     setResizeMode( SizeRootObjectToView );
     setFlags( Qt::FramelessWindowHint );
 
     setSource( QML_BACKGROUND_URL );
     _scene = make_unique< WallScene >( *this, screenRect.topLeft( ));
+
+    _testPattern = new TestPattern( config, rootObject( ));
+    _testPattern->setPosition( -screenRect.topLeft( ));
 
     if( config.getFullscreen( ))
     {
@@ -102,16 +104,6 @@ WallScene& WallWindow::getScene()
     return *_scene;
 }
 
-void WallWindow::setTestPattern( TestPatternPtr testPattern )
-{
-    _testPattern = testPattern;
-}
-
-TestPatternPtr WallWindow::getTestPattern()
-{
-    return _testPattern;
-}
-
 void WallWindow::preRenderUpdate( WallToWallChannel& wallChannel )
 {
     auto movieProvider = dynamic_cast< MovieProvider* >
@@ -124,8 +116,9 @@ void WallWindow::preRenderUpdate( WallToWallChannel& wallChannel )
 
 void WallWindow::setRenderOptions( OptionsPtr options )
 {
-    setColor( options->getBackgroundColor( ));
-    getTestPattern()->setVisible( options->getShowTestPattern( ));
+    setColor( options->getShowTestPattern() ? Qt::black
+                                            : options->getBackgroundColor( ));
+    _testPattern->setVisible( options->getShowTestPattern( ));
 
     getScene().getDisplayGroupRenderer().setRenderingOptions( options );
 }
