@@ -37,6 +37,14 @@ DisplayGroup {
         anchors.left: parent.left
         anchors.leftMargin: Style.fpsX
         anchors.topMargin: Style.fpsY
-        z: Style.fpsZ
+        z: Style.overlayZ
+    }
+
+    Repeater {
+        id: touchpointsMarker
+        anchors.fill: parent
+        model: markers
+        delegate: TouchPointMarker {
+        }
     }
 }

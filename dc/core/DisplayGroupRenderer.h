@@ -69,6 +69,9 @@ public:
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
 
+    /** Set different touchpoint's markers. */
+    void setMarkers( MarkersPtr markers );
+
 public slots:
     /** Set the DisplayGroup to render, replacing the previous one. */
     void setDisplayGroup( DisplayGroupPtr displayGroup );
@@ -89,6 +92,7 @@ private:
     QmlWindowPtr _backgroundWindowItem;
 
     OptionsPtr _options;
+    MarkersPtr _markers;
 
     void _createDisplayGroupQmlItem( QQuickItem& parentItem );
     void _createWindowQmlItem( ContentWindowPtr window );

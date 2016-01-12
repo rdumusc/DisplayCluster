@@ -116,13 +116,17 @@ void WallWindow::setRenderOptions( OptionsPtr options )
     setColor( options->getBackgroundColor( ));
     getTestPattern()->setVisible( options->getShowTestPattern( ));
 
-    getScene().displayMarkers( options->getShowTouchPoints( ));
     getScene().getDisplayGroupRenderer().setRenderingOptions( options );
 }
 
 void WallWindow::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
     getScene().setDisplayGroup( displayGroup );
+}
+
+void WallWindow::setMarkers( MarkersPtr markers )
+{
+    getScene().getDisplayGroupRenderer().setMarkers( markers );
 }
 
 PixelStreamProvider& WallWindow::getPixelStreamProvider()

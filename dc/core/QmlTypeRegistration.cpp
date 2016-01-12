@@ -41,6 +41,7 @@
 #include "ContentWindowController.h"
 #include "ContentActionsModel.h"
 #include "ContentInteractionDelegate.h"
+#include "Markers.h"
 #include "QmlControlPanel.h"
 
 #include <QtQml>
@@ -55,6 +56,8 @@ struct QmlTypeRegistration
 
     QmlTypeRegistration()
     {
+        qmlRegisterType<Markers>(
+                    QML_MODULE, 1, 0, "Markers");
         qmlRegisterType<ContentActionsModel>(
                     QML_MODULE, 1, 0, "ContentActionsModel");
 

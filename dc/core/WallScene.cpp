@@ -39,25 +39,13 @@
 
 #include "WallScene.h"
 
-#include "MarkerRenderer.h"
 #include "DisplayGroupRenderer.h"
 
 WallScene::WallScene( WallWindow& parentWindow, const QPoint& pos )
     : _displayGroupRenderer( new DisplayGroupRenderer( parentWindow, pos ))
-    , _markerRenderer( new MarkerRenderer )
 {}
 
 WallScene::~WallScene() {}
-
-void WallScene::displayMarkers( const bool value )
-{
-    _markerRenderer->setVisible( value );
-}
-
-MarkerRenderer& WallScene::getMarkersRenderer()
-{
-    return *_markerRenderer;
-}
 
 DisplayGroupRenderer& WallScene::getDisplayGroupRenderer()
 {
@@ -68,21 +56,3 @@ void WallScene::setDisplayGroup( DisplayGroupPtr displayGroup )
 {
     _displayGroupRenderer->setDisplayGroup( displayGroup );
 }
-
-//void WallScene::drawForeground( QPainter* painter, const QRectF& )
-//{
-//    if( !markerRenderer_->isVisible( ))
-//        return;
-
-//    painter->beginNativePainting();
-
-//    glPushAttrib( GL_ENABLE_BIT );
-//    glEnable( GL_DEPTH_TEST );
-//    glDisable( GL_LIGHTING );
-
-//    markerRenderer_->render();
-
-//    glPopAttrib();
-
-//    painter->endNativePainting();
-//}

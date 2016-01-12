@@ -44,6 +44,7 @@
 #include "ContentWindowController.h"
 #include "RenderContext.h"
 #include "Options.h"
+#include "Markers.h"
 #include "WallWindow.h"
 
 #include <deflect/Frame.h>
@@ -67,7 +68,9 @@ DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
     , _displayGroup( new DisplayGroup( QSize( )))
     , _displayGroupItem( 0 )
     , _options( new Options )
+    , _markers( new Markers )
 {
+    _engine.rootContext()->setContextProperty( "markers", _markers.get( ));
     _engine.rootContext()->setContextProperty( "options", _options.get( ));
     _createDisplayGroupQmlItem( *parentWindow.rootObject( ));
     _displayGroupItem->setPosition( -pos );
@@ -85,6 +88,12 @@ void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
     _engine.rootContext()->setContextProperty( "options", options.get( ));
     _setBackground( options->getBackgroundContent( ));
     _options = options; // Retain the new Options
+}
+
+void DisplayGroupRenderer::setMarkers( MarkersPtr markers )
+{
+    _engine.rootContext()->setContextProperty( "markers", markers.get( ));
+    _markers = markers; // Retain the new Markers
 }
 
 void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )

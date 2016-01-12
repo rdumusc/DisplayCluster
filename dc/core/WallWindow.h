@@ -82,6 +82,9 @@ public:
     /** Set new display group. */
     void setDisplayGroup( DisplayGroupPtr displayGroup );
 
+    /** Set new touchpoint's markers. */
+    void setMarkers( MarkersPtr markers );
+
     /** @return the pixel stream provider. */
     PixelStreamProvider& getPixelStreamProvider();
 

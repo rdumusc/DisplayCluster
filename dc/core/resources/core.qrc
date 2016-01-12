@@ -5,7 +5,6 @@
     </qresource>
     <qresource prefix="/img">
         <file>error.png</file>
-        <file>marker.png</file>
         <file>browser-icon.png</file>
         <file>clearall-icon.png</file>
         <file>close.svg</file>
@@ -48,6 +47,7 @@
         <file>WallDisplayGroup.qml</file>
         <file>Background.qml</file>
         <file>DoubleBufferedImage.qml</file>
+        <file>TouchPointMarker.qml</file>
     </qresource>
     <qresource prefix="/clock">
         <file>Clock.qml</file>

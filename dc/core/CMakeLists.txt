@@ -127,7 +127,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   DisplayGroupRenderer.h
   DynamicTextureSynchronizer.h
   Markers.h
-  MarkerRenderer.h
   MasterFromWallChannel.h
   MasterToWallChannel.h
   MovieContent.h
@@ -194,7 +193,6 @@ list(APPEND DCCORE_SOURCES
   ImageProviderStringifier.cpp
   log.cpp
   Markers.cpp
-  MarkerRenderer.cpp
   MasterFromWallChannel.cpp
   MasterToWallChannel.cpp
   MetaTypeRegistration.cpp

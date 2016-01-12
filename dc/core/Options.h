@@ -57,6 +57,7 @@ class Options : public QObject, public boost::enable_shared_from_this<Options>
 {
     Q_OBJECT
     Q_PROPERTY( bool showClock READ getShowClock CONSTANT )
+    Q_PROPERTY( bool showTouchPoints READ getShowTouchPoints CONSTANT )
     Q_PROPERTY( bool showStatistics READ getShowStatistics CONSTANT )
     Q_PROPERTY( bool showContentTiles READ getShowContentTiles CONSTANT )
     Q_PROPERTY( bool showWindowBorders READ getShowWindowBorders NOTIFY showWindowBordersChanged )

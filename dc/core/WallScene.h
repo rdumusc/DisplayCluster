@@ -65,12 +65,6 @@ public:
     /** Destructor. */
     ~WallScene();
 
-    /** Display the markers for the touch points. */
-    void displayMarkers( bool value );
-
-    /** Get the MarkersRenderer. */
-    MarkerRenderer& getMarkersRenderer();
-
     /** Get the DisplayGroupRenderer. */
     DisplayGroupRenderer& getDisplayGroupRenderer();
 
@@ -78,10 +72,8 @@ public:
     void setDisplayGroup( DisplayGroupPtr displayGroup );
 
 private:
-//    void drawForeground( QPainter* painter, const QRectF &rect ) override;
 
     DisplayGroupRendererPtr _displayGroupRenderer;
-    MarkerRendererPtr _markerRenderer;
 };
 
 #endif // WALLSCENE_H
