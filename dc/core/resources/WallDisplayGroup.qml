@@ -36,7 +36,7 @@ DisplayGroup {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.leftMargin: Style.fpsX
-        anchors.topMargin: Style.fpsY
+        anchors.topMargin: -parent.y + Style.fpsY
         z: Style.overlayZ
     }
 

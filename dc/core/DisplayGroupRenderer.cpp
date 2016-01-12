@@ -86,6 +86,7 @@ void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
 {
     _engine.rootContext()->setContextProperty( "options", options.get( ));
     _setBackground( options->getBackgroundContent( ));
+    _displayGroupItem->setVisible( !options->getShowTestPattern( ));
     _options = options; // Retain the new Options
 }
 

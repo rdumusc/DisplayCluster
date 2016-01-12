@@ -55,16 +55,17 @@ public:
     /**
      * Constructor
      * @param configuration The configuration to get information from
+     * @param parent the parent object which renders this test pattern
      */
-    TestPattern( const WallConfiguration& configuration );
+    TestPattern( const WallConfiguration& configuration, QQuickItem* parent );
 
     /** Render the test pattern. */
     void paint( QPainter* painter ) final;
 
 private:
-    QList<QString> labels_;
-    const QSize wallSize_;
-    QRect windowRect_;
+    QList<QString> _labels;
+    const QSize _wallSize;
+    QRect _windowRect;
 
     void renderCrossPattern( QPainter* painter );
     void renderLabels( QPainter* painter );
