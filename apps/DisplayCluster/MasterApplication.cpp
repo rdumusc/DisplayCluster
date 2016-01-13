@@ -121,9 +121,6 @@ MasterApplication::~MasterApplication()
 
 void MasterApplication::init()
 {
-    connect( this, &MasterApplication::lastWindowClosed,
-             this, &MasterApplication::quit );
-
     masterWindow_.reset( new MasterWindow( displayGroup_, *config_ ));
     pixelStreamWindowManager_.reset(
                 new PixelStreamWindowManager( *displayGroup_ ));
@@ -132,6 +129,12 @@ void MasterApplication::init()
     startDeflectServer();
     startWebservice( config_->getWebServicePort( ));
     initMPIConnection();
+
+    // send initial display group to wall processes so that they at least the
+    // real display group size to compute correct sizes for full screen etc.
+    // which is vital for the following restoreBackground().
+    masterToWallChannel_->sendAsync( displayGroup_ );
+
     restoreBackground();
 
 #if ENABLE_TUIO_TOUCH_LISTENER
