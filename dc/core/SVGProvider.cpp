@@ -178,16 +178,11 @@ QSGTexture* SVGTextureFactory::createTexture( QQuickWindow* window ) const
     QOpenGLFramebufferObject::blitFramebuffer( &targetFbo, blitRect,
                                                renderFbo.get(), blitRect );
 
-#if QT_VERSION >= 0x050300
     const auto flags = QQuickWindow::CreateTextureOptions(
                             QQuickWindow::TextureHasAlphaChannel |
                             QQuickWindow::TextureOwnsGLTexture );
     return window->createTextureFromId( targetFbo.takeTexture(),
                                         targetFbo.size(), flags );
-#else
-    // Warning: very inefficient conversion when takeTexture() is not available
-    return window->createTextureFromImage( targetFbo.toImage( ));
-#endif
 }
 
 QSize SVGTextureFactory::textureSize() const

@@ -75,12 +75,11 @@ DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
     _createDisplayGroupQmlItem( *parentWindow.rootObject( ));
     _displayGroupItem->setPosition( -pos );
     _setBackground( _options->getBackgroundContent( ));
+}
 
-    connect( &parentWindow, &WallWindow::frameSwapped, [this]()
-        {
-            const int frames = _displayGroupItem->property( "frames" ).toInt();
-            _displayGroupItem->setProperty( "frames", frames + 1 );
-        });
+bool DisplayGroupRenderer::needRedraw() const
+{
+    return _options->getShowStatistics();
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
@@ -149,6 +148,12 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
                 child->setProperty( "opacity", 0.0 );
         }
     }
+}
+
+void DisplayGroupRenderer::updateRenderedFrames()
+{
+    const int frames = _displayGroupItem->property( "frames" ).toInt();
+    _displayGroupItem->setProperty( "frames", frames + 1 );
 }
 
 void DisplayGroupRenderer::_createDisplayGroupQmlItem( QQuickItem& parentItem )

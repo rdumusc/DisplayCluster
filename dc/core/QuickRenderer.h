@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,53 +37,73 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef RENDERCONTROLLER_H
-#define RENDERCONTROLLER_H
+#ifndef QUICKRENDERER_H
+#define QUICKRENDERER_H
 
 #include "types.h"
+#include "WallToWallChannel.h"
 
-#include "SwapSyncObject.h"
+#include <QMutex>
+#include <QWaitCondition>
 
-#include <QObject>
+class QOpenGLContext;
+class QQuickRenderControl;
+class QSurface;
 
 /**
- * Setup the scene and control the rendering options during runtime.
+ * Renders the QML scene from the given window using QQuickRenderControl onto
+ * the surface of the window and synchronizes the swapBuffers() with all other
+ * wall processes. Note that this object needs to be moved to a seperate
+ * (render)thread to function properly.
+ *
+ * Inspired by http://doc.qt.io/qt-5/qtquick-rendercontrol-window-multithreaded-cpp.html
  */
-class RenderController : public QObject
+class QuickRenderer : public QObject
 {
     Q_OBJECT
 
 public:
-    /** Constructor */
-    RenderController( WallWindow& window );
+    QuickRenderer( WallWindow& window );
 
-    /** Get the DisplayGroup */
-    DisplayGroupPtr getDisplayGroup() const;
+    /**
+     * To be called from GUI/main thread to trigger rendering and swapBuffers().
+     * This call is blocking until sync() is done in render thread and must be
+     * executed on all wall processes for non-deadlocking swap barrier.
+     */
+    void render();
 
-public slots:
-    void updateQuit();
-    void updateDisplayGroup( DisplayGroupPtr displayGroup );
-    void updateOptions( OptionsPtr options );
-    void updateMarkers( MarkersPtr markers );
-    void requestRender();
+signals:
+    /** Emitted after swapBuffers(). Originates from render thread */
+    void frameSwapped();
+
+    /**
+     * To be called from GUI/main thread to initialize this object on render
+     * thread. Blocks until operation on render thread is done.
+     */
+    void init();
+
+    /**
+     * To be called from GUI/main thread to stop using this object on the render
+     * thread. Blocks until operation on render thread is done.
+     */
+    void stop();
 
 private:
-    bool event( QEvent* qtEvent ) final;
-    Q_DISABLE_COPY( RenderController )
+    bool event( QEvent* e ) final;
+    void _onInit();
+    void _onRender();
+    void _onStop();
 
-    WallWindow& _window;
+    QOpenGLContext& _glContext;
+    QQuickRenderControl& _renderControl;
+    QSurface& _surface;
 
-    SwapSyncObject<bool> _syncQuit;
-    SwapSyncObject<DisplayGroupPtr> _syncDisplayGroup;
-    SwapSyncObject<OptionsPtr> _syncOptions;
-    SwapSyncObject<MarkersPtr> _syncMarkers;
+    WallToWallChannel& _wallChannel;
 
-    /** Update and synchronize scene objects before rendering a frame. */
-    void _syncAndRender();
+    bool _initialized;
 
-    void _synchronizeObjects( const SyncFunction& versionCheckFunc );
-
-    bool _renderPending;
+    QMutex _mutex;
+    QWaitCondition _cond;
 };
 
-#endif // RENDERCONTROLLER_H
+#endif // QUICKRENDERER_H

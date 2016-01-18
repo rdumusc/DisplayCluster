@@ -72,9 +72,15 @@ public:
     /** Set different touchpoint's markers. */
     void setMarkers( MarkersPtr markers );
 
+    /** @return true if the renderer requires a redraw, currently if statistics are shown. */
+    bool needRedraw() const;
+
 public slots:
     /** Set the DisplayGroup to render, replacing the previous one. */
     void setDisplayGroup( DisplayGroupPtr displayGroup );
+
+    /** Increment number of rendered/swapped frames for FPS display. */
+    void updateRenderedFrames();
 
 signals:
     void windowAdded( QmlWindowPtr qmlWindow );

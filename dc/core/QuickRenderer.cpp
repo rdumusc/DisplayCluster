@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,53 +37,86 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef RENDERCONTROLLER_H
-#define RENDERCONTROLLER_H
+#include "QuickRenderer.h"
+#include "WallWindow.h"
 
-#include "types.h"
+#include <QCoreApplication>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QQuickRenderControl>
 
-#include "SwapSyncObject.h"
-
-#include <QObject>
-
-/**
- * Setup the scene and control the rendering options during runtime.
- */
-class RenderController : public QObject
+QuickRenderer::QuickRenderer( WallWindow& window )
+    : _glContext( window.getOpenGLContext( ))
+    , _renderControl( window.getRenderControl( ))
+    , _surface( window )
+    , _wallChannel( window.getWallChannel( ))
+    , _initialized( false )
 {
-    Q_OBJECT
+    connect( this, &QuickRenderer::init, this,
+             &QuickRenderer::_onInit, Qt::BlockingQueuedConnection );
+    connect( this, &QuickRenderer::stop, this,
+             &QuickRenderer::_onStop, Qt::BlockingQueuedConnection );
+}
 
-public:
-    /** Constructor */
-    RenderController( WallWindow& window );
+void QuickRenderer::render()
+{
+    QMutexLocker lock( &_mutex );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::User ));
 
-    /** Get the DisplayGroup */
-    DisplayGroupPtr getDisplayGroup() const;
+    // the main thread has to be blocked for sync()
+    _cond.wait( &_mutex );
+}
 
-public slots:
-    void updateQuit();
-    void updateDisplayGroup( DisplayGroupPtr displayGroup );
-    void updateOptions( OptionsPtr options );
-    void updateMarkers( MarkersPtr markers );
-    void requestRender();
+bool QuickRenderer::event( QEvent* e )
+{
+    if( e->type() == QEvent::User )
+    {
+        _onRender();
+        return true;
+    }
+    return QObject::event( e );
+}
 
-private:
-    bool event( QEvent* qtEvent ) final;
-    Q_DISABLE_COPY( RenderController )
+void QuickRenderer::_onInit()
+{
+    _glContext.makeCurrent( &_surface );
+    _renderControl.initialize( &_glContext );
+    _initialized = true;
+}
 
-    WallWindow& _window;
+void QuickRenderer::_onStop()
+{
+    _glContext.makeCurrent( &_surface );
 
-    SwapSyncObject<bool> _syncQuit;
-    SwapSyncObject<DisplayGroupPtr> _syncDisplayGroup;
-    SwapSyncObject<OptionsPtr> _syncOptions;
-    SwapSyncObject<MarkersPtr> _syncMarkers;
+    _renderControl.invalidate();
 
-    /** Update and synchronize scene objects before rendering a frame. */
-    void _syncAndRender();
+    _glContext.doneCurrent();
+    _glContext.moveToThread( QCoreApplication::instance()->thread( ));
+}
 
-    void _synchronizeObjects( const SyncFunction& versionCheckFunc );
+void QuickRenderer::_onRender()
+{
+    if( !_initialized )
+        return;
 
-    bool _renderPending;
-};
+    {
+        QMutexLocker lock( &_mutex );
 
-#endif // RENDERCONTROLLER_H
+        _glContext.makeCurrent( &_surface );
+
+        _renderControl.sync();
+
+        // unblock main thread after sync in render thread is done
+        _cond.wakeOne();
+    }
+
+    _renderControl.render();
+    _glContext.functions()->glFinish();
+
+    _wallChannel.globalBarrier();
+
+    _glContext.swapBuffers( &_surface );
+    _glContext.functions()->glFlush();
+
+    emit frameSwapped();
+}

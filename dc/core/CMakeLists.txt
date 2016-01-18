@@ -133,6 +133,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   PixelStreamSynchronizer.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
+  QuickRenderer.h
   QmlControlPanel.h
   RenderController.h
   Tile.h
@@ -202,6 +203,7 @@ list(APPEND DCCORE_SOURCES
   PixelStreamSynchronizer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
+  QuickRenderer.cpp
   QmlControlPanel.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
