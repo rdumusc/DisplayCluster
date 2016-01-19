@@ -65,7 +65,8 @@ public:
     virtual ~DisplayGroupView();
 
     /** Set the DisplayGroup model that this view should present. */
-    void setDataModel( DisplayGroupPtr displayGroup );
+    void setDataModel( DisplayGroupPtr displayGroup, const QSize& numberOfTiles,
+                       int mullionWidth );
 
     /** Get the control panel in this view. */
     QmlControlPanel& getControlPanel();

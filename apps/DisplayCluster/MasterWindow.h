@@ -114,18 +114,18 @@ private slots:
     void openAboutWidget();
 
 private:
-    void setupMasterWindowUI();
+    void _setupMasterWindowUI( const MasterConfiguration& config );
 
-    void addContentDirectory( const QString& directoryName,
+    void _addContentDirectory( const QString& directoryName,
                               unsigned int gridX = 0, unsigned int gridY = 0 );
-    void loadState( const QString &filename );
+    void _loadState( const QString &filename );
 
-    void estimateGridSize( unsigned int numElem, unsigned int& gridX,
+    void _estimateGridSize( unsigned int numElem, unsigned int& gridX,
                            unsigned int& gridY );
 
-    QStringList extractValidContentUrls( const QMimeData* mimeData );
-    QStringList extractFolderUrls( const QMimeData* mimeData );
-    QString extractStateFile( const QMimeData* mimeData );
+    QStringList _extractValidContentUrls( const QMimeData* mimeData );
+    QStringList _extractFolderUrls( const QMimeData* mimeData );
+    QString _extractStateFile( const QMimeData* mimeData );
 
     DisplayGroupPtr _displayGroup;
     OptionsPtr _options;
