@@ -65,3 +65,8 @@ var touchPointMarkerCenterColor = "white"
 var touchPointMarkerBorderColor = "red"
 var touchPointMarkerSize = 18
 var touchPointMarkerBorderSize = 2
+
+var masterWindowFirstCheckerColor = "#B2C7CF"
+var masterWindowSecondCheckerColor = "#97BFCC"
+var masterWindowBezelsColor = "black"
+var masterWindowMarginFactor = 0.05

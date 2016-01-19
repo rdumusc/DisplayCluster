@@ -69,7 +69,9 @@ DisplayGroupView::DisplayGroupView( OptionsPtr options )
 
 DisplayGroupView::~DisplayGroupView() {}
 
-void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup )
+void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup,
+                                     const QSize& numberOfTiles,
+                                     const int mullionWidth )
 {
     if( displayGroup_ )
     {
@@ -88,6 +90,9 @@ void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup )
     displayGroupItem_ = qobject_cast< QQuickItem* >( component.create( ));
     qmlCheckOrThrow( component );
     displayGroupItem_->setParentItem( rootObject( ));
+    displayGroupItem_->setProperty( "numberOfTilesX", numberOfTiles.width( ));
+    displayGroupItem_->setProperty( "numberOfTilesY", numberOfTiles.height( ));
+    displayGroupItem_->setProperty( "mullionWidth", mullionWidth );
 
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
     for( ContentWindowPtr contentWindow : contentWindows )
@@ -102,6 +107,8 @@ void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup )
     connect( displayGroup_.get(),
              SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveToFront( ContentWindowPtr )));
+
+    setResizeMode( QQuickView::SizeRootObjectToView );
 }
 
 QmlControlPanel& DisplayGroupView::getControlPanel()

@@ -94,7 +94,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     resize( DEFAULT_WINDOW_SIZE );
     setAcceptDrops( true );
 
-    setupMasterWindowUI();
+    _setupMasterWindowUI( config );
 
     show();
 }
@@ -116,7 +116,7 @@ QAction* MasterWindow::getAutoFocusPixelStreamsAction()
     return _autoFocusPixelStreamsAction;
 }
 
-void MasterWindow::setupMasterWindowUI()
+void MasterWindow::_setupMasterWindowUI( const MasterConfiguration& config )
 {
     // create menus in menu bar
     QMenu* fileMenu = menuBar()->addMenu("&File");
@@ -298,7 +298,10 @@ void MasterWindow::setupMasterWindowUI()
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    _displayGroupView->setDataModel( _displayGroup );
+    _displayGroupView->setDataModel( _displayGroup, QSize(
+                                     config.getTotalScreenCountX(),
+                                     config.getTotalScreenCountY( )),
+                                     config.getMullionWidth( ));
     QWidget* wrapper = QWidget::createWindowContainer( _displayGroupView,
                                                        mainWidget );
     mainWidget->addTab( wrapper, "Display group 0" );
@@ -354,7 +357,7 @@ void MasterWindow::openContent()
     }
 }
 
-void MasterWindow::addContentDirectory( const QString& directoryName,
+void MasterWindow::_addContentDirectory( const QString& directoryName,
                                         unsigned int gridX,
                                         unsigned int gridY )
 {
@@ -381,7 +384,7 @@ void MasterWindow::addContentDirectory( const QString& directoryName,
 
     // If the grid size is unspecified, compute one large enough to hold all the elements
     if ( gridX == 0 || gridY == 0 )
-        estimateGridSize( list.size(), gridX, gridY );
+        _estimateGridSize( list.size(), gridX, gridY );
 
     unsigned int contentIndex = 0;
 
@@ -420,7 +423,7 @@ void MasterWindow::openContentsDirectory()
                                             "Grid Y dimension", 0, 0 );
     assert( gridX >= 0 && gridY >= 0 );
 
-    addContentDirectory( dirName, gridX, gridY );
+    _addContentDirectory( dirName, gridX, gridY );
 }
 
 void MasterWindow::openAboutWidget()
@@ -469,10 +472,10 @@ void MasterWindow::loadState()
 
     _sessionFolder = QFileInfo( filename ).absoluteDir().path();
 
-    loadState( filename );
+    _loadState( filename );
 }
 
-void MasterWindow::loadState( const QString& filename )
+void MasterWindow::_loadState( const QString& filename )
 {
     if( !StateSerializationHelper( _displayGroup ).load( filename ))
     {
@@ -506,7 +509,7 @@ void MasterWindow::computeImagePyramid()
     put_flog( LOG_DEBUG, "done generating pyramid" );
 }
 
-void MasterWindow::estimateGridSize( unsigned int numElem, unsigned int &gridX,
+void MasterWindow::_estimateGridSize( unsigned int numElem, unsigned int &gridX,
                                      unsigned int &gridY )
 {
     assert( numElem > 0 );
@@ -515,7 +518,7 @@ void MasterWindow::estimateGridSize( unsigned int numElem, unsigned int &gridX,
     gridY = ( gridX * ( gridX-1 ) >= numElem ) ? gridX-1 : gridX;
 }
 
-QStringList MasterWindow::extractValidContentUrls(const QMimeData* mimeData)
+QStringList MasterWindow::_extractValidContentUrls(const QMimeData* mimeData)
 {
     QStringList pathList;
 
@@ -534,7 +537,7 @@ QStringList MasterWindow::extractValidContentUrls(const QMimeData* mimeData)
     return pathList;
 }
 
-QStringList MasterWindow::extractFolderUrls(const QMimeData* mimeData)
+QStringList MasterWindow::_extractFolderUrls(const QMimeData* mimeData)
 {
     QStringList pathList;
 
@@ -552,7 +555,7 @@ QStringList MasterWindow::extractFolderUrls(const QMimeData* mimeData)
     return pathList;
 }
 
-QString MasterWindow::extractStateFile(const QMimeData* mimeData)
+QString MasterWindow::_extractStateFile(const QMimeData* mimeData)
 {
     QList<QUrl> urlList = mimeData->urls();
     if (urlList.size() == 1)
@@ -567,9 +570,9 @@ QString MasterWindow::extractStateFile(const QMimeData* mimeData)
 
 void MasterWindow::dragEnterEvent(QDragEnterEvent* dragEvent)
 {
-    const QStringList& pathList = extractValidContentUrls(dragEvent->mimeData());
-    const QStringList& dirList = extractFolderUrls(dragEvent->mimeData());
-    const QString& stateFile = extractStateFile(dragEvent->mimeData());
+    const QStringList& pathList = _extractValidContentUrls(dragEvent->mimeData());
+    const QStringList& dirList = _extractFolderUrls(dragEvent->mimeData());
+    const QString& stateFile = _extractStateFile(dragEvent->mimeData());
 
     if (!pathList.empty() || !dirList.empty() || !stateFile.isNull())
     {
@@ -579,18 +582,18 @@ void MasterWindow::dragEnterEvent(QDragEnterEvent* dragEvent)
 
 void MasterWindow::dropEvent( QDropEvent* dropEvt )
 {
-    const QStringList& urls = extractValidContentUrls( dropEvt->mimeData( ));
+    const QStringList& urls = _extractValidContentUrls( dropEvt->mimeData( ));
     ContentLoader loader( _displayGroup );
     foreach( QString url, urls )
         loader.load( url );
 
-    const QStringList& folders = extractFolderUrls( dropEvt->mimeData( ));
+    const QStringList& folders = _extractFolderUrls( dropEvt->mimeData( ));
     if( !folders.isEmpty( ))
-        addContentDirectory( folders[0] ); // Only one directory at a time
+        _addContentDirectory( folders[0] ); // Only one directory at a time
 
-    const QString& stateFile = extractStateFile( dropEvt->mimeData( ));
+    const QString& stateFile = _extractStateFile( dropEvt->mimeData( ));
     if( !stateFile.isNull( ))
-        loadState( stateFile );
+        _loadState( stateFile );
 
     dropEvt->acceptProposedAction();
 }
