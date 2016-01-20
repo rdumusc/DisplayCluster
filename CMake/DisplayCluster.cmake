@@ -7,4 +7,4 @@ set(DISPLAYCLUSTER_DEB_DEPENDS libavutil-dev libavformat-dev libavcodec-dev
   libqt5script5 libqt5scripttools5 libqt5svg5-dev libqt5webkit5-dev
   libqt5xmlpatterns5-dev libqt5x11extras5-dev qtquick1-5-dev qtscript5-dev
   libpoppler-qt5-dev)
-set(DISPLAYCLUSTER_PORT_DEPENDS qt5-mac boost ffmpeg fcgi mpich-devel)
+set(DISPLAYCLUSTER_PORT_DEPENDS qt5 boost ffmpeg fcgi mpich-devel)
