@@ -327,7 +327,8 @@ void MasterApplication::initMPIConnection()
 void MasterApplication::initTouchListener()
 {
     QWindow* targetWindow = masterWindow_->getDisplayGroupView();
-    touchListener_.reset( new MultiTouchListener( targetWindow ));
+    touchListener_.reset( new MultiTouchListener(
+                              targetWindow, config_->getTotalSize( )));
     connect( touchListener_.get(), &MultiTouchListener::touchPointAdded,
              markers_.get(), &Markers::addMarker );
     connect( touchListener_.get(), &MultiTouchListener::touchPointUpdated,

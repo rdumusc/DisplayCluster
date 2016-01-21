@@ -49,10 +49,12 @@
 #include <QScreen>
 #include <QWindow>
 
-MultiTouchListener::MultiTouchListener( QWindow* targetWindow )
+MultiTouchListener::MultiTouchListener( QWindow* targetWindow,
+                                        const QSize& wallSize )
     : TUIO::TuioListener()
     , _targetWindow( targetWindow )
     , _device()
+    , _wallSize( wallSize )
 {
     _device.setType( QTouchDevice::TouchScreen );
 
@@ -112,9 +114,8 @@ void MultiTouchListener::refresh( TUIO::TuioTime )
 
 QPointF MultiTouchListener::_getScreenPos( TUIO::TuioCursor* tcur ) const
 {
-    const QSize screenSize( _targetWindow->screen()->size( ));
-    return QPointF( tcur->getX() * screenSize.width(),
-                    tcur->getY() * screenSize.height( ));
+    return QPointF( tcur->getX() * _wallSize.width(),
+                    tcur->getY() * _wallSize.height( ));
 }
 
 void MultiTouchListener::_fillBegin( QTouchEvent::TouchPoint& touchPoint ) const
