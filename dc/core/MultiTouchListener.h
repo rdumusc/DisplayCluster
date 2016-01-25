@@ -58,7 +58,7 @@ class MultiTouchListener : public QObject, public TUIO::TuioListener
     Q_OBJECT
 
 public:
-    MultiTouchListener( QWindow* targetWindow );
+    MultiTouchListener( QWindow* targetWindow, const QSize& wallSize );
     ~MultiTouchListener();
 
     void addTuioObject( TUIO::TuioObject* tobj );
@@ -90,6 +90,7 @@ private:
     QWindow* _targetWindow;
     TUIO::TuioClient _client;
     QTouchDevice _device;
+    QSize _wallSize;
 };
 
 #endif
