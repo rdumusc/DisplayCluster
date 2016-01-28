@@ -45,32 +45,11 @@
 #include <deflect/Frame.h>
 #include <boost/bind.hpp>
 #include <QImage>
-
-template <typename T>
-class ScopedIncrementer
-{
-public:
-    ScopedIncrementer( T& object, std::mutex& mutex )
-        : _object( object )
-        , _mutex( mutex )
-    {
-        std::lock_guard<std::mutex> lock( _mutex );
-        ++_object;
-    }
-    ~ScopedIncrementer()
-    {
-        std::lock_guard<std::mutex> lock( _mutex );
-        --_object;
-    }
-
-private:
-    T& _object;
-    std::mutex& _mutex;
-};
+#include <QThreadStorage>
 
 PixelStreamUpdater::PixelStreamUpdater()
-    : _decodeCount( 0 )
-    , _frameIndex( 0 )
+    : _frameIndex( 0 )
+    , _requestedFrameIndex( 0 )
 {
     _swapSyncFrame.setCallback( boost::bind(
                                     &PixelStreamUpdater::_onFrameSwapped,
@@ -79,13 +58,6 @@ PixelStreamUpdater::PixelStreamUpdater()
 
 void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
 {
-    // Block calls to getTile() by holding the lock until the frame has
-    // been swapped
-    std::lock_guard<std::mutex> lock( _mutex );
-
-    if( !channel.allReady( _decodeCount == 0 ))
-        return;
-
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
 
@@ -97,18 +69,27 @@ const QList<QObject*>& PixelStreamUpdater::getTiles() const
     return _tiles;
 }
 
-QImage PixelStreamUpdater::getTileImage( const uint index )
+QImage PixelStreamUpdater::getTileImage( const uint frameIndex,
+                                         const uint tileIndex )
 {
-    // Ensure that this operation does not conflict with a frame swap
-    ScopedIncrementer<int> increment( _decodeCount, _mutex );
+    // to determine which frames can be deleted from the _frames map
+    _requestedFrameIndex = std::max( _requestedFrameIndex, frameIndex );
 
-    if( !_swapSyncFrame.get( ))
+    // find the segments for the requested frame
+    deflect::FramePtr frame;
+    for( const auto& i : _frames )
+    {
+        if( i.first == frameIndex )
+        {
+            frame = i.second;
+            break;
+        }
+    }
+
+    if( !frame )
         throw std::runtime_error( "No frames yet" );
 
-    auto& segment = _swapSyncFrame.get()->segments.at( index );
-
-    if( segment.parameters.compressed )
-        _decoders[index]->decode( segment );
+    const auto& segment = frame->segments.at( tileIndex );
 
     return QImage( (const uchar*)segment.imageData.constData(),
                    segment.parameters.width, segment.parameters.height,
@@ -129,17 +110,37 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
                      s1.parameters.x < s2.parameters.x );
         } );
 
-    _adjustFrameDecodersCount( frame->segments.size( ));
+    // decode everthing in a batch rather than doing it in the requestImage() for
+    // better performance. TODO: only decode visible segments
+    _decodeSegments( frame->segments );
     _refreshTiles( frame->segments );
+
+    // cleanup old frames
+    while( !_frames.empty( ))
+    {
+        if( _frames.front().first >= _requestedFrameIndex )
+            break;
+        _frames.pop_front();
+    }
+
+    _frames.push_back( std::make_pair( _frameIndex, frame ));
 
     emit pictureUpdated( _frameIndex++ );
     emit requestFrame( frame->uri );
 }
 
-void PixelStreamUpdater::_adjustFrameDecodersCount( const size_t count )
+void PixelStreamUpdater::_decodeSegments( deflect::Segments& segments )
 {
-    while( _decoders.size() < count )
-        _decoders.push_back( make_unique<deflect::SegmentDecoder>( ));
+#pragma omp parallel for
+    for( size_t i = 0; i < segments.size(); ++i )
+    {
+        if( segments[i].parameters.compressed )
+        {
+            // turbojpeg handles need to be per thread
+            static QThreadStorage< deflect::SegmentDecoder > decoder;
+            decoder.localData().decode( segments[i] );
+        }
+    }
 }
 
 QRect toRect( const deflect::SegmentParameters& params )

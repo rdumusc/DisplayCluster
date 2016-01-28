@@ -64,7 +64,6 @@ QImage PixelStreamProvider::requestImage( const QString& id, QSize* size,
     const uint frameIndex = params[1].toUInt( &ok );
     if( !ok )
         return QImage();
-    Q_UNUSED( frameIndex );
 
     ok = false;
     const uint tileIndex = params[2].toUInt( &ok );
@@ -76,7 +75,7 @@ QImage PixelStreamProvider::requestImage( const QString& id, QSize* size,
 
     QImage image;
     try {
-        image = _streams[streamUri]->getTileImage( tileIndex );
+        image = _streams[streamUri]->getTileImage( frameIndex, tileIndex );
     }
     catch ( const std::out_of_range& ) {
         put_flog( LOG_DEBUG, "Invalid tile requested: %d", tileIndex );
