@@ -40,6 +40,7 @@
 #ifndef TEXTUREPROVIDER_H
 #define TEXTUREPROVIDER_H
 
+#include "types.h"
 #include <QQuickImageProvider>
 
 /**
@@ -55,6 +56,13 @@ public:
 
     QImage requestImage( const QString& id, QSize* size,
                          const QSize& requestedSize ) final;
+
+    DynamicTexturePtr openDynamicTexture( const QString& uri );
+
+    void closeDynamicTexture( const QString& uri );
+
+private:
+    std::map< QString, DynamicTexturePtr > _dynamicTextures;
 };
 
 #endif

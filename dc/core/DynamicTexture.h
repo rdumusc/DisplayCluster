@@ -41,11 +41,10 @@
 
 #include "types.h"
 
+#include <QFutureSynchronizer>
+#include <QHash>
 #include <QImage>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <QObject>
 
 /**
  * A dynamically loaded large scale image.
@@ -55,8 +54,11 @@
  * (2) Direct reading from a large image
  * @see generateImagePyramid()
  */
-class DynamicTexture : public boost::enable_shared_from_this<DynamicTexture>
+class DynamicTexture : public QObject,
+        public std::enable_shared_from_this<DynamicTexture>
 {
+    Q_OBJECT
+
 public:
     /**
      * Constructor
@@ -96,6 +98,9 @@ public:
     /** Get the number of tile at the given lod. */
     QSize getTilesCount( uint lod ) const;
 
+    /** @return the image size for the requested lod. */
+    QSize getTilesArea( uint lod ) const;
+
     /** Get the index of the first tile of the given lod. */
     int getFirstTileIndex( uint lod ) const;
 
@@ -106,20 +111,42 @@ public:
     QString getTileFilename( uint tileIndex ) const;
 
     /**
+     * @return the image for the requested tile index, or empty image if not
+     * loaded yet.
+     */
+    QImage getTileImage( uint tileIndex ) const;
+
+    /** Trigger loading the image for the given tile asynchronously. */
+    void triggerTileLoad( uint tileIndex );
+
+    /** Cancel outstanding loads of tiles from triggerTileLoad(). */
+    void cancelPendingTileLoads();
+
+    /**
      * Generate an image Pyramid from the current uri and save it to the disk.
      * @param outputFolder The folder in which the metadata and pyramid images
      *        will be created.
      */
     bool generateImagePyramid( const QString& outputFolder );
 
+    /** @internal Called by loading thread from triggerTileLoad(). */
+    void loadTile( uint tileIndex );
+
+signals:
+    void tileLoaded();
+
 private:
+    QHash<uint, QImage> _tilesCache;
+
+    QFutureSynchronizer< void > _pendingLoadFutures;
+
     /* for root only: */
 
-    QString uri_;
-    QString imageExtension_;
+    QString _uri;
+    QString _imageExtension;
 
-    QString imagePyramidPath_;
-    bool useImagePyramid_;
+    QString _imagePyramidPath;
+    bool _useImagePyramid;
 
     QImage fullscaleImage_;
 
@@ -127,18 +154,16 @@ private:
 
     /* for children only: */
 
-    boost::weak_ptr<DynamicTexture> parent_;
-    QRectF imageCoordsInParentImage_;
+    std::weak_ptr<DynamicTexture> _parent;
+    QRectF _imageCoordsInParentImage;
 
     /* for all objects: */
 
-    std::vector<int> treePath_; // To construct the image name for each object
-    int depth_; // The depth of the object in the image pyramid
+    std::vector<int> _treePath; // To construct the image name for each object
+    int _depth; // The depth of the object in the image pyramid
 
-    QSize imageSize_; // full scale image dimensions
-    QImage scaledImage_; // for texture upload to GPU
-
-    std::vector<DynamicTexturePtr> children_; // Children in the image pyramid
+    QSize _imageSize; // full scale image dimensions
+    QImage _scaledImage; // for texture upload to GPU
 
     void _loadImage();
     bool _canHaveChildren();

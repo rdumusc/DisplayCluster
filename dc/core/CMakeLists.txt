@@ -53,7 +53,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentFactory.h
   ContentLoader.h
   ContentType.h
-  DynamicTexture.h
   DynamicTextureContent.h
   ElapsedTimer.h
   FFMPEGFrame.h
@@ -120,6 +119,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   Coordinates.h
   DisplayGroup.h
   DisplayGroupRenderer.h
+  DynamicTexture.h
   DynamicTextureSynchronizer.h
   Markers.h
   MasterFromWallChannel.h

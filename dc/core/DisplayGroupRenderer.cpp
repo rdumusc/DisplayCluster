@@ -62,18 +62,18 @@ const int BACKGROUND_STACKING_ORDER = -1;
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
-                                            const QPoint& pos )
-    : QObject( &parentWindow )
-    , _engine( *parentWindow.engine( ))
+                                            const QRect& screenRect )
+    : _engine( *parentWindow.engine( ))
     , _displayGroup( new DisplayGroup( QSize( )))
     , _displayGroupItem( 0 )
     , _options( new Options )
     , _markers( new Markers )
+    , _screenRect( screenRect )
 {
     _engine.rootContext()->setContextProperty( "markers", _markers.get( ));
     _engine.rootContext()->setContextProperty( "options", _options.get( ));
     _createDisplayGroupQmlItem( *parentWindow.rootObject( ));
-    _displayGroupItem->setPosition( -pos );
+    _displayGroupItem->setPosition( -screenRect.topLeft( ));
     _setBackground( _options->getBackgroundContent( ));
 }
 
@@ -113,11 +113,10 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 
         updatedWindows.insert( id );
 
-        if( _windowItems.contains( id ))
-            _windowItems[id]->update( window );
-        else
+        if( !_windowItems.contains( id ))
             _createWindowQmlItem( window );
 
+        _windowItems[id]->update( window );
         _windowItems[id]->setStackingOrder( stackingOrder++ );
     }
 
@@ -170,7 +169,7 @@ void DisplayGroupRenderer::_createWindowQmlItem( ContentWindowPtr window )
 {
     const QUuid& id = window->getID();
     _windowItems[id].reset( new QmlWindowRenderer( _engine, *_displayGroupItem,
-                                                   window ));
+                                                   window, _screenRect ));
     emit windowAdded( _windowItems[id] );
 }
 
@@ -198,6 +197,7 @@ void DisplayGroupRenderer::_setBackground( ContentPtr content )
     window->getController()->adjustSize( SIZE_FULLSCREEN );
     _backgroundWindowItem.reset( new QmlWindowRenderer( _engine,
                                                         *_displayGroupItem,
-                                                        window, true ));
+                                                        window, _screenRect,
+                                                        true ));
     _backgroundWindowItem->setStackingOrder( BACKGROUND_STACKING_ORDER );
 }

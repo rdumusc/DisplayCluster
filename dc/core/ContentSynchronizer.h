@@ -90,7 +90,8 @@ public:
 
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content,
-                                          QQmlImageProviderBase& provider );
+                                          QQmlImageProviderBase& provider,
+                                          const QRect& screenRect );
 
 signals:
     /** Notifier for the sourceParams property. */

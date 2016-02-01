@@ -42,21 +42,49 @@
 #include "ContentWindow.h"
 #include "Tile.h"
 #include "ZoomHelper.h"
+#include "TextureProvider.h"
 
 #include <QTextStream>
 
-DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
-    : _reader( uri )
+DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri,
+                                                        const QRect& screenRect,
+                                                        TextureProvider& provider )
+    : _uri( uri )
+    , _provider( provider )
+    , _reader( provider.openDynamicTexture( uri ))
     , _lod( 0 )
+    , _screenRect( screenRect )
 {
-    _updateTiles( _reader.getMaxLod( ));
+    connect( _reader.get(), &DynamicTexture::tileLoaded,
+             this, &DynamicTextureSynchronizer::tilesChanged );
+}
+
+DynamicTextureSynchronizer::~DynamicTextureSynchronizer()
+{
+    _provider.closeDynamicTexture( _uri );
 }
 
 void DynamicTextureSynchronizer::update( const ContentWindow& window )
 {
     const QRectF contentRect = ZoomHelper( window ).getContentRect();
-    const auto lod = _reader.getLod( contentRect.size().toSize( ));
-    _updateTiles( lod );
+    const QSizeF contentSize = contentRect.size();
+    _lod = _reader->getLod( contentSize.toSize( ));
+
+    // same calculation as in WallWindow QML
+    const qreal xScale = contentSize.width() / getTilesArea().width();
+    const qreal yScale = contentSize.height() / getTilesArea().height();
+
+    const QRectF windowCoords = window.getDisplayCoordinates();
+    QRectF visibleArea = _screenRect.intersected( windowCoords );
+    const QSizeF visibleAreaSize = visibleArea.size();
+
+    // transform to content space for tiles origin at (0,0)
+    visibleArea.moveTopLeft(
+        QPointF( std::max( -windowCoords.x() + _screenRect.x(), 0.) / xScale,
+                 std::max( -windowCoords.y() + _screenRect.y(), 0.) / yScale ));
+    visibleArea.setSize( QSizeF( visibleAreaSize.width() / xScale,
+                                 visibleAreaSize.height() / yScale ));
+    _updateTiles( visibleArea );
 }
 
 QString DynamicTextureSynchronizer::getSourceParams() const
@@ -76,38 +104,42 @@ QList<QObject*> DynamicTextureSynchronizer::getTiles() const
 
 QSize DynamicTextureSynchronizer::getTilesArea() const
 {
-    return _tilesArea.size();
+    return _reader->getTilesArea( _lod );
 }
 
 QString DynamicTextureSynchronizer::getStatistics() const
 {
     QString stats;
     QTextStream stream( &stats );
-    stream << "LOD:  " << _lod << "/" << _reader.getMaxLod();
-    stream << "  res: " << _tilesArea.width() << "x" << _tilesArea.height();
+    stream << "LOD:  " << _lod << "/" << _reader->getMaxLod();
+    const QSize& area = getTilesArea();
+    stream << "  res: " << area.width() << "x" << area.height();
     return stats;
 }
 
-void DynamicTextureSynchronizer::_updateTiles( const uint lod )
+void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea )
 {
-    if( lod == _lod && !_tiles.empty( ))
+    if( visibleArea == _visibleArea )
         return;
 
-    _lod = lod;
+    _visibleArea = visibleArea;
     _tiles.clear();
-    _tilesArea = QRect();
+    _reader->cancelPendingTileLoads();
 
-    const QSize tilesCount = _reader.getTilesCount( _lod );
-    const int startIndex = _reader.getFirstTileIndex( _lod );
+    const QSize tilesCount = _reader->getTilesCount( _lod );
+    const int startIndex = _reader->getFirstTileIndex( _lod );
 
     for( int y = 0; y < tilesCount.height(); ++y )
     {
         for( int x = 0; x < tilesCount.width(); ++x )
         {
             const int i = startIndex + y * tilesCount.width() + x;
-            const QRect coord = _reader.getTileCoord( _lod, x, y );
-            _tiles.push_back( new Tile( i, coord, this ));
-            _tilesArea = _tilesArea.united( coord );
+            const QRect& coord = _reader->getTileCoord( _lod, x, y );
+            if( QRectF(coord).intersects( visibleArea ))
+            {
+                _reader->triggerTileLoad( i );
+                _tiles.push_front( new Tile( i, coord, this ));
+            }
         }
     }
     emit tilesChanged();

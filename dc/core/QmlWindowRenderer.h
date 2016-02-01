@@ -56,6 +56,7 @@ public:
     QmlWindowRenderer( QQmlEngine& engine,
                        QQuickItem& parentItem,
                        ContentWindowPtr contentWindow,
+                       const QRect& screenRect,
                        bool isBackground = false );
     /** Destructor. */
     ~QmlWindowRenderer();

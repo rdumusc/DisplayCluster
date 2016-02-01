@@ -23,7 +23,7 @@ Rectangle {
     anchors.leftMargin: anchors.bottomMargin
     visible: options.showZoomContext && hasZoom(contentwindow.content.zoomRect)
 
-    DoubleBufferedImage {
+    Image {
         id: image
         objectName: "ZoomContextItem"
         anchors.fill: parent

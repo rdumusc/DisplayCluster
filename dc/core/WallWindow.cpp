@@ -111,6 +111,7 @@ WallWindow::~WallWindow()
     _quickRendererThread->quit();
     _quickRendererThread->wait();
 
+    delete _displayGroupRenderer;
     delete _qmlComponent;
     delete _qmlEngine;
     delete _glContext;
@@ -167,8 +168,7 @@ void WallWindow::startQuick( const WallConfiguration& config )
 
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
-    _displayGroupRenderer = new DisplayGroupRenderer( *this,
-                                                      screenRect.topLeft( ));
+    _displayGroupRenderer = new DisplayGroupRenderer( *this, screenRect );
     _testPattern = new TestPattern( config, _rootItem );
     _testPattern->setPosition( -screenRect.topLeft( ));
 

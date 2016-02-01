@@ -55,6 +55,7 @@
 
 #include <stdexcept>
 
+#include <QThreadPool>
 #include <QQuickRenderControl>
 
 WallApplication::WallApplication( int& argc_, char** argv_,
@@ -63,6 +64,9 @@ WallApplication::WallApplication( int& argc_, char** argv_,
     : QApplication( argc_, argv_ )
     , _wallChannel( new WallToWallChannel( wallChannel ))
 {
+    // avoid overcommit for dynamic texture load
+    QThreadPool::globalInstance()->setMaxThreadCount( 2 );
+
     CommandLineParameters options( argc_, argv_ );
     if( options.getHelp( ))
         options.showSyntax();
