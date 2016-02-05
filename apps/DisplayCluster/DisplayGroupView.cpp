@@ -41,6 +41,7 @@
 #include "ContentWindow.h"
 #include "DisplayGroup.h"
 #include "Options.h"
+#include "configuration/MasterConfiguration.h"
 #include "qmlUtils.h"
 
 #include <QQmlComponent>
@@ -52,26 +53,38 @@
 
 namespace
 {
-const QString MASTER_WINDOW_OBJECT_NAME( "MasterContentWindow" );
+const QString WALL_OBJECT_NAME( "Wall" );
 const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/MasterContentWindow.qml" );
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
 const QUrl QML_BACKGROUND_URL( "qrc:/qml/master/DisplayGroupBackground.qml" );
 }
 
-DisplayGroupView::DisplayGroupView( OptionsPtr options )
+DisplayGroupView::DisplayGroupView( OptionsPtr options,
+                                    const MasterConfiguration& config )
     : displayGroupItem_( 0 )
 {
-    engine()->rootContext()->setContextProperty( "options", options.get( ));
-    engine()->rootContext()->setContextProperty( "view", this );
-    engine()->rootContext()->setContextProperty( "cppcontrolpanel",
-                                                 &controlPanel_ );
+    setResizeMode( QQuickView::SizeRootObjectToView );
+
+    rootContext()->setContextProperty( "options", options.get( ));
+    rootContext()->setContextProperty( "view", this );
+    rootContext()->setContextProperty( "cppcontrolpanel", &controlPanel_ );
+
+    setSource( QML_BACKGROUND_URL );
+
+    auto wallObject = rootObject()->findChild<QObject*>( WALL_OBJECT_NAME );
+    wallObject->setProperty( "numberOfTilesX", config.getTotalScreenCountX( ));
+    wallObject->setProperty( "numberOfTilesY", config.getTotalScreenCountY( ));
+    wallObject->setProperty( "mullionWidth", config.getMullionWidth( ));
+    wallObject->setProperty( "mullionHeight", config.getMullionHeight( ));
+    wallObject->setProperty( "screenWidth", config.getScreenWidth( ));
+    wallObject->setProperty( "screenHeight", config.getScreenHeight( ));
+    wallObject->setProperty( "wallWidth", config.getTotalWidth( ));
+    wallObject->setProperty( "wallHeight", config.getTotalHeight( ));
 }
 
 DisplayGroupView::~DisplayGroupView() {}
 
-void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup,
-                                     const QSize& numberOfTiles,
-                                     const int mullionWidth )
+void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup )
 {
     if( displayGroup_ )
     {
@@ -84,15 +97,12 @@ void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup,
         return;
 
     rootContext()->setContextProperty( "displaygroup", displayGroup_.get( ));
-    setSource( QML_BACKGROUND_URL );
 
     QQmlComponent component( engine(), QML_DISPLAYGROUP_URL );
     displayGroupItem_ = qobject_cast< QQuickItem* >( component.create( ));
     qmlCheckOrThrow( component );
-    displayGroupItem_->setParentItem( rootObject( ));
-    displayGroupItem_->setProperty( "numberOfTilesX", numberOfTiles.width( ));
-    displayGroupItem_->setProperty( "numberOfTilesY", numberOfTiles.height( ));
-    displayGroupItem_->setProperty( "mullionWidth", mullionWidth );
+    auto wallObject = rootObject()->findChild<QQuickItem*>( WALL_OBJECT_NAME );
+    displayGroupItem_->setParentItem( wallObject );
 
     ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
     for( ContentWindowPtr contentWindow : contentWindows )
@@ -107,8 +117,6 @@ void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup,
     connect( displayGroup_.get(),
              SIGNAL( contentWindowMovedToFront( ContentWindowPtr )),
              this, SLOT( moveToFront( ContentWindowPtr )));
-
-    setResizeMode( QQuickView::SizeRootObjectToView );
 }
 
 QmlControlPanel& DisplayGroupView::getControlPanel()
@@ -118,13 +126,14 @@ QmlControlPanel& DisplayGroupView::getControlPanel()
 
 void DisplayGroupView::clearScene()
 {
-    foreach( QQuickItem* itemToRemove, uuidToWindowMap_ )
-    {
-        itemToRemove->setParentItem( 0 );
-        delete itemToRemove;
-    }
-
     uuidToWindowMap_.clear();
+
+    if( displayGroupItem_ )
+    {
+        displayGroupItem_->setParentItem( 0 );
+        delete displayGroupItem_;
+        displayGroupItem_ = 0;
+    }
 }
 
 bool DisplayGroupView::event( QEvent *evt )
@@ -149,23 +158,6 @@ bool DisplayGroupView::event( QEvent *evt )
     default:
         return QQuickView::event( evt );
     }
-}
-
-void DisplayGroupView::resizeEvent( QResizeEvent* resizeEvt )
-{
-//    const QSizeF& sceneSize = scene()->sceneRect().size();
-
-//    QSizeF windowSize( width(), height( ));
-//    windowSize.scale( sceneSize, Qt::KeepAspectRatioByExpanding );
-//    windowSize = windowSize * ( 1.0 + VIEW_MARGIN );
-
-//    // Center the scene in the view
-//    setSceneRect( -0.5 * (windowSize.width() - sceneSize.width()),
-//                  -0.5 * (windowSize.height() - sceneSize.height()),
-//                  windowSize.width(), windowSize.height( ));
-//    fitInView( sceneRect( ));
-
-    QWindow::resizeEvent( resizeEvt );
 }
 
 void DisplayGroupView::add( ContentWindowPtr contentWindow )
@@ -202,11 +194,5 @@ void DisplayGroupView::moveToFront( ContentWindowPtr contentWindow )
         return;
 
     QQuickItem* itemToRaise = uuidToWindowMap_[id];
-
-    QList<QQuickItem*> windows = displayGroupItem_->childItems();
-    foreach( QQuickItem* item, windows )
-    {
-        if( item != itemToRaise && item->objectName() == MASTER_WINDOW_OBJECT_NAME )
-            item->stackBefore( itemToRaise );
-    }
+    itemToRaise->stackAfter( displayGroupItem_->childItems().last( ));
 }

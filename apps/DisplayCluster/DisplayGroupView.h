@@ -59,14 +59,13 @@ class DisplayGroupView : public QQuickView
 
 public:
     /** Constructor. */
-    DisplayGroupView( OptionsPtr options );
+    DisplayGroupView( OptionsPtr options, const MasterConfiguration& config );
 
     /** Destructor */
     virtual ~DisplayGroupView();
 
     /** Set the DisplayGroup model that this view should present. */
-    void setDataModel( DisplayGroupPtr displayGroup, const QSize& numberOfTiles,
-                       int mullionWidth );
+    void setDataModel( DisplayGroupPtr displayGroup );
 
     /** Get the control panel in this view. */
     QmlControlPanel& getControlPanel();
@@ -79,11 +78,8 @@ signals:
     void backgroundTapAndHold( QPointF pos );
 
 protected:
-    /** @name Re-implemented QWindow events */
-    //@{
+    /** Re-implement QWindow event to capture tab key. */
     bool event( QEvent* event ) override;
-    void resizeEvent( QResizeEvent* event ) override;
-    //@}
 
 private slots:
     void add( ContentWindowPtr contentWindow );

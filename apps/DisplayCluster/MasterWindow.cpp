@@ -75,7 +75,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     , _options( new Options )
     , _backgroundWidget( new BackgroundWidget( config, this ))
     , _webbrowserWidget( new WebbrowserWidget( config, this ))
-    , _displayGroupView( new DisplayGroupView( _options ))
+    , _displayGroupView( new DisplayGroupView( _options, config ))
     , _autoFocusPixelStreamsAction( 0 )
     , _contentFolder( config.getDockStartDir( ))
     , _sessionFolder( config.getDockStartDir( ))
@@ -94,7 +94,7 @@ MasterWindow::MasterWindow( DisplayGroupPtr displayGroup,
     resize( DEFAULT_WINDOW_SIZE );
     setAcceptDrops( true );
 
-    _setupMasterWindowUI( config );
+    _setupMasterWindowUI();
 
     show();
 }
@@ -116,7 +116,7 @@ QAction* MasterWindow::getAutoFocusPixelStreamsAction()
     return _autoFocusPixelStreamsAction;
 }
 
-void MasterWindow::_setupMasterWindowUI( const MasterConfiguration& config )
+void MasterWindow::_setupMasterWindowUI()
 {
     // create menus in menu bar
     QMenu* fileMenu = menuBar()->addMenu("&File");
@@ -298,10 +298,7 @@ void MasterWindow::_setupMasterWindowUI( const MasterConfiguration& config )
     setCentralWidget(mainWidget);
 
     // add the local renderer group
-    _displayGroupView->setDataModel( _displayGroup, QSize(
-                                     config.getTotalScreenCountX(),
-                                     config.getTotalScreenCountY( )),
-                                     config.getMullionWidth( ));
+    _displayGroupView->setDataModel( _displayGroup );
     QWidget* wrapper = QWidget::createWindowContainer( _displayGroupView,
                                                        mainWidget );
     mainWidget->addTab( wrapper, "Display group 0" );
