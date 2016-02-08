@@ -114,7 +114,7 @@ private slots:
     void openAboutWidget();
 
 private:
-    void _setupMasterWindowUI( const MasterConfiguration& config );
+    void _setupMasterWindowUI();
 
     void _addContentDirectory( const QString& directoryName,
                               unsigned int gridX = 0, unsigned int gridY = 0 );

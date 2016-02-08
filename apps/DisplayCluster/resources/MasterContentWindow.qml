@@ -6,7 +6,6 @@ import "qrc:/qml/core/style.js" as Style
 
 BaseContentWindow {
     id: windowRect
-    objectName: "MasterContentWindow"
     color: "#80000000"
 
     function closeWindow() {
