@@ -60,19 +60,15 @@ public:
     /** Get the DisplayGroup */
     DisplayGroupPtr getDisplayGroup() const;
 
-    /** Update and synchronize scene objects before rendering a frame. */
-    void preRenderUpdate( WallToWallChannel& wallChannel );
-
-    /** Do we need to stop rendering. */
-    bool quitRendering() const;
-
 public slots:
     void updateQuit();
     void updateDisplayGroup( DisplayGroupPtr displayGroup );
     void updateOptions( OptionsPtr options );
     void updateMarkers( MarkersPtr markers );
+    void requestRender();
 
 private:
+    bool event( QEvent* qtEvent ) final;
     Q_DISABLE_COPY( RenderController )
 
     WallWindow& _window;
@@ -82,7 +78,12 @@ private:
     SwapSyncObject<OptionsPtr> _syncOptions;
     SwapSyncObject<MarkersPtr> _syncMarkers;
 
+    /** Update and synchronize scene objects before rendering a frame. */
+    void _syncAndRender();
+
     void _synchronizeObjects( const SyncFunction& versionCheckFunc );
+
+    bool _renderPending;
 };
 
 #endif // RENDERCONTROLLER_H

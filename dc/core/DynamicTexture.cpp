@@ -45,6 +45,7 @@
 
 #include <QDir>
 #include <QImageReader>
+#include <QtConcurrentRun>
 
 #define TEXTURE_SIZE 512
 
@@ -56,43 +57,43 @@ const QString PYRAMID_METADATA_FILE_NAME( "pyramid.pyr" );
 const QString DynamicTexture::pyramidFileExtension = QString( "pyr" );
 const QString DynamicTexture::pyramidFolderSuffix = QString( ".pyramid/" );
 
-DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent,
+DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent_,
                                const QRectF& parentCoordinates, const int childIndex)
-    : uri_(uri)
-    , useImagePyramid_(false)
-    , parent_(parent)
-    , imageCoordsInParentImage_(parentCoordinates)
-    , depth_(0)
+    : _uri(uri)
+    , _useImagePyramid(false)
+    , _parent(parent_)
+    , _imageCoordsInParentImage(parentCoordinates)
+    , _depth(0)
 {
     // if we're a child...
-    if(parent)
+    if(parent_)
     {
-        depth_ = parent->depth_ + 1;
+        _depth = parent_->_depth + 1;
 
         // append childIndex to parent's path to form this object's path
-        treePath_ = parent->treePath_;
-        treePath_.push_back(childIndex);
+        _treePath = parent_->_treePath;
+        _treePath.push_back(childIndex);
 
-        imageExtension_ = parent->imageExtension_;
+        _imageExtension = parent_->_imageExtension;
     }
 
     // if we're the top-level object
     if(isRoot())
     {
         // this is the top-level object, so its path is 0
-        treePath_.push_back(0);
+        _treePath.push_back(0);
 
         const QString extension = QString(".").append(pyramidFileExtension);
-        if(uri_.endsWith(extension))
-            readPyramidMetadataFromFile(uri_);
+        if(_uri.endsWith(extension))
+            readPyramidMetadataFromFile(_uri);
         else
-            readFullImageMetadata(uri_);
+            readFullImageMetadata(_uri);
     }
 }
 
 bool DynamicTexture::isRoot() const
 {
-    return depth_ == 0;
+    return _depth == 0;
 }
 
 bool DynamicTexture::readFullImageMetadata( const QString& uri )
@@ -101,8 +102,8 @@ bool DynamicTexture::readFullImageMetadata( const QString& uri )
     if( !imageReader.canRead( ))
         return false;
 
-    imageExtension_ = QString( imageReader.format( ));
-    imageSize_ = imageReader.size();
+    _imageExtension = QString( imageReader.format( ));
+    _imageSize = imageReader.size();
     return true;
 }
 
@@ -131,18 +132,18 @@ bool DynamicTexture::readPyramidMetadataFromFile( const QString& uri )
         return false;
     }
 
-    imagePyramidPath_ = QString(tokens[0].c_str());
-    if( !determineImageExtension( imagePyramidPath_ ))
+    _imagePyramidPath = QString(tokens[0].c_str());
+    if( !determineImageExtension( _imagePyramidPath ))
         return false;
 
-    imageSize_.setWidth(atoi(tokens[1].c_str()));
-    imageSize_.setHeight(atoi(tokens[2].c_str()));
+    _imageSize.setWidth(atoi(tokens[1].c_str()));
+    _imageSize.setHeight(atoi(tokens[2].c_str()));
 
-    useImagePyramid_ = true;
+    _useImagePyramid = true;
 
     put_flog( LOG_VERBOSE, "read pyramid file: '%s'', width: %i, height: %i",
-              imagePyramidPath_.toLocal8Bit().constData(), imageSize_.width(),
-              imageSize_.height( ));
+              _imagePyramidPath.toLocal8Bit().constData(), _imageSize.width(),
+              _imageSize.height( ));
 
     return true;
 }
@@ -164,7 +165,7 @@ bool DynamicTexture::determineImageExtension( const QString& imagePyramidPath )
     if( !QImageReader().supportedImageFormats().contains( extension.toLatin1( )))
         return false;
 
-    imageExtension_ = extension;
+    _imageExtension = extension;
     return true;
 }
 
@@ -179,8 +180,8 @@ bool DynamicTexture::writeMetadataFile( const QString& pyramidFolder,
         return false;
     }
 
-    ofs << "\"" << pyramidFolder.toStdString() << "\" " << imageSize_.width()
-        << " " << imageSize_.height();
+    ofs << "\"" << pyramidFolder.toStdString() << "\" " << _imageSize.width()
+        << " " << _imageSize.height();
     return true;
 }
 
@@ -203,15 +204,15 @@ QString DynamicTexture::getPyramidImageFilename() const
 {
     QString filename;
 
-    for( unsigned int i=0; i<treePath_.size(); ++i )
+    for( unsigned int i=0; i<_treePath.size(); ++i )
     {
-        filename.append( QString::number( treePath_[i] ));
+        filename.append( QString::number( _treePath[i] ));
 
-        if( i != treePath_.size() - 1 )
+        if( i != _treePath.size() - 1 )
             filename.append( "-" );
     }
 
-    filename.append( "." ).append( imageExtension_ );
+    filename.append( "." ).append( _imageExtension );
 
     return filename;
 }
@@ -223,9 +224,9 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     const QString filename = pyramidFolder + getPyramidImageFilename();
     put_flog( LOG_DEBUG, "saving: '%s'", filename.toLocal8Bit().constData( ));
 
-    if( !scaledImage_.save( filename ))
+    if( !_scaledImage.save( filename ))
         return false;
-    scaledImage_ = QImage(); // no longer need scaled image
+    _scaledImage = QImage(); // no longer need scaled image
 
     // recursively generate and save children images
     if( _canHaveChildren( ))
@@ -247,15 +248,20 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     return true;
 }
 
+void loadImageInThread( DynamicTexturePtr dynamicTexture, const uint tileIndex )
+{
+    dynamicTexture->loadTile( tileIndex );
+}
+
 bool DynamicTexture::loadFullResImage()
 {
-    if( !fullscaleImage_.load( uri_ ))
+    if( !fullscaleImage_.load( _uri ))
     {
         put_flog( LOG_ERROR, "error loading: '%s'",
-                  uri_.toLocal8Bit().constData( ));
+                  _uri.toLocal8Bit().constData( ));
         return false;
     }
-    imageSize_ = fullscaleImage_.size();
+    _imageSize = fullscaleImage_.size();
     return true;
 }
 
@@ -263,58 +269,58 @@ void DynamicTexture::_loadImage()
 {
     if(isRoot())
     {
-        if(useImagePyramid_)
+        if(_useImagePyramid)
         {
-            scaledImage_.load(imagePyramidPath_+'/'+getPyramidImageFilename());
+            _scaledImage.load(_imagePyramidPath+'/'+getPyramidImageFilename());
         }
         else
         {
             if (!fullscaleImage_.isNull() || loadFullResImage())
-                scaledImage_ = fullscaleImage_.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
+                _scaledImage = fullscaleImage_.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
         }
     }
     else
     {
         DynamicTexturePtr root = getRoot();
 
-        if(root->useImagePyramid_)
+        if(root->_useImagePyramid)
         {
-            scaledImage_.load(root->imagePyramidPath_+'/'+getPyramidImageFilename());
+            _scaledImage.load(root->_imagePyramidPath+'/'+getPyramidImageFilename());
         }
         else
         {
-            DynamicTexturePtr parent(parent_);
-            const QImage image = parent->getImageFromParent(imageCoordsInParentImage_, this);
+            DynamicTexturePtr parentTex(_parent);
+            const QImage image = parentTex->getImageFromParent(_imageCoordsInParentImage, this);
 
             if(!image.isNull())
             {
-                imageSize_= image.size();
-                scaledImage_ = image.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
+                _imageSize= image.size();
+                _scaledImage = image.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
             }
         }
     }
 
-    if( scaledImage_.isNull( ))
+    if( _scaledImage.isNull( ))
     {
         put_flog( LOG_ERROR, "loading failed in DynamicTexture: '%s'",
-                  uri_.toLocal8Bit().constData( ));
+                  _uri.toLocal8Bit().constData( ));
     }
 }
 
 const QSize& DynamicTexture::getSize() const
 {
-    return imageSize_;
+    return _imageSize;
 }
 
 QImage DynamicTexture::getRootImage() const
 {
-    return QImage( imagePyramidPath_+ '/' + getPyramidImageFilename( ));
+    return QImage( _imagePyramidPath+ '/' + getPyramidImageFilename( ));
 }
 
 uint DynamicTexture::getMaxLod() const
 {
     uint maxLod = 0;
-    int maxDim = std::max( imageSize_.width(), imageSize_.height( ));
+    int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
     while( maxDim > TEXTURE_SIZE )
     {
         maxDim = maxDim >> 1;
@@ -326,7 +332,7 @@ uint DynamicTexture::getMaxLod() const
 uint DynamicTexture::getLod( const QSize& targetDisplaySize ) const
 {
     uint lod = 0;
-    QSize nextLOD = imageSize_ / 2;
+    QSize nextLOD = _imageSize / 2;
     const uint maxLod = getMaxLod();
     while( targetDisplaySize.width() < nextLOD.width() &&
            targetDisplaySize.height() < nextLOD.height( ) &&
@@ -351,7 +357,7 @@ QString DynamicTexture::getTileFilename( const uint tileIndex ) const
     int x = index % tilesCount.width();
     int y = index / tilesCount.width();
 
-    QString filename = QString( ".%1" ).arg( imageExtension_ );
+    QString filename = QString( ".%1" ).arg( _imageExtension );
 
     const uint maxLod = getMaxLod();
     while( ++lod <= maxLod )
@@ -369,8 +375,36 @@ QString DynamicTexture::getTileFilename( const uint tileIndex ) const
         y = y >> 1;
     }
     filename.prepend( '0' );
-    filename.prepend( imagePyramidPath_ );
+    filename.prepend( _imagePyramidPath );
     return filename;
+}
+
+QImage DynamicTexture::getTileImage( const uint tileIndex ) const
+{
+    if( !_tilesCache.count( tileIndex ))
+        return QImage();
+    return _tilesCache[tileIndex];
+}
+
+void DynamicTexture::triggerTileLoad( const uint tileIndex )
+{
+    if( _tilesCache.count( tileIndex ))
+        return;
+
+    _pendingLoadFutures.addFuture( QtConcurrent::run( loadImageInThread,
+                                                      shared_from_this(),
+                                                      tileIndex ));
+}
+
+void DynamicTexture::cancelPendingTileLoads()
+{
+    _pendingLoadFutures.clearFutures();
+}
+
+void DynamicTexture::loadTile( const uint tileIndex )
+{
+    _tilesCache[tileIndex] = QImage( getTileFilename( tileIndex ));
+    emit tileLoaded();
 }
 
 int DynamicTexture::getFirstTileIndex( const uint lod ) const
@@ -391,22 +425,27 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
 
     // All tiles have the same size in the current implementation, but this is
     // likely to change in the future
-    const QSize size = imageSize_.scaled( TEXTURE_SIZE, TEXTURE_SIZE,
+    const QSize size = _imageSize.scaled( TEXTURE_SIZE, TEXTURE_SIZE,
                                           Qt::KeepAspectRatio );
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
 }
 
 QSize DynamicTexture::getTilesCount( const uint lod ) const
 {
-    const int maxDim = std::max( imageSize_.width(), imageSize_.height( ));
+    const int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
     const int tiles = std::ceil( (float)(maxDim >> lod) / TEXTURE_SIZE );
     return QSize( tiles, tiles );
 }
 
+QSize DynamicTexture::getTilesArea( const uint lod ) const
+{
+    return QSize( _imageSize.width() >> lod, _imageSize.height() >> lod );
+}
+
 bool DynamicTexture::_canHaveChildren()
 {
-    return (getRoot()->imageSize_.width() / (1 << depth_) > TEXTURE_SIZE ||
-            getRoot()->imageSize_.height() / (1 << depth_) > TEXTURE_SIZE);
+    return (getRoot()->_imageSize.width() / (1 << _depth) > TEXTURE_SIZE ||
+            getRoot()->_imageSize.height() / (1 << _depth) > TEXTURE_SIZE);
 }
 
 bool DynamicTexture::makeFolder( const QString& folder )
@@ -427,7 +466,7 @@ bool DynamicTexture::generateImagePyramid( const QString& outputFolder )
 {
     assert( isRoot( ));
 
-    const QString imageName( QFileInfo( uri_ ).fileName( ));
+    const QString imageName( QFileInfo( _uri ).fileName( ));
     const QString pyramidFolder( QDir( outputFolder ).absolutePath() +
                                  "/" + imageName + pyramidFolderSuffix );
 
@@ -445,17 +484,17 @@ DynamicTexturePtr DynamicTexture::getRoot()
     if(isRoot())
         return shared_from_this();
     else
-        return DynamicTexturePtr(parent_)->getRoot();
+        return DynamicTexturePtr(_parent)->getRoot();
 }
 
 QRectF DynamicTexture::getImageRegionInParentImage(const QRectF& imageRegion) const
 {
     QRectF parentRegion;
 
-    parentRegion.setX(imageCoordsInParentImage_.x() + imageRegion.x() * imageCoordsInParentImage_.width());
-    parentRegion.setY(imageCoordsInParentImage_.y() + imageRegion.y() * imageCoordsInParentImage_.height());
-    parentRegion.setWidth(imageRegion.width() * imageCoordsInParentImage_.width());
-    parentRegion.setHeight(imageRegion.height() * imageCoordsInParentImage_.height());
+    parentRegion.setX(_imageCoordsInParentImage.x() + imageRegion.x() * _imageCoordsInParentImage.width());
+    parentRegion.setY(_imageCoordsInParentImage.y() + imageRegion.y() * _imageCoordsInParentImage.height());
+    parentRegion.setWidth(imageRegion.width() * _imageCoordsInParentImage.width());
+    parentRegion.setHeight(imageRegion.height() * _imageCoordsInParentImage.height());
 
     return parentRegion;
 }
@@ -469,12 +508,12 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
         if( isRoot( ))
         {
             put_flog( LOG_DEBUG, "root object has no parent! In file: '%s'",
-                      uri_.toLocal8Bit().constData( ));
+                      _uri.toLocal8Bit().constData( ));
             return QImage();
         }
 
-        DynamicTexturePtr parent = parent_.lock();
-        return parent->getImageFromParent(
+        DynamicTexturePtr parentTex = _parent.lock();
+        return parentTex->getImageFromParent(
                     getImageRegionInParentImage( imageRegion ), this );
     }
 
@@ -494,7 +533,7 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
         if(isRoot())
             return QImage();
 
-        DynamicTexturePtr parent = parent_.lock();
-        return parent->getImageFromParent(getImageRegionInParentImage(imageRegion), start);
+        DynamicTexturePtr parentTex = _parent.lock();
+        return parentTex->getImageFromParent(getImageRegionInParentImage(imageRegion), start);
     }
 }

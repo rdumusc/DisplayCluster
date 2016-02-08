@@ -25,7 +25,7 @@ BaseContentWindow {
             Repeater {
                 model: contentsync.tiles
 
-                DoubleBufferedImage {
+                Image {
                     x: model.modelData.coord.x
                     y: model.modelData.coord.y
                     width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width

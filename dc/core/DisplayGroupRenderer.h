@@ -61,10 +61,10 @@ public:
     /**
      * Constructor.
      * @param parentWindow the window to render the scene contents to
-     * @param pos the position of the scene wrt the window in a multi-window
-     *            setup
+     * @param screenRect the rectangle this renderers is rendering wrt global
+     *                   screen setup
      */
-    DisplayGroupRenderer( WallWindow& parentWindow, const QPoint& pos );
+    DisplayGroupRenderer( WallWindow& parentWindow, const QRect& screenRect );
 
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
@@ -72,9 +72,15 @@ public:
     /** Set different touchpoint's markers. */
     void setMarkers( MarkersPtr markers );
 
+    /** @return true if the renderer requires a redraw, currently if statistics are shown. */
+    bool needRedraw() const;
+
 public slots:
     /** Set the DisplayGroup to render, replacing the previous one. */
     void setDisplayGroup( DisplayGroupPtr displayGroup );
+
+    /** Increment number of rendered/swapped frames for FPS display. */
+    void updateRenderedFrames();
 
 signals:
     void windowAdded( QmlWindowPtr qmlWindow );
@@ -93,6 +99,8 @@ private:
 
     OptionsPtr _options;
     MarkersPtr _markers;
+
+    const QRect _screenRect;
 
     void _createDisplayGroupQmlItem( QQuickItem& parentItem );
     void _createWindowQmlItem( ContentWindowPtr window );

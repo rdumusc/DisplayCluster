@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,71 +37,73 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENTSYNCHRONIZER_H
-#define CONTENTSYNCHRONIZER_H
+#ifndef QUICKRENDERER_H
+#define QUICKRENDERER_H
 
 #include "types.h"
-#include "ContentType.h"
+#include "WallToWallChannel.h"
 
-#include <QObject>
-#include <QQmlImageProviderBase>
+#include <QMutex>
+#include <QWaitCondition>
+
+class QOpenGLContext;
+class QQuickRenderControl;
+class QSurface;
 
 /**
- * Interface for synchronizing QML content rendering.
+ * Renders the QML scene from the given window using QQuickRenderControl onto
+ * the surface of the window and synchronizes the swapBuffers() with all other
+ * wall processes. Note that this object needs to be moved to a seperate
+ * (render)thread to function properly.
  *
- * An implementation should be provided for each ContentType which requires
- * a synchronization step before rendring.
+ * Inspired by http://doc.qt.io/qt-5/qtquick-rendercontrol-window-multithreaded-cpp.html
  */
-class ContentSynchronizer : public QObject
+class QuickRenderer : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY( ContentSynchronizer )
-    Q_PROPERTY( QString sourceParams READ getSourceParams
-                NOTIFY sourceParamsChanged )
-    Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
-    Q_PROPERTY( QList<QObject*> tiles READ getTiles NOTIFY tilesChanged )
-    Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesChanged )
-    Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
 public:
-    /** Constructor */
-    ContentSynchronizer() = default;
+    QuickRenderer( WallWindow& window );
 
-    /** Virtual destructor */
-    virtual ~ContentSynchronizer();
-
-    /** Update the Content. */
-    virtual void update( const ContentWindow& window ) = 0;
-
-    /** Get the additional source parameters. */
-    virtual QString getSourceParams() const = 0;
-
-    /** @return true if the content allows texture caching for rendering. */
-    virtual bool allowsTextureCaching() const = 0;
-
-    /** Get the list of tiles that compose the content. */
-    virtual QList<QObject*> getTiles() const = 0;
-
-    /** The total area covered by the tiles (may depend on current LOD). */
-    virtual QSize getTilesArea() const = 0;
-
-    /** Get statistics about this Content. */
-    virtual QString getStatistics() const = 0;
-
-    /** @return a ContentSynchronizer for the given content. */
-    static ContentSynchronizerPtr create( ContentPtr content,
-                                          QQmlImageProviderBase& provider,
-                                          const QRect& screenRect );
+    /**
+     * To be called from GUI/main thread to trigger rendering and swapBuffers().
+     * This call is blocking until sync() is done in render thread and must be
+     * executed on all wall processes for non-deadlocking swap barrier.
+     */
+    void render();
 
 signals:
-    /** Notifier for the sourceParams property. */
-    void sourceParamsChanged();
+    /** Emitted after swapBuffers(). Originates from render thread */
+    void frameSwapped();
 
-    /** Notifier for the tiles properties. */
-    void tilesChanged();
+    /**
+     * To be called from GUI/main thread to initialize this object on render
+     * thread. Blocks until operation on render thread is done.
+     */
+    void init();
 
-    /** Notifier for the statistics property. */
-    void statisticsChanged();
+    /**
+     * To be called from GUI/main thread to stop using this object on the render
+     * thread. Blocks until operation on render thread is done.
+     */
+    void stop();
+
+private:
+    bool event( QEvent* e ) final;
+    void _onInit();
+    void _onRender();
+    void _onStop();
+
+    QOpenGLContext& _glContext;
+    QQuickRenderControl& _renderControl;
+    QSurface& _surface;
+
+    WallToWallChannel& _wallChannel;
+
+    bool _initialized;
+
+    QMutex _mutex;
+    QWaitCondition _cond;
 };
 
-#endif // CONTENTSYNCHRONIZER_H
+#endif // QUICKRENDERER_H

@@ -47,7 +47,7 @@
 #include <deflect/SegmentDecoder.h>
 
 #include <QObject>
-#include <mutex>
+#include <deque>
 
 /**
  * Synchronize the update of PixelStreams and send new frame requests.
@@ -65,11 +65,9 @@ public:
     void synchronizeFramesSwap( WallToWallChannel& channel );
 
     /**
-     * Get a segment by its index.
-     * This function is blocking, and can be called by different threads. The
-     * frame will not be swapped until all calls to this function have returned.
+     * Get a segment by its frame- and tile-index.
      */
-    QImage getTileImage( uint index );
+    QImage getTileImage( uint frameIndex, uint tileIndex );
 
     /** Get the list of tiles for use by QML repeater. */
     const QList<QObject*>& getTiles() const;
@@ -92,17 +90,15 @@ private:
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     SwapSyncFrame _swapSyncFrame;
 
-    std::vector< std::unique_ptr<deflect::SegmentDecoder> > _decoders;
-
-    std::mutex _mutex;
-    int _decodeCount;
+    std::deque< std::pair< size_t, deflect::FramePtr > > _frames;
 
     uint _frameIndex;
+    uint _requestedFrameIndex;
 
     QList<QObject*> _tiles;
 
     void _onFrameSwapped( deflect::FramePtr frame );
-    void _adjustFrameDecodersCount( const size_t count );
+    void _decodeSegments( deflect::Segments& segments );
     void _refreshTiles( const deflect::Segments& segments );
 };
 

@@ -68,24 +68,34 @@ QImage TextureProvider::requestImage( const QString& id, QSize* size,
     {
         const QString& pyramidFile = params[0];
 
+        if( !_dynamicTextures.count( pyramidFile ))
+            return QImage();
+
         bool ok = false;
         const int tileIndex = params[1].toInt( &ok );
         if( !ok )
             return QImage();
 
-        const DynamicTexture reader( pyramidFile );
-        image = QImage( reader.getTileFilename( tileIndex ));
+        image = _dynamicTextures[pyramidFile]->getTileImage( tileIndex );
     }
 
     if( image.isNull( ))
-    {
-        put_flog( LOG_ERROR, "error loading: '%s'",
-                  id.toLocal8Bit().constData( ));
         return QImage();
-    }
 
     if( size )
         *size = image.size();
 
     return image;
+}
+
+DynamicTexturePtr TextureProvider::openDynamicTexture( const QString& uri )
+{
+    if( !_dynamicTextures.count( uri ))
+        _dynamicTextures[ uri ] = std::make_shared< DynamicTexture >( uri );
+    return _dynamicTextures[ uri ];
+}
+
+void TextureProvider::closeDynamicTexture( const QString& uri )
+{
+    _dynamicTextures.erase( uri );
 }

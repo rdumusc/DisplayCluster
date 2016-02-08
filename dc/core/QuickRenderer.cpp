@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,71 +37,86 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef CONTENTSYNCHRONIZER_H
-#define CONTENTSYNCHRONIZER_H
+#include "QuickRenderer.h"
+#include "WallWindow.h"
 
-#include "types.h"
-#include "ContentType.h"
+#include <QCoreApplication>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QQuickRenderControl>
 
-#include <QObject>
-#include <QQmlImageProviderBase>
-
-/**
- * Interface for synchronizing QML content rendering.
- *
- * An implementation should be provided for each ContentType which requires
- * a synchronization step before rendring.
- */
-class ContentSynchronizer : public QObject
+QuickRenderer::QuickRenderer( WallWindow& window )
+    : _glContext( window.getOpenGLContext( ))
+    , _renderControl( window.getRenderControl( ))
+    , _surface( window )
+    , _wallChannel( window.getWallChannel( ))
+    , _initialized( false )
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( ContentSynchronizer )
-    Q_PROPERTY( QString sourceParams READ getSourceParams
-                NOTIFY sourceParamsChanged )
-    Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
-    Q_PROPERTY( QList<QObject*> tiles READ getTiles NOTIFY tilesChanged )
-    Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesChanged )
-    Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
+    connect( this, &QuickRenderer::init, this,
+             &QuickRenderer::_onInit, Qt::BlockingQueuedConnection );
+    connect( this, &QuickRenderer::stop, this,
+             &QuickRenderer::_onStop, Qt::BlockingQueuedConnection );
+}
 
-public:
-    /** Constructor */
-    ContentSynchronizer() = default;
+void QuickRenderer::render()
+{
+    QMutexLocker lock( &_mutex );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::User ));
 
-    /** Virtual destructor */
-    virtual ~ContentSynchronizer();
+    // the main thread has to be blocked for sync()
+    _cond.wait( &_mutex );
+}
 
-    /** Update the Content. */
-    virtual void update( const ContentWindow& window ) = 0;
+bool QuickRenderer::event( QEvent* e )
+{
+    if( e->type() == QEvent::User )
+    {
+        _onRender();
+        return true;
+    }
+    return QObject::event( e );
+}
 
-    /** Get the additional source parameters. */
-    virtual QString getSourceParams() const = 0;
+void QuickRenderer::_onInit()
+{
+    _glContext.makeCurrent( &_surface );
+    _renderControl.initialize( &_glContext );
+    _initialized = true;
+}
 
-    /** @return true if the content allows texture caching for rendering. */
-    virtual bool allowsTextureCaching() const = 0;
+void QuickRenderer::_onStop()
+{
+    _glContext.makeCurrent( &_surface );
 
-    /** Get the list of tiles that compose the content. */
-    virtual QList<QObject*> getTiles() const = 0;
+    _renderControl.invalidate();
 
-    /** The total area covered by the tiles (may depend on current LOD). */
-    virtual QSize getTilesArea() const = 0;
+    _glContext.doneCurrent();
+    _glContext.moveToThread( QCoreApplication::instance()->thread( ));
+}
 
-    /** Get statistics about this Content. */
-    virtual QString getStatistics() const = 0;
+void QuickRenderer::_onRender()
+{
+    if( !_initialized )
+        return;
 
-    /** @return a ContentSynchronizer for the given content. */
-    static ContentSynchronizerPtr create( ContentPtr content,
-                                          QQmlImageProviderBase& provider,
-                                          const QRect& screenRect );
+    {
+        QMutexLocker lock( &_mutex );
 
-signals:
-    /** Notifier for the sourceParams property. */
-    void sourceParamsChanged();
+        _glContext.makeCurrent( &_surface );
 
-    /** Notifier for the tiles properties. */
-    void tilesChanged();
+        _renderControl.sync();
 
-    /** Notifier for the statistics property. */
-    void statisticsChanged();
-};
+        // unblock main thread after sync in render thread is done
+        _cond.wakeOne();
+    }
 
-#endif // CONTENTSYNCHRONIZER_H
+    _renderControl.render();
+    _glContext.functions()->glFinish();
+
+    _wallChannel.globalBarrier();
+
+    _glContext.swapBuffers( &_surface );
+    _glContext.functions()->glFlush();
+
+    emit frameSwapped();
+}

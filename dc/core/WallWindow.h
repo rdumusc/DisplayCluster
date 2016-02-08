@@ -41,10 +41,17 @@
 #define WALLWINDOW_H
 
 #include "types.h"
+#include "WallToWallChannel.h"
 
-#include <QQuickView>
+#include <QQuickWindow>
 
-class WallWindow : public QQuickView
+class QuickRenderer;
+class QQuickRenderControl;
+class QQmlEngine;
+class QQmlComponent;
+class QQuickItem;
+
+class WallWindow : public QQuickWindow
 {
     Q_OBJECT
 
@@ -53,14 +60,20 @@ public:
      * Create a wall window.
      * @param config the wall configuration to setup this window wrt position,
      *               size, etc.
+     * @param renderControl the Qt render control for QML scene rendering
+     * @param wallChannel to synchronize clocks and swapBuffers()
      */
-    WallWindow( const WallConfiguration& config );
+    WallWindow( const WallConfiguration& config,
+                QQuickRenderControl* renderControl,
+                WallToWallChannel& wallChannel );
+
+    ~WallWindow();
 
     /** @return the display group renderer. */
     DisplayGroupRenderer& getDisplayGroupRenderer();
 
-    /** Update and synchronize scene objects before rendering a frame. */
-    void preRenderUpdate( WallToWallChannel& wallChannel );
+    /** Update and synchronize scene objects and trigger frame rendering. */
+    bool syncAndRender();
 
     /** Set new render options. */
     void setRenderOptions( OptionsPtr options );
@@ -74,9 +87,38 @@ public:
     /** @return the pixel stream provider. */
     PixelStreamProvider& getPixelStreamProvider();
 
+    /** @return the QML engine. */
+    QQmlEngine* engine() const;
+
+    /** @return the root object of the QML scene. */
+    QQuickItem*	rootObject() const;
+
+    /** @return the communication channel to synchronize with other windows. */
+    WallToWallChannel& getWallChannel();
+
+    /** @return the OpenGL context. */
+    QOpenGLContext& getOpenGLContext();
+
+    /** @return the Qt quick render control. */
+    QQuickRenderControl& getRenderControl();
+
 private:
+    void exposeEvent( QExposeEvent* exposeEvent ) final;
+
+    void startQuick( const WallConfiguration& config );
+
     DisplayGroupRenderer* _displayGroupRenderer;
     TestPattern* _testPattern;
+    WallToWallChannel& _wallChannel;
+
+    QOpenGLContext* _glContext;
+    QQuickRenderControl* _renderControl;
+    QuickRenderer* _quickRenderer;
+    QThread* _quickRendererThread;
+    QQmlEngine* _qmlEngine;
+    QQmlComponent* _qmlComponent;
+    QQuickItem* _rootItem;
+    bool _rendererInitialized;
 };
 
 #endif // WALLWINDOW_H

@@ -57,6 +57,7 @@ RenderController::RenderController( WallWindow& window )
     , _syncQuit( false )
     , _syncDisplayGroup( boost::make_shared<DisplayGroup>( QSize( )))
     , _syncOptions( boost::make_shared<Options>( ))
+    , _renderPending( false )
 {
     _syncDisplayGroup.setCallback( boost::bind( &WallWindow::setDisplayGroup,
                                                 &_window, _1 ));
@@ -71,45 +72,74 @@ DisplayGroupPtr RenderController::getDisplayGroup() const
     return _syncDisplayGroup.get();
 }
 
-void RenderController::preRenderUpdate( WallToWallChannel& wallChannel )
+bool RenderController::event( QEvent* qtEvent )
 {
+    switch( qtEvent->type( ))
+    {
+    case QEvent::User:
+        _renderPending = false;
+        _syncAndRender();
+        return true;
+    default:
+        return QObject::event( qtEvent );
+    }
+}
+
+void RenderController::requestRender()
+{
+    // throttle renderings from data changes to sync and render speed
+    if( !_renderPending )
+    {
+        _renderPending = true;
+        QCoreApplication::postEvent( this, new QEvent( QEvent::User ));
+    }
+}
+
+void RenderController::_syncAndRender()
+{
+    WallToWallChannel& wallChannel = _window.getWallChannel();
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, &wallChannel, _1 );
 
+    _syncQuit.sync( versionCheckFunc );
+    if( _syncQuit.get( ))
+    {
+        _window.deleteLater();
+        return;
+    }
+
     _synchronizeObjects( versionCheckFunc );
-
-    _window.preRenderUpdate( wallChannel );
-}
-
-bool RenderController::quitRendering() const
-{
-    return _syncQuit.get();
+    if( _window.syncAndRender( ))
+        requestRender();
 }
 
 void RenderController::updateQuit()
 {
     _syncQuit.update( true );
+    requestRender();
 }
 
 void RenderController::updateDisplayGroup( DisplayGroupPtr displayGroup )
 {
     _syncDisplayGroup.update( displayGroup );
+    requestRender();
 }
 
 void RenderController::updateOptions( OptionsPtr options )
 {
     _syncOptions.update( options );
+    requestRender();
 }
 
 void RenderController::updateMarkers( MarkersPtr markers )
 {
     _syncMarkers.update( markers );
+    requestRender();
 }
 
 void RenderController::_synchronizeObjects( const SyncFunction&
                                             versionCheckFunc )
 {
-    _syncQuit.sync( versionCheckFunc );
     _syncDisplayGroup.sync( versionCheckFunc );
     _syncMarkers.sync( versionCheckFunc );
     _syncOptions.sync( versionCheckFunc );

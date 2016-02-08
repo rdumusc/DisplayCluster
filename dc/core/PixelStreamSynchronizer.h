@@ -88,7 +88,7 @@ public:
     QString getStatistics() const override;
 
 private:
-    QString _uri;
+    const QString _uri;
     PixelStreamProvider& _provider;
     PixelStreamUpdaterSharedPtr _updater;
     uint _frameIndex;

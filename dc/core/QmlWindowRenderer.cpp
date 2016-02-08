@@ -52,6 +52,7 @@ const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
                                       QQuickItem& parentItem,
                                       ContentWindowPtr contentWindow,
+                                      const QRect& screenRect,
                                       const bool isBackground )
     : _contentWindow( contentWindow )
     , _windowContext( new QQmlContext( engine.rootContext( )))
@@ -61,7 +62,7 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
 
     auto content = _contentWindow->getContent();
     auto provider = engine.imageProvider( content->getProviderId( ));
-    _contentSynchronizer = ContentSynchronizer::create( content, *provider );
+    _contentSynchronizer = ContentSynchronizer::create( content, *provider, screenRect );
     _windowContext->setContextProperty( "contentsync",
                                         _contentSynchronizer.get( ));
 

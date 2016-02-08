@@ -49,17 +49,21 @@
 
 #include "MovieProvider.h"
 #include "PixelStreamProvider.h"
+#include "TextureProvider.h"
 
 ContentSynchronizer::~ContentSynchronizer() {}
 
 ContentSynchronizerPtr
 ContentSynchronizer::create( ContentPtr content,
-                             QQmlImageProviderBase& provider )
+                             QQmlImageProviderBase& provider,
+                             const QRect& screenRect )
 {
     switch( content->getType( ))
     {
     case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return make_unique<DynamicTextureSynchronizer>( content->getURI( ));
+        return make_unique<DynamicTextureSynchronizer>(
+                    content->getURI(), screenRect,
+                    dynamic_cast<TextureProvider&>( provider ));
     case CONTENT_TYPE_MOVIE:
         return make_unique<MovieSynchronizer>(
                    content->getURI(), dynamic_cast<MovieProvider&>( provider ));

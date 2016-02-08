@@ -73,13 +73,6 @@ public:
     /** Destructor */
     virtual ~WallApplication();
 
-signals:
-    /** Emitted when a frame is finished to trigger the next frame. */
-    void frameFinished();
-
-private slots:
-    void renderFrame();
-
 private:
     boost::scoped_ptr<WallConfiguration> _config;
     WallWindow* _window;
@@ -92,13 +85,9 @@ private:
     QThread _mpiSendThread;
     QThread _mpiReceiveThread;
 
-    size_t _renderedFrames;
-
     bool createConfig(const QString& filename, const int rank);
     void initWallWindow();
     void initMPIConnection(MPIChannelPtr worldChannel);
-
-    void startRendering();
 };
 
 #endif // WALLAPPLICATION_H

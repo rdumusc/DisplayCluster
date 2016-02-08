@@ -70,9 +70,7 @@ WebkitPixelStreamer::WebkitPixelStreamer(const QSize& webpageSize, const QString
     settings->setAttribute( QWebSettings::JavascriptEnabled, true );
     settings->setAttribute( QWebSettings::PluginsEnabled, true );
     settings->setAttribute( QWebSettings::LocalStorageEnabled, true );
-#if QT_VERSION >= 0x040800
     settings->setAttribute( QWebSettings::WebGLEnabled, true );
-#endif
 
     setUrl(url);
 

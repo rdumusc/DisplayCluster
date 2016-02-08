@@ -55,21 +55,18 @@
 
 #include <stdexcept>
 
-#include <boost/bind.hpp>
-#include <QOpenGLContext>
-#if QT_VERSION >= 0x050300
-#  include <QOpenGLFunctions>
-#else
-#  include <QOpenGLFunctions_1_0>
-#endif
+#include <QThreadPool>
+#include <QQuickRenderControl>
 
 WallApplication::WallApplication( int& argc_, char** argv_,
                                   MPIChannelPtr worldChannel,
                                   MPIChannelPtr wallChannel )
     : QApplication( argc_, argv_ )
     , _wallChannel( new WallToWallChannel( wallChannel ))
-    , _renderedFrames( 0 )
 {
+    // avoid overcommit for dynamic texture load
+    QThreadPool::globalInstance()->setMaxThreadCount( 2 );
+
     CommandLineParameters options( argc_, argv_ );
     if( options.getHelp( ))
         options.showSyntax();
@@ -79,7 +76,6 @@ WallApplication::WallApplication( int& argc_, char** argv_,
 
     initWallWindow();
     initMPIConnection( worldChannel );
-    startRendering();
 }
 
 WallApplication::~WallApplication()
@@ -109,7 +105,8 @@ void WallApplication::initWallWindow()
 {
     try
     {
-        _window = new WallWindow( *_config );
+        _window = new WallWindow( *_config, new QQuickRenderControl( this ),
+                                  *_wallChannel );
     }
     catch( const std::runtime_error& e )
     {
@@ -146,6 +143,9 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
              &_window->getPixelStreamProvider(),
              SLOT( setNewFrame( deflect::FramePtr )));
 
+    connect( _fromMasterChannel.get(), SIGNAL( received( deflect::FramePtr )),
+             _renderController.get(), SLOT( requestRender( )));
+
     if( _wallChannel->getRank() == 0 )
     {
         connect( &_window->getPixelStreamProvider(),
@@ -161,60 +161,4 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 
     _mpiReceiveThread.start();
     _mpiSendThread.start();
-}
-
-void WallApplication::startRendering()
-{
-    // setup connection so renderFrame() will be called continuously.
-    // Must be a queued connection to avoid infinite recursion.
-    connect( this, SIGNAL( frameFinished( )),
-             this, SLOT( renderFrame( )), Qt::QueuedConnection );
-
-    // swap sync; afterRendering signal is emitted before swapBuffers
-    connect( _window, &WallWindow::afterRendering, [this]()
-    {
-        auto gl = _window->openglContext();
-#if QT_VERSION >= 0x050300
-        gl->functions()->glFinish();
-#else
-        auto funcs = gl->versionFunctions< QOpenGLFunctions_1_0 >();
-        funcs->initializeOpenGLFunctions();
-        funcs->glFinish();
-#endif
-        if( _renderedFrames == 0 )
-            _wallChannel->globalBarrier();
-        ++_renderedFrames;
-    });
-
-    // trigger new renderloop after rendering & swap or quit application
-    connect( _window, &WallWindow::frameSwapped, [this]()
-    {
-        auto gl = _window->openglContext();
-#if QT_VERSION >= 0x050300
-        gl->functions()->glFlush();
-#else
-        auto funcs = gl->versionFunctions< QOpenGLFunctions_1_0 >();
-        funcs->initializeOpenGLFunctions();
-        funcs->glFlush();
-#endif
-        // expose event also causes swap, but don't trigger new frames in that
-        // case to not messup/deadlock swap- and object-sync
-        if( _renderedFrames == 1 )
-        {
-            if( _renderController->quitRendering( ))
-                _window->deleteLater();
-           else
-                emit frameFinished();
-        }
-    });
-
-    renderFrame();
-}
-
-void WallApplication::renderFrame()
-{
-    _renderedFrames = 0;
-    _wallChannel->synchronizeClock();
-    _renderController->preRenderUpdate( *_wallChannel );
-    _window->update();
 }
