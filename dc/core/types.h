@@ -60,8 +60,8 @@ class DynamicTexture;
 class FFMPEGFrame;
 class FFMPEGMovie;
 class FFMPEGPicture;
-class FFMPEGVideoStream;
 class FFMPEGVideoFrameConverter;
+class FFMPEGVideoStream;
 class MarkerRenderer;
 class Markers;
 class MasterConfiguration;
@@ -77,9 +77,10 @@ class QmlWindowRenderer;
 class Renderable;
 class TestPattern;
 class TextureProvider;
-class WallWindow;
+class Tile;
 class WallConfiguration;
 class WallToWallChannel;
+class WallWindow;
 
 typedef boost::shared_ptr< Content > ContentPtr;
 typedef std::unique_ptr<ContentSynchronizer> ContentSynchronizerPtr;
@@ -106,6 +107,9 @@ typedef boost::shared_ptr< WallWindow > WallWindowPtr;
 typedef std::set< ContentWindowPtr > ContentWindowSet;
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
+
+class QObject;
+typedef QList< QObject* > Tiles;
 
 static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 static const QSize UNDEFINED_SIZE( -1, -1 );

@@ -39,6 +39,7 @@
 #include "DynamicTexture.h"
 
 #include "log.h"
+#include "Tile.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
@@ -89,6 +90,11 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent_,
         else
             readFullImageMetadata(_uri);
     }
+}
+
+DynamicTexture::~DynamicTexture()
+{
+    cancelPendingTileLoads();
 }
 
 bool DynamicTexture::isRoot() const
@@ -248,11 +254,6 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
     return true;
 }
 
-void loadImageInThread( DynamicTexturePtr dynamicTexture, const uint tileIndex )
-{
-    dynamicTexture->loadTile( tileIndex );
-}
-
 bool DynamicTexture::loadFullResImage()
 {
     if( !fullscaleImage_.load( _uri ))
@@ -381,19 +382,22 @@ QString DynamicTexture::getTileFilename( const uint tileIndex ) const
 
 QImage DynamicTexture::getTileImage( const uint tileIndex ) const
 {
+    QMutexLocker lock( &_tilesCacheMutex );
     if( !_tilesCache.count( tileIndex ))
         return QImage();
     return _tilesCache[tileIndex];
 }
 
-void DynamicTexture::triggerTileLoad( const uint tileIndex )
+void DynamicTexture::triggerTileLoad( Tile* tile )
 {
-    if( _tilesCache.count( tileIndex ))
+    if( _tilesCache.count( tile->getIndex( )))
+    {
+        tile->setVisible( true );
         return;
+    }
 
-    _pendingLoadFutures.addFuture( QtConcurrent::run( loadImageInThread,
-                                                      shared_from_this(),
-                                                      tileIndex ));
+    _pendingLoadFutures.addFuture(
+                           QtConcurrent::run( [&,tile] { _loadTile( tile ); }));
 }
 
 void DynamicTexture::cancelPendingTileLoads()
@@ -401,9 +405,14 @@ void DynamicTexture::cancelPendingTileLoads()
     _pendingLoadFutures.clearFutures();
 }
 
-void DynamicTexture::loadTile( const uint tileIndex )
+void DynamicTexture::_loadTile( Tile* tile )
 {
-    _tilesCache[tileIndex] = QImage( getTileFilename( tileIndex ));
+    QImage tileImage( getTileFilename( tile->getIndex( )));
+    {
+        QMutexLocker lock( &_tilesCacheMutex );
+        _tilesCache[tile->getIndex()] = tileImage;
+    }
+    tile->setVisible( true );
     emit tileLoaded();
 }
 

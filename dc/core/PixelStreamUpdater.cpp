@@ -64,7 +64,7 @@ void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
     _swapSyncFrame.sync( versionCheckFunc );
 }
 
-const QList<QObject*>& PixelStreamUpdater::getTiles() const
+const Tiles& PixelStreamUpdater::getTiles() const
 {
     return _tiles;
 }
@@ -162,7 +162,8 @@ void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
 
     // Insert new objects in the vector if it is smaller
     for( size_t i = _tiles.size(); i < segments.size(); ++i )
-        _tiles.push_back( new Tile( i, toRect( segments[i].parameters ), this));
+        _tiles.push_back( new Tile( i, toRect( segments[i].parameters ),
+                                    this, true ));
 
     // Or remove objects if it is bigger
     const size_t removeCount = _tiles.size() - segments.size();

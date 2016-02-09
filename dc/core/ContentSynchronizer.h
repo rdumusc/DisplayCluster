@@ -59,7 +59,7 @@ class ContentSynchronizer : public QObject
     Q_PROPERTY( QString sourceParams READ getSourceParams
                 NOTIFY sourceParamsChanged )
     Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
-    Q_PROPERTY( QList<QObject*> tiles READ getTiles NOTIFY tilesChanged )
+    Q_PROPERTY( Tiles tiles READ getTiles NOTIFY tilesChanged )
     Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesChanged )
     Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
@@ -80,7 +80,7 @@ public:
     virtual bool allowsTextureCaching() const = 0;
 
     /** Get the list of tiles that compose the content. */
-    virtual QList<QObject*> getTiles() const = 0;
+    virtual Tiles getTiles() const = 0;
 
     /** The total area covered by the tiles (may depend on current LOD). */
     virtual QSize getTilesArea() const = 0;

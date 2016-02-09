@@ -70,7 +70,7 @@ public:
     bool allowsTextureCaching() const override;
 
     /** @copydoc ContentSynchronizer::getTiles */
-    QList<QObject*> getTiles() const override;
+    Tiles getTiles() const override;
 
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
@@ -81,13 +81,13 @@ public:
 private:
     const QString _uri;
     TextureProvider& _provider;
-    QList<QObject*> _tiles;
+    Tiles _tiles;
     DynamicTexturePtr _reader;
     uint _lod;
     const QRectF _screenRect;
     QRectF _visibleArea;
 
-    void _updateTiles( const QRectF& visibleArea );
+    void _updateTiles( const QRectF& visibleArea, uint lod );
 };
 
 #endif

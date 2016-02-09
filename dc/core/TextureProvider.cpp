@@ -45,8 +45,7 @@
 const QString TextureProvider::ID( "texture" );
 
 TextureProvider::TextureProvider()
-    : QQuickImageProvider( QQmlImageProviderBase::Image,
-                           ForceAsynchronousImageLoading )
+    : QQuickImageProvider( QQmlImageProviderBase::Image )
 {}
 
 TextureProvider::~TextureProvider() {}
