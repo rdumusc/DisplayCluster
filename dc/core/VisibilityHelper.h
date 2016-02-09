@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,41 +37,25 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentSynchronizer.h"
+#ifndef VISIBILITYHELPER_H
+#define VISIBILITYHELPER_H
 
-#include "Content.h"
+#include "types.h"
 
-#include "BasicSynchronizer.h"
-#include "DynamicTextureSynchronizer.h"
-#include "MovieSynchronizer.h"
-#include "PixelStreamSynchronizer.h"
-#include "VectorialSynchronizer.h"
-
-#include "MovieProvider.h"
-#include "PixelStreamProvider.h"
-#include "TextureProvider.h"
-
-ContentSynchronizer::~ContentSynchronizer() {}
-
-ContentSynchronizerPtr
-ContentSynchronizer::create( ContentPtr content,
-                             QQmlImageProviderBase& provider )
+/**
+ * Helper to determine the visible parts of windows on the wall.
+ */
+class VisibilityHelper
 {
-    switch( content->getType( ))
-    {
-    case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return make_unique<DynamicTextureSynchronizer>(
-                 content->getURI(), dynamic_cast<TextureProvider&>( provider ));
-    case CONTENT_TYPE_MOVIE:
-        return make_unique<MovieSynchronizer>(
-                   content->getURI(), dynamic_cast<MovieProvider&>( provider ));
-    case CONTENT_TYPE_PIXEL_STREAM:
-        return make_unique<PixelStreamSynchronizer>(
-             content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
-    case CONTENT_TYPE_PDF:
-    case CONTENT_TYPE_SVG:
-        return make_unique<VectorialSynchronizer>();
-    default:
-        return make_unique<BasicSynchronizer>();
-    }
-}
+public:
+    VisibilityHelper( const DisplayGroup& displayGroup,
+                      const QRect& visibleArea );
+
+    QRectF getVisibleArea( const ContentWindow& window ) const;
+
+private:
+    const DisplayGroup& _displayGroup;
+    const QRect& _visibleArea;
+};
+
+#endif

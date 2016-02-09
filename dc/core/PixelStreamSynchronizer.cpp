@@ -61,9 +61,11 @@ PixelStreamSynchronizer::~PixelStreamSynchronizer()
     _provider.close( _uri );
 }
 
-void PixelStreamSynchronizer::update( const ContentWindow& window )
+void PixelStreamSynchronizer::update( const ContentWindow& window,
+                                      const QRectF& visibleArea )
 {
     Q_UNUSED( window );
+    _updater->updateTilesVisibility( visibleArea );
 }
 
 QString PixelStreamSynchronizer::getSourceParams() const

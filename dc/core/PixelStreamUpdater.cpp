@@ -101,6 +101,11 @@ void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
     _swapSyncFrame.update( frame );
 }
 
+void PixelStreamUpdater::updateTilesVisibility( const QRectF& visibleArea )
+{
+    Q_UNUSED( visibleArea );
+}
+
 void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
 {
     std::sort( frame->segments.begin(), frame->segments.end(),

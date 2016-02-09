@@ -86,6 +86,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   TestPattern.h
   TextureContent.h
   TextureProvider.h
+  VisibilityHelper.h
   ZoomInteractionDelegate.h
   ZoomHelper.h
   configuration/Configuration.h
@@ -218,6 +219,7 @@ list(APPEND DCCORE_SOURCES
   TextureContent.cpp
   TextureProvider.cpp
   VectorialSynchronizer.cpp
+  VisibilityHelper.cpp
   WallFromMasterChannel.cpp
   WallToMasterChannel.cpp
   WallToWallChannel.cpp

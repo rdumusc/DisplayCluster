@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,41 +37,73 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ContentSynchronizer.h"
+#include "VisibilityHelper.h"
 
-#include "Content.h"
+#include "DisplayGroup.h"
+#include "ContentWindow.h"
 
-#include "BasicSynchronizer.h"
-#include "DynamicTextureSynchronizer.h"
-#include "MovieSynchronizer.h"
-#include "PixelStreamSynchronizer.h"
-#include "VectorialSynchronizer.h"
+VisibilityHelper::VisibilityHelper( const DisplayGroup& displayGroup,
+                                    const QRect& visibleArea )
+    : _displayGroup( displayGroup )
+    , _visibleArea( visibleArea )
+{}
 
-#include "MovieProvider.h"
-#include "PixelStreamProvider.h"
-#include "TextureProvider.h"
-
-ContentSynchronizer::~ContentSynchronizer() {}
-
-ContentSynchronizerPtr
-ContentSynchronizer::create( ContentPtr content,
-                             QQmlImageProviderBase& provider )
+QRectF cutOverlap( const QRectF& window, const QRectF& other )
 {
-    switch( content->getType( ))
+    if( other.contains( window ))
+        return QRectF();
+
+    const QRectF overlap = window.intersected( other );
+    if( overlap.isEmpty( ))
+        return window;
+
+    // Full horizontal cut
+    if( overlap.width() >= window.width( ))
     {
-    case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return make_unique<DynamicTextureSynchronizer>(
-                 content->getURI(), dynamic_cast<TextureProvider&>( provider ));
-    case CONTENT_TYPE_MOVIE:
-        return make_unique<MovieSynchronizer>(
-                   content->getURI(), dynamic_cast<MovieProvider&>( provider ));
-    case CONTENT_TYPE_PIXEL_STREAM:
-        return make_unique<PixelStreamSynchronizer>(
-             content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
-    case CONTENT_TYPE_PDF:
-    case CONTENT_TYPE_SVG:
-        return make_unique<VectorialSynchronizer>();
-    default:
-        return make_unique<BasicSynchronizer>();
+        QRectF area( window );
+        if( overlap.top() <= window.top( ))
+            area.setTop( overlap.bottom( ));
+        else if( overlap.bottom() >= window.bottom( ))
+            area.setBottom( overlap.top( ));
+        return area;
     }
+
+    // Full vertical cut
+    if( overlap.height() >= window.height( ))
+    {
+        QRectF area( window );
+        if( overlap.left() <= window.left( ))
+            area.setLeft( overlap.right( ));
+        else if( overlap.right() >= window.right( ))
+            area.setRight( overlap.left( ));
+        return area;
+    }
+
+    return window;
+}
+
+QRectF VisibilityHelper::getVisibleArea( const ContentWindow& window ) const
+{
+    const QRectF& windowCoords = window.getDisplayCoordinates();
+
+    QRectF area = windowCoords.intersected( _visibleArea );
+    if( area.isEmpty( ))
+        return area;
+
+    bool isAbove = false;
+    for( auto win : _displayGroup.getContentWindows( ))
+    {
+        if( win->getID() == window.getID( ))
+        {
+            isAbove = true;
+            continue;
+        }
+        if( isAbove || win->isFocused( ))
+            area = cutOverlap( area, win->getDisplayCoordinates( ));
+
+        if( area.isEmpty( ))
+            return area;
+    }
+
+    return area.translated( -windowCoords.x(), -windowCoords.y( ));
 }

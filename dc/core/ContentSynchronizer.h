@@ -71,7 +71,8 @@ public:
     virtual ~ContentSynchronizer();
 
     /** Update the Content. */
-    virtual void update( const ContentWindow& window ) = 0;
+    virtual void update( const ContentWindow& window,
+                         const QRectF& visibleArea ) = 0;
 
     /** Get the additional source parameters. */
     virtual QString getSourceParams() const = 0;
@@ -90,8 +91,7 @@ public:
 
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content,
-                                          QQmlImageProviderBase& provider,
-                                          const QRect& screenRect );
+                                          QQmlImageProviderBase& provider );
 
 signals:
     /** Notifier for the sourceParams property. */

@@ -57,8 +57,8 @@ BaseContentWindow {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: windowRect.border.width
         anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width - 2 * windowRect.border.width
-        height: parent.height - windowRect.border.width - (titleBar.visible ? titleBar.height : windowRect.border.width)
+        width: parent.width - windowRect.widthOffset
+        height: parent.height - windowRect.heightOffset
 
         function removeOffset(position) {
             // C++ interaction delegates don't have any knowledge of the title

@@ -10,17 +10,20 @@ Rectangle {
     property bool isBackground: false
     property bool animating: widthAnimation.running || heightAnimation.running
                              || unfocusTransition.running
-    property real heightOffset: titleBar.visible ? titleBar.height : 0
-    property real yOffset: isBackground ? 0.0 : 0.5 * heightOffset
+
+    property real widthOffset: 2 * border.width
+    property real heightOffset: border.width + (titleBar.visible ? titleBar.height : border.width)
+    property real xOffset: border.width
+    property real yOffset: titleBar.visible ? titleBar.height : border.width
 
     border.color: Style.windowBorderDefaultColor
     border.width: options.showWindowBorders && !isBackground ? Style.windowBorderWidth : 0
 
-    x: contentwindow.x
+    x: contentwindow.x - xOffset
     y: contentwindow.y - yOffset
     z: stackingOrder
-    width: contentwindow.width + 2 * border.width
-    height: contentwindow.height + heightOffset + 2 * border.width
+    width: contentwindow.width + widthOffset
+    height: contentwindow.height + heightOffset
 
     Rectangle {
         id: titleBar
@@ -50,9 +53,9 @@ Rectangle {
             when: contentwindow.focused
             PropertyChanges {
                 target: windowRect
-                x: contentwindow.focusedCoordinates.x
+                x: contentwindow.focusedCoordinates.x - xOffset
                 y: contentwindow.focusedCoordinates.y - yOffset
-                width: contentwindow.focusedCoordinates.width
+                width: contentwindow.focusedCoordinates.width + widthOffset
                 height: contentwindow.focusedCoordinates.height + heightOffset
                 border.color: Style.windowBorderSelectedColor
                 z: stackingOrder + Style.focusZorder

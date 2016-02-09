@@ -72,6 +72,9 @@ public:
     /** Get the list of tiles for use by QML repeater. */
     const Tiles& getTiles() const;
 
+    /** Update the tiles visibility given the visible area of the window. */
+    void updateTilesVisibility( const QRectF& visibleArea );
+
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
     void updatePixelStream( deflect::FramePtr frame );
