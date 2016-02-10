@@ -65,6 +65,8 @@ void MovieSynchronizer::update( const ContentWindow& window,
 {
     _updater->update( static_cast<const MovieContent&>( *window.getContent( )));
     _updater->setVisible( !visibleArea.isEmpty( ));
+
+    BasicSynchronizer::update( window, visibleArea );
 }
 
 QString MovieSynchronizer::getSourceParams() const

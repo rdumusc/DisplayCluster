@@ -43,14 +43,20 @@
 
 BasicSynchronizer::BasicSynchronizer()
 {
-    _tiles.push_back( new Tile( -1, QRect(), this, true ));
+    _tiles.push_back( new Tile( -1, QRect(), this, false ));
 }
 
 void BasicSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
     Q_UNUSED( window );
-    Q_UNUSED( visibleArea );
+
+    Tile* tile = qobject_cast<Tile*>( _tiles.front( ));
+
+    // Don't switch visibility on / off because each cycle triggers an
+    // unnecessary image request from the provider
+    if( !tile->isVisible( ))
+        tile->setVisible( !visibleArea.isEmpty( ));
 }
 
 QString BasicSynchronizer::getSourceParams() const
