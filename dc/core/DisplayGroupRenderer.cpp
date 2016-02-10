@@ -44,6 +44,7 @@
 #include "ContentWindowController.h"
 #include "Options.h"
 #include "Markers.h"
+#include "VisibilityHelper.h"
 #include "WallWindow.h"
 
 #include <deflect/Frame.h>
@@ -116,7 +117,8 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         if( !_windowItems.contains( id ))
             _createWindowQmlItem( window );
 
-        _windowItems[id]->update( window );
+        const VisibilityHelper helper( *displayGroup, _screenRect );
+        _windowItems[id]->update( window, helper.getVisibleArea( *window ));
         _windowItems[id]->setStackingOrder( stackingOrder++ );
     }
 
@@ -169,7 +171,7 @@ void DisplayGroupRenderer::_createWindowQmlItem( ContentWindowPtr window )
 {
     const QUuid& id = window->getID();
     _windowItems[id].reset( new QmlWindowRenderer( _engine, *_displayGroupItem,
-                                                   window, _screenRect ));
+                                                   window ));
     emit windowAdded( _windowItems[id] );
 }
 
@@ -197,7 +199,7 @@ void DisplayGroupRenderer::_setBackground( ContentPtr content )
     window->getController()->adjustSize( SIZE_FULLSCREEN );
     _backgroundWindowItem.reset( new QmlWindowRenderer( _engine,
                                                         *_displayGroupItem,
-                                                        window, _screenRect,
+                                                        window,
                                                         true ));
     _backgroundWindowItem->setStackingOrder( BACKGROUND_STACKING_ORDER );
 }

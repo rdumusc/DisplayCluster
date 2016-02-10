@@ -55,7 +55,8 @@ public:
     BasicSynchronizer();
 
     /** @copydoc ContentSynchronizer::update */
-    void update( const ContentWindow& window ) override;
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) override;
 
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;

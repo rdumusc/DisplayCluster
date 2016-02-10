@@ -69,8 +69,9 @@ public:
     /** Destruct the synchronizer and close the stream in the provider. */
     ~PixelStreamSynchronizer();
 
-    /** @copydoc ContentSynchronizer::updateTiles */
-    void update( const ContentWindow& window ) override;
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) override;
 
     /** @copydoc ContentSynchronizer::getSourceParams */
     QString getSourceParams() const override;

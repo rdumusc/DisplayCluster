@@ -60,8 +60,10 @@ MovieSynchronizer::~MovieSynchronizer()
     _provider.close( _uri );
 }
 
-void MovieSynchronizer::update( const ContentWindow& window )
+void MovieSynchronizer::update( const ContentWindow& window,
+                                const QRectF& visibleArea )
 {
+    Q_UNUSED( visibleArea );
     _updater->sync( static_cast< const MovieContent& >( *window.getContent( )));
 }
 

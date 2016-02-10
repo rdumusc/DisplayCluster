@@ -42,8 +42,11 @@
 #include "ContentWindow.h"
 #include "ImageProviderStringifier.h"
 
-void VectorialSynchronizer::update( const ContentWindow& window )
+void VectorialSynchronizer::update( const ContentWindow& window,
+                                    const QRectF& visibleArea )
 {
+    Q_UNUSED( visibleArea );
+
     // Legacy solution. A list of tiles with different LODs might bring
     // better interactive performances and allow for texture caching.
     ContentPtr content = window.getContent();

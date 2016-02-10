@@ -46,9 +46,11 @@ BasicSynchronizer::BasicSynchronizer()
     _tiles.push_back( new Tile( -1, QRect(), this, true ));
 }
 
-void BasicSynchronizer::update( const ContentWindow& window )
+void BasicSynchronizer::update( const ContentWindow& window,
+                                const QRectF& visibleArea )
 {
     Q_UNUSED( window );
+    Q_UNUSED( visibleArea );
 }
 
 QString BasicSynchronizer::getSourceParams() const

@@ -47,13 +47,11 @@
 #include <QTextStream>
 
 DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri,
-                                                        const QRect& screenRect,
                                                         TextureProvider& provider )
     : _uri( uri )
     , _provider( provider )
     , _reader( provider.openDynamicTexture( uri ))
     , _lod( 0 )
-    , _screenRect( screenRect )
 {
 }
 
@@ -62,30 +60,24 @@ DynamicTextureSynchronizer::~DynamicTextureSynchronizer()
     _provider.closeDynamicTexture( _uri );
 }
 
-void DynamicTextureSynchronizer::update( const ContentWindow& window )
+void DynamicTextureSynchronizer::update( const ContentWindow& window,
+                                         const QRectF& visibleArea )
 {
     const QRectF contentRect = ZoomHelper( window ).getContentRect();
-    const QSizeF contentSize = contentRect.size();
+    const uint lod = _reader->getLod( contentRect.size().toSize( ));
 
-    const uint lod = _reader->getLod( contentSize.toSize( ));
-    const QSize& tilesArea = _reader->getTilesArea( lod );
-
-    // same calculation as in WallWindow QML
-    const qreal xScale = contentSize.width() / tilesArea.width();
-    const qreal yScale = contentSize.height() / tilesArea.height();
-
-    const QRectF windowCoords = window.getDisplayCoordinates();
-    QRectF visibleArea = _screenRect.intersected( windowCoords );
-    const QSizeF visibleAreaSize = visibleArea.size();
-
-    // transform to content space for tiles origin at (0,0)
-    visibleArea.moveTopLeft(
-        QPointF( std::max( -windowCoords.x() + _screenRect.x(), 0.) / xScale,
-                 std::max( -windowCoords.y() + _screenRect.y(), 0.) / yScale ));
-    visibleArea.setSize( QSizeF( visibleAreaSize.width() / xScale,
-                                 visibleAreaSize.height() / yScale ));
-
-    _updateTiles( visibleArea, lod );
+    // Map window visibleArea to content space for tiles origin at (0,0)
+    const QRectF visibleContentArea = visibleArea.translated( -contentRect.x(),
+                                                              -contentRect.y());
+    // Scale content area to tiles area size
+    const QSize tilesArea = _reader->getTilesArea( lod );
+    const qreal xScale = tilesArea.width() / contentRect.width();
+    const qreal yScale = tilesArea.height() / contentRect.height();
+    const QRectF visibleTilesArea( visibleContentArea.x() * xScale,
+                                   visibleContentArea.y() * yScale,
+                                   visibleContentArea.width() * xScale,
+                                   visibleContentArea.height() * yScale );
+    _updateTiles( visibleTilesArea, lod );
 }
 
 QString DynamicTextureSynchronizer::getSourceParams() const

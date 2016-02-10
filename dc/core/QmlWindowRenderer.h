@@ -56,14 +56,14 @@ public:
     QmlWindowRenderer( QQmlEngine& engine,
                        QQuickItem& parentItem,
                        ContentWindowPtr contentWindow,
-                       const QRect& screenRect,
                        bool isBackground = false );
     /** Destructor. */
     ~QmlWindowRenderer();
 
     /** Update the qml object with a new data model. */
-    void update( ContentWindowPtr contentWindow );
+    void update( ContentWindowPtr contentWindow, const QRectF& visibleArea );
 
+    /** Set the z value of the window. */
     void setStackingOrder( int value );
 
     /** Get the ContentWindow. */

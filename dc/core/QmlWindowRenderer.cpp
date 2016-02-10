@@ -52,7 +52,6 @@ const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
                                       QQuickItem& parentItem,
                                       ContentWindowPtr contentWindow,
-                                      const QRect& screenRect,
                                       const bool isBackground )
     : _contentWindow( contentWindow )
     , _windowContext( new QQmlContext( engine.rootContext( )))
@@ -62,7 +61,7 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
 
     auto content = _contentWindow->getContent();
     auto provider = engine.imageProvider( content->getProviderId( ));
-    _contentSynchronizer = ContentSynchronizer::create( content, *provider, screenRect );
+    _contentSynchronizer = ContentSynchronizer::create( content, *provider );
     _windowContext->setContextProperty( "contentsync",
                                         _contentSynchronizer.get( ));
 
@@ -76,12 +75,13 @@ QmlWindowRenderer::~QmlWindowRenderer()
     delete _windowItem;
 }
 
-void QmlWindowRenderer::update( ContentWindowPtr contentWindow )
+void QmlWindowRenderer::update( ContentWindowPtr contentWindow,
+                                const QRectF& visibleArea )
 {
     // Could be optimized by checking for changes before updating the context
     _windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
     _contentWindow = contentWindow;
-    _contentSynchronizer->update( *_contentWindow );
+    _contentSynchronizer->update( *_contentWindow, visibleArea );
 }
 
 void QmlWindowRenderer::setStackingOrder( const int value )
