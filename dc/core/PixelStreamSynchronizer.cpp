@@ -42,6 +42,9 @@
 #include "PixelStreamProvider.h"
 #include "PixelStreamUpdater.h"
 
+#include "ContentWindow.h"
+#include "ZoomHelper.h"
+
 PixelStreamSynchronizer::PixelStreamSynchronizer( const QString& uri,
                                                  PixelStreamProvider& provider )
     : _uri( uri )
@@ -64,8 +67,11 @@ PixelStreamSynchronizer::~PixelStreamSynchronizer()
 void PixelStreamSynchronizer::update( const ContentWindow& window,
                                       const QRectF& visibleArea )
 {
-    Q_UNUSED( window );
-    _updater->updateTilesVisibility( visibleArea );
+    // Tiles area corresponds to Content dimensions for PixelStreams
+    const QSize tilesSurface = window.getContent()->getDimensions();
+
+    ZoomHelper helper( window );
+    _updater->updateVisibility( helper.toTilesArea( visibleArea, tilesSurface ));
 }
 
 QString PixelStreamSynchronizer::getSourceParams() const

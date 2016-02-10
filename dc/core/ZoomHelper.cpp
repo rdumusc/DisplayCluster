@@ -75,3 +75,21 @@ QRectF ZoomHelper::toZoomRect( const QRectF& contentRect ) const
 
     return QRectF( posX, posY, w, h );
 }
+
+QRectF ZoomHelper::toTilesArea( const QRectF& windowArea,
+                                const QSize& tilesSurface ) const
+{
+    const QRectF contentRect = getContentRect();
+
+    // Map window visibleArea to content space for tiles origin at (0,0)
+    const QRectF visibleContentArea = windowArea.translated( -contentRect.x(),
+                                                             -contentRect.y( ));
+    // Scale content area to tiles area size
+    const qreal xScale = tilesSurface.width() / contentRect.width();
+    const qreal yScale = tilesSurface.height() / contentRect.height();
+    const QRectF visibleTilesArea( visibleContentArea.x() * xScale,
+                                   visibleContentArea.y() * yScale,
+                                   visibleContentArea.width() * xScale,
+                                   visibleContentArea.height() * yScale );
+    return visibleTilesArea;
+}

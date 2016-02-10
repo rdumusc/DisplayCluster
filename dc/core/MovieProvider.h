@@ -65,7 +65,7 @@ public:
     void close( const QString& movieFile );
 
     /** Update the movies, using the channel to synchronize accross processes.*/
-    void update( WallToWallChannel& channel );
+    void synchronize( WallToWallChannel& channel );
 
 private:
     typedef std::map<QString, MovieUpdaterSharedPtr> MovieMap;

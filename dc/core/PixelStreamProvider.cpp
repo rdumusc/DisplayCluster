@@ -118,7 +118,7 @@ void PixelStreamProvider::close( const QString& stream )
     _streams.erase( stream );
 }
 
-void PixelStreamProvider::update( WallToWallChannel& channel )
+void PixelStreamProvider::synchronize( WallToWallChannel& channel )
 {
     for( auto& stream : _streams )
         stream.second->synchronizeFramesSwap( channel );

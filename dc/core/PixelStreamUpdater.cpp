@@ -89,7 +89,7 @@ QImage PixelStreamUpdater::getTileImage( const uint frameIndex,
     if( !frame )
         throw std::runtime_error( "No frames yet" );
 
-    const auto& segment = frame->segments.at( tileIndex );
+    const auto& segment = frame->segments.at( _visibleSet[tileIndex] );
 
     return QImage( (const uchar*)segment.imageData.constData(),
                    segment.parameters.width, segment.parameters.height,
@@ -101,9 +101,11 @@ void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
     _swapSyncFrame.update( frame );
 }
 
-void PixelStreamUpdater::updateTilesVisibility( const QRectF& visibleArea )
+void PixelStreamUpdater::updateVisibility( const QRectF& visibleArea )
 {
-    Q_UNUSED( visibleArea );
+    // TODO if some segments become visible that were hidden before,
+    // they will remain hidden until a new frameSwap() happens
+    _visibleArea = visibleArea;
 }
 
 void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
@@ -115,8 +117,9 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
                      s1.parameters.x < s2.parameters.x );
         } );
 
-    // decode everthing in a batch rather than doing it in the requestImage() for
-    // better performance. TODO: only decode visible segments
+    // decode everthing in a batch rather than doing it in the requestImage()
+    // for better performance.
+    _computeVisibleSet( frame->segments );
     _decodeSegments( frame->segments );
     _refreshTiles( frame->segments );
 
@@ -137,13 +140,13 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
 void PixelStreamUpdater::_decodeSegments( deflect::Segments& segments )
 {
 #pragma omp parallel for
-    for( size_t i = 0; i < segments.size(); ++i )
+    for( size_t i = 0; i < _visibleSet.size(); ++i )
     {
-        if( segments[i].parameters.compressed )
+        if( segments[_visibleSet[i]].parameters.compressed )
         {
             // turbojpeg handles need to be per thread
             static QThreadStorage< deflect::SegmentDecoder > decoder;
-            decoder.localData().decode( segments[i] );
+            decoder.localData().decode( segments[_visibleSet[i]] );
         }
     }
 }
@@ -153,25 +156,42 @@ QRect toRect( const deflect::SegmentParameters& params )
     return QRect( params.x, params.y, params.width, params.height );
 }
 
+void PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments )
+{
+    _visibleSet.clear();
+
+    if( _visibleArea.isEmpty( ))
+        return;
+
+    for( size_t i = 0; i < segments.size(); ++i )
+    {
+        if( _visibleArea.intersects( toRect( segments[i].parameters )))
+            _visibleSet.push_back( i );
+    }
+}
+
 void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
 {
     // Update existing segments
-    const size_t maxIndex = std::min( (size_t)_tiles.size(), segments.size( ));
+    const size_t maxIndex = std::min( (size_t)_tiles.size(),
+                                      _visibleSet.size( ));
     for( size_t i = 0; i < maxIndex; ++i )
     {
         Tile* tile = qobject_cast<Tile*>( _tiles[i] );
-        tile->update( toRect( segments[i].parameters ));
+        tile->update( toRect( segments[_visibleSet[i]].parameters ));
     }
 
-    const bool sizeChange = segments.size() != (size_t)_tiles.size();
+    const bool sizeChange = _visibleSet.size() != (size_t)_tiles.size();
 
     // Insert new objects in the vector if it is smaller
-    for( size_t i = _tiles.size(); i < segments.size(); ++i )
-        _tiles.push_back( new Tile( i, toRect( segments[i].parameters ),
-                                    this, true ));
+    for( size_t i = _tiles.size(); i < _visibleSet.size(); ++i )
+    {
+        const auto tileRect = toRect( segments[_visibleSet[i]].parameters );
+        _tiles.push_back( new Tile( i, tileRect, this, true ));
+    }
 
     // Or remove objects if it is bigger
-    const size_t removeCount = _tiles.size() - segments.size();
+    const size_t removeCount = _tiles.size() - _visibleSet.size();
     for( size_t i = 0; i < removeCount; ++i )
     {
         delete _tiles.back();

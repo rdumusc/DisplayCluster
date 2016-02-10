@@ -73,7 +73,7 @@ public:
     const Tiles& getTiles() const;
 
     /** Update the tiles visibility given the visible area of the window. */
-    void updateTilesVisibility( const QRectF& visibleArea );
+    void updateVisibility( const QRectF& visibleArea );
 
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
@@ -99,9 +99,14 @@ private:
     uint _requestedFrameIndex;
 
     Tiles _tiles;
+    QRectF _visibleArea;
+
+    typedef std::vector<size_t> SegmentIndices;
+    SegmentIndices _visibleSet;
 
     void _onFrameSwapped( deflect::FramePtr frame );
     void _decodeSegments( deflect::Segments& segments );
+    void _computeVisibleSet( const deflect::Segments& segments );
     void _refreshTiles( const deflect::Segments& segments );
 };
 

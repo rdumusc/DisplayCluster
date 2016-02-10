@@ -55,6 +55,9 @@ public:
     QRectF toContentRect( const QRectF& zoomRect ) const;
     QRectF toZoomRect( const QRectF& contentRect ) const;
 
+    QRectF toTilesArea( const QRectF& windowArea,
+                        const QSize& tilesSurface ) const;
+
 private:
     const ContentWindow& _contentWindow;
 };

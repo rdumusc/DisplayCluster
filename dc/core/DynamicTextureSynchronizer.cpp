@@ -39,10 +39,9 @@
 
 #include "DynamicTextureSynchronizer.h"
 
-#include "ContentWindow.h"
+#include "TextureProvider.h"
 #include "Tile.h"
 #include "ZoomHelper.h"
-#include "TextureProvider.h"
 
 #include <QTextStream>
 
@@ -63,21 +62,10 @@ DynamicTextureSynchronizer::~DynamicTextureSynchronizer()
 void DynamicTextureSynchronizer::update( const ContentWindow& window,
                                          const QRectF& visibleArea )
 {
-    const QRectF contentRect = ZoomHelper( window ).getContentRect();
-    const uint lod = _reader->getLod( contentRect.size().toSize( ));
-
-    // Map window visibleArea to content space for tiles origin at (0,0)
-    const QRectF visibleContentArea = visibleArea.translated( -contentRect.x(),
-                                                              -contentRect.y());
-    // Scale content area to tiles area size
-    const QSize tilesArea = _reader->getTilesArea( lod );
-    const qreal xScale = tilesArea.width() / contentRect.width();
-    const qreal yScale = tilesArea.height() / contentRect.height();
-    const QRectF visibleTilesArea( visibleContentArea.x() * xScale,
-                                   visibleContentArea.y() * yScale,
-                                   visibleContentArea.width() * xScale,
-                                   visibleContentArea.height() * yScale );
-    _updateTiles( visibleTilesArea, lod );
+    const ZoomHelper helper( window );
+    const uint lod = _reader->getLod( helper.getContentRect().size().toSize( ));
+    const QSize tilesSurface = _reader->getTilesArea( lod );
+    _updateTiles( helper.toTilesArea( visibleArea, tilesSurface ), lod );
 }
 
 QString DynamicTextureSynchronizer::getSourceParams() const
