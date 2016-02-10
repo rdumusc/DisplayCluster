@@ -39,9 +39,8 @@
 
 #include "RenderController.h"
 
-#include "DisplayGroupRenderer.h"
-
 #include "DisplayGroup.h"
+#include "DisplayGroupRenderer.h"
 #include "Options.h"
 #include "WallToWallChannel.h"
 #include "WallWindow.h"
@@ -57,7 +56,8 @@ RenderController::RenderController( WallWindow& window )
     , _syncQuit( false )
     , _syncDisplayGroup( boost::make_shared<DisplayGroup>( QSize( )))
     , _syncOptions( boost::make_shared<Options>( ))
-    , _renderPending( false )
+    , _renderTimer( 0 )
+    , _stopRenderingDelayTimer( 0 )
 {
     _syncDisplayGroup.setCallback( boost::bind( &WallWindow::setDisplayGroup,
                                                 &_window, _1 ));
@@ -72,27 +72,26 @@ DisplayGroupPtr RenderController::getDisplayGroup() const
     return _syncDisplayGroup.get();
 }
 
-bool RenderController::event( QEvent* qtEvent )
+void RenderController::timerEvent( QTimerEvent* qtEvent )
 {
-    switch( qtEvent->type( ))
-    {
-    case QEvent::User:
-        _renderPending = false;
+    if( qtEvent->timerId() == _renderTimer )
         _syncAndRender();
-        return true;
-    default:
-        return QObject::event( qtEvent );
+    else if( qtEvent->timerId() == _stopRenderingDelayTimer )
+    {
+        killTimer( _renderTimer );
+        killTimer( _stopRenderingDelayTimer );
+        _renderTimer = 0;
+        _stopRenderingDelayTimer = 0;
     }
 }
 
 void RenderController::requestRender()
 {
-    // throttle renderings from data changes to sync and render speed
-    if( !_renderPending )
-    {
-        _renderPending = true;
-        QCoreApplication::postEvent( this, new QEvent( QEvent::User ));
-    }
+    killTimer( _stopRenderingDelayTimer );
+    _stopRenderingDelayTimer = 0;
+
+    if( _renderTimer == 0 )
+        _renderTimer = startTimer( 5, Qt::PreciseTimer );
 }
 
 void RenderController::_syncAndRender()
@@ -104,13 +103,18 @@ void RenderController::_syncAndRender()
     _syncQuit.sync( versionCheckFunc );
     if( _syncQuit.get( ))
     {
+        killTimer( _renderTimer );
+        killTimer( _stopRenderingDelayTimer );
         _window.deleteLater();
         return;
     }
 
     _synchronizeObjects( versionCheckFunc );
-    if( _window.syncAndRender( ))
-        requestRender();
+    if( !_window.syncAndRender( ))
+    {
+        if( _stopRenderingDelayTimer == 0 )
+            _stopRenderingDelayTimer = startTimer( 5000 /*ms*/ );
+    }
 }
 
 void RenderController::updateQuit()

@@ -68,7 +68,7 @@ public slots:
     void requestRender();
 
 private:
-    bool event( QEvent* qtEvent ) final;
+    void timerEvent( QTimerEvent* qtEvent ) final;
     Q_DISABLE_COPY( RenderController )
 
     WallWindow& _window;
@@ -83,7 +83,8 @@ private:
 
     void _synchronizeObjects( const SyncFunction& versionCheckFunc );
 
-    bool _renderPending;
+    int _renderTimer;
+    int _stopRenderingDelayTimer;
 };
 
 #endif // RENDERCONTROLLER_H

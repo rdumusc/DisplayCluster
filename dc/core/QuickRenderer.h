@@ -89,7 +89,7 @@ signals:
     void stop();
 
 private:
-    bool event( QEvent* e ) final;
+    bool event( QEvent* qtEvent ) final;
     void _onInit();
     void _onRender();
     void _onStop();
