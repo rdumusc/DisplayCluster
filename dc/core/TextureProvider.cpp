@@ -98,3 +98,13 @@ void TextureProvider::closeDynamicTexture( const QString& uri )
 {
     _dynamicTextures.erase( uri );
 }
+
+bool TextureProvider::needRedraw() const
+{
+    for( const auto& i : _dynamicTextures )
+    {
+        if( i.second->hasPendingTileLoads( ))
+            return true;
+    }
+    return false;
+}
