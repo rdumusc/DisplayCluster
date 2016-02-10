@@ -82,9 +82,6 @@ WallWindow::WallWindow( const WallConfiguration& config,
     , _rootItem( nullptr )
     , _rendererInitialized( false )
 {
-    if( !_qmlEngine->incubationController( ))
-        _qmlEngine->setIncubationController( incubationController( ));
-
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
     const QPoint& windowPos = config.getWindowPos();
