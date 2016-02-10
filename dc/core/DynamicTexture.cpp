@@ -90,11 +90,8 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent_,
         else
             readFullImageMetadata(_uri);
     }
-}
 
-DynamicTexture::~DynamicTexture()
-{
-    cancelPendingTileLoads();
+    _pendingLoadFutures.setCancelOnWait( true );
 }
 
 bool DynamicTexture::isRoot() const
@@ -402,7 +399,22 @@ void DynamicTexture::triggerTileLoad( Tile* tile )
 
 void DynamicTexture::cancelPendingTileLoads()
 {
+    _pendingLoadFutures.waitForFinished();
     _pendingLoadFutures.clearFutures();
+}
+
+bool DynamicTexture::hasPendingTileLoads() const
+{
+    for( const auto& future : _pendingLoadFutures.futures( ))
+    {
+        if( !future.isFinished( ))
+            return true;
+    }
+    // finished futures are never removed from the future synchronizer, so
+    // we do it here when all are done as we are called here as long there are
+    // pending futures.
+    _pendingLoadFutures.clearFutures();
+    return false;
 }
 
 void DynamicTexture::_loadTile( Tile* tile )
@@ -413,7 +425,6 @@ void DynamicTexture::_loadTile( Tile* tile )
         _tilesCache[tile->getIndex()] = tileImage;
     }
     tile->setVisible( true );
-    emit tileLoaded();
 }
 
 int DynamicTexture::getFirstTileIndex( const uint lod ) const

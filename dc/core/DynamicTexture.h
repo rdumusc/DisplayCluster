@@ -74,9 +74,6 @@ public:
                     const QRectF& parentCoordinates = QRectF(),
                     const int childIndex = 0 );
 
-    /** Destructor cancels all pending tile loads. */
-    ~DynamicTexture();
-
     /** The exension of pyramid metadata files */
     static const QString pyramidFileExtension;
 
@@ -125,6 +122,9 @@ public:
     /** Cancel outstanding loads of tiles from triggerTileLoad(). */
     void cancelPendingTileLoads();
 
+    /** @return true if there pending tile loads from triggerTileLoad(). */
+    bool hasPendingTileLoads() const;
+
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
      * @param outputFolder The folder in which the metadata and pyramid images
@@ -132,16 +132,13 @@ public:
      */
     bool generateImagePyramid( const QString& outputFolder );
 
-signals:
-    void tileLoaded();
-
 private:
     void _loadTile( Tile* tile );
 
     mutable QMutex _tilesCacheMutex;
     QHash<uint, QImage> _tilesCache;
 
-    QFutureSynchronizer< void > _pendingLoadFutures;
+    mutable QFutureSynchronizer< void > _pendingLoadFutures;
 
     /* for root only: */
 

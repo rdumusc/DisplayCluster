@@ -61,6 +61,12 @@ public:
 
     void closeDynamicTexture( const QString& uri );
 
+    /**
+     * @return true if a redraw is needed because of pending tiles from any
+     *         dynamic texture.
+     */
+    bool needRedraw() const;
+
 private:
     std::map< QString, DynamicTexturePtr > _dynamicTextures;
 };

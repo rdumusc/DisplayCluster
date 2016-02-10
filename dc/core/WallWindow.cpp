@@ -186,16 +186,20 @@ bool WallWindow::syncAndRender()
 
     auto movieProvider = dynamic_cast< MovieProvider* >
             ( engine()->imageProvider( MovieProvider::ID ));
+    auto textureProvider = dynamic_cast< TextureProvider* >
+            ( engine()->imageProvider( TextureProvider::ID ));
     auto& pixelStreamProvider = getPixelStreamProvider();
 
     _wallChannel.synchronizeClock();
     movieProvider->update( _wallChannel );
     pixelStreamProvider.update( _wallChannel );
+    bool needRedraw = textureProvider->needRedraw();
 
     _renderControl->polishItems();
     _quickRenderer->render();
 
-    return _displayGroupRenderer->needRedraw();
+    needRedraw = needRedraw || _displayGroupRenderer->needRedraw();
+    return !_wallChannel.allReady( !needRedraw );
 }
 
 void WallWindow::setRenderOptions( OptionsPtr options )
