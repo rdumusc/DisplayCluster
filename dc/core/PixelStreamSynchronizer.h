@@ -79,7 +79,7 @@ public:
     bool allowsTextureCaching() const override;
 
     /** @copydoc ContentSynchronizer::getTiles */
-    QList<QObject*> getTiles() const override;
+    Tiles getTiles() const override;
 
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;

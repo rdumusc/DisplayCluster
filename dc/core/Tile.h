@@ -53,19 +53,36 @@ class Tile : public QObject
 
     Q_PROPERTY( int index READ getIndex CONSTANT )
     Q_PROPERTY( QRect coord READ getCoord NOTIFY coordChanged )
+    Q_PROPERTY( bool visible READ isVisible NOTIFY visibilityChanged )
 
 public:
     // false-positive on qt signals for Q_PROPERTY notifiers
     // cppcheck-suppress uninitMemberVar
-    Tile( const int index, const QRect& rect, QObject* parent_ = nullptr )
+    Tile( const int index, const QRect& rect, QObject* parent_,
+          const bool visible )
         : QObject( parent_ )
         , _index( index )
         , _rect( rect )
+        , _visible( visible )
     {}
 
     const QRect& getCoord() const
     {
         return _rect;
+    }
+
+    bool isVisible() const
+    {
+        return _visible;
+    }
+
+    void setVisible( const bool visible )
+    {
+        if( _visible == visible )
+            return;
+
+        _visible = visible;
+        emit visibilityChanged();
     }
 
     int getIndex() const
@@ -84,10 +101,12 @@ public:
 
 signals:
     void coordChanged();
+    void visibilityChanged();
 
 private:
     int _index;
     QRect _rect;
+    bool _visible;
 };
 
 #endif

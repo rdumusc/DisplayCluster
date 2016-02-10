@@ -64,8 +64,11 @@ WallApplication::WallApplication( int& argc_, char** argv_,
     : QApplication( argc_, argv_ )
     , _wallChannel( new WallToWallChannel( wallChannel ))
 {
-    // avoid overcommit for dynamic texture load
-    QThreadPool::globalInstance()->setMaxThreadCount( 2 );
+    // avoid overcommit for async content loading; consider number of processes
+    // on the same machine
+    const int maxThreads = std::max( QThread::idealThreadCount() /
+                                     wallChannel->getSize(), 2 );
+    QThreadPool::globalInstance()->setMaxThreadCount( maxThreads );
 
     CommandLineParameters options( argc_, argv_ );
     if( options.getHelp( ))

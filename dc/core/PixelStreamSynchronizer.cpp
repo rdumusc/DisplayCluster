@@ -76,7 +76,7 @@ bool PixelStreamSynchronizer::allowsTextureCaching() const
     return false;
 }
 
-QList<QObject*> PixelStreamSynchronizer::getTiles() const
+Tiles PixelStreamSynchronizer::getTiles() const
 {
     return _updater->getTiles();
 }

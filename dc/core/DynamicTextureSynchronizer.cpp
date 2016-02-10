@@ -55,8 +55,6 @@ DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri,
     , _lod( 0 )
     , _screenRect( screenRect )
 {
-    connect( _reader.get(), &DynamicTexture::tileLoaded,
-             this, &DynamicTextureSynchronizer::tilesChanged );
 }
 
 DynamicTextureSynchronizer::~DynamicTextureSynchronizer()
@@ -68,11 +66,13 @@ void DynamicTextureSynchronizer::update( const ContentWindow& window )
 {
     const QRectF contentRect = ZoomHelper( window ).getContentRect();
     const QSizeF contentSize = contentRect.size();
-    _lod = _reader->getLod( contentSize.toSize( ));
+
+    const uint lod = _reader->getLod( contentSize.toSize( ));
+    const QSize& tilesArea = _reader->getTilesArea( lod );
 
     // same calculation as in WallWindow QML
-    const qreal xScale = contentSize.width() / getTilesArea().width();
-    const qreal yScale = contentSize.height() / getTilesArea().height();
+    const qreal xScale = contentSize.width() / tilesArea.width();
+    const qreal yScale = contentSize.height() / tilesArea.height();
 
     const QRectF windowCoords = window.getDisplayCoordinates();
     QRectF visibleArea = _screenRect.intersected( windowCoords );
@@ -84,7 +84,8 @@ void DynamicTextureSynchronizer::update( const ContentWindow& window )
                  std::max( -windowCoords.y() + _screenRect.y(), 0.) / yScale ));
     visibleArea.setSize( QSizeF( visibleAreaSize.width() / xScale,
                                  visibleAreaSize.height() / yScale ));
-    _updateTiles( visibleArea );
+
+    _updateTiles( visibleArea, lod );
 }
 
 QString DynamicTextureSynchronizer::getSourceParams() const
@@ -97,7 +98,7 @@ bool DynamicTextureSynchronizer::allowsTextureCaching() const
     return true;
 }
 
-QList<QObject*> DynamicTextureSynchronizer::getTiles() const
+Tiles DynamicTextureSynchronizer::getTiles() const
 {
     return _tiles;
 }
@@ -117,31 +118,43 @@ QString DynamicTextureSynchronizer::getStatistics() const
     return stats;
 }
 
-void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea )
+void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
+                                               const uint lod )
 {
-    if( visibleArea == _visibleArea )
+    if( visibleArea == _visibleArea && lod == _lod )
         return;
 
     _visibleArea = visibleArea;
-    _tiles.clear();
     _reader->cancelPendingTileLoads();
 
+    if( lod != _lod )
+    {
+        _tiles.clear();
+        _lod = lod;
+        emit statisticsChanged();
+    }
+
+    Tiles tiles;
     const QSize tilesCount = _reader->getTilesCount( _lod );
     const int startIndex = _reader->getFirstTileIndex( _lod );
-
     for( int y = 0; y < tilesCount.height(); ++y )
     {
         for( int x = 0; x < tilesCount.width(); ++x )
         {
             const int i = startIndex + y * tilesCount.width() + x;
             const QRect& coord = _reader->getTileCoord( _lod, x, y );
-            if( QRectF(coord).intersects( visibleArea ))
+            if( QRectF( coord ).intersects( visibleArea ))
             {
-                _reader->triggerTileLoad( i );
-                _tiles.push_front( new Tile( i, coord, this ));
+                Tile* tile = new Tile( i, coord, this, false );
+                _reader->triggerTileLoad( tile );
+                tiles.push_back( tile );
             }
         }
     }
-    emit tilesChanged();
-    emit statisticsChanged();
+
+    if( _tiles != tiles )
+    {
+        _tiles = tiles;
+        emit tilesChanged();
+    }
 }

@@ -43,7 +43,7 @@
 
 BasicSynchronizer::BasicSynchronizer()
 {
-    _tiles.push_back( new Tile( -1, QRect(), this ));
+    _tiles.push_back( new Tile( -1, QRect(), this, true ));
 }
 
 void BasicSynchronizer::update( const ContentWindow& window )
@@ -61,7 +61,7 @@ bool BasicSynchronizer::allowsTextureCaching() const
     return true;
 }
 
-QList<QObject*> BasicSynchronizer::getTiles() const
+Tiles BasicSynchronizer::getTiles() const
 {
     return _tiles;
 }

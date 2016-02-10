@@ -70,7 +70,7 @@ public:
     QImage getTileImage( uint frameIndex, uint tileIndex );
 
     /** Get the list of tiles for use by QML repeater. */
-    const QList<QObject*>& getTiles() const;
+    const Tiles& getTiles() const;
 
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
@@ -95,7 +95,7 @@ private:
     uint _frameIndex;
     uint _requestedFrameIndex;
 
-    QList<QObject*> _tiles;
+    Tiles _tiles;
 
     void _onFrameSwapped( deflect::FramePtr frame );
     void _decodeSegments( deflect::Segments& segments );

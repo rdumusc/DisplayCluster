@@ -30,9 +30,10 @@ BaseContentWindow {
                     y: model.modelData.coord.y
                     width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width
                     height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
+                    visible: model.modelData.visible
 
                     property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
-                    source: imagesource + contentsync.sourceParams + tileIndex
+                    source: model.modelData.visible ? imagesource + contentsync.sourceParams + tileIndex : ""
 
                     cache: contentsync.allowsTextureCaching
 
