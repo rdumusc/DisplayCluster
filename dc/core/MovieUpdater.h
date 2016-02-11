@@ -59,8 +59,9 @@ public:
     explicit MovieUpdater( const QString& uri );
     ~MovieUpdater();
 
-    void sync( const MovieContent& movie );
-    void update( WallToWallChannel& channel );
+    void setVisible( bool visible );
+    void update( const MovieContent& movie );
+    void sync( WallToWallChannel& channel );
 
     PicturePtr getPicture();
 
@@ -72,7 +73,7 @@ private:
 
     bool _paused;
     bool _loop;
-    bool _isVisible;
+    bool _visible;
 
     ElapsedTimer _timer;
     double _sharedTimestamp;

@@ -96,8 +96,8 @@ void MovieProvider::close( const QString& movieFile )
     _movies.erase( movieFile );
 }
 
-void MovieProvider::update( WallToWallChannel& channel )
+void MovieProvider::synchronize( WallToWallChannel& channel )
 {
     for( auto& movie : _movies )
-        movie.second->update( channel );
+        movie.second->sync( channel );
 }

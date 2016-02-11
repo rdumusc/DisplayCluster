@@ -191,8 +191,8 @@ bool WallWindow::syncAndRender()
     auto& pixelStreamProvider = getPixelStreamProvider();
 
     _wallChannel.synchronizeClock();
-    movieProvider->update( _wallChannel );
-    pixelStreamProvider.update( _wallChannel );
+    movieProvider->synchronize( _wallChannel );
+    pixelStreamProvider.synchronize( _wallChannel );
     bool needRedraw = textureProvider->needRedraw();
 
     _renderControl->polishItems();

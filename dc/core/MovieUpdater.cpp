@@ -50,7 +50,7 @@ MovieUpdater::MovieUpdater( const QString& uri )
     : _ffmpegMovie( new FFMPEGMovie( uri ))
     , _paused( false )
     , _loop( true )
-    , _isVisible( true )
+    , _visible( true )
     , _sharedTimestamp( 0.0 )
 {
     // Observed bug [DISCL-295]: opening a movie might fail on WallProcesses
@@ -66,13 +66,18 @@ MovieUpdater::MovieUpdater( const QString& uri )
 
 MovieUpdater::~MovieUpdater() {}
 
-void MovieUpdater::sync( const MovieContent& movie )
+void MovieUpdater::setVisible( const bool visible )
+{
+    _visible = visible;
+}
+
+void MovieUpdater::update( const MovieContent& movie )
 {
     _paused = movie.getControlState() & STATE_PAUSED;
     _loop = movie.getControlState() & STATE_LOOP;
 }
 
-void MovieUpdater::update( WallToWallChannel& channel )
+void MovieUpdater::sync( WallToWallChannel& channel )
 {
     if( !_ffmpegMovie->isValid( ))
         return;
@@ -84,7 +89,7 @@ void MovieUpdater::update( WallToWallChannel& channel )
         _synchronizeTimestamp( channel );
     }
 
-    if( !_isVisible )
+    if( !_visible )
         return;
 
     if( _futurePicture.valid() && is_ready( _futurePicture ))
@@ -107,7 +112,6 @@ void MovieUpdater::update( WallToWallChannel& channel )
     const bool needsFrame = _getDelay() >= _ffmpegMovie->getFrameDuration();
     if( !_futurePicture.valid() && needsFrame )
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
-
 }
 
 PicturePtr MovieUpdater::getPicture()
@@ -124,7 +128,7 @@ void MovieUpdater::_updateTimestamp( WallToWallChannel& channel )
 {
     // Don't increment the timestamp until all the processes have caught up
     const bool isInSync = _getDelay() <= _ffmpegMovie->getFrameDuration();
-    if( !channel.allReady( !_isVisible || isInSync ))
+    if( !channel.allReady( !_visible || isInSync ))
         return;
 
     _sharedTimestamp += ElapsedTimer::toSeconds( _timer.getElapsedTime( ));
@@ -133,7 +137,7 @@ void MovieUpdater::_updateTimestamp( WallToWallChannel& channel )
 void MovieUpdater::_synchronizeTimestamp( WallToWallChannel& channel )
 {
     // Elect a leader among processes which have decoded a frame
-    const bool isCandidate = _ffmpegMovie->isValid() && _isVisible;
+    const bool isCandidate = _ffmpegMovie->isValid() && _visible;
     const int leader = channel.electLeader( isCandidate );
 
     if( leader < 0 )

@@ -69,7 +69,7 @@ public:
     void close( const QString& stream );
 
     /** Update the streams, using the channel to synchronize processes. */
-    void update( WallToWallChannel& channel );
+    void synchronize( WallToWallChannel& channel );
 
 public slots:
     /** Add a new frame. */
