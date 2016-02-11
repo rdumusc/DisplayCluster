@@ -4,6 +4,7 @@ import "style.js" as Style
 
 Item {
     property int border: modelData
+    visible: isActive || contentwindow.border === ContentWindow.NOBORDER
 
     property bool isRight: border === ContentWindow.RIGHT
                            || border == ContentWindow.BOTTOM_RIGHT
@@ -45,7 +46,6 @@ Item {
         radius: Style.resizeCircleRadius
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        visible: isActive || contentwindow.border === ContentWindow.NOBORDER
         color: isActive ? Style.activeResizeCircleColor
                         : Style.inactiveResizeCircleColor
     }

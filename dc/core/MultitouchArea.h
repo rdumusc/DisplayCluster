@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,44 +37,102 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef TOUCH_MOUSE_AREA_H
-#define TOUCH_MOUSE_AREA_H
+#ifndef MULTITOUCHAREA_H
+#define MULTITOUCHAREA_H
 
-#include "TouchArea.h"
+#include <QQuickItem>
+
+#include <QTimer>
 
 /**
- * Extends TouchArea by converting mouse inputs to touch events.
- *
- * Also captures keyboard inputs, including TAB key
+ * A multipoint touch area to detect touch gestures on Qml objects.
  */
-class TouchMouseArea : public TouchArea
+class MultitouchArea : public QQuickItem
 {
     Q_OBJECT
 
+    /** Set a target item to enable the touch area to move it. */
+    Q_PROPERTY( QQuickItem* referenceItem READ getReferenceItem
+                WRITE setReferenceItem NOTIFY referenceItemChanged )
+
+    /** The minimum displacement until a gesture is considered as a pan. */
+    Q_PROPERTY( qreal panThreshold READ getPanThreshold WRITE setPanThreshold
+                NOTIFY panThresholdChanged )
+
 public:
-    /** Constructor. */
-    TouchMouseArea();
+    MultitouchArea( QQuickItem* parent = 0 );
+
+    QQuickItem* getReferenceItem() const;
+    qreal getPanThreshold() const;
+
+public slots:
+    void setReferenceItem( QQuickItem* arg );
+    void setPanThreshold( qreal arg );
 
 signals:
-    void keyPress( int key, int modifiers, QString text );
-    void keyRelease( int key, int modifiers, QString text );
+    void referenceItemChanged( QQuickItem* arg );
+    void panThresholdChanged( qreal arg );
 
-protected:
-    /** @name Re-implemented QQuickItem events */
-    //@{
-    bool event( QEvent* event ) override;
+    void tapStarted( QPointF pos );
+    void tapEnded( QPointF pos );
+
+    void doubleTap( QPointF pos );
+
+    void tapAndHold( QPointF pos );
+
+    void panStarted( QPointF pos );
+    void pan( QPointF pos, QPointF delta );
+    void panEnded();
+
+    void pinch( QPointF pos, qreal pixelDelta );
+
+private:
     void mousePressEvent( QMouseEvent* event ) override;
     void mouseMoveEvent( QMouseEvent* event ) override;
     void mouseReleaseEvent( QMouseEvent* event ) override;
     void mouseDoubleClickEvent( QMouseEvent* event ) override;
     void wheelEvent( QWheelEvent* event ) override;
-    void keyPressEvent( QKeyEvent* keyEvent ) override;
-    void keyReleaseEvent( QKeyEvent* keyEvent ) override;
-    //@}
+    void touchEvent( QTouchEvent* event ) override;
 
-private:
-    QPointF _mousePressPos;
+    QPointF _getScenePos( QMouseEvent* mouse );
+    QPointF _getScenePos( const QTouchEvent::TouchPoint& point );
+    QPointF _getScenePos( const QPointF& itemPos );
+
+    qreal _getPinchDistance( const QTouchEvent::TouchPoint& p0,
+                             const QTouchEvent::TouchPoint& p1 );
+
+    void _handleSinglePoint( const QTouchEvent::TouchPoint& point );
+
+    void _startPanGesture( const QPointF& pos );
+    void _cancelPanGesture();
+
+    void _startTapAndHoldGesture();
+    void _cancelTapAndHoldGesture();
+
+    void _startDoubleTapGesture();
+    void _cancelDoubleTapGesture();
+
+    void _handleTwoPoints( const QTouchEvent::TouchPoint& p0,
+                           const QTouchEvent::TouchPoint& p1 );
+
+    QQuickItem* _referenceItem;
+    qreal _panThreshold;
+
     QPointF _mousePrevPos;
+
+    bool _panning;
+    QPointF _lastPanPos;
+
+    bool _pinchDetectionStarted;
+    bool _pinching;
+    qreal _lastPinchDist;
+
+    QPointF _tapStartPos;
+    uint _tapCounter;
+    qreal _initialPinchDist;
+
+    QTimer _tapAndHoldTimer;
+    QTimer _doubleTapTimer;
 };
 
 #endif

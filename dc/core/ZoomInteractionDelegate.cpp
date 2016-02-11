@@ -100,15 +100,12 @@ void ZoomInteractionDelegate::_checkAndApply( QRectF zoomRect )
     _contentWindow.getContent()->setZoomRect( zoomRect );
 }
 
-void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
+void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta )
 {
-    QRectF zoomRect = _contentWindow.getContent()->getZoomRect();
-    const qreal zoom = zoomRect.width();
-    const QPointF normalizedDelta = getNormalizedPoint( sceneDelta ) * zoom;
-    zoomRect.translate( -normalizedDelta );
-
-    _constraintPosition( zoomRect );
-    _contentWindow.getContent()->setZoomRect( zoomRect );
+    const ZoomHelper zoomHelper( _contentWindow );
+    QRectF contentRect = zoomHelper.getContentRect();
+    contentRect.translate( sceneDelta );
+    _checkAndApply( zoomHelper.toZoomRect( contentRect ));
 }
 
 void ZoomInteractionDelegate::_constrainZoomLevel( QRectF& zoomRect ) const
