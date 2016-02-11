@@ -136,6 +136,12 @@ BOOST_FIXTURE_TEST_CASE( testOverlappingWindow, Fixture )
     // Full overlap
     BOOST_CHECK_EQUAL( helper.getVisibleArea( *window ), QRectF( ));
 
+    // Focused
+    window->setFocusedCoordinates( coord );
+    window->setFocused( true );
+    BOOST_CHECK_EQUAL( helper.getVisibleArea( *window ), coord );
+    window->setFocused( false );
+
     // Half-above horizonally
     otherWindow->setCoordinates( QRectF( QPointF( 100, 0 ), size ));
     BOOST_CHECK_EQUAL( helper.getVisibleArea( *window ),
