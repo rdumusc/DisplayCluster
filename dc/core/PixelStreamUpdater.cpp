@@ -48,8 +48,7 @@
 #include <QThreadStorage>
 
 PixelStreamUpdater::PixelStreamUpdater()
-    : _frameIndex( 0 )
-    , _requestedFrameIndex( 0 )
+    : _tilesDirty( false )
 {
     _swapSyncFrame.setCallback( boost::bind(
                                     &PixelStreamUpdater::_onFrameSwapped,
@@ -62,6 +61,13 @@ void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
         boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
 
     _swapSyncFrame.sync( versionCheckFunc );
+
+    // If the frame was not swapped, refresh tiles caused by a visibility update
+    if( _tilesDirty && _currentFrame )
+    {
+        _decodeSegments( _currentFrame->segments );
+        _refreshTiles( _currentFrame->segments );
+    }
 }
 
 const Tiles& PixelStreamUpdater::getTiles() const
@@ -69,27 +75,12 @@ const Tiles& PixelStreamUpdater::getTiles() const
     return _tiles;
 }
 
-QImage PixelStreamUpdater::getTileImage( const uint frameIndex,
-                                         const uint tileIndex )
+QImage PixelStreamUpdater::getTileImage( const uint tileIndex )
 {
-    // to determine which frames can be deleted from the _frames map
-    _requestedFrameIndex = std::max( _requestedFrameIndex, frameIndex );
-
-    // find the segments for the requested frame
-    deflect::FramePtr frame;
-    for( const auto& i : _frames )
-    {
-        if( i.first == frameIndex )
-        {
-            frame = i.second;
-            break;
-        }
-    }
-
-    if( !frame )
+    if( !_currentFrame )
         throw std::runtime_error( "No frames yet" );
 
-    const auto& segment = frame->segments.at( _visibleSet[tileIndex] );
+    const auto& segment = _currentFrame->segments.at( _visibleSet[tileIndex] );
 
     return QImage( (const uchar*)segment.imageData.constData(),
                    segment.parameters.width, segment.parameters.height,
@@ -103,9 +94,16 @@ void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 
 void PixelStreamUpdater::updateVisibility( const QRectF& visibleArea )
 {
-    // TODO if some segments become visible that were hidden before,
-    // they will remain hidden until a new frameSwap() happens
+    if( _visibleArea == visibleArea )
+        return;
+
     _visibleArea = visibleArea;
+
+    if( !_currentFrame )
+        return;
+
+    if( _visibleSet != _computeVisibleSet( _currentFrame->segments ))
+        _tilesDirty = true;
 }
 
 void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
@@ -117,23 +115,19 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
                      s1.parameters.x < s2.parameters.x );
         } );
 
+    _currentFrame = frame;
+
     // decode everthing in a batch rather than doing it in the requestImage()
     // for better performance.
-    _computeVisibleSet( frame->segments );
+    _visibleSet = _computeVisibleSet( frame->segments );
     _decodeSegments( frame->segments );
-    _refreshTiles( frame->segments );
 
-    // cleanup old frames
-    while( !_frames.empty( ))
-    {
-        if( _frames.front().first >= _requestedFrameIndex )
-            break;
-        _frames.pop_front();
-    }
+    // When the tilesChanged signal is emitted all the qml tiles are immediately
+    // recreated and they request a new image. As an optimization, there is no
+    // need to trigger a second image update in this case.
+    const bool tilesChangedEmitted = _refreshTiles( frame->segments );
+    emit pictureUpdated( !tilesChangedEmitted );
 
-    _frames.push_back( std::make_pair( _frameIndex, frame ));
-
-    emit pictureUpdated( _frameIndex++ );
     emit requestFrame( frame->uri );
 }
 
@@ -156,21 +150,23 @@ QRect toRect( const deflect::SegmentParameters& params )
     return QRect( params.x, params.y, params.width, params.height );
 }
 
-void PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments )
+PixelStreamUpdater::SegmentIndices
+PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments) const
 {
-    _visibleSet.clear();
+    SegmentIndices visibleSet;
 
     if( _visibleArea.isEmpty( ))
-        return;
+        return visibleSet;
 
     for( size_t i = 0; i < segments.size(); ++i )
     {
         if( _visibleArea.intersects( toRect( segments[i].parameters )))
-            _visibleSet.push_back( i );
+            visibleSet.push_back( i );
     }
+    return visibleSet;
 }
 
-void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
+bool PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
 {
     // Update existing segments
     const size_t maxIndex = std::min( (size_t)_tiles.size(),
@@ -198,6 +194,10 @@ void PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
         _tiles.pop_back();
     }
 
+    _tilesDirty = false;
+
     if( sizeChange )
         emit tilesChanged();
+
+    return sizeChange;
 }

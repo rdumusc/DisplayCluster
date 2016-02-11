@@ -95,7 +95,7 @@ private:
     uint _frameIndex;
     FpsCounter _fpsCounter;
 
-    void onPictureUpdated( uint frameIndex );
+    void _onPictureUpdated( bool requestImageUpdate );
 };
 
 #endif

@@ -54,7 +54,7 @@ PixelStreamSynchronizer::PixelStreamSynchronizer( const QString& uri,
     _updater = _provider.open( uri );
 
     connect( _updater.get(), &PixelStreamUpdater::pictureUpdated,
-             this, &PixelStreamSynchronizer::onPictureUpdated );
+             this, &PixelStreamSynchronizer::_onPictureUpdated );
     connect( _updater.get(), &PixelStreamUpdater::tilesChanged,
              this, &ContentSynchronizer::tilesChanged );
 }
@@ -99,10 +99,13 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-void PixelStreamSynchronizer::onPictureUpdated( const uint frameIndex )
+void PixelStreamSynchronizer::_onPictureUpdated( const bool requestImageUpdate )
 {
-    _frameIndex = frameIndex;
-    emit sourceParamsChanged();
+    if( requestImageUpdate )
+    {
+        ++_frameIndex;
+        emit sourceParamsChanged();
+    }
 
     _fpsCounter.tick();
     emit statisticsChanged();
