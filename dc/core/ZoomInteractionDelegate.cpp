@@ -61,13 +61,11 @@ void ZoomInteractionDelegate::pan( const QPointF position, const QPointF delta )
     _moveZoomRect( delta );
 }
 
-void ZoomInteractionDelegate::pinch( QPointF position,
+void ZoomInteractionDelegate::pinch( const QPointF position,
                                      const qreal pixelDelta )
 {
     const ZoomHelper zoomHelper( _contentWindow );
     QRectF contentRect = zoomHelper.getContentRect();
-
-    position -= _contentWindow.getDisplayCoordinates().topLeft();
 
     QSizeF newSize = contentRect.size();
     newSize.scale( newSize.width() + pixelDelta,
@@ -100,15 +98,12 @@ void ZoomInteractionDelegate::_checkAndApply( QRectF zoomRect )
     _contentWindow.getContent()->setZoomRect( zoomRect );
 }
 
-void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta ) const
+void ZoomInteractionDelegate::_moveZoomRect( const QPointF& sceneDelta )
 {
-    QRectF zoomRect = _contentWindow.getContent()->getZoomRect();
-    const qreal zoom = zoomRect.width();
-    const QPointF normalizedDelta = getNormalizedPoint( sceneDelta ) * zoom;
-    zoomRect.translate( -normalizedDelta );
-
-    _constraintPosition( zoomRect );
-    _contentWindow.getContent()->setZoomRect( zoomRect );
+    const ZoomHelper zoomHelper( _contentWindow );
+    QRectF contentRect = zoomHelper.getContentRect();
+    contentRect.translate( sceneDelta );
+    _checkAndApply( zoomHelper.toZoomRect( contentRect ));
 }
 
 void ZoomInteractionDelegate::_constrainZoomLevel( QRectF& zoomRect ) const

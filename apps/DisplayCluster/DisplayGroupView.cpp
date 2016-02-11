@@ -48,15 +48,14 @@
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickItem>
-
-#define VIEW_MARGIN 0.05
+#include <QQmlProperty>
 
 namespace
 {
-const QString WALL_OBJECT_NAME( "Wall" );
 const QUrl QML_CONTENTWINDOW_URL( "qrc:/qml/master/MasterContentWindow.qml" );
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/master/MasterDisplayGroup.qml" );
 const QUrl QML_BACKGROUND_URL( "qrc:/qml/master/DisplayGroupBackground.qml" );
+const QString WALL_OBJECT_NAME( "Wall" );
 }
 
 DisplayGroupView::DisplayGroupView( OptionsPtr options,
@@ -71,15 +70,15 @@ DisplayGroupView::DisplayGroupView( OptionsPtr options,
 
     setSource( QML_BACKGROUND_URL );
 
-    auto wallObject = rootObject()->findChild<QObject*>( WALL_OBJECT_NAME );
-    wallObject->setProperty( "numberOfTilesX", config.getTotalScreenCountX( ));
-    wallObject->setProperty( "numberOfTilesY", config.getTotalScreenCountY( ));
-    wallObject->setProperty( "mullionWidth", config.getMullionWidth( ));
-    wallObject->setProperty( "mullionHeight", config.getMullionHeight( ));
-    wallObject->setProperty( "screenWidth", config.getScreenWidth( ));
-    wallObject->setProperty( "screenHeight", config.getScreenHeight( ));
-    wallObject->setProperty( "wallWidth", config.getTotalWidth( ));
-    wallObject->setProperty( "wallHeight", config.getTotalHeight( ));
+    wallObject_ = rootObject()->findChild<QObject*>( WALL_OBJECT_NAME );
+    wallObject_->setProperty( "numberOfTilesX", config.getTotalScreenCountX( ));
+    wallObject_->setProperty( "numberOfTilesY", config.getTotalScreenCountY( ));
+    wallObject_->setProperty( "mullionWidth", config.getMullionWidth( ));
+    wallObject_->setProperty( "mullionHeight", config.getMullionHeight( ));
+    wallObject_->setProperty( "screenWidth", config.getScreenWidth( ));
+    wallObject_->setProperty( "screenHeight", config.getScreenHeight( ));
+    wallObject_->setProperty( "wallWidth", config.getTotalWidth( ));
+    wallObject_->setProperty( "wallHeight", config.getTotalHeight( ));
 }
 
 DisplayGroupView::~DisplayGroupView() {}
@@ -122,6 +121,20 @@ void DisplayGroupView::setDataModel( DisplayGroupPtr displayGroup )
 QmlControlPanel& DisplayGroupView::getControlPanel()
 {
     return controlPanel_;
+}
+
+QPointF DisplayGroupView::mapToWallPos( const QPointF& normalizedPos ) const
+{
+    const float scale = QQmlProperty::read( wallObject_, "scale" ).toFloat();
+    const float offsetX = QQmlProperty::read( wallObject_, "offsetX" ).toFloat();
+    const float offsetY = QQmlProperty::read( wallObject_, "offsetY" ).toFloat();
+
+    const float screenPosX = normalizedPos.x() * displayGroup_->width() *
+                             scale + offsetX;
+    const float screenPosY = normalizedPos.y() * displayGroup_->height() *
+                             scale + offsetY;
+
+    return QPointF( screenPosX, screenPosY );
 }
 
 void DisplayGroupView::clearScene()

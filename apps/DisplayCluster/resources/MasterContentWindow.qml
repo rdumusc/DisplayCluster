@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import DisplayCluster 1.0
-import DisplayClusterApp 1.0
 import "qrc:/qml/core/."
 import "qrc:/qml/core/style.js" as Style
 
@@ -37,31 +36,41 @@ BaseContentWindow {
         event.accepted = true;
     }
 
-    TouchMouseArea {
+    MultitouchArea
+    {
         id: windowMoveAndResizeArea
 
-        visible: !contentInteractionArea.visible
         anchors.fill: parent
+        referenceItem: windowRect.parent
+
+        visible: contentwindow.state !== ContentWindow.SELECTED &&
+                 contentwindow.border === ContentWindow.NOBORDER
+
+        onTapStarted: displaygroup.moveContentWindowToFront(contentwindow.id)
+        onTapEnded: {
+            contentwindow.state = ContentWindow.NONE
+            toggleControlsVisibility()
+        }
+
+        onPanStarted: contentwindow.state = ContentWindow.MOVING
+        onPan: contentwindow.controller.moveTo(Qt.point(contentwindow.x + delta.x,
+                                                        contentwindow.y + delta.y))
+        onPanEnded: contentwindow.state = ContentWindow.NONE
 
         onDoubleTap: toggleFocusMode()
-        onTouchBegin: displaygroup.moveContentWindowToFront(contentwindow.id)
-        onTouchEnd: contentwindow.state = ContentWindow.NONE
-        onTap: toggleControlsVisibility()
-        onPan: {
-            contentwindow.state = ContentWindow.MOVING
-            contentwindow.controller.moveTo(Qt.point(contentwindow.x + delta.x,
-                                                     contentwindow.y + delta.y))
-        }
+
         onPinch: {
             contentwindow.state = ContentWindow.RESIZING
-            contentwindow.controller.scale(position, pixelDelta)
+            var offsetY = displaygroup.showWindowBorders ? Style.windowBorderWidth : 0
+            offsetY = displaygroup.showWindowTitles ? Style.windowTitleHeight : offsetY
+            contentwindow.controller.scale(Qt.point(contentwindow.x + pos.x,contentwindow.y + pos.y - offsetY), pixelDelta)
         }
     }
 
-    TouchMouseArea {
+    MultitouchArea {
         id: contentInteractionArea
-
-        visible: contentwindow.state === ContentWindow.SELECTED
+        visible: contentwindow.state === ContentWindow.SELECTED &&
+                 contentwindow.border === ContentWindow.NOBORDER
 
         anchors.bottom: parent.bottom
         anchors.bottomMargin: windowRect.border.width
@@ -69,105 +78,14 @@ BaseContentWindow {
         width: parent.width - windowRect.widthOffset
         height: parent.height - windowRect.heightOffset
 
-        function removeOffset(position) {
-            // C++ interaction delegates don't have any knowledge of the title
-            // bar offset applied to this contentInteractionArea. Gesture
-            // positions must be passed without the offset.
-            return Qt.point(position.x, position.y - parent.yOffset);
-        }
+        referenceItem: windowRect.parent
 
         onDoubleTap: toggleFocusMode()
-        onTouchBegin: {
-            displaygroup.moveContentWindowToFront(contentwindow.id)
-            contentwindow.delegate.touchBegin(removeOffset(position))
-        }
-        onTouchEnd: contentwindow.delegate.touchEnd(removeOffset(position))
-        onTap: contentwindow.delegate.tap(removeOffset(position))
-        onTapAndHold: contentwindow.delegate.tapAndHold(removeOffset(position))
-        onPan: contentwindow.delegate.pan(removeOffset(position), delta)
-        onPinch: contentwindow.delegate.pinch(removeOffset(position), pixelDelta)
-        onSwipeLeft:contentwindow.delegate.swipeLeft()
-        onSwipeRight: contentwindow.delegate.swipeRight()
-        onSwipeUp: contentwindow.delegate.swipeUp()
-        onSwipeDown: contentwindow.delegate.swipeDown()
-        onKeyPress: contentwindow.delegate.keyPress(key, modifiers, text)
-        onKeyRelease: contentwindow.delegate.keyRelease(key, modifiers, text)
-    }
-
-    ResizeCircles {
-        resizeCirclesDelegate: touchBorderDelegate
-
-        Component {
-            id: touchBorderDelegate
-            ResizeCircle {
-                TouchArea {
-                    tapAndHoldEnabled: false
-                    doubleTapEnabled: false
-                    anchors.fill: parent
-                    onTouchBegin: {
-                        contentwindow.border = parent.border
-                        contentwindow.state = ContentWindow.RESIZING
-                    }
-                    onPan: {
-                        contentwindow.controller.resizeRelative(delta)
-                    }
-                    onTouchEnd: {
-                        contentwindow.border = ContentWindow.NOBORDER
-                        contentwindow.state = ContentWindow.NONE
-                    }
-                }
-            }
-        }
-    }
-
-    WindowControls {
-        listview.delegate: buttonDelegate
-        listview.header: fixedButtonsDelegate
-
-        Component {
-            id: fixedButtonsDelegate
-            Column {
-                CloseControlButton {
-                    TouchMouseArea {
-                        anchors.fill: parent
-                        onTap: closeWindow()
-                    }
-                }
-                OneToOneControlButton {
-                    TouchMouseArea {
-                        anchors.fill: parent
-                        onTap: contentwindow.controller.adjustSizeOneToOne()
-                    }
-                }
-                FocusControlButton {
-                    TouchMouseArea {
-                        anchors.fill: parent
-                        onTap: toggleFocusMode()
-                    }
-                }
-            }
-        }
-
-        Component {
-            id: buttonDelegate
-            WindowControlsDelegate {
-                TouchMouseArea {
-                    anchors.fill: parent
-                    onTap: action.trigger()
-                }
-            }
-        }
-    }
-
-    Text {
-        visible: !parent.titleBar.visible
-        text: contentwindow.label
-        font.pixelSize: 48
-        width: Math.min(paintedWidth, parent.width)
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.topMargin: 10
-        anchors.leftMargin: 10
+        onTapStarted: displaygroup.moveContentWindowToFront(contentwindow.id)
+        onTapEnded: contentwindow.delegate.tap(pos)
+        onTapAndHold: contentwindow.delegate.tapAndHold(pos)
+        onPan: contentwindow.delegate.pan(pos, Qt.point(delta.x, delta.y))
+        onPinch: contentwindow.delegate.pinch(pos, pixelDelta)
     }
 
     ContentWindowButton {
@@ -199,10 +117,93 @@ BaseContentWindow {
             contentwindow.state = ContentWindow.RESIZING
         }
         mousearea.onPositionChanged: {
+            if(!mousearea.pressed)
+                return
             var newSize = Qt.size(mouse.x - startMousePos.x + startSize.width,
                                   mouse.y - startMousePos.y + startSize.height)
             contentwindow.controller.resize(newSize)
         }
         mousearea.onReleased: contentwindow.state = ContentWindow.NONE
+    }
+
+    ResizeCircles {
+        resizeCirclesDelegate: touchBorderDelegate
+        Component {
+            id: touchBorderDelegate
+            ResizeCircle {
+                MultitouchArea
+                {
+                    anchors.fill: parent
+                    referenceItem: windowRect.parent
+                    panThreshold: 0
+
+                    onPanStarted: {
+                        contentwindow.border = parent.border
+                        contentwindow.state = ContentWindow.RESIZING
+                    }
+
+                    onPan: contentwindow.controller.resizeRelative(delta)
+
+                    onPanEnded: {
+                        contentwindow.border = ContentWindow.NOBORDER
+                        contentwindow.state = ContentWindow.NONE
+                    }
+                }
+            }
+        }
+    }
+
+    WindowControls {
+        listview.delegate: buttonDelegate
+        listview.header: fixedButtonsDelegate
+
+        Component {
+            id: fixedButtonsDelegate
+            Column {
+                CloseControlButton {
+                    MultitouchArea
+                    {
+                        anchors.fill: parent
+                        onTapEnded: closeWindow()
+                    }
+                }
+                OneToOneControlButton {
+                    MultitouchArea
+                    {
+                        anchors.fill: parent
+                        onTapEnded: contentwindow.controller.adjustSizeOneToOne()
+                    }
+                }
+                FocusControlButton {
+                    MultitouchArea
+                    {
+                        anchors.fill: parent
+                        onTapEnded: toggleFocusMode()
+                    }
+                }
+            }
+        }
+
+        Component {
+            id: buttonDelegate
+            WindowControlsDelegate {
+                MultitouchArea
+                {
+                    anchors.fill: parent
+                    onTapEnded: action.trigger()
+                }
+            }
+        }
+    }
+
+    Text {
+        visible: !parent.titleBar.visible
+        text: contentwindow.label
+        font.pixelSize: 48
+        width: Math.min(paintedWidth, parent.width)
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.topMargin: 10
+        anchors.leftMargin: 10
     }
 }

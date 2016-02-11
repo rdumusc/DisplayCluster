@@ -25,12 +25,6 @@ set(DCCORE_LINK_LIBRARIES
     ${FFMPEG_LIBRARIES}
 )
 
-if(ENABLE_TUIO_TOUCH_LISTENER)
-  list(APPEND DCCORE_MOC_PUBLIC_HEADERS MultiTouchListener.h)
-  list(APPEND DCCORE_SOURCES MultiTouchListener.cpp)
-  list(APPEND DCCORE_LINK_LIBRARIES PUBLIC TUIO)
-endif()
-
 if(ENABLE_PDF_SUPPORT)
   list(APPEND DCCORE_PUBLIC_HEADERS
     PDFTiler.h
@@ -68,11 +62,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   FFMPEGVideoStream.h
   FileCommandHandler.h
   FpsCounter.h
-  gestures/DoubleTapGestureRecognizer.h
-  gestures/PanGesture.h
-  gestures/PanGestureRecognizer.h
-  gestures/PinchGesture.h
-  gestures/PinchGestureRecognizer.h
   LayoutEngine.h
   Image.h
   log.h
@@ -139,6 +128,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MovieContent.h
   MovieSynchronizer.h
   MovieUpdater.h
+  MultitouchArea.h
   Options.h
   PixelStreamInteractionDelegate.h
   PixelStreamSynchronizer.h
@@ -217,6 +207,7 @@ list(APPEND DCCORE_SOURCES
   MPIChannel.cpp
   MPIContext.cpp
   MPINospin.cpp
+  MultitouchArea.cpp
   Options.cpp
   PixelStreamContent.cpp
   PixelStreamInteractionDelegate.cpp
@@ -257,11 +248,6 @@ list(APPEND DCCORE_SOURCES
   configuration/Configuration.cpp
   configuration/MasterConfiguration.cpp
   configuration/WallConfiguration.cpp
-  gestures/DoubleTapGestureRecognizer.cpp
-  gestures/PanGesture.cpp
-  gestures/PanGestureRecognizer.cpp
-  gestures/PinchGesture.cpp
-  gestures/PinchGestureRecognizer.cpp
   localstreamer/AsyncImageLoader.cpp
   localstreamer/CommandLineOptions.cpp
   localstreamer/DockPixelStreamer.cpp

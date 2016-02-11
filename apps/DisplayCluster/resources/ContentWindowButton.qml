@@ -7,9 +7,12 @@ Image {
     height: width
     sourceSize.width: 512
     sourceSize.height: 512
+
     MouseArea {
         id: mousearea
+        // Work around to prevent MouseArea from stealing touch events
+        hoverEnabled: true
+        acceptedButtons: containsMouse ? Qt.LeftButton : Qt.NoButton
         anchors.fill: parent
-        preventStealing: true
     }
 }

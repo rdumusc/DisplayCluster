@@ -70,6 +70,9 @@ public:
     /** Get the control panel in this view. */
     QmlControlPanel& getControlPanel();
 
+    /** Map a normalized touch event on the wall to this view's coordinates. */
+    QPointF mapToWallPos( const QPointF& normalizedPos ) const;
+
 signals:
     /** Emitted when a user taps the background. */
     void backgroundTap( QPointF pos );
@@ -93,6 +96,7 @@ private:
     DisplayGroupPtr displayGroup_;
 
     QQuickItem* displayGroupItem_;
+    QObject* wallObject_;
     QmlControlPanel controlPanel_;
 
     typedef QMap<QUuid, QQuickItem*> UuidToWindowMap;

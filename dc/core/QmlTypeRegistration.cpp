@@ -42,6 +42,7 @@
 #include "ContentActionsModel.h"
 #include "ContentInteractionDelegate.h"
 #include "Markers.h"
+#include "MultitouchArea.h"
 #include "QmlControlPanel.h"
 
 #include <QtQml>
@@ -57,6 +58,7 @@ struct QmlTypeRegistration
     QmlTypeRegistration()
     {
         qmlRegisterType<Markers>( QML_MODULE, 1, 0, "Markers");
+        qmlRegisterType<MultitouchArea>( QML_MODULE, 1, 0, "MultitouchArea");
         qmlRegisterType<ContentActionsModel>(
                     QML_MODULE, 1, 0, "ContentActionsModel");
 
