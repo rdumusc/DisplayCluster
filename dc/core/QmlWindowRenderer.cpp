@@ -84,9 +84,9 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow,
     _contentSynchronizer->update( *_contentWindow, visibleArea );
 }
 
-void QmlWindowRenderer::setStackingOrder( const int value )
+QQuickItem* QmlWindowRenderer::getQuickItem()
 {
-    _windowItem->setProperty( "stackingOrder", value );
+    return _windowItem;
 }
 
 ContentWindowPtr QmlWindowRenderer::getContentWindow()

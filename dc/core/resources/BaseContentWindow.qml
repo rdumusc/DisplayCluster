@@ -6,7 +6,6 @@ Rectangle {
     id: windowRect
 
     property alias titleBar: titleBar
-    property int stackingOrder: 0
     property bool isBackground: false
     property bool animating: widthAnimation.running || heightAnimation.running
                              || unfocusTransition.running
@@ -21,7 +20,7 @@ Rectangle {
 
     x: contentwindow.x - xOffset
     y: contentwindow.y - yOffset
-    z: stackingOrder
+    z: isBackground ? Style.backgroundZOrder : 0
     width: contentwindow.width + widthOffset
     height: contentwindow.height + heightOffset
 
@@ -58,7 +57,7 @@ Rectangle {
                 width: contentwindow.focusedCoordinates.width + widthOffset
                 height: contentwindow.focusedCoordinates.height + heightOffset
                 border.color: Style.windowBorderSelectedColor
-                z: stackingOrder + Style.focusZorder
+                z: Style.focusZorder
             }
         },
         State {
