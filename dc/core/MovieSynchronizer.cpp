@@ -43,12 +43,13 @@
 #include "MovieContent.h"
 #include "MovieProvider.h"
 #include "MovieUpdater.h"
+#include "Tile.h"
 
 MovieSynchronizer::MovieSynchronizer( const QString& uri,
                                       MovieProvider& provider )
     : _provider( provider )
     , _uri( uri )
-    , _timestamp( 0.0 )
+    , _timestamp( -1.0 )
 {
     _updater = _provider.open( uri );
     connect( _updater.get(), SIGNAL( pictureUpdated( double )),
@@ -65,8 +66,6 @@ void MovieSynchronizer::update( const ContentWindow& window,
 {
     _updater->update( static_cast<const MovieContent&>( *window.getContent( )));
     _updater->setVisible( !visibleArea.isEmpty( ));
-
-    BasicSynchronizer::update( window, visibleArea );
 }
 
 QString MovieSynchronizer::getSourceParams() const
@@ -86,6 +85,10 @@ QString MovieSynchronizer::getStatistics() const
 
 void MovieSynchronizer::onPictureUpdated( const double timestamp )
 {
+    // Delay making the Tile visible until first picture is ready
+    if( _timestamp < 0.0 && _updater->isVisible( ))
+        qobject_cast<Tile*>( getTiles().front( ))->setVisible( true );
+
     _timestamp = timestamp;
     emit sourceParamsChanged();
 

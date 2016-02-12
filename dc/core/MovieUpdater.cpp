@@ -66,6 +66,11 @@ MovieUpdater::MovieUpdater( const QString& uri )
 
 MovieUpdater::~MovieUpdater() {}
 
+bool MovieUpdater::isVisible() const
+{
+    return _visible;
+}
+
 void MovieUpdater::setVisible( const bool visible )
 {
     _visible = visible;
@@ -114,9 +119,12 @@ void MovieUpdater::sync( WallToWallChannel& channel )
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
 }
 
-PicturePtr MovieUpdater::getPicture()
+QImage MovieUpdater::getImage() const
 {
-    return _currentPicture;
+    if( !_currentPicture )
+        return QImage();
+
+    return _currentPicture->toQImage();
 }
 
 double MovieUpdater::_getDelay() const
