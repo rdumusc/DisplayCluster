@@ -1,5 +1,6 @@
 .pragma library
 
+var backgroundZOrder = -1;
 var focusTransitionTime = 500;
 var focusContextColor = "black"
 var focusContextOpacity = 0.7;

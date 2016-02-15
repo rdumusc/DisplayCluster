@@ -58,8 +58,6 @@
 namespace
 {
 const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/WallDisplayGroup.qml" );
-const QString BACKGROUND_ITEM_OBJECT_NAME( "BackgroundItem" );
-const int BACKGROUND_STACKING_ORDER = -1;
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
@@ -107,7 +105,8 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
 
     // Update windows, creating new ones if needed
     QSet<QUuid> updatedWindows;
-    int stackingOrder = BACKGROUND_STACKING_ORDER + 1;
+    const QQuickItem* parentItem = nullptr;
+    const VisibilityHelper helper( *displayGroup, _screenRect );
     for( ContentWindowPtr window : contentWindows )
     {
         const QUuid& id = window->getID();
@@ -117,9 +116,13 @@ void DisplayGroupRenderer::setDisplayGroup( DisplayGroupPtr displayGroup )
         if( !_windowItems.contains( id ))
             _createWindowQmlItem( window );
 
-        const VisibilityHelper helper( *displayGroup, _screenRect );
         _windowItems[id]->update( window, helper.getVisibleArea( *window ));
-        _windowItems[id]->setStackingOrder( stackingOrder++ );
+
+        // Update stacking order
+        QQuickItem* item = _windowItems[id]->getQuickItem();
+        if( parentItem )
+            item->stackAfter( parentItem );
+        parentItem = item;
     }
 
     // Remove old windows
@@ -201,5 +204,8 @@ void DisplayGroupRenderer::_setBackground( ContentPtr content )
                                                         *_displayGroupItem,
                                                         window,
                                                         true ));
-    _backgroundWindowItem->setStackingOrder( BACKGROUND_STACKING_ORDER );
+
+    DisplayGroup emptyGroup( _screenRect.size( ));
+    const VisibilityHelper helper( emptyGroup, _screenRect );
+    _backgroundWindowItem->update( window, helper.getVisibleArea( *window ));
 }

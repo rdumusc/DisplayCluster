@@ -63,8 +63,8 @@ public:
     /** Update the qml object with a new data model. */
     void update( ContentWindowPtr contentWindow, const QRectF& visibleArea );
 
-    /** Set the z value of the window. */
-    void setStackingOrder( int value );
+    /** Get the QML item. */
+    QQuickItem* getQuickItem();
 
     /** Get the ContentWindow. */
     ContentWindowPtr getContentWindow();

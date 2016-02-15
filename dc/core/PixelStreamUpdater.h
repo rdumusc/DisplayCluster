@@ -67,7 +67,7 @@ public:
     /**
      * Get a segment by its frame- and tile-index.
      */
-    QImage getTileImage( uint frameIndex, uint tileIndex );
+    QImage getTileImage( uint tileIndex );
 
     /** Get the list of tiles for use by QML repeater. */
     const Tiles& getTiles() const;
@@ -81,33 +81,31 @@ public slots:
 
 signals:
     /** Emitted when a new picture has become available. */
-    void pictureUpdated( uint frameIndex );
+    void pictureUpdated( bool requestImageUpdate );
 
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
 
-    /** Emitted when the number of tiles has changed after a successful swap. */
+    /** Emitted when the number of tiles has changed. */
     void tilesChanged();
 
 private:
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     SwapSyncFrame _swapSyncFrame;
 
-    std::deque< std::pair< size_t, deflect::FramePtr > > _frames;
-
-    uint _frameIndex;
-    uint _requestedFrameIndex;
+    deflect::FramePtr _currentFrame;
 
     Tiles _tiles;
     QRectF _visibleArea;
+    bool _tilesDirty;
 
     typedef std::vector<size_t> SegmentIndices;
     SegmentIndices _visibleSet;
 
     void _onFrameSwapped( deflect::FramePtr frame );
     void _decodeSegments( deflect::Segments& segments );
-    void _computeVisibleSet( const deflect::Segments& segments );
-    void _refreshTiles( const deflect::Segments& segments );
+    SegmentIndices _computeVisibleSet( const deflect::Segments& segments) const;
+    bool _refreshTiles( const deflect::Segments& segments );
 };
 
 #endif

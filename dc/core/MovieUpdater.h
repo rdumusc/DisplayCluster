@@ -59,11 +59,13 @@ public:
     explicit MovieUpdater( const QString& uri );
     ~MovieUpdater();
 
+    bool isVisible() const;
     void setVisible( bool visible );
+
     void update( const MovieContent& movie );
     void sync( WallToWallChannel& channel );
 
-    PicturePtr getPicture();
+    QImage getImage() const;
 
 signals:
     void pictureUpdated( double timestamp );

@@ -48,7 +48,7 @@ VisibilityHelper::VisibilityHelper( const DisplayGroup& displayGroup,
     , _visibleArea( visibleArea )
 {}
 
-QRectF cutOverlap( const QRectF& window, const QRectF& other )
+QRectF _cutOverlap( const QRectF& window, const QRectF& other )
 {
     if( other.contains( window ))
         return QRectF();
@@ -90,6 +90,9 @@ QRectF VisibilityHelper::getVisibleArea( const ContentWindow& window ) const
     if( area.isEmpty( ))
         return area;
 
+    if( window.isFocused( ))
+        return area.translated( -windowCoords.x(), -windowCoords.y( ));
+
     bool isAbove = false;
     for( auto win : _displayGroup.getContentWindows( ))
     {
@@ -99,7 +102,7 @@ QRectF VisibilityHelper::getVisibleArea( const ContentWindow& window ) const
             continue;
         }
         if( isAbove || win->isFocused( ))
-            area = cutOverlap( area, win->getDisplayCoordinates( ));
+            area = _cutOverlap( area, win->getDisplayCoordinates( ));
 
         if( area.isEmpty( ))
             return area;

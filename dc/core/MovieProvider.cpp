@@ -68,16 +68,10 @@ QImage MovieProvider::requestImage( const QString& id, QSize* size,
     if( !_movies.count( movieFile ))
         return QImage();
 
-    PicturePtr picture = _movies[ movieFile ]->getPicture();
-    if( !picture )
-        return QImage();
-
-    QImage image = picture->toQImage();
+    QImage image = _movies[ movieFile ]->getImage();
 
     if( !requestedSize.isEmpty( ))
         image = image.scaled( requestedSize );
-    else
-        image = image.copy();
 
     *size = image.size();
     return image;
