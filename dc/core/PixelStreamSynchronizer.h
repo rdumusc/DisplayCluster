@@ -80,7 +80,7 @@ public:
     bool allowsTextureCaching() const override;
 
     /** @copydoc ContentSynchronizer::getTiles */
-    Tiles getTiles() const override;
+    Tiles& getTiles() override;
 
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
@@ -95,7 +95,7 @@ private:
     uint _frameIndex;
     FpsCounter _fpsCounter;
 
-    void _onPictureUpdated( bool requestImageUpdate );
+    void _onPictureUpdated();
 };
 
 #endif

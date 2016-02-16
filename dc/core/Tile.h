@@ -58,10 +58,8 @@ class Tile : public QObject
 public:
     // false-positive on qt signals for Q_PROPERTY notifiers
     // cppcheck-suppress uninitMemberVar
-    Tile( const int index, const QRect& rect, QObject* parent_,
-          const bool visible )
-        : QObject( parent_ )
-        , _index( index )
+    Tile( const int index, const QRect& rect, const bool visible )
+        : _index( index )
         , _rect( rect )
         , _visible( visible )
     {}

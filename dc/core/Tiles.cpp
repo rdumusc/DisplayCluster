@@ -37,53 +37,122 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "BasicSynchronizer.h"
+#include "Tiles.h"
 
-#include "Tile.h"
-
-BasicSynchronizer::BasicSynchronizer()
+namespace
 {
+const int ROLE_TILE = Qt::UserRole;
 }
 
-void BasicSynchronizer::update( const ContentWindow& window,
-                                const QRectF& visibleArea )
+Tiles::Tiles( QObject* parent_ )
+    : QAbstractListModel( parent_ )
+{}
+
+QHash<int, QByteArray> Tiles::roleNames() const
 {
-    Q_UNUSED( window );
-
-
-    // Don't switch visibility on / off because each cycle triggers an
-    // unnecessary image request from the provider
-    if( !visibleArea.isEmpty( ))
-        showTile();
+    QHash<int, QByteArray> roles;
+    roles[ ROLE_TILE ] = "tile";
+    return roles;
 }
 
-QString BasicSynchronizer::getSourceParams() const
+QVariant Tiles::data( const QModelIndex& index_, const int role ) const
 {
-    return QString();
+    if( index_.row() < 0 || index_.row() >= rowCount() || !index_.isValid( ))
+        return QVariant();
+
+    if( role == ROLE_TILE )
+    {
+        QVariant variant;
+        variant.setValue( static_cast<QObject*>( _tiles[ index_.row() ].get( )));
+        return variant;
+    }
+    return QVariant();
 }
 
-bool BasicSynchronizer::allowsTextureCaching() const
+int Tiles::rowCount( const QModelIndex& parent_ ) const
 {
-    return true;
+    Q_UNUSED( parent_ );
+    return _tiles.size();
 }
 
-Tiles& BasicSynchronizer::getTiles()
+void Tiles::add( TilePtr tile )
+{
+    if( contains( tile->getIndex( )))
+        return;
+
+    const int tileIndex = rowCount();
+
+    beginInsertRows( QModelIndex(), tileIndex, tileIndex );
+
+    _tiles.push_back( std::move( tile ));
+
+    endInsertRows();
+}
+
+Tile* Tiles::get( const int tileIndex )
+{
+    auto it = _findTile( tileIndex );
+    return it  == _tiles.end() ? nullptr : it->get();
+}
+
+void Tiles::reset( TileList&& tiles )
+{
+    beginResetModel();
+
+    _tiles = std::move( tiles );
+
+    endResetModel();
+}
+
+const TileList& Tiles::getTileList() const
 {
     return _tiles;
 }
 
-QSize BasicSynchronizer::getTilesArea() const
+bool Tiles::update( const int tileIndex, const QRect& coordinates )
 {
-    return QSize();
+    auto it = _findTile( tileIndex );
+
+    if( it  == _tiles.end( ))
+        return false;
+
+    (*it)->update( coordinates );
+
+    // No need to emit data changed, Tiles does the notification itself
+    //const int rowIndex = it - _tiles.begin();
+    //emit dataChanged( index( rowIndex, 0 ), index( rowIndex, 0 ));
+
+    return true;
 }
 
-QString BasicSynchronizer::getStatistics() const
+void Tiles::remove( const int tileIndex )
 {
-    return QString();
+    auto it = _findTile( tileIndex );
+
+    if( it  == _tiles.end( ))
+        return;
+
+    const int rowIndex = it - _tiles.begin();
+    beginRemoveRows( QModelIndex(), rowIndex, rowIndex );
+
+    _tiles.erase( it );
+
+    endRemoveRows();
 }
 
-void BasicSynchronizer::showTile()
+bool Tiles::contains( const int tileIndex ) const
 {
-    if( !_tiles.rowCount( ))
-        _tiles.add( make_unique<Tile>( -1, QRect(), true ));
+    return _findTile( tileIndex ) != _tiles.end();
+}
+
+TileList::const_iterator Tiles::_findTile( const int tileIndex ) const
+{
+   return std::find_if( _tiles.begin(), _tiles.end(), [&tileIndex]( const TilePtr& tile )
+             { return tile->getIndex() == tileIndex; });
+}
+
+TileList::iterator Tiles::_findTile( const int tileIndex )
+{
+   return std::find_if( _tiles.begin(), _tiles.end(), [&tileIndex]( const TilePtr& tile )
+             { return tile->getIndex() == tileIndex; });
 }

@@ -78,6 +78,7 @@ class Renderable;
 class TestPattern;
 class TextureProvider;
 class Tile;
+class Tiles;
 class WallConfiguration;
 class WallToWallChannel;
 class WallWindow;
@@ -102,14 +103,14 @@ typedef std::shared_ptr< PixelStreamUpdater > PixelStreamUpdaterSharedPtr;
 typedef boost::shared_ptr< QmlWindowRenderer > QmlWindowPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
 typedef boost::shared_ptr< TestPattern > TestPatternPtr;
+typedef std::unique_ptr<Tile> TilePtr;
 typedef boost::shared_ptr< WallWindow > WallWindowPtr;
 
 typedef std::set< ContentWindowPtr > ContentWindowSet;
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
-
-class QObject;
-typedef QList< QObject* > Tiles;
+typedef std::vector<TilePtr> TileList;
+typedef std::vector<size_t> Indices;
 
 static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 static const QSize UNDEFINED_SIZE( -1, -1 );
@@ -154,6 +155,15 @@ template<typename R>
 bool is_ready( std::future<R> const& f )
 {
     return f.wait_for( std::chrono::seconds( 0 )) == std::future_status::ready;
+}
+
+template <typename T>
+T set_difference( const T& v1, const T& v2 )
+{
+    T diff;
+    std::set_difference( v1.begin(), v1.end(), v2.begin(), v2.end(),
+                         std::inserter( diff, diff.begin( )));
+    return diff;
 }
 
 #endif

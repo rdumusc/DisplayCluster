@@ -387,6 +387,7 @@ QImage DynamicTexture::getTileImage( const uint tileIndex ) const
 
 void DynamicTexture::triggerTileLoad( Tile* tile )
 {
+    QMutexLocker lock( &_tilesCacheMutex );
     if( _tilesCache.count( tile->getIndex( )))
     {
         tile->setVisible( true );

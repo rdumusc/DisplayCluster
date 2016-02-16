@@ -37,53 +37,56 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "BasicSynchronizer.h"
+#ifndef TILES_H
+#define TILES_H
 
+#include "types.h"
 #include "Tile.h"
 
-BasicSynchronizer::BasicSynchronizer()
+#include <QtCore/QAbstractListModel>
+
+/**
+ * Exposes Tiles through a model for using in dynamic QML views.
+ */
+class Tiles : public QAbstractListModel
 {
-}
+    Q_OBJECT
+    Q_DISABLE_COPY( Tiles )
 
-void BasicSynchronizer::update( const ContentWindow& window,
-                                const QRectF& visibleArea )
-{
-    Q_UNUSED( window );
+public:
+    Tiles( QObject* parent = 0 );
 
+    QVariant data( const QModelIndex &index, int role ) const override;
+    int rowCount( const QModelIndex& parent = QModelIndex( )) const override;
 
-    // Don't switch visibility on / off because each cycle triggers an
-    // unnecessary image request from the provider
-    if( !visibleArea.isEmpty( ))
-        showTile();
-}
+    /** Add a tile. */
+    void add( TilePtr tile );
 
-QString BasicSynchronizer::getSourceParams() const
-{
-    return QString();
-}
+    /** Get a tile. */
+    Tile* get( int tileIndex );
 
-bool BasicSynchronizer::allowsTextureCaching() const
-{
-    return true;
-}
+    /** Update a tile coordinates. */
+    bool update( int tileIndex, const QRect& coordinates );
 
-Tiles& BasicSynchronizer::getTiles()
-{
-    return _tiles;
-}
+    /** Remove a Tile. */
+    void remove( int tileIndex );
 
-QSize BasicSynchronizer::getTilesArea() const
-{
-    return QSize();
-}
+    /** Reset the model with a new list of tiles. */
+    void reset( TileList&& tiles );
 
-QString BasicSynchronizer::getStatistics() const
-{
-    return QString();
-}
+    /** Check for the existence of a tile. */
+    bool contains( int tileIndex ) const;
 
-void BasicSynchronizer::showTile()
-{
-    if( !_tiles.rowCount( ))
-        _tiles.add( make_unique<Tile>( -1, QRect(), true ));
-}
+    /** Get the internal list of tiles. */
+    const TileList& getTileList() const;
+
+private:
+    QHash<int, QByteArray> roleNames() const final;
+
+    TileList _tiles;
+
+    TileList::const_iterator _findTile( int tileIndex ) const;
+    TileList::iterator _findTile( int tileIndex );
+};
+
+#endif

@@ -55,8 +55,6 @@ PixelStreamSynchronizer::PixelStreamSynchronizer( const QString& uri,
 
     connect( _updater.get(), &PixelStreamUpdater::pictureUpdated,
              this, &PixelStreamSynchronizer::_onPictureUpdated );
-    connect( _updater.get(), &PixelStreamUpdater::tilesChanged,
-             this, &ContentSynchronizer::tilesChanged );
 }
 
 PixelStreamSynchronizer::~PixelStreamSynchronizer()
@@ -84,7 +82,7 @@ bool PixelStreamSynchronizer::allowsTextureCaching() const
     return false;
 }
 
-Tiles PixelStreamSynchronizer::getTiles() const
+Tiles& PixelStreamSynchronizer::getTiles()
 {
     return _updater->getTiles();
 }
@@ -99,13 +97,10 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-void PixelStreamSynchronizer::_onPictureUpdated( const bool requestImageUpdate )
+void PixelStreamSynchronizer::_onPictureUpdated()
 {
-    if( requestImageUpdate )
-    {
-        ++_frameIndex;
-        emit sourceParamsChanged();
-    }
+    ++_frameIndex;
+    emit sourceParamsChanged();
 
     _fpsCounter.tick();
     emit statisticsChanged();
