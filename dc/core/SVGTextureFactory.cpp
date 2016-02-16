@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,11 +37,10 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGProvider.h"
+#include "SVGTextureFactory.h"
 
 #include "log.h"
 #include "types.h" // for make_unique()
-#include "ImageProviderStringifier.h"
 
 #include <QQuickWindow>
 #include <QOpenGLPaintDevice>
@@ -51,36 +50,6 @@
 namespace
 {
 const int MULTI_SAMPLE_ANTI_ALIASING_SAMPLES = 8;
-const QSize PREVIEW_SIZE( 512, 512 );
-}
-
-const QString SVGProvider::ID( "svg" );
-
-SVGProvider::SVGProvider()
-    : QQuickImageProvider( QQmlImageProviderBase::Texture,
-                           ForceAsynchronousImageLoading )
-{}
-
-SVGProvider::~SVGProvider() {}
-
-QQuickTextureFactory* SVGProvider::requestTexture( const QString& id,
-                                                   QSize* size,
-                                                   const QSize& requestedSize )
-{
-    QStringList params = id.split( "#" );
-    if( params.isEmpty( ))
-        return nullptr;
-
-    const QString& uri = params[0];
-    QRectF zoomRect( UNIT_RECTF );
-    if( params.size() > 1 )
-        zoomRect = destringify( params[1] );
-
-    SVGTextureFactory* factory = new SVGTextureFactory( uri, requestedSize,
-                                                        zoomRect );
-    if( size )
-        *size = factory->textureSize();
-    return factory;
 }
 
 QRectF getViewBox( const QRectF& zoomRect, const QRectF& svgExtents )
@@ -116,8 +85,6 @@ SVGTextureFactory::SVGTextureFactory( const QString& uri,
 
     _svgRenderer.setViewBox( getViewBox( zoomRect, _svgRenderer.viewBoxF( )));
 }
-
-SVGTextureFactory::~SVGTextureFactory() {}
 
 void _saveGLState()
 {

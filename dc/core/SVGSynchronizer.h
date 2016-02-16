@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,38 +37,29 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "ImageProviderStringifier.h"
+#ifndef SVGSYNCHRONIZER_H
+#define SVGSYNCHRONIZER_H
 
-#include <QTextStream>
+#include "VectorialSynchronizer.h"
 
-#define REAL_PRECISION 5
-#define REAL_SEPARATOR ';'
-
-QString stringify( const QRectF& rect )
+/**
+ * Synchronize SVG content.
+ */
+class SVGSynchronizer : public VectorialSynchronizer
 {
-    QString string;
-    QTextStream stream( &string );
-    stream.setRealNumberPrecision( REAL_PRECISION );
-    stream << rect.x() << REAL_SEPARATOR;
-    stream << rect.y() << REAL_SEPARATOR;
-    stream << rect.width() << REAL_SEPARATOR;
-    stream << rect.height();
-    return string;
-}
+    Q_OBJECT
+    Q_DISABLE_COPY( SVGSynchronizer )
 
-QRectF destringify( const QString& rectString )
-{
-    QStringList list = rectString.split( REAL_SEPARATOR );
-    if( list.size() != 4 )
-        return QRectF();
+public:
+    /** Constructor. */
+    explicit SVGSynchronizer( const QString& uri );
 
-    QList<qreal> values;
-    bool ok = false;
-    for( const QString& string : list )
-    {
-        values.push_back( string.toDouble( &ok ));
-        if( !ok )
-            return QRectF();
-    }
-    return QRectF( values[0], values[1], values[2], values[3] );
-}
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) override;
+
+    /** @copydoc ContentSynchronizer::getTileImage */
+    QImage getTileImage( uint tileIndex ) const override;
+};
+
+#endif

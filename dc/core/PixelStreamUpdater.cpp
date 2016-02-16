@@ -72,7 +72,7 @@ Tiles& PixelStreamUpdater::getTiles()
     return _tiles;
 }
 
-QImage PixelStreamUpdater::getTileImage( const uint tileIndex )
+QImage PixelStreamUpdater::getTileImage( const uint tileIndex ) const
 {
     if( !_currentFrame )
         throw std::runtime_error( "No frames yet" );

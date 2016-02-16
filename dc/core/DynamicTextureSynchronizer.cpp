@@ -39,24 +39,15 @@
 
 #include "DynamicTextureSynchronizer.h"
 
-#include "TextureProvider.h"
 #include "Tile.h"
 #include "ZoomHelper.h"
 
 #include <QTextStream>
 
-DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri,
-                                                        TextureProvider& provider )
-    : _uri( uri )
-    , _provider( provider )
-    , _reader( provider.openDynamicTexture( uri ))
+DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
+    : _reader( new DynamicTexture( uri ))
     , _lod( 0 )
 {
-}
-
-DynamicTextureSynchronizer::~DynamicTextureSynchronizer()
-{
-    _provider.closeDynamicTexture( _uri );
 }
 
 void DynamicTextureSynchronizer::update( const ContentWindow& window,
@@ -68,9 +59,14 @@ void DynamicTextureSynchronizer::update( const ContentWindow& window,
     _updateTiles( helper.toTilesArea( visibleArea, tilesSurface ), lod );
 }
 
-QString DynamicTextureSynchronizer::getSourceParams() const
+void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    return QString();
+    Q_UNUSED( channel );
+}
+
+bool DynamicTextureSynchronizer::needRedraw() const
+{
+    return _reader->hasPendingTileLoads();
 }
 
 bool DynamicTextureSynchronizer::allowsTextureCaching() const
@@ -96,6 +92,11 @@ QString DynamicTextureSynchronizer::getStatistics() const
     const QSize& area = getTilesArea();
     stream << "  res: " << area.width() << "x" << area.height();
     return stats;
+}
+
+QImage DynamicTextureSynchronizer::getTileImage( const uint tileIndex ) const
+{
+    return _reader->getTileImage( tileIndex );
 }
 
 void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,

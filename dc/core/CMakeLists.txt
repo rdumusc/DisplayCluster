@@ -32,16 +32,14 @@ if(ENABLE_TUIO_TOUCH_LISTENER)
 endif()
 
 if(ENABLE_PDF_SUPPORT)
-  list(APPEND DCCORE_PUBLIC_HEADER
-    PDFProvider.h
-  )
   list(APPEND DCCORE_MOC_PUBLIC_HEADERS
     PDFContent.h
+    PDFSynchronizer.h
   )
   list(APPEND DCCORE_SOURCES
     PDF.cpp
     PDFContent.cpp
-    PDFProvider.cpp
+    PDFSynchronizer.cpp
     PDFInteractionDelegate.cpp
     thumbnail/PDFThumbnailGenerator.cpp
   )
@@ -68,9 +66,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   gestures/PinchGesture.h
   gestures/PinchGestureRecognizer.h
   LayoutEngine.h
-  ImageProviderStringifier.h
   log.h
-  MovieProvider.h
   MPIChannel.h
   MPIContext.h
   MPINospin.h
@@ -82,10 +78,10 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   StatePreview.h
   StateSerializationHelper.h
   SVGContent.h
-  SVGProvider.h
+  SVGTextureFactory.h
   TestPattern.h
   TextureContent.h
-  TextureProvider.h
+  TextureFactory.h
   VisibilityHelper.h
   ZoomInteractionDelegate.h
   ZoomHelper.h
@@ -122,6 +118,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   DisplayGroupRenderer.h
   DynamicTexture.h
   DynamicTextureSynchronizer.h
+  ImageSynchronizer.h
   Markers.h
   MasterFromWallChannel.h
   MasterToWallChannel.h
@@ -130,13 +127,14 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MovieUpdater.h
   Options.h
   PixelStreamInteractionDelegate.h
-  PixelStreamProvider.h
   PixelStreamSynchronizer.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
   QuickRenderer.h
   QmlControlPanel.h
   RenderController.h
+  SVGSynchronizer.h
+  TextureProvider.h
   Tile.h
   Tiles.h
   VectorialSynchronizer.h
@@ -185,14 +183,13 @@ list(APPEND DCCORE_SOURCES
   FileCommandHandler.cpp
   FpsCounter.cpp
   LayoutEngine.cpp
-  ImageProviderStringifier.cpp
+  ImageSynchronizer.cpp
   log.cpp
   Markers.cpp
   MasterFromWallChannel.cpp
   MasterToWallChannel.cpp
   MetaTypeRegistration.cpp
   MovieContent.cpp
-  MovieProvider.cpp
   MovieSynchronizer.cpp
   MovieUpdater.cpp
   MPIChannel.cpp
@@ -201,7 +198,6 @@ list(APPEND DCCORE_SOURCES
   Options.cpp
   PixelStreamContent.cpp
   PixelStreamInteractionDelegate.cpp
-  PixelStreamProvider.cpp
   PixelStreamSynchronizer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
@@ -215,9 +211,11 @@ list(APPEND DCCORE_SOURCES
   StatePreview.cpp
   StateSerializationHelper.cpp
   SVGContent.cpp
-  SVGProvider.cpp
+  SVGTextureFactory.cpp
+  SVGSynchronizer.cpp
   TestPattern.cpp
   TextureContent.cpp
+  TextureFactory.cpp
   TextureProvider.cpp
   Tiles.cpp
   VectorialSynchronizer.cpp

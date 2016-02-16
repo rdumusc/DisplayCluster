@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,51 +37,28 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXELSTREAMPROVIDER_H
-#define PIXELSTREAMPROVIDER_H
+#include "TextureFactory.h"
 
-#include "types.h"
+#include "ContentSynchronizer.h"
 
-#include <QQuickImageProvider>
+#include <QQuickWindow>
 
-/**
- * Provides PixelStream frames to QML.
- */
-class PixelStreamProvider : public QObject, public QQuickImageProvider
+TextureFactory::TextureFactory( ContentSynchronizerSharedPtr synchronizer )
+    : _synchronizer( synchronizer )
+{}
+
+QSGTexture* TextureFactory::createTexture( QQuickWindow* window ) const
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( PixelStreamProvider )
+    Q_UNUSED( window );
+    return nullptr;
+}
 
-public:
-    /** Constructor */
-    PixelStreamProvider();
+QSize TextureFactory::textureSize() const
+{
+    return QSize();
+}
 
-    static const QString ID;
-
-    /** @copydoc QQuickImageProvider::requestImage */
-    QImage requestImage( const QString& id, QSize* size,
-                         const QSize& requestedSize ) final;
-
-    /** Open a stream, shared with the other windows for this process. */
-    PixelStreamUpdaterSharedPtr open( const QString& stream );
-
-    /** Close a stream by removing it from the internal list. */
-    void close( const QString& stream );
-
-    /** Update the streams, using the channel to synchronize processes. */
-    void synchronize( WallToWallChannel& channel );
-
-public slots:
-    /** Add a new frame. */
-    void setNewFrame( deflect::FramePtr frame );
-
-signals:
-    /** Emitted to request a new frame after a successful swap. */
-    void requestFrame( QString uri );
-
-private:
-    typedef std::map<QString, PixelStreamUpdaterSharedPtr> PixelStreamMap;
-    PixelStreamMap _streams;
-};
-
-#endif
+int TextureFactory::textureByteCount() const
+{
+    return 0;
+}

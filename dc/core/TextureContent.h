@@ -54,12 +54,6 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
-    /** @copydoc Content::getProviderId */
-    QString getProviderId() const final;
-
-    /** @copydoc Content::getSourceImage */
-    QString getSourceImage() const override;
-
     /**
      * Read texture metadata.
      * @return true on success, false if the URI is invalid or an error occured.

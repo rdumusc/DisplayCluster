@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,24 +37,17 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PDFPROVIDER_H
-#define PDFPROVIDER_H
+#include "ImageSynchronizer.h"
 
-#include <QQuickImageProvider>
+#include <QImage>
 
-/**
- * Provides PDF images to QML.
- */
-class PDFProvider : public QQuickImageProvider
+ImageSynchronizer::ImageSynchronizer( const QString& uri )
+    : _uri( uri )
+{}
+
+QImage ImageSynchronizer::getTileImage( const uint tileIndex ) const
 {
-public:
-    PDFProvider();
-    ~PDFProvider();
+    Q_UNUSED( tileIndex );
+    return QImage( _uri );
+}
 
-    static const QString ID;
-
-    QImage requestImage( const QString& id, QSize* size,
-                         const QSize& requestedSize ) final;
-};
-
-#endif

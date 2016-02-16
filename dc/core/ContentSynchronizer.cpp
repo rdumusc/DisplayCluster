@@ -43,35 +43,33 @@
 
 #include "BasicSynchronizer.h"
 #include "DynamicTextureSynchronizer.h"
+#include "ImageSynchronizer.h"
 #include "MovieSynchronizer.h"
 #include "PixelStreamSynchronizer.h"
+#include "PDFSynchronizer.h"
+#include "SVGSynchronizer.h"
 #include "VectorialSynchronizer.h"
-
-#include "MovieProvider.h"
-#include "PixelStreamProvider.h"
-#include "TextureProvider.h"
 
 ContentSynchronizer::~ContentSynchronizer() {}
 
-ContentSynchronizerPtr
-ContentSynchronizer::create( ContentPtr content,
-                             QQmlImageProviderBase& provider )
+ContentSynchronizerPtr ContentSynchronizer::create( ContentPtr content )
 {
+    const QString& uri = content->getURI();
     switch( content->getType( ))
     {
     case CONTENT_TYPE_DYNAMIC_TEXTURE:
-        return make_unique<DynamicTextureSynchronizer>(
-                 content->getURI(), dynamic_cast<TextureProvider&>( provider ));
+        return make_unique<DynamicTextureSynchronizer>( uri );
     case CONTENT_TYPE_MOVIE:
-        return make_unique<MovieSynchronizer>(
-                   content->getURI(), dynamic_cast<MovieProvider&>( provider ));
+        return make_unique<MovieSynchronizer>( uri );
     case CONTENT_TYPE_PIXEL_STREAM:
-        return make_unique<PixelStreamSynchronizer>(
-             content->getURI(), dynamic_cast<PixelStreamProvider&>( provider ));
+        return make_unique<PixelStreamSynchronizer>();
     case CONTENT_TYPE_PDF:
+        return make_unique<PDFSynchronizer>( uri );
     case CONTENT_TYPE_SVG:
-        return make_unique<VectorialSynchronizer>();
+        return make_unique<SVGSynchronizer>( uri );
+    case CONTENT_TYPE_TEXTURE:
+        return make_unique<ImageSynchronizer>( uri );
     default:
-        return make_unique<BasicSynchronizer>();
+        throw std::runtime_error( "No ContentSynchronizer for ContentType" );
     }
 }

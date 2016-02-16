@@ -54,16 +54,17 @@ class DynamicTextureSynchronizer : public ContentSynchronizer
 
 public:
     /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri, TextureProvider& provider );
-
-    ~DynamicTextureSynchronizer();
+    DynamicTextureSynchronizer( const QString& uri );
 
     /** @copydoc ContentSynchronizer::updateTiles */
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) override;
+
+    /** @copydoc ContentSynchronizer::needRedraw */
+    bool needRedraw() const override;
 
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
@@ -77,9 +78,10 @@ public:
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;
 
+    /** @copydoc ContentSynchronizer::getTileImage */
+    QImage getTileImage( uint tileIndex ) const override;
+
 private:
-    const QString _uri;
-    TextureProvider& _provider;
     Tiles _tiles;
     DynamicTexturePtr _reader;
     uint _lod;

@@ -40,7 +40,6 @@
 #include "VectorialSynchronizer.h"
 
 #include "ContentWindow.h"
-#include "ImageProviderStringifier.h"
 
 void VectorialSynchronizer::update( const ContentWindow& window,
                                     const QRectF& visibleArea )
@@ -51,17 +50,10 @@ void VectorialSynchronizer::update( const ContentWindow& window,
     if( _contentZoom != content->getZoomRect() )
     {
         _contentZoom = content->getZoomRect();
-        emit sourceParamsChanged();
+//        emit sourceParamsChanged();
     }
 
     BasicSynchronizer::update( window, visibleArea );
-}
-
-QString VectorialSynchronizer::getSourceParams() const
-{
-    if( _contentZoom.isValid( ))
-        return QString( '#' ) + stringify( _contentZoom );
-    return QString();
 }
 
 bool VectorialSynchronizer::allowsTextureCaching() const

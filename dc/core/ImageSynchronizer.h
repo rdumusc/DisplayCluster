@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,84 +37,28 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PixelStreamProvider.h"
+#ifndef IMAGESYNCHRONIZER_H
+#define IMAGESYNCHRONIZER_H
 
-#include "PixelStreamUpdater.h"
-#include "log.h"
+#include "BasicSynchronizer.h"
 
-#include <deflect/Frame.h>
-#include <deflect/SegmentDecoder.h>
-
-const QString PixelStreamProvider::ID( "pixelstream" );
-
-PixelStreamProvider::PixelStreamProvider()
-    : QQuickImageProvider( QQmlImageProviderBase::Image )
-{}
-
-QImage PixelStreamProvider::requestImage( const QString& id, QSize* size,
-                                          const QSize& requestedSize )
+/**
+ * Synchronizer for simple images.
+ */
+class ImageSynchronizer : public BasicSynchronizer
 {
-    const QStringList params = id.split( "?" );
-    if( params.length() != 3 )
-        return QImage();
+    Q_OBJECT
+    Q_DISABLE_COPY( ImageSynchronizer )
 
-    const QString& streamUri = params[0];
+public:
+    /** Constructor. */
+    explicit ImageSynchronizer( const QString& uri );
 
-    bool ok = false;
-    const uint tileIndex = params[2].toUInt( &ok );
-    if( !ok )
-        return QImage();
+    /** @copydoc ContentSynchronizer::getTileImage */
+    QImage getTileImage( uint tileIndex ) const override;
 
-    if( !_streams.count( streamUri ))
-        return QImage();
+private:
+    QString _uri;
+};
 
-    QImage image;
-    try {
-        image = _streams[streamUri]->getTileImage( tileIndex );
-    }
-    catch ( const std::out_of_range& ) {
-        put_flog( LOG_DEBUG, "Invalid tile requested: %d", tileIndex );
-        return QImage();
-    }
-    catch ( const std::runtime_error& e ) {
-        put_flog( LOG_DEBUG, "%s", e.what( ));
-        return QImage();
-    }
-
-    if( !requestedSize.isEmpty( ))
-        image = image.scaled( requestedSize );
-
-    *size = image.size();
-
-    return image;
-}
-
-void PixelStreamProvider::setNewFrame( deflect::FramePtr frame )
-{
-    if( !_streams.count( frame->uri ))
-        return;
-
-    _streams[frame->uri]->updatePixelStream( frame );
-}
-
-PixelStreamUpdaterSharedPtr PixelStreamProvider::open( const QString& stream )
-{
-    if( !_streams.count( stream ))
-    {
-        _streams[ stream ] = std::make_shared<PixelStreamUpdater>();
-        connect( _streams[ stream ].get(), &PixelStreamUpdater::requestFrame,
-                 this, &PixelStreamProvider::requestFrame );
-    }
-    return _streams[ stream ];
-}
-
-void PixelStreamProvider::close( const QString& stream )
-{
-    _streams.erase( stream );
-}
-
-void PixelStreamProvider::synchronize( WallToWallChannel& channel )
-{
-    for( auto& stream : _streams )
-        stream.second->synchronizeFramesSwap( channel );
-}
+#endif

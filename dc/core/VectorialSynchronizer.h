@@ -58,14 +58,11 @@ public:
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
-
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
 
-private:
+protected:
     QRectF _contentZoom;
 };
 
-#endif // VECTORIALSYNCHRONIZER_H
+#endif

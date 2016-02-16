@@ -57,9 +57,14 @@ void BasicSynchronizer::update( const ContentWindow& window,
         showTile();
 }
 
-QString BasicSynchronizer::getSourceParams() const
+void BasicSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    return QString();
+    Q_UNUSED( channel );
+}
+
+bool BasicSynchronizer::needRedraw() const
+{
+    return false;
 }
 
 bool BasicSynchronizer::allowsTextureCaching() const

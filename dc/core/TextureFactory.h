@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,51 +37,27 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFProvider.h"
+#ifndef TEXTUREFACTORY_H
+#define TEXTUREFACTORY_H
 
-#include "PDF.h"
-#include "ImageProviderStringifier.h"
+#include "types.h"
 
-namespace
+#include <QQuickTextureFactory>
+
+/**
+ * Provide OpenGL Textures to Qml which can be directly updated from C++.
+ */
+class TextureFactory : public QQuickTextureFactory
 {
-const QSize PREVIEW_SIZE( 512, 512 );
-}
+public:
+    TextureFactory( ContentSynchronizerSharedPtr synchronizer );
 
-const QString PDFProvider::ID( "pdf" );
+    QSGTexture* createTexture( QQuickWindow* window ) const final;
+    QSize textureSize() const final;
+    int textureByteCount() const final;
 
-PDFProvider::PDFProvider()
-    : QQuickImageProvider( QQmlImageProviderBase::Image,
-                           ForceAsynchronousImageLoading )
-{}
+private:
+    ContentSynchronizerSharedPtr _synchronizer;
+};
 
-PDFProvider::~PDFProvider() {}
-
-QImage PDFProvider::requestImage( const QString& id, QSize* size,
-                                  const QSize& requestedSize )
-{
-    QStringList list = id.split("#");
-    if( list.size() < 2 )
-        return QImage();
-
-    PDF pdf( list.at( 0 ));
-    if( !pdf.isValid( ))
-        return QImage();
-
-    bool ok = false;
-    const int pageNumber = list.at( 1 ).toInt( &ok );
-    if( !ok || !pdf.isValid( pageNumber ))
-        return QImage();
-    pdf.setPage( pageNumber );
-
-    QRectF zoomRect( UNIT_RECTF );
-    if( list.size() > 2 )
-        zoomRect = destringify( list.at( 2 ));
-
-    const QSize targetSize( requestedSize.isEmpty() ? pdf.getSize() :
-                                                      requestedSize );
-    const QImage image = pdf.renderToImage( targetSize, zoomRect );
-    if( size )
-        *size = image.size();
-
-    return image;
-}
+#endif

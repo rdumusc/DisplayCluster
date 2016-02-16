@@ -75,7 +75,8 @@ private:
     ContentWindowPtr _contentWindow;
     std::unique_ptr<QQmlContext> _windowContext;
     QQuickItem* _windowItem;
-    std::unique_ptr<ContentSynchronizer> _contentSynchronizer;
+    ContentSynchronizerSharedPtr _contentSynchronizer;
+    TextureProvider* _provider;
 
     QQuickItem* createQmlItem( const QUrl& url );
 };

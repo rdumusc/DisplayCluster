@@ -45,10 +45,6 @@
 
 /**
  * Synchronizes a Movie between different QML windows.
- *
- * The MovieSynchronizer serves as an interface between the MovieProvider and
- * the QML rendering, to inform it when new frames are ready and swap them
- * synchronously.
  */
 class MovieSynchronizer : public BasicSynchronizer
 {
@@ -59,19 +55,18 @@ public:
     /**
      * Construct a synchronizer for a movie, opening it in the provider.
      * @param uri The uri of the movie to open.
-     * @param provider The MovieProvider where the movie will be opened.
      */
-    MovieSynchronizer( const QString& uri, MovieProvider& provider );
-
-    /** Destruct the synchronizer and close the movie in the provider. */
-    ~MovieSynchronizer();
+    MovieSynchronizer( const QString& uri );
 
     /** @copydoc ContentSynchronizer::update */
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
+    /** Update the movies, using the channel to synchronize accross processes.*/
+    void synchronize( WallToWallChannel& channel ) final;
+
+    /** @copydoc ContentSynchronizer::needRedraw */
+    bool needRedraw() const override;
 
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
@@ -79,13 +74,14 @@ public:
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;
 
+    /** @copydoc ContentSynchronizer::getTileImage */
+    QImage getTileImage( uint tileIndex ) const override;
+
 private slots:
     void onPictureUpdated( double timestamp );
 
 private:
-    MovieProvider& _provider;
     MovieUpdaterSharedPtr _updater;
-    QString _uri;
     double _timestamp;
     FpsCounter _fpsCounter;
 };

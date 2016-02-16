@@ -38,12 +38,11 @@
 
 #include "SVGContent.h"
 
-#include "SVGProvider.h"
-
 #include <boost/serialization/export.hpp>
 #include "serializationHelpers.h"
 
 #include <QFileInfo>
+#include <QSvgRenderer>
 
 BOOST_CLASS_EXPORT_GUID( SVGContent, "SVGContent" )
 
@@ -54,16 +53,6 @@ SVGContent::SVGContent( const QString& uri )
 CONTENT_TYPE SVGContent::getType() const
 {
     return CONTENT_TYPE_SVG;
-}
-
-QString SVGContent::getProviderId() const
-{
-    return SVGProvider::ID;
-}
-
-QString SVGContent::getSourceImage() const
-{
-    return SVGProvider::ID + "/" + _uri;
 }
 
 bool SVGContent::readMetadata()

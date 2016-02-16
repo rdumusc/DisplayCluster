@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,45 +37,22 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef SVGPROVIDER_H
-#define SVGPROVIDER_H
+#include "SVGSynchronizer.h"
 
-#include <QQuickImageProvider>
-#include <QQuickTextureFactory>
-
-/**
- * Provides SVG images to QML.
- */
-class SVGProvider : public QQuickImageProvider
+SVGSynchronizer::SVGSynchronizer( const QString& uri )
 {
-public:
-    SVGProvider();
-    ~SVGProvider();
+    Q_UNUSED( uri );
+}
 
-    static const QString ID;
-
-    QQuickTextureFactory* requestTexture( const QString &id, QSize *size,
-                                          const QSize &requestedSize ) final;
-};
-
-#include <QSvgRenderer>
-
-/** Renders an svg document into a texure using hardware antialiasing. */
-class SVGTextureFactory : public QQuickTextureFactory
+void SVGSynchronizer::update( const ContentWindow& window,
+                              const QRectF& visibleArea )
 {
-public:
-    SVGTextureFactory( const QString& uri, const QSize& textureSize,
-                       const QRectF& zoomRect );
-    ~SVGTextureFactory();
+    Q_UNUSED( window );
+    Q_UNUSED( visibleArea );
+}
 
-    QSGTexture* createTexture( QQuickWindow* window ) const final;
-    QSize textureSize() const final;
-    int textureByteCount() const final;
-
-private:
-    QSize _textureSize;
-    QRectF _zoomRect;
-    mutable QSvgRenderer _svgRenderer; // mutable because paint() is not const
-};
-
-#endif
+QImage SVGSynchronizer::getTileImage( const uint tileIndex ) const
+{
+    Q_UNUSED( tileIndex );
+    throw std::runtime_error( "getTileImage() not implemented for SVG!" );
+}

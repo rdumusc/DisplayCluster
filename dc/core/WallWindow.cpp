@@ -47,13 +47,6 @@
 
 #include "configuration/WallConfiguration.h"
 
-#include "config.h"
-#include "MovieProvider.h"
-#if ENABLE_PDF_SUPPORT
-#  include "PDFProvider.h"
-#endif
-#include "PixelStreamProvider.h"
-#include "SVGProvider.h"
 #include "TextureProvider.h"
 
 #include <QOpenGLContext>
@@ -154,14 +147,7 @@ void WallWindow::startQuick( const WallConfiguration& config )
     _rootItem->setWidth( width( ));
     _rootItem->setHeight( height( ));
 
-    _qmlEngine->addImageProvider( MovieProvider::ID, new MovieProvider );
-#if ENABLE_PDF_SUPPORT
-    _qmlEngine->addImageProvider( PDFProvider::ID, new PDFProvider );
-#endif
-    _qmlEngine->addImageProvider( PixelStreamProvider::ID,
-                              new PixelStreamProvider );
-    _qmlEngine->addImageProvider( SVGProvider::ID, new SVGProvider );
-    _qmlEngine->addImageProvider( TextureProvider::ID, new TextureProvider);
+    _qmlEngine->addImageProvider( TextureProvider::ID, new TextureProvider );
 
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
@@ -184,16 +170,11 @@ bool WallWindow::syncAndRender()
     if( !_rendererInitialized )
         return true;
 
-    auto movieProvider = dynamic_cast< MovieProvider* >
-            ( engine()->imageProvider( MovieProvider::ID ));
-    auto textureProvider = dynamic_cast< TextureProvider* >
-            ( engine()->imageProvider( TextureProvider::ID ));
-    auto& pixelStreamProvider = getPixelStreamProvider();
+    auto& textureProvider = getTextureProvider();
 
     _wallChannel.synchronizeClock();
-    movieProvider->synchronize( _wallChannel );
-    pixelStreamProvider.synchronize( _wallChannel );
-    bool needRedraw = textureProvider->needRedraw();
+    textureProvider.synchronize( _wallChannel );
+    bool needRedraw = textureProvider.needRedraw();
 
     _renderControl->polishItems();
     _quickRenderer->render();
@@ -221,11 +202,11 @@ void WallWindow::setMarkers( MarkersPtr markers )
     _displayGroupRenderer->setMarkers( markers );
 }
 
-PixelStreamProvider& WallWindow::getPixelStreamProvider()
+TextureProvider& WallWindow::getTextureProvider()
 {
-    auto pixelStreamProvider = dynamic_cast< PixelStreamProvider* >
-            ( engine()->imageProvider( PixelStreamProvider::ID ));
-    return *pixelStreamProvider;
+    auto textureProvider = dynamic_cast< TextureProvider* >
+            ( engine()->imageProvider( TextureProvider::ID ));
+    return *textureProvider;
 }
 
 QQmlEngine* WallWindow::engine() const

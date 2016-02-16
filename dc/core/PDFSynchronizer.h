@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,39 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIEPROVIDER_H
-#define MOVIEPROVIDER_H
+#ifndef PDFSYNCHRONIZER_H
+#define PDFSYNCHRONIZER_H
 
-#include "types.h"
+#include "VectorialSynchronizer.h"
 
-#include <QQuickImageProvider>
+#include "PDF.h" // member
 
 /**
- * Provides Movie frames to QML.
+ * Synchronize PDF content.
  */
-class MovieProvider : public QQuickImageProvider
+class PDFSynchronizer : public VectorialSynchronizer
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( PDFSynchronizer )
+
 public:
-    MovieProvider();
-    ~MovieProvider();
+    PDFSynchronizer( const QString& uri );
 
-    static const QString ID;
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) override;
 
-    QImage requestImage( const QString& id, QSize* size,
-                         const QSize& requestedSize ) final;
-
-    /** Open a movie, shared with the other windows for this process. */
-    MovieUpdaterSharedPtr open( const QString& movieFile );
-
-    /** Close a movie by removing it from the internal list. */
-    void close( const QString& movieFile );
-
-    /** Update the movies, using the channel to synchronize accross processes.*/
-    void synchronize( WallToWallChannel& channel );
+    /** @copydoc ContentSynchronizer::getTileImage */
+    QImage getTileImage( uint tileIndex ) const override;
 
 private:
-    typedef std::map<QString, MovieUpdaterSharedPtr> MovieMap;
-    MovieMap _movies;
+    PDF _pdf;
+    QSize _renderSize;
 };
 
-#endif // MOVIEPROVIDER_H
+#endif

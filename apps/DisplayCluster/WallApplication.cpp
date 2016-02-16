@@ -51,7 +51,7 @@
 
 #include "configuration/WallConfiguration.h"
 
-#include "PixelStreamProvider.h"
+#include "TextureProvider.h"
 
 #include <stdexcept>
 
@@ -143,7 +143,7 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 
     connect( _fromMasterChannel.get(),
              SIGNAL( received( deflect::FramePtr )),
-             &_window->getPixelStreamProvider(),
+             &_window->getTextureProvider(),
              SLOT( setNewFrame( deflect::FramePtr )));
 
     connect( _fromMasterChannel.get(), SIGNAL( received( deflect::FramePtr )),
@@ -151,7 +151,7 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
 
     if( _wallChannel->getRank() == 0 )
     {
-        connect( &_window->getPixelStreamProvider(),
+        connect( &_window->getTextureProvider(),
                  SIGNAL( requestFrame( QString )),
                  _toMasterChannel.get(), SLOT( sendRequestFrame( QString )));
     }

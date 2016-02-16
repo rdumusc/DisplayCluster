@@ -41,6 +41,7 @@
 
 #include "ContentSynchronizer.h"
 #include "ContentWindow.h"
+#include "TextureProvider.h"
 
 #include <QQmlComponent>
 
@@ -56,12 +57,15 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
     : _contentWindow( contentWindow )
     , _windowContext( new QQmlContext( engine.rootContext( )))
     , _windowItem( 0 )
+    , _provider( nullptr )
 {
     _windowContext->setContextProperty( "contentwindow", _contentWindow.get( ));
 
     auto content = _contentWindow->getContent();
-    auto provider = engine.imageProvider( content->getProviderId( ));
-    _contentSynchronizer = ContentSynchronizer::create( content, *provider );
+    auto provider = engine.imageProvider( TextureProvider::ID );
+    _provider = dynamic_cast<TextureProvider*>( provider );
+
+    _contentSynchronizer = _provider->open( content );
     _windowContext->setContextProperty( "contentsync",
                                         _contentSynchronizer.get( ));
 
@@ -72,6 +76,7 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
 
 QmlWindowRenderer::~QmlWindowRenderer()
 {
+    _provider->close( _contentWindow->getContent()->getURI( ));
     delete _windowItem;
 }
 

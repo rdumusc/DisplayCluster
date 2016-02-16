@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,61 +37,27 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "MovieProvider.h"
+#ifndef SVGTEXTUREFACTORY_H
+#define SVGTEXTUREFACTORY_H
 
-#include "MovieUpdater.h"
-#include "FFMPEGPicture.h"
+#include <QQuickTextureFactory>
+#include <QSvgRenderer> // member
 
-const QString MovieProvider::ID( "movie" );
-
-MovieProvider::MovieProvider()
-    : QQuickImageProvider( QQmlImageProviderBase::Image )
-{}
-
-MovieProvider::~MovieProvider() {}
-
-QImage MovieProvider::requestImage( const QString& id, QSize* size,
-                                    const QSize& requestedSize )
+/** Renders an svg document into a texure using hardware antialiasing. */
+class SVGTextureFactory : public QQuickTextureFactory
 {
-    QStringList params = id.split( "?" );
-    if( params.length() != 2 )
-        return QImage();
+public:
+    SVGTextureFactory( const QString& uri, const QSize& textureSize,
+                       const QRectF& zoomRect );
 
-    const QString& movieFile = params[0];
+    QSGTexture* createTexture( QQuickWindow* window ) const final;
+    QSize textureSize() const final;
+    int textureByteCount() const final;
 
-    bool ok = false;
-    const double timestamp = params[1].toDouble( &ok );
-    if( !ok )
-        return QImage();
-    Q_UNUSED( timestamp );
+private:
+    QSize _textureSize;
+    QRectF _zoomRect;
+    mutable QSvgRenderer _svgRenderer; // mutable because paint() is not const
+};
 
-    if( !_movies.count( movieFile ))
-        return QImage();
-
-    QImage image = _movies[ movieFile ]->getImage();
-
-    if( !requestedSize.isEmpty( ))
-        image = image.scaled( requestedSize );
-
-    *size = image.size();
-    return image;
-}
-
-MovieUpdaterSharedPtr MovieProvider::open( const QString& movieFile )
-{
-    if( !_movies.count( movieFile ))
-        _movies[ movieFile ] = std::make_shared<MovieUpdater>( movieFile );
-
-    return _movies[ movieFile ];
-}
-
-void MovieProvider::close( const QString& movieFile )
-{
-    _movies.erase( movieFile );
-}
-
-void MovieProvider::synchronize( WallToWallChannel& channel )
-{
-    for( auto& movie : _movies )
-        movie.second->sync( channel );
-}
+#endif

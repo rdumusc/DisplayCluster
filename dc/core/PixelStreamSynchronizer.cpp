@@ -39,27 +39,19 @@
 
 #include "PixelStreamSynchronizer.h"
 
-#include "PixelStreamProvider.h"
 #include "PixelStreamUpdater.h"
 
 #include "ContentWindow.h"
 #include "ZoomHelper.h"
 
-PixelStreamSynchronizer::PixelStreamSynchronizer( const QString& uri,
-                                                 PixelStreamProvider& provider )
-    : _uri( uri )
-    , _provider( provider )
+PixelStreamSynchronizer::PixelStreamSynchronizer()
+    : _updater( new PixelStreamUpdater )
     , _frameIndex( 0 )
 {
-    _updater = _provider.open( uri );
-
     connect( _updater.get(), &PixelStreamUpdater::pictureUpdated,
              this, &PixelStreamSynchronizer::_onPictureUpdated );
-}
-
-PixelStreamSynchronizer::~PixelStreamSynchronizer()
-{
-    _provider.close( _uri );
+    connect( _updater.get(), &PixelStreamUpdater::requestFrame,
+             this, &PixelStreamSynchronizer::requestFrame );
 }
 
 void PixelStreamSynchronizer::update( const ContentWindow& window,
@@ -72,9 +64,14 @@ void PixelStreamSynchronizer::update( const ContentWindow& window,
     _updater->updateVisibility( helper.toTilesArea( visibleArea, tilesSurface ));
 }
 
-QString PixelStreamSynchronizer::getSourceParams() const
+void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    return QString( "?%1" ).arg( _frameIndex );
+    _updater->synchronizeFramesSwap( channel );
+}
+
+bool PixelStreamSynchronizer::needRedraw() const
+{
+    return false;
 }
 
 bool PixelStreamSynchronizer::allowsTextureCaching() const
@@ -97,10 +94,20 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
+void PixelStreamSynchronizer::updatePixelStream( deflect::FramePtr frame )
+{
+    _updater->updatePixelStream( frame );
+}
+
+QImage PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const
+{
+    return _updater->getTileImage( tileIndex );
+}
+
 void PixelStreamSynchronizer::_onPictureUpdated()
 {
     ++_frameIndex;
-    emit sourceParamsChanged();
+    //emit sourceParamsChanged();
 
     _fpsCounter.tick();
     emit statisticsChanged();

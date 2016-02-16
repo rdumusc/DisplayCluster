@@ -47,10 +47,6 @@
 
 /**
  * Synchronizes a PixelStream between different QML windows.
- *
- * The PixelStreamSynchronizer serves as an interface between the
- * PixelStreamProvider and the QML rendering, to inform it when new frames are
- * ready and swap them synchronously.
  */
 class PixelStreamSynchronizer : public ContentSynchronizer
 {
@@ -59,22 +55,19 @@ class PixelStreamSynchronizer : public ContentSynchronizer
 
 public:
     /**
-     * Construct a synchronizer for a stream, opening it in the provider.
-     * @param uri The uri of the movie to open.
-     * @param provider The PixelStreamProvider where the stream will be opened.
+     * Construct a synchronizer for a stream.
      */
-    PixelStreamSynchronizer( const QString& uri,
-                             PixelStreamProvider& provider );
-
-    /** Destruct the synchronizer and close the stream in the provider. */
-    ~PixelStreamSynchronizer();
+    PixelStreamSynchronizer();
 
     /** @copydoc ContentSynchronizer::update */
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) override;
+
+    /** @copydoc ContentSynchronizer::needRedraw */
+    bool needRedraw() const override;
 
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
@@ -88,9 +81,17 @@ public:
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;
 
+    /** @copydoc ContentSynchronizer::getTileImage */
+    QImage getTileImage( uint tileIndex ) const override;
+
+    /** Update the appropriate PixelStream with the given frame. */
+    void updatePixelStream( deflect::FramePtr frame );
+
+signals:
+    /** Emitted to request a new frame after a successful swap. */
+    void requestFrame( QString uri );
+
 private:
-    const QString _uri;
-    PixelStreamProvider& _provider;
     PixelStreamUpdaterSharedPtr _updater;
     uint _frameIndex;
     FpsCounter _fpsCounter;

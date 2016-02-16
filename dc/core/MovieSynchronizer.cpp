@@ -41,24 +41,15 @@
 
 #include "ContentWindow.h"
 #include "MovieContent.h"
-#include "MovieProvider.h"
 #include "MovieUpdater.h"
 #include "Tile.h"
 
-MovieSynchronizer::MovieSynchronizer( const QString& uri,
-                                      MovieProvider& provider )
-    : _provider( provider )
-    , _uri( uri )
+MovieSynchronizer::MovieSynchronizer( const QString& uri )
+    : _updater( new MovieUpdater( uri ))
     , _timestamp( -1.0 )
 {
-    _updater = _provider.open( uri );
     connect( _updater.get(), SIGNAL( pictureUpdated( double )),
              this, SLOT( onPictureUpdated( double )));
-}
-
-MovieSynchronizer::~MovieSynchronizer()
-{
-    _provider.close( _uri );
 }
 
 void MovieSynchronizer::update( const ContentWindow& window,
@@ -68,9 +59,14 @@ void MovieSynchronizer::update( const ContentWindow& window,
     _updater->setVisible( !visibleArea.isEmpty( ));
 }
 
-QString MovieSynchronizer::getSourceParams() const
+void MovieSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    return QString( "?%1" ).arg( _timestamp );
+    _updater->sync( channel );
+}
+
+bool MovieSynchronizer::needRedraw() const
+{
+    return !_updater->isPaused();
 }
 
 bool MovieSynchronizer::allowsTextureCaching() const
@@ -83,6 +79,12 @@ QString MovieSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
+QImage MovieSynchronizer::getTileImage( const uint tileIndex ) const
+{
+    Q_UNUSED( tileIndex );
+    return _updater->getImage();
+}
+
 void MovieSynchronizer::onPictureUpdated( const double timestamp )
 {
     // Delay making the Tile visible until first picture is ready
@@ -90,7 +92,7 @@ void MovieSynchronizer::onPictureUpdated( const double timestamp )
         showTile();
 
     _timestamp = timestamp;
-    emit sourceParamsChanged();
+//    emit sourceParamsChanged();
 
     _fpsCounter.tick();
     emit statisticsChanged();

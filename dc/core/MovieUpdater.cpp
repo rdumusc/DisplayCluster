@@ -76,6 +76,11 @@ void MovieUpdater::setVisible( const bool visible )
     _visible = visible;
 }
 
+bool MovieUpdater::isPaused() const
+{
+    return _paused;
+}
+
 void MovieUpdater::update( const MovieContent& movie )
 {
     _paused = movie.getControlState() & STATE_PAUSED;

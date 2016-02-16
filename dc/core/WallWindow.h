@@ -84,8 +84,8 @@ public:
     /** Set new touchpoint's markers. */
     void setMarkers( MarkersPtr markers );
 
-    /** @return the pixel stream provider. */
-    PixelStreamProvider& getPixelStreamProvider();
+    /** @return the texture provider. */
+    TextureProvider& getTextureProvider();
 
     /** @return the QML engine. */
     QQmlEngine* engine() const;

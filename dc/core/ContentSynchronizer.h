@@ -45,20 +45,19 @@
 #include "Tiles.h"
 
 #include <QObject>
-#include <QQmlImageProviderBase>
+#include <QImage>
 
 /**
  * Interface for synchronizing QML content rendering.
  *
- * An implementation should be provided for each ContentType which requires
- * a synchronization step before rendring.
+ * ContentSynchronizer serves as an interface between the TextureProvider and
+ * the QML rendering, to inform it when new frames are ready and swap them
+ * synchronously.
  */
 class ContentSynchronizer : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY( ContentSynchronizer )
-    Q_PROPERTY( QString sourceParams READ getSourceParams
-                NOTIFY sourceParamsChanged )
     Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
     Q_PROPERTY( Tiles* tiles READ getTilesPtr CONSTANT )
     Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesAreaChanged )
@@ -75,8 +74,11 @@ public:
     virtual void update( const ContentWindow& window,
                          const QRectF& visibleArea ) = 0;
 
-    /** Get the additional source parameters. */
-    virtual QString getSourceParams() const = 0;
+    /** Synchronize content advance accross processes.*/
+    virtual void synchronize( WallToWallChannel& channel ) = 0;
+
+    /** return true if a redraw is needed because of pending tiles. */
+    virtual bool needRedraw() const = 0;
 
     /** @return true if the content allows texture caching for rendering. */
     virtual bool allowsTextureCaching() const = 0;
@@ -94,14 +96,13 @@ public:
     /** Get statistics about this Content. */
     virtual QString getStatistics() const = 0;
 
+    /** Get the image for a given tile index. */
+    virtual QImage getTileImage( uint tileIndex ) const = 0;
+
     /** @return a ContentSynchronizer for the given content. */
-    static ContentSynchronizerPtr create( ContentPtr content,
-                                          QQmlImageProviderBase& provider );
+    static ContentSynchronizerPtr create( ContentPtr content );
 
 signals:
-    /** Notifier for the sourceParams property. */
-    void sourceParamsChanged();
-
     /** Notifier for the tiles area property. */
     void tilesAreaChanged();
 

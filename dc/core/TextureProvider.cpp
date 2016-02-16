@@ -39,71 +39,94 @@
 
 #include "TextureProvider.h"
 
+#include "Content.h"
+#include "ContentFactory.h"
+#include "ContentSynchronizer.h"
+#include "PixelStreamSynchronizer.h"
+#include "SVGTextureFactory.h"
+#include "TextureFactory.h"
+
 #include "log.h"
-#include "DynamicTexture.h"
+
+#include <deflect/Frame.h>
 
 const QString TextureProvider::ID( "texture" );
 
 TextureProvider::TextureProvider()
-    : QQuickImageProvider( QQmlImageProviderBase::Image )
+    : QQuickImageProvider( QQmlImageProviderBase::Texture )
 {}
 
 TextureProvider::~TextureProvider() {}
 
-QImage TextureProvider::requestImage( const QString& id, QSize* size,
-                                      const QSize& /*requestedSize*/ )
+QQuickTextureFactory*
+TextureProvider::requestTexture( const QString& id, QSize* size,
+                                 const QSize& requestedSize )
 {
-    const QStringList params = id.split( "?" );
+    QStringList params = id.split( "?" );
+    if( params.isEmpty( ))
+        return nullptr;
 
-    QImage image;
-    if( params.length() == 1 )
-    {
-        if( params[0].endsWith( ".pyr" ))
-            image = DynamicTexture( params[0] ).getRootImage();
-        else
-            image = QImage( params[0] );
-    }
-    else if( params.length() == 2 )
-    {
-        const QString& pyramidFile = params[0];
+    const QString& uri = params[0];
 
-        if( !_dynamicTextures.count( pyramidFile ))
-            return QImage();
-
-        bool ok = false;
-        const int tileIndex = params[1].toInt( &ok );
-        if( !ok )
-            return QImage();
-
-        image = _dynamicTextures[pyramidFile]->getTileImage( tileIndex );
-    }
-
-    if( image.isNull( ))
-        return QImage();
+    QQuickTextureFactory* factory = nullptr;
+    if( ContentFactory::getContentTypeForFile( uri ) == CONTENT_TYPE_SVG )
+        factory = new SVGTextureFactory( uri, requestedSize, UNIT_RECTF );
+    else
+        factory = new TextureFactory( _synchronizers[uri] );
 
     if( size )
-        *size = image.size();
-
-    return image;
+        *size = factory->textureSize();
+    return factory;
 }
 
-DynamicTexturePtr TextureProvider::openDynamicTexture( const QString& uri )
+ContentSynchronizerSharedPtr TextureProvider::open( ContentPtr content )
 {
-    if( !_dynamicTextures.count( uri ))
-        _dynamicTextures[ uri ] = std::make_shared< DynamicTexture >( uri );
-    return _dynamicTextures[ uri ];
+    const QString& uri = content->getURI();
+
+    if( !_synchronizers.count( uri ))
+    {
+        _synchronizers[uri] = ContentSynchronizer::create( content );
+
+        if( content->getType() == CONTENT_TYPE_PIXEL_STREAM )
+        {
+            auto synchronizer = dynamic_cast<PixelStreamSynchronizer*>(
+                                    _synchronizers[uri].get( ));
+            connect( synchronizer, &PixelStreamSynchronizer::requestFrame,
+                     this, &TextureProvider::requestFrame );
+        }
+    }
+    return _synchronizers[uri];
 }
 
-void TextureProvider::closeDynamicTexture( const QString& uri )
+void TextureProvider::close( const QString& uri )
 {
-    _dynamicTextures.erase( uri );
+    _synchronizers.erase( uri );
+}
+
+void TextureProvider::synchronize( WallToWallChannel& channel )
+{
+    for( auto& synchronizer : _synchronizers )
+        synchronizer.second->synchronize( channel );
+}
+
+void TextureProvider::setNewFrame( deflect::FramePtr frame )
+{
+    if( !_synchronizers.count( frame->uri ))
+        return;
+
+    auto synchronizer = dynamic_cast<PixelStreamSynchronizer*>(
+                            _synchronizers[frame->uri].get( ));
+    if( !synchronizer )
+        return;
+
+    synchronizer->updatePixelStream( frame );
 }
 
 bool TextureProvider::needRedraw() const
 {
-    for( const auto& i : _dynamicTextures )
+    for( const auto& i : _synchronizers )
     {
-        if( i.second->hasPendingTileLoads( ))
+        if( i.second->needRedraw( ))
             return true;
     }
     return false;

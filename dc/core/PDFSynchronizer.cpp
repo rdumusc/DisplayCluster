@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,13 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef IMAGEPROVIDERSTRINGIFIER_H
-#define IMAGEPROVIDERSTRINGIFIER_H
+#include "PDFSynchronizer.h"
 
-#include <QRectF>
-#include <QString>
+#include "ContentWindow.h"
+#include "PDFContent.h"
+#include "ZoomHelper.h"
 
-QString stringify( const QRectF& rect );
-QRectF destringify( const QString& rectString );
+PDFSynchronizer::PDFSynchronizer( const QString& uri )
+    : _pdf( uri )
+    , _renderSize( _pdf.getSize( ))
+{}
 
-#endif
+void PDFSynchronizer::update( const ContentWindow& window,
+                              const QRectF& visibleArea )
+{
+    auto content = window.getContent();
+    const PDFContent& pdfContent = dynamic_cast<const PDFContent&>( *content );
+
+    _pdf.setPage( pdfContent.getPage( ));
+    _renderSize = ZoomHelper( window ).getContentRect().toRect().size();
+
+    VectorialSynchronizer::update( window, visibleArea );
+}
+
+QImage PDFSynchronizer::getTileImage( const uint tileIndex ) const
+{
+    Q_UNUSED( tileIndex );
+    return _pdf.renderToImage( _renderSize, _contentZoom );
+}

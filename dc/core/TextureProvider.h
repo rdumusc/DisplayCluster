@@ -44,31 +44,48 @@
 #include <QQuickImageProvider>
 
 /**
- * Provides Texture images to QML.
+ * Provides GL Textures to QML.
  */
-class TextureProvider : public QQuickImageProvider
+class TextureProvider : public QObject, public QQuickImageProvider
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( TextureProvider )
+
 public:
     TextureProvider();
     ~TextureProvider();
 
     static const QString ID;
 
-    QImage requestImage( const QString& id, QSize* size,
-                         const QSize& requestedSize ) final;
+    /** @copydoc QQuickImageProvider::requestTexture */
+    QQuickTextureFactory* requestTexture( const QString& id, QSize* size,
+                                          const QSize& requestedSize ) final;
 
-    DynamicTexturePtr openDynamicTexture( const QString& uri );
+    /** Open a ContentSynchronizer. */
+    ContentSynchronizerSharedPtr open( ContentPtr content );
 
-    void closeDynamicTexture( const QString& uri );
+    /** Close a ContentSynchronizer. */
+    void close( const QString& uri );
+
+    /** Update the contents, using the channel to synchronize processes. */
+    void synchronize( WallToWallChannel& channel );
 
     /**
      * @return true if a redraw is needed because of pending tiles from any
-     *         dynamic texture.
+     *         content.
      */
     bool needRedraw() const;
 
+public slots:
+    /** Add a new frame. */
+    void setNewFrame( deflect::FramePtr frame );
+
+signals:
+    /** Emitted to request a new frame after a successful swap. */
+    void requestFrame( QString uri );
+
 private:
-    std::map< QString, DynamicTexturePtr > _dynamicTextures;
+    std::map< QString, ContentSynchronizerSharedPtr > _synchronizers;
 };
 
 #endif

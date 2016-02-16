@@ -66,14 +66,14 @@ public:
     void synchronizeFramesSwap( WallToWallChannel& channel );
 
     /**
-     * Get a segment by its frame- and tile-index.
+     * Get a segment by its tile-index.
      */
-    QImage getTileImage( uint tileIndex );
+    QImage getTileImage( uint tileIndex ) const;
 
     /** Get the list of tiles for use by QML repeater. */
     Tiles& getTiles();
 
-    /** Update the tiles visibility given the visible area of the window. */
+    /** Update the visibility of the segements. */
     void updateVisibility( const QRectF& visibleArea );
 
 public slots:

@@ -60,8 +60,11 @@ public:
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) override;
+
+    /** @copydoc ContentSynchronizer::needRedraw */
+    bool needRedraw() const override;
 
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;

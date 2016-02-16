@@ -8,7 +8,7 @@ BaseContentWindow {
     // for contents with alpha channel such as SVG or PNG
     color: options.alphaBlending ? "transparent" : "black"
 
-    property string imagesource: "image://" + contentwindow.content.sourceImage
+    property string imagesource: "image://texture/" + contentwindow.content.uri
 
     Item {
         id: contentItemArea
@@ -33,7 +33,7 @@ BaseContentWindow {
                     visible: model.modelData.visible
 
                     property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
-                    source: model.modelData.visible ? imagesource + contentsync.sourceParams + tileIndex : ""
+                    source: model.modelData.visible ? imagesource + tileIndex : ""
 
                     cache: contentsync.allowsTextureCaching
 
@@ -66,10 +66,7 @@ BaseContentWindow {
 
     ZoomContext {
         id: zoomContext
-        // vectorial content types store the zoom region in
-        // contentsync.sourceParams, which must be excluded for the zoom context
-        property string sourceparams: contentwindow.content.vectorial ? "" : contentsync.sourceParams
-        image.source: visible ? imagesource + sourceparams : ""
+        image.source: visible ? imagesource : ""
         image.cache: contentsync.allowsTextureCaching
     }
 

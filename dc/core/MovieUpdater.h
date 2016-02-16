@@ -62,6 +62,8 @@ public:
     bool isVisible() const;
     void setVisible( bool visible );
 
+    bool isPaused() const;
+
     void update( const MovieContent& movie );
     void sync( WallToWallChannel& channel );
 
