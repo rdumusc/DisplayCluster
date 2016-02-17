@@ -159,7 +159,8 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
 
     BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
     {
-        if( !contentWindow->getContent( ))
+        ContentPtr content = contentWindow->getContent();
+        if( !content )
         {
             put_flog( LOG_WARN, "Window '%s' does not have a Content!",
                 contentWindow->getID().toString().toLocal8Bit().constData( ));
@@ -167,28 +168,41 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
         }
         // PixelStreams are not supported yet, don't restore them.
         // This feature will be implemented in DISCL-6
-        if( isPixelStream( *contentWindow ))
+        if( content->getType() == CONTENT_TYPE_PIXEL_STREAM )
             continue;
+
+        // Some regular textures were saved as DynamicTexture type before the
+        // migration to qml2 rendering
+        if( content->getType() == CONTENT_TYPE_DYNAMIC_TEXTURE )
+        {
+            const QString& uri = content->getURI();
+            const auto type = ContentFactory::getContentTypeForFile( uri );
+            if( type == CONTENT_TYPE_TEXTURE )
+            {
+                put_flog( LOG_DEBUG, "Try restoring legacy DynamicTexture as "
+                                     "a regular texture: '%s'",
+                          content->getURI().toLocal8Bit().constData( ));
+
+                content = ContentFactory::getContent( uri );
+                contentWindow->setContent( content );
+            }
+        }
 
         // Refresh content information, files can have been modified or removed
         // since the state was saved.
-        if( contentWindow->getContent()->readMetadata( ))
+        if( content->readMetadata( ))
         {
             put_flog( LOG_DEBUG, "Restoring content: '%s'",
-              contentWindow->getContent()->getURI().toLocal8Bit().constData( ));
+                      content->getURI().toLocal8Bit().constData( ));
         }
         else
         {
             put_flog( LOG_WARN, "'%s' could not be restored!",
-              contentWindow->getContent()->getURI().toLocal8Bit().constData( ));
-            contentWindow->setContent( ContentFactory::getErrorContent( ));
+                      content->getURI().toLocal8Bit().constData( ));
+            const QSize& size = content->getDimensions();
+            contentWindow->setContent( ContentFactory::getErrorContent( size ));
         }
         validContentWindows.push_back( contentWindow );
     }
     contentWindows = validContentWindows;
-}
-
-bool StateSerializationHelper::isPixelStream( const ContentWindow& contentWindow ) const
-{
-    return contentWindow.getContent()->getType() == CONTENT_TYPE_PIXEL_STREAM;
 }

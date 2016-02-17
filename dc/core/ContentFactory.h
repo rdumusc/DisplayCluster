@@ -41,6 +41,7 @@
 #define CONTENTFACTORY_H
 
 #include "types.h"
+#include "ContentType.h"
 
 #include <QStringList>
 #include <boost/shared_ptr.hpp>
@@ -51,13 +52,13 @@ class ContentFactory
 {
 public:
     /** Get a Content object of the appropriate derived type based on the URI given. */
-    static ContentPtr getContent(const QString& uri);
+    static ContentPtr getContent( const QString& uri );
 
     /** Special case: PixelStreamContent type cannot be derived from its uri. */
-    static ContentPtr getPixelStreamContent(const QString& uri);
+    static ContentPtr getPixelStreamContent( const QString& uri );
 
     /** Get a Content object representing a loading error. */
-    static ContentPtr getErrorContent();
+    static ContentPtr getErrorContent( const QSize& size = QSize( ));
 
     /** Get all the supported file extensions. */
     static const QStringList& getSupportedExtensions();
@@ -67,6 +68,9 @@ public:
 
     /** Get all the file extensions prefixed with '.' in one string. */
     static QString getSupportedFilesFilterAsString();
+
+    /** Get the content type for a given uri. */
+    static CONTENT_TYPE getContentTypeForFile( const QString& uri );
 };
 
 #endif // CONTENTFACTORY_H

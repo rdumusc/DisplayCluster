@@ -66,36 +66,38 @@ namespace
 const QSize maxTextureSize( 16384, 16384 );
 }
 
-CONTENT_TYPE getContentTypeForFile(const QString& uri)
+CONTENT_TYPE ContentFactory::getContentTypeForFile( const QString& uri )
 {
-    const QString extension = QFileInfo(uri).suffix().toLower();
+    const QString extension = QFileInfo( uri ).suffix().toLower();
 
     // SVGs must be processed first because they can also be read as an image
-    if(SVGContent::getSupportedExtensions().contains(extension))
+    if( SVGContent::getSupportedExtensions().contains( extension ))
         return CONTENT_TYPE_SVG;
 
-    if(MovieContent::getSupportedExtensions().contains(extension))
+    if( MovieContent::getSupportedExtensions().contains( extension ))
         return CONTENT_TYPE_MOVIE;
 
 #if ENABLE_PDF_SUPPORT
-    if(PDFContent::getSupportedExtensions().contains(extension))
+    if( PDFContent::getSupportedExtensions().contains( extension ))
         return CONTENT_TYPE_PDF;
 #endif
 
-    if(extension == "pyr")
+    if( DynamicTextureContent::getSupportedExtensions().contains( extension ))
         return CONTENT_TYPE_DYNAMIC_TEXTURE;
 
-    // small images use Texture; large images use DynamicTexture
-    const QImageReader imageReader(uri);
-    if(imageReader.canRead())
+    const QImageReader imageReader( uri );
+    if( imageReader.canRead( ))
     {
         const QSize size = imageReader.size();
 
-        if(size.width() <= maxTextureSize.width() &&
-           size.height() <= maxTextureSize.height())
+        if( size.width() <= maxTextureSize.width() &&
+            size.height() <= maxTextureSize.height( ))
             return CONTENT_TYPE_TEXTURE;
 
-        return CONTENT_TYPE_DYNAMIC_TEXTURE;
+        put_flog( LOG_WARN, "Image too big to open. Try converting it to an "
+                            "image pyramid: '%s'",
+                  uri.toLocal8Bit().constData( ));
+        return CONTENT_TYPE_ANY;
     }
 
     return CONTENT_TYPE_ANY;
@@ -140,9 +142,14 @@ ContentPtr ContentFactory::getPixelStreamContent(const QString& uri)
     return ContentPtr(new PixelStreamContent(uri));
 }
 
-ContentPtr ContentFactory::getErrorContent()
+ContentPtr ContentFactory::getErrorContent( const QSize& size )
 {
-    return ContentPtr(new TextureContent(ERROR_IMAGE_FILENAME));
+    ContentPtr content( new TextureContent( ERROR_IMAGE_FILENAME ));
+    if( !size.isEmpty( ))
+        content->setDimensions( size );
+    else
+        content->readMetadata();
+    return content;
 }
 
 const QStringList& ContentFactory::getSupportedExtensions()
