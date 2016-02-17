@@ -1,6 +1,10 @@
 /*********************************************************************/
 /* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+<<<<<<< HEAD
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+=======
+/*                     Daniel.Nachbaur@epfl.ch                       */
+>>>>>>> 9f82d03... Asynchronous texture upload for movies
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -45,20 +49,37 @@
 
 TextureFactory::TextureFactory( ContentSynchronizerSharedPtr synchronizer )
     : _synchronizer( synchronizer )
+    , _textureSize()
 {}
 
 QSGTexture* TextureFactory::createTexture( QQuickWindow* window ) const
 {
-    Q_UNUSED( window );
-    return nullptr;
+    uint textureID;
+    glActiveTexture( GL_TEXTURE0 );
+    glGenTextures( 1, &textureID );
+    glBindTexture( GL_TEXTURE_2D, textureID );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, _textureSize.width(),
+                  _textureSize.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+    glBindTexture( GL_TEXTURE_2D, 0 );
+
+    emit textureCreated( textureID );
+
+    const auto flags = QQuickWindow::CreateTextureOptions(
+                            QQuickWindow::TextureHasAlphaChannel |
+                            QQuickWindow::TextureOwnsGLTexture );
+    return window->createTextureFromId( textureID, _textureSize, flags );
 }
 
 QSize TextureFactory::textureSize() const
 {
-    return QSize();
+    return _textureSize;
 }
 
 int TextureFactory::textureByteCount() const
 {
-    return 0;
+    return _textureSize.width() * _textureSize.height() * 4;
 }

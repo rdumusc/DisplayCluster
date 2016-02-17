@@ -66,6 +66,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   gestures/PinchGesture.h
   gestures/PinchGestureRecognizer.h
   LayoutEngine.h
+  Image.h
   log.h
   MPIChannel.h
   MPIContext.h
@@ -78,10 +79,8 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   StatePreview.h
   StateSerializationHelper.h
   SVGContent.h
-  SVGTextureFactory.h
   TestPattern.h
   TextureContent.h
-  TextureFactory.h
   VisibilityHelper.h
   ZoomInteractionDelegate.h
   ZoomHelper.h
@@ -134,7 +133,10 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   QmlControlPanel.h
   RenderController.h
   SVGSynchronizer.h
+  SVGTextureFactory.h
   TextureProvider.h
+  TextureFactory.h
+  TextureUploader.h
   Tile.h
   Tiles.h
   VectorialSynchronizer.h
@@ -217,6 +219,7 @@ list(APPEND DCCORE_SOURCES
   TextureContent.cpp
   TextureFactory.cpp
   TextureProvider.cpp
+  TextureUploader.cpp
   Tiles.cpp
   VectorialSynchronizer.cpp
   VisibilityHelper.cpp

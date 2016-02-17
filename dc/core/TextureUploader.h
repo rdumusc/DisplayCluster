@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,52 +37,57 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIESYNCHRONIZER_H
-#define MOVIESYNCHRONIZER_H
+#ifndef TEXTUREUPLOADER_H
+#define TEXTUREUPLOADER_H
 
-#include "BasicSynchronizer.h"
-#include "FpsCounter.h"
+#include <QObject>
+
+#include "types.h"
+
+class QOffscreenSurface;
+class QOpenGLContext;
+class QOpenGLFunctions_2_1;
 
 /**
- * Synchronizes a Movie between different QML windows.
+ * A class responsible for uploading pixel data from CPU memory to GPU memory
+ * using a PixelBufferObject. An object of this class needs to be moved to a
+ * separate thread for optimal performance and for the init() and stop()
+ * sequence to work.
  */
-class MovieSynchronizer : public BasicSynchronizer
+class TextureUploader : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY( MovieSynchronizer )
-
 public:
+    /** Construction does not need any OpenGL context. */
+    TextureUploader();
+
+public slots:
+    /** Performs the actual upload of pixels into the given OpenGL texture. */
+    void uploadTexture( ImagePtr image, uint textureID );
+
+signals:
     /**
-     * Construct a synchronizer for a movie, opening it in the provider.
-     * @param uri The uri of the movie to open.
+     * Does the necessary OpenGL setup, needs to be called from the dedicated
+     * upload thread.
      */
-    MovieSynchronizer( const QString& uri );
+    void init( QOpenGLContext* shareContext );
 
-    /** @copydoc ContentSynchronizer::update */
-    void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
-
-    /** Update the movies, using the channel to synchronize accross processes.*/
-    void synchronize( WallToWallChannel& channel ) final;
-
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
-
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
-
-    /** @copydoc ContentSynchronizer::getTileImage */
-    QImage getTileImage( uint tileIndex ) const override;
-
-private slots:
-    void onTextureUploaded();
+    /**
+     * Does the necessary OpenGL teardown, needs to be called from the dedicated
+     * upload thread.
+     */
+    void stop();
 
 private:
-    MovieUpdaterSharedPtr _updater;
-    FpsCounter _fpsCounter;
+    void _onInit( QOpenGLContext* shareContext );
+    void _onStop();
+
+    QOpenGLContext* _glContext;
+    QOffscreenSurface* _offscreenSurface;
+    QOpenGLFunctions_2_1* _gl;
+
+    uint _pbo;
+    size_t _bufferSize;
 };
 
-#endif
+#endif // TEXTUREUPLOADER_H

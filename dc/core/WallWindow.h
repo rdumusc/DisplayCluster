@@ -119,6 +119,9 @@ private:
     QQmlComponent* _qmlComponent;
     QQuickItem* _rootItem;
     bool _rendererInitialized;
+
+    QThread* _uploadThread;
+    TextureUploader* _uploader;
 };
 
 #endif // WALLWINDOW_H

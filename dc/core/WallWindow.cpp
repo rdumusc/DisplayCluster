@@ -39,11 +39,11 @@
 
 #include "WallWindow.h"
 
-#include "QuickRenderer.h"
-
 #include "DisplayGroupRenderer.h"
 #include "Options.h"
+#include "QuickRenderer.h"
 #include "TestPattern.h"
+#include "TextureUploader.h"
 
 #include "configuration/WallConfiguration.h"
 
@@ -74,6 +74,8 @@ WallWindow::WallWindow( const WallConfiguration& config,
     , _qmlComponent( nullptr )
     , _rootItem( nullptr )
     , _rendererInitialized( false )
+    , _uploadThread( new QThread )
+    , _uploader( new TextureUploader )
 {
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
@@ -96,16 +98,22 @@ WallWindow::WallWindow( const WallConfiguration& config,
 
 WallWindow::~WallWindow()
 {
-    _quickRenderer->stop();
+    _uploader->stop();
+    _uploadThread->quit();
+    _uploadThread->wait();
+    delete _uploadThread;
 
+    _quickRenderer->stop();
     _quickRendererThread->quit();
     _quickRendererThread->wait();
+    delete _quickRendererThread;
 
     delete _displayGroupRenderer;
     delete _qmlComponent;
     delete _qmlEngine;
     delete _glContext;
     delete _quickRenderer;
+    delete _uploader;
 }
 
 void WallWindow::exposeEvent( QExposeEvent* )
@@ -128,9 +136,22 @@ void WallWindow::exposeEvent( QExposeEvent* )
 
         _glContext->moveToThread( _quickRendererThread );
         _quickRenderer->moveToThread( _quickRendererThread );
+
+        connect( _quickRenderer, &QuickRenderer::frameSwapped,
+                 _displayGroupRenderer,
+                 &DisplayGroupRenderer::updateRenderedFrames );
+
+        _quickRendererThread->setObjectName( "Render" );
         _quickRendererThread->start();
 
         _quickRenderer->init();
+
+        _uploader->moveToThread( _uploadThread );
+        _uploadThread->setObjectName( "Upload" );
+        _uploadThread->start();
+
+        _uploader->init( _glContext );
+
         _wallChannel.globalBarrier();
         _rendererInitialized = true;
     }
@@ -147,17 +168,14 @@ void WallWindow::startQuick( const WallConfiguration& config )
     _rootItem->setWidth( width( ));
     _rootItem->setHeight( height( ));
 
-    _qmlEngine->addImageProvider( TextureProvider::ID, new TextureProvider );
+    _qmlEngine->addImageProvider( TextureProvider::ID,
+                                  new TextureProvider( _uploader ));
 
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
     _displayGroupRenderer = new DisplayGroupRenderer( *this, screenRect );
     _testPattern = new TestPattern( config, _rootItem );
     _testPattern->setPosition( -screenRect.topLeft( ));
-
-    connect( _quickRenderer, &QuickRenderer::frameSwapped,
-             _displayGroupRenderer,
-             &DisplayGroupRenderer::updateRenderedFrames );
 }
 
 DisplayGroupRenderer& WallWindow::getDisplayGroupRenderer()

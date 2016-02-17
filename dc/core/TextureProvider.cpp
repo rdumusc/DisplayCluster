@@ -45,6 +45,7 @@
 #include "PixelStreamSynchronizer.h"
 #include "SVGTextureFactory.h"
 #include "TextureFactory.h"
+#include "TextureUploader.h"
 
 #include "log.h"
 
@@ -52,8 +53,9 @@
 
 const QString TextureProvider::ID( "texture" );
 
-TextureProvider::TextureProvider()
+TextureProvider::TextureProvider( TextureUploader* uploader )
     : QQuickImageProvider( QQmlImageProviderBase::Texture )
+    , _uploader( uploader )
 {}
 
 TextureProvider::~TextureProvider() {}
@@ -86,6 +88,11 @@ ContentSynchronizerSharedPtr TextureProvider::open( ContentPtr content )
     if( !_synchronizers.count( uri ))
     {
         _synchronizers[uri] = ContentSynchronizer::create( content );
+
+        // TODO connect new image signal to texture uploader
+//        movieUpdater->connect( movieUpdater.get(), &MovieUpdater::uploadTexture,
+//                               _uploader, &TextureUploader::uploadTexture );
+
 
         if( content->getType() == CONTENT_TYPE_PIXEL_STREAM )
         {

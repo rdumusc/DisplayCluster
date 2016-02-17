@@ -162,6 +162,8 @@ void WallApplication::initMPIConnection( MPIChannelPtr worldChannel )
     connect( &_mpiReceiveThread, SIGNAL( started( )),
              _fromMasterChannel.get(), SLOT( processMessages( )));
 
+    _mpiReceiveThread.setObjectName( "Recv" );
+    _mpiSendThread.setObjectName( "Send" );
     _mpiReceiveThread.start();
     _mpiSendThread.start();
 }

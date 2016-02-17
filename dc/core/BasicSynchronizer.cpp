@@ -43,6 +43,7 @@
 
 BasicSynchronizer::BasicSynchronizer()
 {
+    _tiles.add( make_unique<Tile>( -1, QRect(), true ));
 }
 
 void BasicSynchronizer::update( const ContentWindow& window,
@@ -89,6 +90,6 @@ QString BasicSynchronizer::getStatistics() const
 
 void BasicSynchronizer::showTile()
 {
-    if( !_tiles.rowCount( ))
-        _tiles.add( make_unique<Tile>( -1, QRect(), true ));
+//    if( !_tiles.rowCount( ))
+//        _tiles.add( make_unique<Tile>( -1, QRect(), true ));
 }

@@ -45,19 +45,28 @@
 #include <QQuickTextureFactory>
 
 /**
- * Provide OpenGL Textures to Qml which can be directly updated from C++.
+ * A Qt Quick texture factory which provides a texture that is updated by the
+ * TextureUploader as instructed by the respective ContentProvider that requests
+ * this factory.
  */
 class TextureFactory : public QQuickTextureFactory
 {
+     Q_OBJECT
+
 public:
     TextureFactory( ContentSynchronizerSharedPtr synchronizer );
 
+signals:
+    /** Emitted after Qt Quick called createTexture() from the render thread. */
+    void textureCreated( uint textureID ) const;
+
+private:
     QSGTexture* createTexture( QQuickWindow* window ) const final;
     QSize textureSize() const final;
     int textureByteCount() const final;
 
-private:
     ContentSynchronizerSharedPtr _synchronizer;
+    const QSize _textureSize;
 };
 
 #endif

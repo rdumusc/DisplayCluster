@@ -46,6 +46,8 @@
 /** Renders an svg document into a texure using hardware antialiasing. */
 class SVGTextureFactory : public QQuickTextureFactory
 {
+    Q_OBJECT
+
 public:
     SVGTextureFactory( const QString& uri, const QSize& textureSize,
                        const QRectF& zoomRect );

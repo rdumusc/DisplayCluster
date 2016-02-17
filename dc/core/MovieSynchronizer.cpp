@@ -46,10 +46,9 @@
 
 MovieSynchronizer::MovieSynchronizer( const QString& uri )
     : _updater( new MovieUpdater( uri ))
-    , _timestamp( -1.0 )
 {
-    connect( _updater.get(), SIGNAL( pictureUpdated( double )),
-             this, SLOT( onPictureUpdated( double )));
+    connect( _updater.get(), &MovieUpdater::textureUploaded,
+             this, &MovieSynchronizer::onTextureUploaded );
 }
 
 void MovieSynchronizer::update( const ContentWindow& window,
@@ -82,18 +81,17 @@ QString MovieSynchronizer::getStatistics() const
 QImage MovieSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );
-    return _updater->getImage();
+    return QImage();
 }
 
-void MovieSynchronizer::onPictureUpdated( const double timestamp )
+void MovieSynchronizer::onTextureUploaded()
 {
     // Delay making the Tile visible until first picture is ready
-    if( _timestamp < 0.0 && _updater->isVisible( ))
-        showTile();
-
-    _timestamp = timestamp;
-//    emit sourceParamsChanged();
+//    if( _updater->isVisible( ))
+//        showTile();
 
     _fpsCounter.tick();
     emit statisticsChanged();
+
+    emit swapImage();
 }

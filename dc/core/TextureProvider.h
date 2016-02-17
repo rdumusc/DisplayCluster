@@ -52,7 +52,7 @@ class TextureProvider : public QObject, public QQuickImageProvider
     Q_DISABLE_COPY( TextureProvider )
 
 public:
-    TextureProvider();
+    TextureProvider( TextureUploader* uploader );
     ~TextureProvider();
 
     static const QString ID;
@@ -85,6 +85,7 @@ signals:
     void requestFrame( QString uri );
 
 private:
+    TextureUploader* _uploader;
     std::map< QString, ContentSynchronizerSharedPtr > _synchronizers;
 };
 

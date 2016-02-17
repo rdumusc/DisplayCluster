@@ -59,8 +59,10 @@ extern "C"
     #include <libavutil/mem.h>
 }
 
+#include "Image.h"
+
 /** A frame of an FFMPEG movie. */
-class FFMPEGFrame
+class FFMPEGFrame : public Image
 {
 public:
     /** Constructor. */
@@ -69,11 +71,17 @@ public:
     /** Destructor. */
     ~FFMPEGFrame();
 
-    /** @return the timestamp of the frame. */
-    int64_t getTimestamp() const;
+    /** @copydoc Image::getTimestamp */
+    int64_t getTimestamp() const override;
 
-    /** @return the frame raw data. */
-    const uint8_t* getData() const;
+    /** @copydoc Image::getData */
+    const uint8_t* getData() const override;
+
+    /** @copydoc Image::getWidth */
+    int getWidth() const override;
+
+    /** @copydoc Image::getHeight */
+    int getHeight() const override;
 
     /** Get the FFMPEG frame. */
     AVFrame& getAVFrame();

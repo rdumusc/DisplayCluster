@@ -52,15 +52,16 @@ struct MetaTypeRegistration
 {
     MetaTypeRegistration()
     {
-        qRegisterMetaType< OptionsPtr >( "OptionsPtr" );
-        qRegisterMetaType< MarkersPtr >( "MarkersPtr" );
-        qRegisterMetaType< DisplayGroupPtr >( "DisplayGroupPtr" );
         qRegisterMetaType< ContentWindowPtr >( "ContentWindowPtr" );
-        qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
         qRegisterMetaType< ContentWindow::WindowBorder >( "ContentWindow::WindowBorder" );
+        qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
+        qRegisterMetaType< DisplayGroupPtr >( "DisplayGroupPtr" );
+        qRegisterMetaType< ImagePtr >( "ImagePtr" );
+        qRegisterMetaType< MarkersPtr >( "MarkersPtr" );
         qRegisterMetaType< MPIMessageType >( "MPIMessageType" );
-        qRegisterMetaType< std::string >( "std::string" );
+        qRegisterMetaType< OptionsPtr >( "OptionsPtr" );
         qRegisterMetaType< QUuid >( "QUuid" );
+        qRegisterMetaType< std::string >( "std::string" );
         qRegisterMetaTypeStreamOperators< QUuid >( "QUuid" );
     }
 };

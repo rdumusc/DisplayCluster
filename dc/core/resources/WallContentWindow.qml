@@ -25,7 +25,8 @@ BaseContentWindow {
             Repeater {
                 model: contentsync.tiles
 
-                Image {
+                DoubleBufferedImage {
+                    id: dbi
                     x: model.modelData.coord.x
                     y: model.modelData.coord.y
                     width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width
@@ -34,6 +35,13 @@ BaseContentWindow {
 
                     property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
                     source: model.modelData.visible ? imagesource + tileIndex : ""
+
+                    Connections {
+                        target: contentsync
+                        onSwapImage: {
+                            dbi.showFront = !dbi.showFront
+                        }
+                    }
 
                     cache: contentsync.allowsTextureCaching
 

@@ -41,6 +41,7 @@
 #define MOVIEUPDATER_H
 
 #include "ElapsedTimer.h"
+#include "SwapSyncObject.h"
 #include "types.h"
 
 #include <QObject>
@@ -67,10 +68,14 @@ public:
     void update( const MovieContent& movie );
     void sync( WallToWallChannel& channel );
 
-    QImage getImage() const;
+    TextureFactory* createTextureFactory();
 
 signals:
-    void pictureUpdated( double timestamp );
+    void textureUploaded();
+    void uploadTexture( ImagePtr image, uint textureID );
+
+public slots:
+    void onTextureUploaded( ImagePtr image, uint textureID );
 
 private:
     MoviePtr _ffmpegMovie;
@@ -82,8 +87,12 @@ private:
     ElapsedTimer _timer;
     double _sharedTimestamp;
     std::future<PicturePtr> _futurePicture;
-    PicturePtr _currentPicture;
+    std::deque< uint > _textures;
 
+    typedef SwapSyncObject< int64_t > SyncSwapImage;
+    SyncSwapImage _syncSwapImage;
+
+    uint _popTextureID();
     double _getDelay() const;
     void _updateTimestamp( WallToWallChannel& channel );
     void _synchronizeTimestamp( WallToWallChannel& channel );

@@ -1,6 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,52 +37,29 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MOVIESYNCHRONIZER_H
-#define MOVIESYNCHRONIZER_H
-
-#include "BasicSynchronizer.h"
-#include "FpsCounter.h"
+#ifndef IMAGE_H
+#define IMAGE_H
 
 /**
- * Synchronizes a Movie between different QML windows.
+ * An interface to provide necessary image information for the texture upload
+ * and swap in TextureUploader.
  */
-class MovieSynchronizer : public BasicSynchronizer
+class Image
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( MovieSynchronizer )
-
 public:
-    /**
-     * Construct a synchronizer for a movie, opening it in the provider.
-     * @param uri The uri of the movie to open.
-     */
-    MovieSynchronizer( const QString& uri );
+    virtual ~Image() {}
 
-    /** @copydoc ContentSynchronizer::update */
-    void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
+    /** @return the width of the image. */
+    virtual int getWidth() const = 0;
 
-    /** Update the movies, using the channel to synchronize accross processes.*/
-    void synchronize( WallToWallChannel& channel ) final;
+    /** @return the height of the image. */
+    virtual int getHeight() const = 0;
 
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
+    /** @return the pointer to the pixels. */
+    virtual const uint8_t* getData() const = 0;
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
-
-    /** @copydoc ContentSynchronizer::getTileImage */
-    QImage getTileImage( uint tileIndex ) const override;
-
-private slots:
-    void onTextureUploaded();
-
-private:
-    MovieUpdaterSharedPtr _updater;
-    FpsCounter _fpsCounter;
+    /** @return the timestamp this image was created for. */
+    virtual int64_t getTimestamp() const = 0;
 };
 
-#endif
+#endif // IMAGE_H

@@ -108,6 +108,9 @@ signals:
 
     /** Notifier for the statistics property. */
     void statisticsChanged();
+
+    /** Notifier for the DoubleBufferedImage to swap the texture/image. */
+    void swapImage();
 };
 
 #endif // CONTENTSYNCHRONIZER_H
