@@ -38,6 +38,8 @@
 
 #include "Options.h"
 
+#include "Content.h"
+
 // false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
 Options::Options()
@@ -198,3 +200,16 @@ void Options::setBackgroundContent( ContentPtr content )
 
     emit(updated(shared_from_this()));
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+void Options::moveToThread( QThread* thread )
+{
+    if( backgroundContent_ )
+        backgroundContent_->moveToThread( thread );
+    QObject::moveToThread( thread );
+}
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
