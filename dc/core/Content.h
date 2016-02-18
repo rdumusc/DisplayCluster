@@ -130,9 +130,6 @@ public:
     /** Set the zoom rectangle in normalized coordinates. */
     void setZoomRect( const QRectF& zoomRect );
 
-    /** Callback for creating content-specific actions */
-    virtual void createActions() {}
-
     /** Get the actions from QML. */
     ContentActionsModel* getActions();
 

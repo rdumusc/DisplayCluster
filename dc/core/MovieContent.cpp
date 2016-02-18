@@ -55,12 +55,13 @@ const QString ICON_PLAY( "qrc:///img/play.svg" );
 
 MovieContent::MovieContent( const QString& uri )
     : Content( uri )
-    , controlState_( STATE_LOOP )
+    , _controlState( STATE_LOOP )
 {
+    _createActions();
 }
 
 MovieContent::MovieContent()
-    : controlState_( STATE_LOOP )
+    : _controlState( STATE_LOOP )
 {
 }
 
@@ -108,30 +109,30 @@ const QStringList& MovieContent::getSupportedExtensions()
 
 ControlState MovieContent::getControlState() const
 {
-    return controlState_;
+    return _controlState;
 }
 
 void MovieContent::play()
 {
-    controlState_ = (ControlState)(controlState_ & ~STATE_PAUSED);
+    _controlState = (ControlState)(_controlState & ~STATE_PAUSED);
 
     emit modified();
 }
 
 void MovieContent::pause()
 {
-    controlState_ = (ControlState)(controlState_ | STATE_PAUSED);
+    _controlState = (ControlState)(_controlState | STATE_PAUSED);
 
     emit modified();
 }
 
-void MovieContent::createActions()
+void MovieContent::_createActions()
 {
     ContentAction* playPauseAction = new ContentAction();
     playPauseAction->setCheckable( true );
     playPauseAction->setIcon( ICON_PAUSE );
     playPauseAction->setIconChecked( ICON_PLAY );
-    playPauseAction->setChecked( controlState_ & STATE_PAUSED );
+    playPauseAction->setChecked( _controlState & STATE_PAUSED );
     connect( playPauseAction, SIGNAL( checked( )), this, SLOT( pause( )));
     connect( playPauseAction, SIGNAL( unchecked( )), this, SLOT( play( )));
     _actions.add( playPauseAction );

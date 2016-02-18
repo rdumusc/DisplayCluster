@@ -82,7 +82,7 @@ private slots:
     void pause();
 
 private:
-    void createActions() override;
+    void _createActions();
 
     friend class boost::serialization::access;
 
@@ -94,7 +94,7 @@ private:
     void serialize( Archive & ar, const unsigned int )
     {
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-        ar & controlState_;
+        ar & _controlState;
     }
 
     /** Serialize for saving to an xml file. */
@@ -104,7 +104,7 @@ private:
         // serialize base class information (with NVP for xml archives)
         ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
         if( version >= 2 )
-            ar & boost::serialization::make_nvp( "controlState", controlState_ );
+            ar & boost::serialization::make_nvp( "controlState", _controlState );
     }
 
     /** Loading from xml. */
@@ -112,7 +112,7 @@ private:
                             const unsigned int version )
     {
         serialize_members_xml( ar, version );
-        createActions(); // Need to be done after controlState_ is restored
+        _createActions(); // Need to be done after _controlState is restored
     }
 
     /** Saving to xml. */
@@ -122,7 +122,7 @@ private:
         serialize_members_xml( ar, version );
     }
 
-    ControlState controlState_;
+    ControlState _controlState;
 };
 
 BOOST_CLASS_VERSION( MovieContent, 2 )
