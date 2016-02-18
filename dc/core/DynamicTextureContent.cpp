@@ -83,13 +83,7 @@ const QStringList& DynamicTextureContent::getSupportedExtensions()
     static QStringList extensions;
 
     if( extensions.empty( ))
-    {
         extensions << "pyr";
 
-        const QList<QByteArray>& imageFormats =
-                QImageReader::supportedImageFormats();
-        foreach( const QByteArray entry, imageFormats )
-            extensions << entry;
-    }
     return extensions;
 }

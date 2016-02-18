@@ -75,7 +75,6 @@ private:
 
     void scaleToDisplayGroup( ContentWindowPtrs& contentWindows ) const;
     void validate( ContentWindowPtrs& contentWindows ) const;
-    bool isPixelStream( const ContentWindow& contentWindow ) const;
 };
 
 #endif // STATESERIALIZATIONHELPER_H
