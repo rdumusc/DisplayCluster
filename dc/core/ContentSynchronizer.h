@@ -42,6 +42,7 @@
 
 #include "types.h"
 #include "ContentType.h"
+#include "Tiles.h"
 
 #include <QObject>
 #include <QQmlImageProviderBase>
@@ -59,8 +60,8 @@ class ContentSynchronizer : public QObject
     Q_PROPERTY( QString sourceParams READ getSourceParams
                 NOTIFY sourceParamsChanged )
     Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
-    Q_PROPERTY( Tiles tiles READ getTiles NOTIFY tilesChanged )
-    Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesChanged )
+    Q_PROPERTY( Tiles* tiles READ getTilesPtr CONSTANT )
+    Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesAreaChanged )
     Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
 public:
@@ -80,8 +81,12 @@ public:
     /** @return true if the content allows texture caching for rendering. */
     virtual bool allowsTextureCaching() const = 0;
 
+
     /** Get the list of tiles that compose the content. */
-    virtual Tiles getTiles() const = 0;
+    virtual Tiles& getTiles() = 0;
+
+    /** Qml needs a pointer instead of a reference. */
+    Tiles* getTilesPtr() { return &getTiles(); }
 
     /** The total area covered by the tiles (may depend on current LOD). */
     virtual QSize getTilesArea() const = 0;
@@ -97,8 +102,8 @@ signals:
     /** Notifier for the sourceParams property. */
     void sourceParamsChanged();
 
-    /** Notifier for the tiles properties. */
-    void tilesChanged();
+    /** Notifier for the tiles area property. */
+    void tilesAreaChanged();
 
     /** Notifier for the statistics property. */
     void statisticsChanged();

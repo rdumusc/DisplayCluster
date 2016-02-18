@@ -78,7 +78,7 @@ bool DynamicTextureSynchronizer::allowsTextureCaching() const
     return true;
 }
 
-Tiles DynamicTextureSynchronizer::getTiles() const
+Tiles& DynamicTextureSynchronizer::getTiles()
 {
     return _tiles;
 }
@@ -105,36 +105,91 @@ void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
         return;
 
     _visibleArea = visibleArea;
-    _reader->cancelPendingTileLoads();
 
     if( lod != _lod )
     {
-        _tiles.clear();
+        _tiles.reset( TileList( ));
+        if( !_lodTilesMap.count( lod ))
+            _lodTilesMap[ lod ] = _gatherAllTiles( lod );
+
         _lod = lod;
+        _visibleSet.clear();
+        _reader->cancelPendingTileLoads();
+
         emit statisticsChanged();
+        emit tilesAreaChanged();
     }
 
-    Tiles tiles;
-    const QSize tilesCount = _reader->getTilesCount( _lod );
-    const int startIndex = _reader->getFirstTileIndex( _lod );
+    const TileList& tiles = _lodTilesMap[ lod ];
+
+    const Indices visibleSet = _computeVisibleSet( visibleArea, tiles );
+
+    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
+    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
+
+
+    // Remove tiles
+    if( !removedTiles.empty( ))
+    {
+        _reader->cancelPendingTileLoads();
+        for( auto i : removedTiles )
+            _tiles.remove( tiles[i]->getIndex( ));
+
+        // Retrigger tile loads which might have been canceled above
+        const Indices current = set_difference( _visibleSet, removedTiles );
+        for( auto i : current )
+            _reader->triggerTileLoad( _tiles.get( tiles[i]->getIndex( )));
+    }
+
+    // Add tiles
+    for( auto i : addedTiles )
+    {
+        auto tile = make_unique<Tile>( tiles[i]->getIndex(),
+                                       tiles[i]->getCoord(), false );
+        _reader->triggerTileLoad( tile.get( ));
+        _tiles.add( std::move( tile ));
+    }
+
+    _visibleSet = visibleSet;
+}
+
+TileList DynamicTextureSynchronizer::_gatherAllTiles( const uint lod ) const
+{
+    TileList tiles;
+
+    const QSize tilesCount = _reader->getTilesCount( lod );
+    int tileIndex = _reader->getFirstTileIndex( lod );
     for( int y = 0; y < tilesCount.height(); ++y )
     {
         for( int x = 0; x < tilesCount.width(); ++x )
         {
-            const int i = startIndex + y * tilesCount.width() + x;
-            const QRect& coord = _reader->getTileCoord( _lod, x, y );
-            if( QRectF( coord ).intersects( visibleArea ))
-            {
-                Tile* tile = new Tile( i, coord, this, false );
-                _reader->triggerTileLoad( tile );
-                tiles.push_back( tile );
-            }
+            const QRect& coord = _reader->getTileCoord( lod, x, y );
+            tiles.push_back( make_unique<Tile>( tileIndex, coord, false ));
+            ++tileIndex;
         }
     }
 
-    if( _tiles != tiles )
+    return tiles;
+}
+
+Indices
+DynamicTextureSynchronizer::_computeVisibleSet( const QRectF& visibleArea,
+                                                const TileList& tiles ) const
+{
+    Indices visibleTiles;
+
+    if( visibleArea.isEmpty( ))
+        return visibleTiles;
+
+    const QRect rectArea = visibleArea.toRect();
+
+    int i = 0;
+    for( const auto& tile : tiles )
     {
-        _tiles = tiles;
-        emit tilesChanged();
+        if( tile->getCoord().intersects( rectArea ))
+            visibleTiles.push_back( i );
+        ++i;
     }
+
+    return visibleTiles;
 }

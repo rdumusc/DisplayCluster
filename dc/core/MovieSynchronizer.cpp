@@ -87,7 +87,7 @@ void MovieSynchronizer::onPictureUpdated( const double timestamp )
 {
     // Delay making the Tile visible until first picture is ready
     if( _timestamp < 0.0 && _updater->isVisible( ))
-        qobject_cast<Tile*>( getTiles().front( ))->setVisible( true );
+        showTile();
 
     _timestamp = timestamp;
     emit sourceParamsChanged();

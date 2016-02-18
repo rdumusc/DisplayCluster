@@ -69,7 +69,7 @@ public:
     bool allowsTextureCaching() const override;
 
     /** @copydoc ContentSynchronizer::getTiles */
-    Tiles getTiles() const override;
+    Tiles& getTiles() override;
 
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
@@ -85,7 +85,14 @@ private:
     uint _lod;
     QRectF _visibleArea;
 
+    Indices _visibleSet;
+    typedef std::map<size_t, TileList> LodTilesMap;
+    LodTilesMap _lodTilesMap;
+
     void _updateTiles( const QRectF& visibleArea, uint lod );
+    TileList _gatherAllTiles( const uint lod ) const;
+    Indices _computeVisibleSet( const QRectF& visibleArea,
+                                const TileList& tiles ) const;
 };
 
 #endif

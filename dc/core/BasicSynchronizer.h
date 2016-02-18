@@ -42,6 +42,8 @@
 
 #include "ContentSynchronizer.h"
 
+#include "Tiles.h"
+
 /**
  * A basic synchronizer used for static content types.
  */
@@ -65,13 +67,16 @@ public:
     bool allowsTextureCaching() const override;
 
     /** @copydoc ContentSynchronizer::getTiles */
-    Tiles getTiles() const override;
+    Tiles& getTiles() override;
 
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;
+
+protected:
+    void showTile();
 
 private:
     Tiles _tiles;

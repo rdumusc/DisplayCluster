@@ -63,14 +63,11 @@ void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
     _swapSyncFrame.sync( versionCheckFunc );
 
     // If the frame was not swapped, refresh tiles caused by a visibility update
-    if( _tilesDirty && _currentFrame )
-    {
-        _decodeSegments( _currentFrame->segments );
-        _refreshTiles( _currentFrame->segments );
-    }
+    if( _tilesDirty )
+        _updateTiles();
 }
 
-const Tiles& PixelStreamUpdater::getTiles() const
+Tiles& PixelStreamUpdater::getTiles()
 {
     return _tiles;
 }
@@ -80,7 +77,7 @@ QImage PixelStreamUpdater::getTileImage( const uint tileIndex )
     if( !_currentFrame )
         throw std::runtime_error( "No frames yet" );
 
-    const auto& segment = _currentFrame->segments.at( _visibleSet[tileIndex] );
+    const auto& segment = _currentFrame->segments.at( tileIndex );
 
     return QImage( (const uchar*)segment.imageData.constData(),
                    segment.parameters.width, segment.parameters.height,
@@ -116,33 +113,28 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
         } );
 
     _currentFrame = frame;
+    _updateTiles();
 
-    // decode everthing in a batch rather than doing it in the requestImage()
-    // for better performance.
-    _visibleSet = _computeVisibleSet( frame->segments );
-    _decodeSegments( frame->segments );
-
-    // When the tilesChanged signal is emitted all the qml tiles are immediately
-    // recreated and they request a new image. As an optimization, there is no
-    // need to trigger a second image update in this case.
-    const bool tilesChangedEmitted = _refreshTiles( frame->segments );
-    emit pictureUpdated( !tilesChangedEmitted );
-
+    emit pictureUpdated();
     emit requestFrame( frame->uri );
 }
 
-void PixelStreamUpdater::_decodeSegments( deflect::Segments& segments )
+void PixelStreamUpdater::_decodeVisibleSegments( deflect::Segments& segments )
 {
 #pragma omp parallel for
     for( size_t i = 0; i < _visibleSet.size(); ++i )
     {
-        if( segments[_visibleSet[i]].parameters.compressed )
+        const auto tileIndex = _visibleSet[i];
+        if( segments[tileIndex].parameters.compressed )
         {
             // turbojpeg handles need to be per thread
             static QThreadStorage< deflect::SegmentDecoder > decoder;
-            decoder.localData().decode( segments[_visibleSet[i]] );
+            decoder.localData().decode( segments[tileIndex] );
         }
     }
+    // Must be done after the parallel for, otherwise there are threading issues
+    for( auto tileIndex : _visibleSet )
+        _tiles.get( tileIndex )->setVisible( true );
 }
 
 QRect toRect( const deflect::SegmentParameters& params )
@@ -150,10 +142,10 @@ QRect toRect( const deflect::SegmentParameters& params )
     return QRect( params.x, params.y, params.width, params.height );
 }
 
-PixelStreamUpdater::SegmentIndices
+Indices
 PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments) const
 {
-    SegmentIndices visibleSet;
+    Indices visibleSet;
 
     if( _visibleArea.isEmpty( ))
         return visibleSet;
@@ -166,38 +158,36 @@ PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments) const
     return visibleSet;
 }
 
-bool PixelStreamUpdater::_refreshTiles( const deflect::Segments& segments )
+void PixelStreamUpdater::_updateTiles()
 {
+    if( !_currentFrame )
+        return;
+
+    const Indices visibleSet = _computeVisibleSet( _currentFrame->segments );
+
+    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
+    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
+    const Indices currentTiles = set_difference( _visibleSet, removedTiles );
+
+    // Remove tiles
+    for( auto i : removedTiles )
+        _tiles.remove( i );
+
+    // Add tiles
+    for( auto i : addedTiles )
+    {
+        const auto tileRect = toRect( _currentFrame->segments[i].parameters );
+        _tiles.add( make_unique<Tile>( i, tileRect, false ));
+    }
+
     // Update existing segments
-    const size_t maxIndex = std::min( (size_t)_tiles.size(),
-                                      _visibleSet.size( ));
-    for( size_t i = 0; i < maxIndex; ++i )
-    {
-        Tile* tile = qobject_cast<Tile*>( _tiles[i] );
-        tile->update( toRect( segments[_visibleSet[i]].parameters ));
-    }
+    for( auto i : currentTiles )
+        _tiles.update( i, toRect( _currentFrame->segments[i].parameters ));
 
-    const bool sizeChange = _visibleSet.size() != (size_t)_tiles.size();
-
-    // Insert new objects in the vector if it is smaller
-    for( size_t i = _tiles.size(); i < _visibleSet.size(); ++i )
-    {
-        const auto tileRect = toRect( segments[_visibleSet[i]].parameters );
-        _tiles.push_back( new Tile( i, tileRect, this, true ));
-    }
-
-    // Or remove objects if it is bigger
-    const size_t removeCount = _tiles.size() - _visibleSet.size();
-    for( size_t i = 0; i < removeCount; ++i )
-    {
-        delete _tiles.back();
-        _tiles.pop_back();
-    }
-
+    _visibleSet = visibleSet;
     _tilesDirty = false;
 
-    if( sizeChange )
-        emit tilesChanged();
-
-    return sizeChange;
+    // decode everthing in a batch rather than doing it in the requestImage()
+    // for better performance.
+    _decodeVisibleSegments( _currentFrame->segments );
 }

@@ -61,7 +61,6 @@ struct MetaTypeRegistration
         qRegisterMetaType< MPIMessageType >( "MPIMessageType" );
         qRegisterMetaType< std::string >( "std::string" );
         qRegisterMetaType< QUuid >( "QUuid" );
-        qRegisterMetaType< Tiles >( "Tiles" );
         qRegisterMetaTypeStreamOperators< QUuid >( "QUuid" );
     }
 };
