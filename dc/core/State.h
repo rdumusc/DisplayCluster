@@ -100,17 +100,22 @@ private:
     void serialize( Archive & ar, const unsigned int version )
     {
         version_ = static_cast< StateVersion >( version );
+
+        if( version < FIRST_PIXEL_COORDINATES_FILE_VERSION )
+            displayGroup_->setCoordinates( UNIT_RECTF );
+
         if( version < WINDOW_TITLES_VERSION )
         {
             ContentWindowPtrs contentWindows;
             ar & boost::serialization::make_nvp( "contentWindows",
-            contentWindows );
+                                                 contentWindows );
             displayGroup_->setContentWindows( contentWindows );
             displayGroup_->setShowWindowTitles( false );
         }
         else
         {
-            ar & boost::serialization::make_nvp( "displayGroup", displayGroup_ );
+            ar & boost::serialization::make_nvp( "displayGroup",
+                                                 displayGroup_ );
         }
     }
 

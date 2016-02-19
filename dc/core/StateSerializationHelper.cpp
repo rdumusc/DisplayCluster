@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2016, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -39,21 +39,21 @@
 
 #include "StateSerializationHelper.h"
 
+#include "ContentFactory.h"
+#include "DisplayGroup.h"
+#include "DisplayGroupController.h"
 #include "State.h"
 #include "StatePreview.h"
-#include "DisplayGroup.h"
-#include "ContentFactory.h"
 
 #include "log.h"
 
 #include <fstream>
-#include <boost/foreach.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_archive_exception.hpp>
 
 StateSerializationHelper::StateSerializationHelper( DisplayGroupPtr displayGroup )
-    : displayGroup_( displayGroup )
+    : _displayGroup( displayGroup )
 {
 }
 
@@ -63,11 +63,11 @@ bool StateSerializationHelper::save( const QString& filename,
     put_flog( LOG_INFO, "Saving session: '%s'",
               filename.toStdString().c_str( ));
 
-    ContentWindowPtrs contentWindows = displayGroup_->getContentWindows();
+    ContentWindowPtrs contentWindows = _displayGroup->getContentWindows();
 
     if( generatePreview )
     {
-        const QSizeF& size = displayGroup_->getCoordinates().size();
+        const QSizeF& size = _displayGroup->getCoordinates().size();
         const QSize dimensions( (int)size.width(), (int)size.height( ));
         StatePreview filePreview( filename );
         filePreview.generateImage( dimensions, contentWindows );
@@ -81,12 +81,41 @@ bool StateSerializationHelper::save( const QString& filename,
 
     // brace this so destructor is called on archive before we use the stream
     {
-        State state( displayGroup_ );
+        State state( _displayGroup );
         boost::archive::xml_oarchive oa( ofs );
         oa << BOOST_SERIALIZATION_NVP( state );
     }
     ofs.close();
 
+    return true;
+}
+
+bool _loadBoostXml( State& state, const QString& filename )
+{
+    // De-serialize state file
+    std::ifstream ifs( filename.toStdString( ));
+    if ( !ifs.good( ))
+        return false;
+    try
+    {
+        boost::archive::xml_iarchive ia( ifs );
+        ia >> BOOST_SERIALIZATION_NVP( state );
+    }
+    catch( const boost::archive::archive_exception& e )
+    {
+        put_flog( LOG_ERROR, "Could not restore session: '%s': %s",
+                  filename.toStdString().c_str(), e.what( ));
+        return false;
+    }
+    catch( const std::exception& e )
+    {
+        put_flog( LOG_ERROR, "Could not restore state file '%s'',"
+                             "wrong file format: %s",
+                  filename.toStdString().c_str(), e.what( ));
+        return false;
+    }
+
+    ifs.close();
     return true;
 }
 
@@ -96,68 +125,42 @@ bool StateSerializationHelper::load( const QString& filename )
               filename.toStdString().c_str( ));
 
     State state;
+    // For backward compatibility, try to load the file as a legacy xml first
+    if( !state.legacyLoadXML( filename ) && !_loadBoostXml( state, filename ))
+        return false;
 
-    // For backward compatibility, try to load the file as a legacy state file first
-    if( !state.legacyLoadXML( filename ))
+    DisplayGroupPtr group = state.getDisplayGroup();
+    _validateContents( *group );
+
+    DisplayGroupController controller( *group );
+
+    if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )
+        controller.denormalize( _displayGroup->getCoordinates().size( ));
+    else if( state.getVersion() == FIRST_PIXEL_COORDINATES_FILE_VERSION )
     {
-        // De-serialize state file
-        std::ifstream ifs( filename.toStdString( ));
-        if ( !ifs.good( ))
-            return false;
-        try
-        {
-            boost::archive::xml_iarchive ia( ifs );
-            ia >> BOOST_SERIALIZATION_NVP( state );
-        }
-        catch( const boost::archive::archive_exception& e )
-        {
-            put_flog( LOG_ERROR, "Could not restore session: '%s': %s",
-                      filename.toStdString().c_str(), e.what( ));
-            return false;
-        }
-        catch( const std::exception& e )
-        {
-            put_flog( LOG_ERROR, "Could not restore state file '%s'',"
-                                 "wrong file format: %s",
-                      filename.toStdString().c_str(), e.what( ));
-            return false;
-        }
-
-        ifs.close();
+        // Approximation; only applies to FIRST_PIXEL_COORDINATES_FILE_VERSION
+        // which did not serialize the size of the DisplayGroup
+        assert( group->getCoordinates().isEmpty( ));
+        group->setCoordinates( controller.estimateSurface( ));
     }
 
-    DisplayGroupPtr newDisplayGroup = state.getDisplayGroup();
-    ContentWindowPtrs contentWindows = newDisplayGroup->getContentWindows();
-    if( state.getVersion() < FIRST_PIXEL_COORDINATES_FILE_VERSION )
-        scaleToDisplayGroup( contentWindows );
-    validate( contentWindows );
+    // Scale down the new DisplayGroup if it doesn't fit
+    if( !_displayGroup->getCoordinates().contains( group->getCoordinates( )))
+        controller.adjust( _displayGroup->getCoordinates().size( ));
 
-    displayGroup_->setShowWindowTitles( newDisplayGroup->getShowWindowTitles( ));
-    displayGroup_->setContentWindows( contentWindows );
+    _displayGroup->setShowWindowTitles( group->getShowWindowTitles( ));
+    _displayGroup->setContentWindows( group->getContentWindows( ));
     return true;
 }
 
-void StateSerializationHelper::scaleToDisplayGroup( ContentWindowPtrs&
-                                                    contentWindows ) const
+void StateSerializationHelper::_validateContents( DisplayGroup& group ) const
 {
-    const QRectF& group = displayGroup_->getCoordinates();
+    const ContentWindowPtrs& windows = group.getContentWindows();
 
-    BOOST_FOREACH( ContentWindowPtr window, contentWindows )
-    {
-        const QRectF& norm = window->getCoordinates();
-        window->setCoordinates( QRectF( norm.x() * group.width(),
-                                        norm.y() * group.height(),
-                                        norm.width() * group.width(),
-                                        norm.height() * group.height( )));
-    }
-}
-
-void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
-{
     ContentWindowPtrs validContentWindows;
-    validContentWindows.reserve( contentWindows.size( ));
+    validContentWindows.reserve( windows.size( ));
 
-    BOOST_FOREACH( ContentWindowPtr contentWindow, contentWindows )
+    for( ContentWindowPtr contentWindow : windows )
     {
         ContentPtr content = contentWindow->getContent();
         if( !content )
@@ -204,5 +207,6 @@ void StateSerializationHelper::validate(ContentWindowPtrs& contentWindows) const
         }
         validContentWindows.push_back( contentWindow );
     }
-    contentWindows = validContentWindows;
+
+    group.setContentWindows( validContentWindows );
 }

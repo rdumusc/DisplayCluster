@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2013, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2013-2016, EPFL/Blue Brain Project                  */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -45,7 +45,7 @@
 #include "types.h"
 
 /**
- * Helper class to store the current session to a state file and restore it later.
+ * Helper class to store a session to a state file and restore it later.
  */
 class StateSerializationHelper
 {
@@ -61,9 +61,9 @@ public:
      * Save the state of the application.
      *
      * @param filename The .dcx file to save the state.
-     * @param generatePreview Also generate a .dcxpreview thumbnail image for the state.
+     * @param generatePreview Also generate a .dcxpreview thumbnail image.
      */
-    bool save( const QString& filename, const bool generatePreview = true );
+    bool save( const QString& filename, bool generatePreview = true );
 
     /**
      * Load the state from a given xml file.
@@ -71,10 +71,9 @@ public:
     bool load( const QString& filename );
 
 private:
-    DisplayGroupPtr displayGroup_;
+    DisplayGroupPtr _displayGroup;
 
-    void scaleToDisplayGroup( ContentWindowPtrs& contentWindows ) const;
-    void validate( ContentWindowPtrs& contentWindows ) const;
+    void _validateContents( DisplayGroup& group ) const;
 };
 
 #endif // STATESERIALIZATIONHELPER_H

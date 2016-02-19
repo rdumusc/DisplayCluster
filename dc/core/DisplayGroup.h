@@ -224,8 +224,9 @@ private:
                             const unsigned int version)
     {
         serialize_members_xml( ar, version );
-        BOOST_FOREACH( ContentWindowPtr window, _contentWindows )
+        for( ContentWindowPtr window : _contentWindows )
         {
+            _assignController( *window );
             if( window->isFocused( ))
             {
                 window->setState( ContentWindow::SELECTED );
@@ -244,6 +245,7 @@ private:
     }
 
     void _watchChanges( ContentWindowPtr contentWindow );
+    void _assignController( ContentWindow& window );
     void _removeFocusedWindow( ContentWindowPtr window );
     void _updateFocusedWindowsCoordinates();
 

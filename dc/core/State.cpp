@@ -47,7 +47,7 @@
 #include <QtXmlPatterns/QXmlQuery>
 
 State::State()
-    : displayGroup_( new DisplayGroup( QSizeF( 0, 0 )))
+    : displayGroup_( new DisplayGroup( QSizeF( )))
     , version_( INVALID_FILE_VERSION )
 {}
 
@@ -99,6 +99,7 @@ bool State::legacyLoadXML( const QString& filename )
     displayGroup_->setContentWindows( contentWindows );
     // Preserve appearence of legacy sessions.
     displayGroup_->setShowWindowTitles( false );
+    displayGroup_->setCoordinates( UNIT_RECTF );
     version_ = LEGACY_FILE_VERSION;
 
     return true;

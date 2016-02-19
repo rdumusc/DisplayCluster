@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,67 +37,78 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "CommandLineParameters.h"
+#include "DisplayGroupController.h"
 
-#include <iostream>
-#include <boost/program_options.hpp>
+#include "DisplayGroup.h"
 
-CommandLineParameters::CommandLineParameters(int &argc, char **argv)
-    : desc_("Allowed options")
-    , getHelp_(false)
+#include <QTransform>
+
+DisplayGroupController::DisplayGroupController( DisplayGroup& group )
+    : _group( group )
+{}
+
+void DisplayGroupController::scale( const QSizeF& factor )
 {
-    initDesc();
-    parseCommandLineArguments(argc, argv);
+    const QTransform t = QTransform::fromScale( factor.width(),
+                                                factor.height( ));
+
+    for( ContentWindowPtr window : _group.getContentWindows( ))
+        window->setCoordinates( t.mapRect( window->getCoordinates( )));
+
+    _group.setCoordinates( t.mapRect( _group.getCoordinates( )));
 }
 
-
-bool CommandLineParameters::getHelp() const
+void DisplayGroupController::adjust( const QSizeF& maxGroupSize )
 {
-    return getHelp_;
+    QSizeF targetSize = _group.getCoordinates().size();
+    targetSize.scale( maxGroupSize, Qt::KeepAspectRatio );
+    const qreal scaleFactor = targetSize.width() / _group.width();
+    scale( QSizeF( scaleFactor, scaleFactor ));
 }
 
-void CommandLineParameters::showSyntax() const
+void DisplayGroupController::denormalize( const QSizeF& targetSize )
 {
-    std::cout << desc_;
+    if( _group.getCoordinates() != UNIT_RECTF )
+        throw std::runtime_error( "Target DisplayGroup is not normalized!" );
+
+    const qreal aspectRatio = _estimateAspectRatio();
+    const QSizeF scaleFactor = QSizeF( aspectRatio, 1.0 ).scaled( targetSize,
+                                                          Qt::KeepAspectRatio );
+    scale( scaleFactor );
+    // Make sure aspect ratio is 100% correct for all windows - some may be
+    // slightly off due to numerical imprecisions in the xml state file
+    adjustWindowsAspectRatioToContent();
 }
 
-void CommandLineParameters::initDesc()
+void DisplayGroupController::adjustWindowsAspectRatioToContent()
 {
-    desc_.add_options()
-        ("help", "produce help message")
-        ("config", boost::program_options::value<std::string>()->default_value(""),
-                 "path to configuration file")
-        ("sessionfile", boost::program_options::value<std::string>()->default_value(""),
-                 "path to an initial session file")
-    ;
-}
-
-void CommandLineParameters::parseCommandLineArguments(int &argc, char **argv)
-{
-    boost::program_options::variables_map vm;
-    try
+    for( ContentWindowPtr window : _group.getContentWindows( ))
     {
-        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc_), vm);
-        boost::program_options::notify(vm);
+        QSizeF exactSize = window->getContent()->getDimensions();
+        exactSize.scale( window->getCoordinates().size(), Qt::KeepAspectRatio );
+        window->setWidth( exactSize.width( ));
+        window->setHeight( exactSize.height( ));
     }
-    catch (const std::exception& e)
+}
+
+QRectF DisplayGroupController::estimateSurface() const
+{
+    QRectF area( UNIT_RECTF );
+    for( ContentWindowPtr contentWindow : _group.getContentWindows( ))
+        area = area.united( contentWindow->getCoordinates( ));
+    area.setTopLeft( QPointF( 0.0, 0.0 ));
+
+    return area;
+}
+
+qreal DisplayGroupController::_estimateAspectRatio() const
+{
+    qreal averageAR = 0.0;
+    for( ContentWindowPtr window : _group.getContentWindows( ))
     {
-        std::cerr << e.what() << std::endl;
-        return;
+        const qreal windowAR = window->width() / window->height();
+        averageAR += window->getContent()->getAspectRatio() / windowAR;
     }
-
-    getHelp_ = vm.count("help");
-    configFilename_ = vm["config"].as<std::string>().c_str();
-    sessionFilename_ = vm["sessionfile"].as<std::string>().c_str();
+    averageAR /= _group.getContentWindows().size();
+    return averageAR;
 }
-
-const QString& CommandLineParameters::getConfigFilename() const
-{
-    return configFilename_;
-}
-
-const QString& CommandLineParameters::getSessionFilename() const
-{
-    return sessionFilename_;
-}
-

@@ -197,6 +197,32 @@ void checkWindow( ContentWindowPtr window )
     checkContent( window->getContent( ));
 }
 
+void checkWindowVersion0( ContentWindowPtr window )
+{
+    BOOST_CHECK_EQUAL( window->getContent()->getZoomRect().width(), 1.0/1.5 );
+
+    // The window's content size is 256x128, the window has width and height of
+    // 0.5 and a position of (0.25; 0.25).
+    // So the estimated AR of the saved group should be 2.0.
+    // Current wall size is QSize(7694, 3264) -> AR ~= 2.357. So the window will
+    // retain its height of 0.5*wallHeight and its width will be 2*height.
+    const qreal expectedHeight = 0.5 * wallSize.height();
+    const qreal expectedWidth = 2.0 * expectedHeight;
+
+    BOOST_CHECK_EQUAL( window->getCoordinates().size(),
+                       QSize( expectedWidth, expectedHeight ));
+
+    // The denormalized group will be positionned inside the new group at (0,0):
+    const qreal estimatedOldGroupWidth = 2.0 * expectedWidth;
+    const qreal expectedX = 0.25 * estimatedOldGroupWidth;
+    const qreal expectedY = 0.25 * wallSize.height();
+
+    BOOST_CHECK_EQUAL( window->getCoordinates().x(), expectedX );
+    BOOST_CHECK_EQUAL( window->getCoordinates().y(), expectedY );
+
+    checkContent( window->getContent( ));
+}
+
 void checkWindowVersion3( ContentWindowPtr window )
 {
     BOOST_CHECK_EQUAL( window->getContent()->getZoomRect().width(), 1.0 );
@@ -232,7 +258,7 @@ BOOST_AUTO_TEST_CASE( testWhenOpeningValidStateThenContentIsLoaded )
     checkLegacyWindow( contentWindows[0] );
 }
 
-BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
+BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromVersion0File )
 {
     DisplayGroupPtr displayGroup( new DisplayGroup( wallSize ));
     StateSerializationHelper helper( displayGroup );
@@ -243,7 +269,10 @@ BOOST_AUTO_TEST_CASE( testStateSerializationHelperReadingFromFile )
     BOOST_REQUIRE_EQUAL( displayGroup->getContentWindows().size(), 1 );
     BOOST_REQUIRE_EQUAL( displayGroup->getShowWindowTitles(), false );
 
-    checkWindow( displayGroup->getContentWindows()[0] );
+    // The file contains only normalized coordinates, so all the windows have
+    // to be denormalized to be adjusted to the new displaygroup.
+    BOOST_REQUIRE_EQUAL( displayGroup->getCoordinates().size(), wallSize );
+    checkWindowVersion0( displayGroup->getContentWindows()[0] );
 }
 
 BOOST_AUTO_TEST_CASE( testWhenOpeningValidVersion3StateThenContentIsLoaded )

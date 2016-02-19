@@ -58,6 +58,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentType.h
   DataSource.h
   DynamicTexture.h
+  DisplayGroupController.h
   DynamicTextureContent.h
   ElapsedTimer.h
   FFMPEGFrame.h
@@ -187,6 +188,7 @@ list(APPEND DCCORE_SOURCES
   Coordinates.cpp
   DataProvider.cpp
   DisplayGroup.cpp
+  DisplayGroupController.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
   DynamicTextureContent.cpp
