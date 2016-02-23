@@ -46,16 +46,15 @@
 
 MovieSynchronizer::MovieSynchronizer( const QString& uri )
     : _updater( new MovieUpdater( uri ))
-{
-    connect( _updater.get(), &MovieUpdater::textureUploaded,
-             this, &MovieSynchronizer::onTextureUploaded );
-}
+{}
 
 void MovieSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
     _updater->update( static_cast<const MovieContent&>( *window.getContent( )));
     _updater->setVisible( !visibleArea.isEmpty( ));
+
+    BasicSynchronizer::update( window, visibleArea );
 }
 
 void MovieSynchronizer::synchronize( WallToWallChannel& channel )
@@ -78,20 +77,16 @@ QString MovieSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-QImage MovieSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );
-    return QImage();
+    return _updater->getImage();
 }
 
 void MovieSynchronizer::onTextureUploaded()
 {
-    // Delay making the Tile visible until first picture is ready
-//    if( _updater->isVisible( ))
-//        showTile();
-
     _fpsCounter.tick();
     emit statisticsChanged();
 
-    emit swapImage();
+//    emit swapImage();
 }

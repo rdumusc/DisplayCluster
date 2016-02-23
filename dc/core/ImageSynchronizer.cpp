@@ -39,15 +39,16 @@
 
 #include "ImageSynchronizer.h"
 
+#include "QtImage.h"
+
 #include <QImage>
 
 ImageSynchronizer::ImageSynchronizer( const QString& uri )
     : _uri( uri )
 {}
 
-QImage ImageSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );
-    return QImage( _uri );
+    return std::make_shared<QtImage>( QImage( _uri ));
 }
-

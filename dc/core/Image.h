@@ -40,6 +40,8 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#include <stdint.h>
+
 /**
  * An interface to provide necessary image information for the texture upload
  * and swap in TextureUploader.

@@ -1,10 +1,7 @@
 /*********************************************************************/
 /* Copyright (c) 2016, EPFL/Blue Brain Project                       */
-<<<<<<< HEAD
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
-=======
 /*                     Daniel.Nachbaur@epfl.ch                       */
->>>>>>> 9f82d03... Asynchronous texture upload for movies
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -47,10 +44,13 @@
 
 #include <QQuickWindow>
 
-TextureFactory::TextureFactory( ContentSynchronizerSharedPtr synchronizer )
-    : _synchronizer( synchronizer )
-    , _textureSize()
-{}
+TextureFactory::TextureFactory( Tile& tile )
+    : _tile( tile )
+    , _textureSize( tile.getCoord().size( ))
+{
+    connect( this, &TextureFactory::textureCreated,
+             &tile, &Tile::associateGlTexture );
+}
 
 QSGTexture* TextureFactory::createTexture( QQuickWindow* window ) const
 {

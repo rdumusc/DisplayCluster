@@ -76,6 +76,12 @@ DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
     _setBackground( _options->getBackgroundContent( ));
 }
 
+void DisplayGroupRenderer::synchronize( WallToWallChannel& channel )
+{
+    for( auto& windowRenderer : _windowItems )
+        windowRenderer->synchronize( channel );
+}
+
 bool DisplayGroupRenderer::needRedraw() const
 {
     return _options->getShowStatistics();

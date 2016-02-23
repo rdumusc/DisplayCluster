@@ -72,7 +72,10 @@ public:
     /** Set different touchpoint's markers. */
     void setMarkers( MarkersPtr markers );
 
-    /** @return true if the renderer requires a redraw, currently if statistics are shown. */
+    /** Update the contents, using the channel to synchronize processes. */
+    void synchronize( WallToWallChannel& channel );
+
+    /** @return true if the renderer requires a redraw. */
     bool needRedraw() const;
 
 public slots:

@@ -42,6 +42,7 @@
 
 #include <QObject>
 #include <QRect>
+#include <QSet>
 
 /**
  * Qml parameters for an image tile.
@@ -51,14 +52,14 @@ class Tile : public QObject
     Q_OBJECT
     Q_DISABLE_COPY( Tile )
 
-    Q_PROPERTY( int index READ getIndex CONSTANT )
+    Q_PROPERTY( uint index READ getIndex CONSTANT )
     Q_PROPERTY( QRect coord READ getCoord NOTIFY coordChanged )
     Q_PROPERTY( bool visible READ isVisible NOTIFY visibilityChanged )
 
 public:
     // false-positive on qt signals for Q_PROPERTY notifiers
     // cppcheck-suppress uninitMemberVar
-    Tile( const int index, const QRect& rect, const bool visible )
+    Tile( const uint index, const QRect& rect, const bool visible )
         : _index( index )
         , _rect( rect )
         , _visible( visible )
@@ -83,7 +84,7 @@ public:
         emit visibilityChanged();
     }
 
-    int getIndex() const
+    uint getIndex() const
     {
         return _index;
     }
@@ -97,14 +98,32 @@ public:
         emit coordChanged();
     }
 
+public slots:
+    void associateGlTexture( const uint id )
+    {
+        if( _glTextures.contains( id ))
+            return;
+
+        _glTextures.insert( id );
+        if( _glTextures.size() == 1 )
+            emit requestTextureUpdate();
+    }
+
 signals:
     void coordChanged();
     void visibilityChanged();
 
+
+    void requestTextureUpdate();
+
+    /** Notifier for the DoubleBufferedImage to swap the texture/image. */
+    void swapImage();
+
 private:
-    int _index;
+    uint _index;
     QRect _rect;
     bool _visible;
+    QSet<uint> _glTextures;
 };
 
 #endif

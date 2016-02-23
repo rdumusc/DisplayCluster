@@ -67,15 +67,6 @@ public:
     /** Close a ContentSynchronizer. */
     void close( const QString& uri );
 
-    /** Update the contents, using the channel to synchronize processes. */
-    void synchronize( WallToWallChannel& channel );
-
-    /**
-     * @return true if a redraw is needed because of pending tiles from any
-     *         content.
-     */
-    bool needRedraw() const;
-
 public slots:
     /** Add a new frame. */
     void setNewFrame( deflect::FramePtr frame );

@@ -89,7 +89,7 @@ void Tiles::add( TilePtr tile )
     endInsertRows();
 }
 
-Tile* Tiles::get( const int tileIndex )
+Tile* Tiles::get( const uint tileIndex )
 {
     auto it = _findTile( tileIndex );
     return it  == _tiles.end() ? nullptr : it->get();
@@ -104,12 +104,7 @@ void Tiles::reset( TileList&& tiles )
     endResetModel();
 }
 
-const TileList& Tiles::getTileList() const
-{
-    return _tiles;
-}
-
-bool Tiles::update( const int tileIndex, const QRect& coordinates )
+bool Tiles::update( const uint tileIndex, const QRect& coordinates )
 {
     auto it = _findTile( tileIndex );
 
@@ -125,7 +120,7 @@ bool Tiles::update( const int tileIndex, const QRect& coordinates )
     return true;
 }
 
-void Tiles::remove( const int tileIndex )
+void Tiles::remove( const uint tileIndex )
 {
     auto it = _findTile( tileIndex );
 
@@ -140,18 +135,18 @@ void Tiles::remove( const int tileIndex )
     endRemoveRows();
 }
 
-bool Tiles::contains( const int tileIndex ) const
+bool Tiles::contains( const uint tileIndex ) const
 {
     return _findTile( tileIndex ) != _tiles.end();
 }
 
-TileList::const_iterator Tiles::_findTile( const int tileIndex ) const
+TileList::const_iterator Tiles::_findTile( const uint tileIndex ) const
 {
    return std::find_if( _tiles.begin(), _tiles.end(), [&tileIndex]( const TilePtr& tile )
              { return tile->getIndex() == tileIndex; });
 }
 
-TileList::iterator Tiles::_findTile( const int tileIndex )
+TileList::iterator Tiles::_findTile( const uint tileIndex )
 {
    return std::find_if( _tiles.begin(), _tiles.end(), [&tileIndex]( const TilePtr& tile )
              { return tile->getIndex() == tileIndex; });

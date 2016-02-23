@@ -55,7 +55,7 @@ public:
     explicit ImageSynchronizer( const QString& uri );
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    QImage getTileImage( uint tileIndex ) const override;
+    ImagePtr getTileImage( uint tileIndex ) const override;
 
 private:
     QString _uri;

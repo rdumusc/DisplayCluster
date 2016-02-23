@@ -63,30 +63,27 @@ public:
     void add( TilePtr tile );
 
     /** Get a tile. */
-    Tile* get( int tileIndex );
+    Tile* get( uint tileIndex );
 
     /** Update a tile coordinates. */
-    bool update( int tileIndex, const QRect& coordinates );
+    bool update( uint tileIndex, const QRect& coordinates );
 
     /** Remove a Tile. */
-    void remove( int tileIndex );
+    void remove( uint tileIndex );
 
     /** Reset the model with a new list of tiles. */
     void reset( TileList&& tiles );
 
     /** Check for the existence of a tile. */
-    bool contains( int tileIndex ) const;
-
-    /** Get the internal list of tiles. */
-    const TileList& getTileList() const;
+    bool contains( uint tileIndex ) const;
 
 private:
     QHash<int, QByteArray> roleNames() const final;
 
     TileList _tiles;
 
-    TileList::const_iterator _findTile( int tileIndex ) const;
-    TileList::iterator _findTile( int tileIndex );
+    TileList::const_iterator _findTile( uint tileIndex ) const;
+    TileList::iterator _findTile( uint tileIndex );
 };
 
 #endif

@@ -63,6 +63,12 @@ public:
     /** Update the qml object with a new data model. */
     void update( ContentWindowPtr contentWindow, const QRectF& visibleArea );
 
+    /** Update the contents, using the channel to synchronize processes. */
+    void synchronize( WallToWallChannel& channel );
+
+    /** @return true if the window requires a redraw. */
+    bool needRedraw() const;
+
     /** Get the QML item. */
     QQuickItem* getQuickItem();
 

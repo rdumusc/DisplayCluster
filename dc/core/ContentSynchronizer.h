@@ -97,7 +97,7 @@ public:
     virtual QString getStatistics() const = 0;
 
     /** Get the image for a given tile index. */
-    virtual QImage getTileImage( uint tileIndex ) const = 0;
+    virtual ImagePtr getTileImage( uint tileIndex ) const = 0;
 
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content );
@@ -108,9 +108,6 @@ signals:
 
     /** Notifier for the statistics property. */
     void statisticsChanged();
-
-    /** Notifier for the DoubleBufferedImage to swap the texture/image. */
-    void swapImage();
 };
 
 #endif // CONTENTSYNCHRONIZER_H

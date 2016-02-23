@@ -65,16 +65,30 @@ TextureProvider::requestTexture( const QString& id, QSize* size,
                                  const QSize& requestedSize )
 {
     QStringList params = id.split( "?" );
-    if( params.isEmpty( ))
+    if( params.size() != 2 )
         return nullptr;
 
     const QString& uri = params[0];
+
+    bool ok = false;
+    const uint tileIndex = params[1].toUInt( &ok );
+    if( !ok )
+    {
+        put_flog( LOG_WARN, "No tile index specified for texture id: %s",
+                  id.toLocal8Bit().constData( ));
+        return nullptr;
+    }
 
     QQuickTextureFactory* factory = nullptr;
     if( ContentFactory::getContentTypeForFile( uri ) == CONTENT_TYPE_SVG )
         factory = new SVGTextureFactory( uri, requestedSize, UNIT_RECTF );
     else
-        factory = new TextureFactory( _synchronizers[uri] );
+    {
+        Tile* tile = _synchronizers[uri]->getTiles().get( tileIndex );
+        if( !tile )
+            return nullptr;
+        factory = new TextureFactory( *tile );
+    }
 
     if( size )
         *size = factory->textureSize();
@@ -88,11 +102,6 @@ ContentSynchronizerSharedPtr TextureProvider::open( ContentPtr content )
     if( !_synchronizers.count( uri ))
     {
         _synchronizers[uri] = ContentSynchronizer::create( content );
-
-        // TODO connect new image signal to texture uploader
-//        movieUpdater->connect( movieUpdater.get(), &MovieUpdater::uploadTexture,
-//                               _uploader, &TextureUploader::uploadTexture );
-
 
         if( content->getType() == CONTENT_TYPE_PIXEL_STREAM )
         {
@@ -110,12 +119,6 @@ void TextureProvider::close( const QString& uri )
     _synchronizers.erase( uri );
 }
 
-void TextureProvider::synchronize( WallToWallChannel& channel )
-{
-    for( auto& synchronizer : _synchronizers )
-        synchronizer.second->synchronize( channel );
-}
-
 void TextureProvider::setNewFrame( deflect::FramePtr frame )
 {
     if( !_synchronizers.count( frame->uri ))
@@ -127,14 +130,4 @@ void TextureProvider::setNewFrame( deflect::FramePtr frame )
         return;
 
     synchronizer->updatePixelStream( frame );
-}
-
-bool TextureProvider::needRedraw() const
-{
-    for( const auto& i : _synchronizers )
-    {
-        if( i.second->needRedraw( ))
-            return true;
-    }
-    return false;
 }

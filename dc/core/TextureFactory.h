@@ -54,7 +54,7 @@ class TextureFactory : public QQuickTextureFactory
      Q_OBJECT
 
 public:
-    TextureFactory( ContentSynchronizerSharedPtr synchronizer );
+    TextureFactory( Tile& tile );
 
 signals:
     /** Emitted after Qt Quick called createTexture() from the render thread. */
@@ -65,7 +65,7 @@ private:
     QSize textureSize() const final;
     int textureByteCount() const final;
 
-    ContentSynchronizerSharedPtr _synchronizer;
+    Tile& _tile;
     const QSize _textureSize;
 };
 

@@ -51,7 +51,7 @@ void SVGSynchronizer::update( const ContentWindow& window,
     Q_UNUSED( visibleArea );
 }
 
-QImage SVGSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr SVGSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );
     throw std::runtime_error( "getTileImage() not implemented for SVG!" );

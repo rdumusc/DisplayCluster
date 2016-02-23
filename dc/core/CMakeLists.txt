@@ -51,6 +51,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentFactory.h
   ContentLoader.h
   ContentType.h
+  DataLoader.h
   DynamicTextureContent.h
   ElapsedTimer.h
   FFMPEGFrame.h
@@ -74,6 +75,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamContent.h
   QmlWindowRenderer.h
   qmlUtils.h
+  QtImage.h
   SessionCommandHandler.h
   State.h
   StatePreview.h
@@ -171,6 +173,7 @@ list(APPEND DCCORE_SOURCES
   ContentWindow.cpp
   ContentWindowController.cpp
   Coordinates.cpp
+  DataLoader.cpp
   DisplayGroup.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
@@ -207,6 +210,7 @@ list(APPEND DCCORE_SOURCES
   QmlControlPanel.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
+  QtImage.cpp
   RenderController.cpp
   SessionCommandHandler.cpp
   State.cpp

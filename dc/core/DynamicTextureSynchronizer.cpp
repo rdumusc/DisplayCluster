@@ -40,6 +40,7 @@
 #include "DynamicTextureSynchronizer.h"
 
 #include "Tile.h"
+#include "QtImage.h"
 #include "ZoomHelper.h"
 
 #include <QTextStream>
@@ -94,9 +95,9 @@ QString DynamicTextureSynchronizer::getStatistics() const
     return stats;
 }
 
-QImage DynamicTextureSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr DynamicTextureSynchronizer::getTileImage( const uint tileIndex ) const
 {
-    return _reader->getTileImage( tileIndex );
+    return std::make_shared<QtImage>( _reader->getTileImage( tileIndex ));
 }
 
 void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
@@ -159,7 +160,7 @@ TileList DynamicTextureSynchronizer::_gatherAllTiles( const uint lod ) const
     TileList tiles;
 
     const QSize tilesCount = _reader->getTilesCount( lod );
-    int tileIndex = _reader->getFirstTileIndex( lod );
+    uint tileIndex = _reader->getFirstTileIndex( lod );
     for( int y = 0; y < tilesCount.height(); ++y )
     {
         for( int x = 0; x < tilesCount.width(); ++x )

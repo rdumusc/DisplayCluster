@@ -75,7 +75,7 @@ public:
     QString getStatistics() const override;
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    QImage getTileImage( uint tileIndex ) const override;
+    ImagePtr getTileImage( uint tileIndex ) const override;
 
 private slots:
     void onTextureUploaded();

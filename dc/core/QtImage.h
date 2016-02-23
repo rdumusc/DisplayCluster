@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,66 +37,36 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef PIXELSTREAMSYNCHRONIZER_H
-#define PIXELSTREAMSYNCHRONIZER_H
+#ifndef QTIMAGE_H
+#define QTIMAGE_H
 
-#include "ContentSynchronizer.h"
-#include "FpsCounter.h"
+#include "Image.h"
 
-#include <QObject>
+#include <QImage>
 
 /**
- * Synchronizes a PixelStream between different QML windows.
+ * Image wrapper for QImage.
  */
-class PixelStreamSynchronizer : public ContentSynchronizer
+class QtImage : public Image
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( PixelStreamSynchronizer )
-
 public:
-    /**
-     * Construct a synchronizer for a stream.
-     */
-    PixelStreamSynchronizer();
+    /** Constructor, stores the given QImage. */
+    QtImage( const QImage& image );
 
-    /** @copydoc ContentSynchronizer::update */
-    void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
+    /** @copydoc Image::getWidth */
+    int getWidth() const override;
 
-    /** @copydoc ContentSynchronizer::synchronize */
-    void synchronize( WallToWallChannel& channel ) override;
+    /** @copydoc Image::getHeight */
+    int getHeight() const override;
 
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
+    /** @copydoc Image::getData */
+    const uint8_t* getData() const override;
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
-    /** @copydoc ContentSynchronizer::getTiles */
-    Tiles& getTiles() override;
-
-    /** @copydoc ContentSynchronizer::getTilesArea */
-    QSize getTilesArea() const override;
-
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
-
-    /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex ) const override;
-
-    /** Update the appropriate PixelStream with the given frame. */
-    void updatePixelStream( deflect::FramePtr frame );
-
-signals:
-    /** Emitted to request a new frame after a successful swap. */
-    void requestFrame( QString uri );
+    /** @copydoc Image::getTimestamp */
+    int64_t getTimestamp() const override;
 
 private:
-    PixelStreamUpdaterSharedPtr _updater;
-    uint _frameIndex;
-    FpsCounter _fpsCounter;
-
-    void _onPictureUpdated();
+    const QImage _image;
 };
 
-#endif
+#endif // QTIMAGE_H

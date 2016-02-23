@@ -114,6 +114,7 @@ typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
 typedef std::vector<TilePtr> TileList;
 typedef std::vector<size_t> Indices;
+typedef QList<ImagePtr> ImagePtrs;
 
 static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );
 static const QSize UNDEFINED_SIZE( -1, -1 );

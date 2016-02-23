@@ -32,12 +32,10 @@ BaseContentWindow {
                     width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width
                     height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
                     visible: model.modelData.visible
-
-                    property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
-                    source: model.modelData.visible ? imagesource + tileIndex : ""
+                    source: model.modelData.visible ? imagesource + "?" + model.modelData.index : ""
 
                     Connections {
-                        target: contentsync
+                        target: model.modelData
                         onSwapImage: {
                             dbi.showFront = !dbi.showFront
                         }

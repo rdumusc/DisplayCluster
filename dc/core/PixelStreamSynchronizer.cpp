@@ -39,9 +39,9 @@
 
 #include "PixelStreamSynchronizer.h"
 
-#include "PixelStreamUpdater.h"
-
 #include "ContentWindow.h"
+#include "PixelStreamUpdater.h"
+#include "QtImage.h"
 #include "ZoomHelper.h"
 
 PixelStreamSynchronizer::PixelStreamSynchronizer()
@@ -99,9 +99,9 @@ void PixelStreamSynchronizer::updatePixelStream( deflect::FramePtr frame )
     _updater->updatePixelStream( frame );
 }
 
-QImage PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const
 {
-    return _updater->getTileImage( tileIndex );
+    return std::make_shared<QtImage>( _updater->getTileImage( tileIndex ));
 }
 
 void PixelStreamSynchronizer::_onPictureUpdated()

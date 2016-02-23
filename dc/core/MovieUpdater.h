@@ -68,14 +68,16 @@ public:
     void update( const MovieContent& movie );
     void sync( WallToWallChannel& channel );
 
-    TextureFactory* createTextureFactory();
+    ImagePtr getImage() const;
+
+//    TextureFactory* createTextureFactory();
 
 signals:
     void textureUploaded();
     void uploadTexture( ImagePtr image, uint textureID );
 
 public slots:
-    void onTextureUploaded( ImagePtr image, uint textureID );
+//    void onTextureUploaded( ImagePtr image, uint textureID );
 
 private:
     MoviePtr _ffmpegMovie;
@@ -87,12 +89,14 @@ private:
     ElapsedTimer _timer;
     double _sharedTimestamp;
     std::future<PicturePtr> _futurePicture;
-    std::deque< uint > _textures;
+//    std::deque< uint > _textures;
 
     typedef SwapSyncObject< int64_t > SyncSwapImage;
     SyncSwapImage _syncSwapImage;
 
-    uint _popTextureID();
+    PicturePtr _image;
+
+//    uint _popTextureID();
     double _getDelay() const;
     void _updateTimestamp( WallToWallChannel& channel );
     void _synchronizeTimestamp( WallToWallChannel& channel );

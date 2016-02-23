@@ -89,6 +89,16 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow,
     _contentSynchronizer->update( *_contentWindow, visibleArea );
 }
 
+void QmlWindowRenderer::synchronize( WallToWallChannel& channel )
+{
+    _contentSynchronizer->synchronize( channel );
+}
+
+bool QmlWindowRenderer::needRedraw() const
+{
+    return _contentSynchronizer->needRedraw();
+}
+
 QQuickItem* QmlWindowRenderer::getQuickItem()
 {
     return _windowItem;

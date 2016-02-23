@@ -41,6 +41,7 @@
 
 #include "ContentWindow.h"
 #include "PDFContent.h"
+#include "QtImage.h"
 #include "ZoomHelper.h"
 
 PDFSynchronizer::PDFSynchronizer( const QString& uri )
@@ -60,8 +61,9 @@ void PDFSynchronizer::update( const ContentWindow& window,
     VectorialSynchronizer::update( window, visibleArea );
 }
 
-QImage PDFSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr PDFSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );
-    return _pdf.renderToImage( _renderSize, _contentZoom );
+    return std::make_shared<QtImage>( _pdf.renderToImage( _renderSize,
+                                                          _contentZoom ));
 }

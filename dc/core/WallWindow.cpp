@@ -188,16 +188,13 @@ bool WallWindow::syncAndRender()
     if( !_rendererInitialized )
         return true;
 
-    auto& textureProvider = getTextureProvider();
-
     _wallChannel.synchronizeClock();
-    textureProvider.synchronize( _wallChannel );
-    bool needRedraw = textureProvider.needRedraw();
+    _displayGroupRenderer->synchronize( _wallChannel );
 
     _renderControl->polishItems();
     _quickRenderer->render();
 
-    needRedraw = needRedraw || _displayGroupRenderer->needRedraw();
+    const bool needRedraw = _displayGroupRenderer->needRedraw();
     return !_wallChannel.allReady( !needRedraw );
 }
 

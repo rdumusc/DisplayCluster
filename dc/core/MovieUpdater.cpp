@@ -118,8 +118,8 @@ void MovieUpdater::sync( WallToWallChannel& channel )
     {
         try
         {
-            PicturePtr picture  = _futurePicture.get();
-            emit uploadTexture( picture, _popTextureID( ));
+            _image  = _futurePicture.get();
+            //emit uploadTexture( _futurePicture.get(), _popTextureID( ));
         }
         catch( const std::exception& e )
         {
@@ -134,35 +134,40 @@ void MovieUpdater::sync( WallToWallChannel& channel )
     }
 
     const bool needsFrame = _getDelay() >= _ffmpegMovie->getFrameDuration();
-    if( !_futurePicture.valid() && needsFrame && !_textures.empty( ))
+    if( !_futurePicture.valid() && needsFrame /*&& !_textures.empty( )*/)
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
 }
 
-void MovieUpdater::onTextureUploaded( const ImagePtr image,
-                                      const uint textureID )
+ImagePtr MovieUpdater::getImage() const
 {
-    _syncSwapImage.update( image->getTimestamp( ));
-    _textures.push_back( textureID );
+    return _image;
 }
 
-uint MovieUpdater::_popTextureID()
-{
-    assert( !_textures.empty( ));
-    const uint textureID = _textures.front();
-    _textures.pop_front();
-    return textureID;
-}
+//void MovieUpdater::onTextureUploaded( const ImagePtr image,
+//                                      const uint textureID )
+//{
+//    _syncSwapImage.update( image->getTimestamp( ));
+//    _textures.push_back( textureID );
+//}
 
-TextureFactory* MovieUpdater::createTextureFactory()
-{
-    TextureFactory* factory =
-            new TextureFactory( QSize( _ffmpegMovie->getWidth(),
-                                       _ffmpegMovie->getHeight( )));
+//uint MovieUpdater::_popTextureID()
+//{
+//    assert( !_textures.empty( ));
+//    const uint textureID = _textures.front();
+//    _textures.pop_front();
+//    return textureID;
+//}
 
-    connect( factory, &TextureFactory::textureCreated,
-             [&]( const uint textureID) { _textures.push_back( textureID ); } );
-    return factory;
-}
+//TextureFactory* MovieUpdater::createTextureFactory()
+//{
+//    TextureFactory* factory =
+//            new TextureFactory( QSize( _ffmpegMovie->getWidth(),
+//                                       _ffmpegMovie->getHeight( )));
+
+//    connect( factory, &TextureFactory::textureCreated,
+//             [&]( const uint textureID) { _textures.push_back( textureID ); } );
+//    return factory;
+//}
 
 double MovieUpdater::_getDelay() const
 {
