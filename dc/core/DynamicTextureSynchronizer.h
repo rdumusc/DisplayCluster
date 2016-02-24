@@ -69,9 +69,6 @@ public:
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
 
-    /** @copydoc ContentSynchronizer::getTiles */
-    Tiles& getTiles() override;
-
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 
@@ -81,20 +78,22 @@ public:
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex ) const override;
 
+    /** @copydoc ContentSynchronizer::onSwapReady */
+    void onSwapReady( TilePtr tile ) override;
+
 private:
-    Tiles _tiles;
     DynamicTexturePtr _reader;
     uint _lod;
     QRectF _visibleArea;
 
     Indices _visibleSet;
-    typedef std::map<size_t, TileList> LodTilesMap;
+    typedef std::map<size_t, Tiles> LodTilesMap;
     LodTilesMap _lodTilesMap;
 
     void _updateTiles( const QRectF& visibleArea, uint lod );
-    TileList _gatherAllTiles( const uint lod ) const;
+    Tiles _gatherAllTiles( const uint lod ) const;
     Indices _computeVisibleSet( const QRectF& visibleArea,
-                                const TileList& tiles ) const;
+                                const Tiles& tiles ) const;
 };
 
 #endif

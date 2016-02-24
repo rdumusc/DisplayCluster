@@ -39,6 +39,7 @@
 
 #include "WallWindow.h"
 
+#include "DataProvider.h"
 #include "DisplayGroupRenderer.h"
 #include "Options.h"
 #include "QuickRenderer.h"
@@ -46,8 +47,6 @@
 #include "TextureUploader.h"
 
 #include "configuration/WallConfiguration.h"
-
-#include "TextureProvider.h"
 
 #include <QOpenGLContext>
 #include <QQmlEngine>
@@ -76,7 +75,11 @@ WallWindow::WallWindow( const WallConfiguration& config,
     , _rendererInitialized( false )
     , _uploadThread( new QThread )
     , _uploader( new TextureUploader )
+    , _provider( new DataProvider )
 {
+    connect( _provider, &DataProvider::imageLoaded,
+             _uploader, &TextureUploader::uploadTexture );
+
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
     const QPoint& windowPos = config.getWindowPos();
@@ -114,6 +117,7 @@ WallWindow::~WallWindow()
     delete _glContext;
     delete _quickRenderer;
     delete _uploader;
+    delete _provider;
 }
 
 void WallWindow::exposeEvent( QExposeEvent* )
@@ -168,12 +172,10 @@ void WallWindow::startQuick( const WallConfiguration& config )
     _rootItem->setWidth( width( ));
     _rootItem->setHeight( height( ));
 
-    _qmlEngine->addImageProvider( TextureProvider::ID,
-                                  new TextureProvider( _uploader ));
-
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
-    _displayGroupRenderer = new DisplayGroupRenderer( *this, screenRect );
+    _displayGroupRenderer = new DisplayGroupRenderer( *this, *_provider,
+                                                      screenRect );
     _testPattern = new TestPattern( config, _rootItem );
     _testPattern->setPosition( -screenRect.topLeft( ));
 }
@@ -217,11 +219,9 @@ void WallWindow::setMarkers( MarkersPtr markers )
     _displayGroupRenderer->setMarkers( markers );
 }
 
-TextureProvider& WallWindow::getTextureProvider()
+DataProvider& WallWindow::getDataProvider()
 {
-    auto textureProvider = dynamic_cast< TextureProvider* >
-            ( engine()->imageProvider( TextureProvider::ID ));
-    return *textureProvider;
+    return *_provider;
 }
 
 QQmlEngine* WallWindow::engine() const

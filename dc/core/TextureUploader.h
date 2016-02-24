@@ -62,8 +62,8 @@ public:
     TextureUploader();
 
 public slots:
-    /** Performs the actual upload of pixels into the given OpenGL texture. */
-    void uploadTexture( ImagePtr image, uint textureID );
+    /** Performs the upload of pixels into the given tile's back texture. */
+    void uploadTexture( ImagePtr image, TileWeakPtr tile );
 
 signals:
     /**

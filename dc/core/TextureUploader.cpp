@@ -41,6 +41,7 @@
 
 #include "MovieUpdater.h"
 #include "Image.h"
+#include "Tile.h"
 
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
@@ -88,9 +89,16 @@ void TextureUploader::_onStop()
     delete _glContext;
 }
 
-void TextureUploader::uploadTexture( const ImagePtr image,
-                                     const uint textureID )
+void TextureUploader::uploadTexture( const ImagePtr image, TileWeakPtr tile_ )
 {
+    if( !image )
+        return;
+
+    TilePtr tile = tile_.lock();
+    if( !tile )
+        return;
+
+    const uint textureID = tile->getBackGlTexture();
     if( !textureID )
         return;
 
@@ -130,10 +138,7 @@ void TextureUploader::uploadTexture( const ImagePtr image,
     _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
     _gl->glBindTexture( GL_TEXTURE_2D, 0 );
 
-    // notify sender to toggle visibility of texture
-    MovieUpdater* movieUpdater = static_cast< MovieUpdater* >( sender( ));
-    QMetaObject::invokeMethod( movieUpdater, "onTextureUploaded",
-                               Qt::QueuedConnection,
-                               Q_ARG( ImagePtr, image ),
-                               Q_ARG( uint, textureID ));
+    // notify tile that its texture has been updated
+    QMetaObject::invokeMethod( tile.get(), "markBackTextureUpdated",
+                               Qt::QueuedConnection );
 }

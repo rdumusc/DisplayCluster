@@ -42,6 +42,7 @@
 #include "ContentWindow.h"
 #include "PixelStreamUpdater.h"
 #include "QtImage.h"
+#include "Tile.h"
 #include "ZoomHelper.h"
 
 PixelStreamSynchronizer::PixelStreamSynchronizer()
@@ -52,6 +53,14 @@ PixelStreamSynchronizer::PixelStreamSynchronizer()
              this, &PixelStreamSynchronizer::_onPictureUpdated );
     connect( _updater.get(), &PixelStreamUpdater::requestFrame,
              this, &PixelStreamSynchronizer::requestFrame );
+
+    // Forward tiles signal
+    connect( _updater.get(), &PixelStreamUpdater::addTile,
+             this, &PixelStreamSynchronizer::addTile );
+    connect( _updater.get(), &PixelStreamUpdater::removeTile,
+             this, &PixelStreamSynchronizer::removeTile );
+    connect( _updater.get(), &PixelStreamUpdater::updateTile,
+             this, &PixelStreamSynchronizer::updateTile );
 }
 
 void PixelStreamSynchronizer::update( const ContentWindow& window,
@@ -79,11 +88,6 @@ bool PixelStreamSynchronizer::allowsTextureCaching() const
     return false;
 }
 
-Tiles& PixelStreamSynchronizer::getTiles()
-{
-    return _updater->getTiles();
-}
-
 QSize PixelStreamSynchronizer::getTilesArea() const
 {
     return QSize();
@@ -92,6 +96,11 @@ QSize PixelStreamSynchronizer::getTilesArea() const
 QString PixelStreamSynchronizer::getStatistics() const
 {
     return _fpsCounter.toString();
+}
+
+void PixelStreamSynchronizer::onSwapReady( TilePtr tile )
+{
+    tile->swapImage();
 }
 
 void PixelStreamSynchronizer::updatePixelStream( deflect::FramePtr frame )

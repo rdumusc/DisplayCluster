@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,53 +37,52 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef TILES_H
-#define TILES_H
+#ifndef DATAPROVIDER_H
+#define DATAPROVIDER_H
 
 #include "types.h"
-#include "Tile.h"
 
-#include <QtCore/QAbstractListModel>
+#include <QObject>
+#include <QList>
+#include <QFutureWatcher>
+
+class PixelStreamSynchronizer;
 
 /**
- * Exposes Tiles through a model for using in dynamic QML views.
+ * Load image data in parallel.
  */
-class Tiles : public QAbstractListModel
+class DataProvider : public QObject
 {
     Q_OBJECT
-    Q_DISABLE_COPY( Tiles )
+    Q_DISABLE_COPY( DataProvider )
 
 public:
-    Tiles( QObject* parent = 0 );
+    DataProvider();
+    ~DataProvider();
 
-    QVariant data( const QModelIndex &index, int role ) const override;
-    int rowCount( const QModelIndex& parent = QModelIndex( )) const override;
+public slots:
+    /** Load an image asynchronously. */
+    void loadAsync( ContentSynchronizerSharedPtr source, TileWeakPtr tile );
 
-    /** Add a tile. */
-    void add( TilePtr tile );
+    /** Add a new frame. */
+    void setNewFrame( deflect::FramePtr frame );
 
-    /** Get a tile. */
-    Tile* get( uint tileIndex );
+signals:
+    /** Notify that loadAsync has completed for the given tile. */
+    void imageLoaded( ImagePtr image, TileWeakPtr tile );
 
-    /** Update a tile coordinates. */
-    bool update( uint tileIndex, const QRect& coordinates );
-
-    /** Remove a Tile. */
-    void remove( uint tileIndex );
-
-    /** Reset the model with a new list of tiles. */
-    void reset( TileList&& tiles );
-
-    /** Check for the existence of a tile. */
-    bool contains( uint tileIndex ) const;
+    /** Emitted to request a new frame after a successful swap. */
+    void requestFrame( QString uri );
 
 private:
-    QHash<int, QByteArray> roleNames() const final;
+    typedef QFutureWatcher<void> Watcher;
+    QList<Watcher*> _watchers;
 
-    TileList _tiles;
+    typedef std::shared_ptr<PixelStreamSynchronizer> PixelStreamSynchronizerPtr;
+    std::map< QString, PixelStreamSynchronizerPtr > _synchronizers;
 
-    TileList::const_iterator _findTile( uint tileIndex ) const;
-    TileList::iterator _findTile( uint tileIndex );
+    void _load( ContentSynchronizerSharedPtr source, TileWeakPtr tile );
+    void _handleFinished();
 };
 
 #endif

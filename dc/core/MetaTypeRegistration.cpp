@@ -55,6 +55,7 @@ struct MetaTypeRegistration
         qRegisterMetaType< ContentWindowPtr >( "ContentWindowPtr" );
         qRegisterMetaType< ContentWindow::WindowBorder >( "ContentWindow::WindowBorder" );
         qRegisterMetaType< ContentWindow::WindowState >( "ContentWindow::WindowState" );
+        qRegisterMetaType< ContentSynchronizerSharedPtr >( "ContentSynchronizerSharedPtr" );
         qRegisterMetaType< DisplayGroupPtr >( "DisplayGroupPtr" );
         qRegisterMetaType< ImagePtr >( "ImagePtr" );
         qRegisterMetaType< MarkersPtr >( "MarkersPtr" );
@@ -62,6 +63,8 @@ struct MetaTypeRegistration
         qRegisterMetaType< OptionsPtr >( "OptionsPtr" );
         qRegisterMetaType< QUuid >( "QUuid" );
         qRegisterMetaType< std::string >( "std::string" );
+        qRegisterMetaType< TilePtr >( "TilePtr" );
+        qRegisterMetaType< TileWeakPtr >( "TileWeakPtr" );
         qRegisterMetaTypeStreamOperators< QUuid >( "QUuid" );
     }
 };

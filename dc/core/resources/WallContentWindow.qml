@@ -21,36 +21,18 @@ BaseContentWindow {
 
         Item {
             id: contentItem
+            objectName: "TilesParent"
 
-            Repeater {
-                model: contentsync.tiles
-
-                DoubleBufferedImage {
-                    id: dbi
-                    x: model.modelData.coord.x
-                    y: model.modelData.coord.y
-                    width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width
-                    height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
-                    visible: model.modelData.visible
-                    source: model.modelData.visible ? imagesource + "?" + model.modelData.index : ""
-
-                    Connections {
-                        target: model.modelData
-                        onSwapImage: {
-                            dbi.showFront = !dbi.showFront
-                        }
-                    }
-
-                    cache: contentsync.allowsTextureCaching
-
-                    Rectangle {
-                        visible: options.showContentTiles
-                        anchors.fill: parent
-                        border.color: Style.segmentBorderColor
-                        color: "transparent"
-                    }
-                }
-            }
+//            Repeater {
+//                model: contentsync.tiles
+//                    Rectangle {
+//                        visible: options.showContentTiles
+//                        anchors.fill: parent
+//                        border.color: Style.segmentBorderColor
+//                        color: "transparent"
+//                    }
+//                }
+//            }
             transform: [
                 // Adjust tiles to content area
                 Scale {
@@ -70,11 +52,11 @@ BaseContentWindow {
         }
     }
 
-    ZoomContext {
-        id: zoomContext
-        image.source: visible ? imagesource : ""
-        image.cache: contentsync.allowsTextureCaching
-    }
+//    ZoomContext {
+//        id: zoomContext
+//        image.source: visible ? imagesource : ""
+//        image.cache: contentsync.allowsTextureCaching
+//    }
 
     Text {
         id: statistics

@@ -72,9 +72,6 @@ public:
     /** @copydoc ContentSynchronizer::allowsTextureCaching */
     bool allowsTextureCaching() const override;
 
-    /** @copydoc ContentSynchronizer::getTiles */
-    Tiles& getTiles() override;
-
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 
@@ -83,6 +80,9 @@ public:
 
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex ) const override;
+
+    /** @copydoc ContentSynchronizer::onSwapReady */
+    void onSwapReady( TilePtr tile ) override;
 
     /** Update the appropriate PixelStream with the given frame. */
     void updatePixelStream( deflect::FramePtr frame );

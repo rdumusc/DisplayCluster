@@ -67,17 +67,19 @@ void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
         _updateTiles();
 }
 
-Tiles& PixelStreamUpdater::getTiles()
-{
-    return _tiles;
-}
-
 QImage PixelStreamUpdater::getTileImage( const uint tileIndex ) const
 {
     if( !_currentFrame )
         throw std::runtime_error( "No frames yet" );
 
-    const auto& segment = _currentFrame->segments.at( tileIndex );
+    auto& segment = _currentFrame->segments.at( tileIndex );
+    if( segment.parameters.compressed )
+    {
+        // turbojpeg handles need to be per thread, and this function may be
+        // called from multiple threads
+        static QThreadStorage< deflect::SegmentDecoder > decoder;
+        decoder.localData().decode( segment );
+    }
 
     return QImage( (const uchar*)segment.imageData.constData(),
                    segment.parameters.width, segment.parameters.height,
@@ -119,24 +121,6 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
     emit requestFrame( frame->uri );
 }
 
-void PixelStreamUpdater::_decodeVisibleSegments( deflect::Segments& segments )
-{
-#pragma omp parallel for
-    for( size_t i = 0; i < _visibleSet.size(); ++i )
-    {
-        const auto tileIndex = _visibleSet[i];
-        if( segments[tileIndex].parameters.compressed )
-        {
-            // turbojpeg handles need to be per thread
-            static QThreadStorage< deflect::SegmentDecoder > decoder;
-            decoder.localData().decode( segments[tileIndex] );
-        }
-    }
-    // Must be done after the parallel for, otherwise there are threading issues
-    for( auto tileIndex : _visibleSet )
-        _tiles.get( tileIndex )->setVisible( true );
-}
-
 QRect toRect( const deflect::SegmentParameters& params )
 {
     return QRect( params.x, params.y, params.width, params.height );
@@ -171,23 +155,19 @@ void PixelStreamUpdater::_updateTiles()
 
     // Remove tiles
     for( auto i : removedTiles )
-        _tiles.remove( i );
+        emit removeTile( i );
 
     // Add tiles
     for( auto i : addedTiles )
     {
         const auto tileRect = toRect( _currentFrame->segments[i].parameters );
-        _tiles.add( make_unique<Tile>( i, tileRect, false ));
+        emit addTile( std::make_shared<Tile>( i, tileRect ));
     }
 
     // Update existing segments
     for( auto i : currentTiles )
-        _tiles.update( i, toRect( _currentFrame->segments[i].parameters ));
+        emit updateTile( i, toRect( _currentFrame->segments[i].parameters ));
 
     _visibleSet = visibleSet;
     _tilesDirty = false;
-
-    // decode everthing in a batch rather than doing it in the requestImage()
-    // for better performance.
-    _decodeVisibleSegments( _currentFrame->segments );
 }

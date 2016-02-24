@@ -49,11 +49,15 @@
 /**
  * Provide a Qml representation of a ContentWindow on the Wall.
  */
-class QmlWindowRenderer
+class QmlWindowRenderer : public QObject
 {
+    Q_OBJECT
+    Q_DISABLE_COPY( QmlWindowRenderer )
+
 public:
     /** Constructor. */
     QmlWindowRenderer( QQmlEngine& engine,
+                       DataProvider& provider,
                        QQuickItem& parentItem,
                        ContentWindowPtr contentWindow,
                        bool isBackground = false );
@@ -75,16 +79,22 @@ public:
     /** Get the ContentWindow. */
     ContentWindowPtr getContentWindow();
 
-private:
-    Q_DISABLE_COPY( QmlWindowRenderer )
+private slots:
+    void _addTile( TilePtr tile );
+    void _removeTile( uint tileIndex );
+    void _updateTile( uint tileIndex, const QRect& coordinates );
 
+private:
+    DataProvider& _provider;
     ContentWindowPtr _contentWindow;
     std::unique_ptr<QQmlContext> _windowContext;
     QQuickItem* _windowItem;
-    ContentSynchronizerSharedPtr _contentSynchronizer;
-    TextureProvider* _provider;
+    ContentSynchronizerSharedPtr _synchronizer;
 
-    QQuickItem* createQmlItem( const QUrl& url );
+    typedef std::map<uint,TilePtr> TilesMap;
+    TilesMap _tiles;
+
+    QQuickItem* _createQmlItem( const QUrl& url );
 };
 
 #endif // QMLWINDOWRENDERER_H

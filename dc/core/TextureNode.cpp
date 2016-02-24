@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,117 +37,49 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Tiles.h"
+#include "TextureNode.h"
 
-namespace
+#include <QQuickWindow>
+
+TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
+    : _size( size )
+    , _frontTexture( _createTexture( window ))
+    , _backTexture( _createTexture( window ))
 {
-const int ROLE_TILE = Qt::UserRole;
+    setTexture( _frontTexture.get( ));
+    setFiltering( QSGTexture::Nearest );
 }
 
-Tiles::Tiles( QObject* parent_ )
-    : QAbstractListModel( parent_ )
-{}
-
-QHash<int, QByteArray> Tiles::roleNames() const
+uint TextureNode::getBackGlTexture() const
 {
-    QHash<int, QByteArray> roles;
-    roles[ ROLE_TILE ] = "tile";
-    return roles;
+    return _backTexture->textureId();
 }
 
-QVariant Tiles::data( const QModelIndex& index_, const int role ) const
+void TextureNode::swap()
 {
-    if( index_.row() < 0 || index_.row() >= rowCount() || !index_.isValid( ))
-        return QVariant();
-
-    if( role == ROLE_TILE )
-    {
-        QVariant variant;
-        variant.setValue( static_cast<QObject*>( _tiles[ index_.row() ].get( )));
-        return variant;
-    }
-    return QVariant();
+    std::swap( _frontTexture, _backTexture );
+    setTexture( _frontTexture.get( ));
+    markDirty( DirtyMaterial );
 }
 
-int Tiles::rowCount( const QModelIndex& parent_ ) const
+TextureNode::QSGTexturePtr
+TextureNode::_createTexture( QQuickWindow* window ) const
 {
-    Q_UNUSED( parent_ );
-    return _tiles.size();
-}
+    uint textureID;
+    glActiveTexture( GL_TEXTURE0 );
+    glGenTextures( 1, &textureID );
+    glBindTexture( GL_TEXTURE_2D, textureID );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, _size.width(), _size.height(),
+                  0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+    glBindTexture( GL_TEXTURE_2D, 0 );
 
-void Tiles::add( TilePtr tile )
-{
-    if( contains( tile->getIndex( )))
-        return;
-
-    const int tileIndex = rowCount();
-
-    beginInsertRows( QModelIndex(), tileIndex, tileIndex );
-
-    _tiles.push_back( std::move( tile ));
-
-    endInsertRows();
-}
-
-Tile* Tiles::get( const uint tileIndex )
-{
-    auto it = _findTile( tileIndex );
-    return it  == _tiles.end() ? nullptr : it->get();
-}
-
-void Tiles::reset( TileList&& tiles )
-{
-    beginResetModel();
-
-    _tiles = std::move( tiles );
-
-    endResetModel();
-}
-
-bool Tiles::update( const uint tileIndex, const QRect& coordinates )
-{
-    auto it = _findTile( tileIndex );
-
-    if( it  == _tiles.end( ))
-        return false;
-
-    (*it)->update( coordinates );
-
-    // No need to emit data changed, Tiles does the notification itself
-    //const int rowIndex = it - _tiles.begin();
-    //emit dataChanged( index( rowIndex, 0 ), index( rowIndex, 0 ));
-
-    return true;
-}
-
-void Tiles::remove( const uint tileIndex )
-{
-    auto it = _findTile( tileIndex );
-
-    if( it  == _tiles.end( ))
-        return;
-
-    const int rowIndex = it - _tiles.begin();
-    beginRemoveRows( QModelIndex(), rowIndex, rowIndex );
-
-    _tiles.erase( it );
-
-    endRemoveRows();
-}
-
-bool Tiles::contains( const uint tileIndex ) const
-{
-    return _findTile( tileIndex ) != _tiles.end();
-}
-
-TileList::const_iterator Tiles::_findTile( const uint tileIndex ) const
-{
-   return std::find_if( _tiles.begin(), _tiles.end(), [&tileIndex]( const TilePtr& tile )
-             { return tile->getIndex() == tileIndex; });
-}
-
-TileList::iterator Tiles::_findTile( const uint tileIndex )
-{
-   return std::find_if( _tiles.begin(), _tiles.end(), [&tileIndex]( const TilePtr& tile )
-             { return tile->getIndex() == tileIndex; });
+    const auto textureFlags = QQuickWindow::CreateTextureOptions(
+                                  QQuickWindow::TextureHasAlphaChannel |
+                                  QQuickWindow::TextureOwnsGLTexture );
+    return QSGTexturePtr( window->createTextureFromId( textureID, _size,
+                                                       textureFlags ));
 }

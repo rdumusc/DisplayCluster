@@ -42,24 +42,23 @@
 
 #include "types.h"
 #include "ContentType.h"
-#include "Tiles.h"
 
 #include <QObject>
 #include <QImage>
+#include <memory> // std::enable_shared_from_this
 
 /**
  * Interface for synchronizing QML content rendering.
  *
- * ContentSynchronizer serves as an interface between the TextureProvider and
- * the QML rendering, to inform it when new frames are ready and swap them
- * synchronously.
+ * ContentSynchronizer informs the QML engine when new frames are ready and
+ * swaps them synchronously.
  */
-class ContentSynchronizer : public QObject
+class ContentSynchronizer : public QObject,
+        public std::enable_shared_from_this<ContentSynchronizer>
 {
     Q_OBJECT
     Q_DISABLE_COPY( ContentSynchronizer )
     Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
-    Q_PROPERTY( Tiles* tiles READ getTilesPtr CONSTANT )
     Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesAreaChanged )
     Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
@@ -84,12 +83,6 @@ public:
     virtual bool allowsTextureCaching() const = 0;
 
 
-    /** Get the list of tiles that compose the content. */
-    virtual Tiles& getTiles() = 0;
-
-    /** Qml needs a pointer instead of a reference. */
-    Tiles* getTilesPtr() { return &getTiles(); }
-
     /** The total area covered by the tiles (may depend on current LOD). */
     virtual QSize getTilesArea() const = 0;
 
@@ -102,12 +95,36 @@ public:
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content );
 
+public slots:
+    /**
+     * Called when a tile is ready to swap.
+     * Specfific implementation can choose to swap the tile immediately or
+     * delay the swap until a later synchronization point.
+     */
+    virtual void onSwapReady( TilePtr tile ) = 0;
+
+    /** Called when a tile has finished initializing; re-emits requestUpdate */
+    void onTextureInitialized( TilePtr tile );
+
 signals:
     /** Notifier for the tiles area property. */
     void tilesAreaChanged();
 
     /** Notifier for the statistics property. */
     void statisticsChanged();
+
+    /** Notify the window to add a tile. */
+    void addTile( TilePtr tile );
+
+    /** Notify the window to remove a tile. */
+    void removeTile( uint tileId );
+
+    /** Notify to update a tile's coordinates. */
+    void updateTile( uint tileId, QRect coordinates );
+
+    /** Request an update of the tile. */
+    void requestUpdate( ContentSynchronizerSharedPtr synchronizer,
+                        TileWeakPtr tile );
 };
 
 #endif // CONTENTSYNCHRONIZER_H

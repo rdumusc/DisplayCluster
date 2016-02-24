@@ -41,42 +41,52 @@
 
 #include "ContentSynchronizer.h"
 #include "ContentWindow.h"
-#include "TextureProvider.h"
+#include "DataProvider.h"
+#include "Tile.h"
 
 #include <QQmlComponent>
 
 namespace
 {
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
+const QString TILES_PARENT_OBJECT_NAME( "TilesParent" );
 }
 
 QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
+                                      DataProvider& provider,
                                       QQuickItem& parentItem,
                                       ContentWindowPtr contentWindow,
                                       const bool isBackground )
-    : _contentWindow( contentWindow )
+    : _provider( provider )
+    , _contentWindow( contentWindow )
     , _windowContext( new QQmlContext( engine.rootContext( )))
     , _windowItem( 0 )
-    , _provider( nullptr )
+    , _synchronizer( ContentSynchronizer::create( contentWindow->getContent( )))
 {
+    connect( _synchronizer.get(), &ContentSynchronizer::addTile,
+             this, &QmlWindowRenderer::_addTile );
+    connect( _synchronizer.get(), &ContentSynchronizer::removeTile,
+             this, &QmlWindowRenderer::_removeTile );
+    connect( _synchronizer.get(), &ContentSynchronizer::updateTile,
+             this, &QmlWindowRenderer::_updateTile );
+
+    connect( _synchronizer.get(), &ContentSynchronizer::requestUpdate,
+             &_provider, &DataProvider::loadAsync );
+
     _windowContext->setContextProperty( "contentwindow", _contentWindow.get( ));
+    _windowContext->setContextProperty( "contentsync", _synchronizer.get( ));
 
-    auto content = _contentWindow->getContent();
-    auto provider = engine.imageProvider( TextureProvider::ID );
-    _provider = dynamic_cast<TextureProvider*>( provider );
-
-    _contentSynchronizer = _provider->open( content );
-    _windowContext->setContextProperty( "contentsync",
-                                        _contentSynchronizer.get( ));
-
-    _windowItem = createQmlItem( QML_WINDOW_URL );
+    _windowItem = _createQmlItem( QML_WINDOW_URL );
     _windowItem->setParentItem( &parentItem );
     _windowItem->setProperty( "isBackground", isBackground );
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
 {
-    _provider->close( _contentWindow->getContent()->getURI( ));
+    for( auto& tile : _tiles )
+        tile.second->setParentItem( nullptr );
+    _tiles.clear();
+
     delete _windowItem;
 }
 
@@ -86,17 +96,17 @@ void QmlWindowRenderer::update( ContentWindowPtr contentWindow,
     // Could be optimized by checking for changes before updating the context
     _windowContext->setContextProperty( "contentwindow", contentWindow.get( ));
     _contentWindow = contentWindow;
-    _contentSynchronizer->update( *_contentWindow, visibleArea );
+    _synchronizer->update( *_contentWindow, visibleArea );
 }
 
 void QmlWindowRenderer::synchronize( WallToWallChannel& channel )
 {
-    _contentSynchronizer->synchronize( channel );
+    _synchronizer->synchronize( channel );
 }
 
 bool QmlWindowRenderer::needRedraw() const
 {
-    return _contentSynchronizer->needRedraw();
+    return _synchronizer->needRedraw();
 }
 
 QQuickItem* QmlWindowRenderer::getQuickItem()
@@ -109,7 +119,39 @@ ContentWindowPtr QmlWindowRenderer::getContentWindow()
     return _contentWindow;
 }
 
-QQuickItem* QmlWindowRenderer::createQmlItem( const QUrl& url )
+void QmlWindowRenderer::_addTile( TilePtr tile )
+{
+    connect( tile.get(), &Tile::readyToSwap,
+             _synchronizer.get(), &ContentSynchronizer::onSwapReady );
+
+    connect( tile.get(), &Tile::textureInitialized,
+             _synchronizer.get(), &ContentSynchronizer::onTextureInitialized,
+             Qt::QueuedConnection );
+
+    _tiles[tile->getIndex()] = tile;
+
+    auto item = _windowItem->findChild<QQuickItem*>( TILES_PARENT_OBJECT_NAME );
+    tile->setParentItem( item );
+}
+
+void QmlWindowRenderer::_removeTile( const uint tileIndex )
+{
+    if( !_tiles.count( tileIndex ))
+        return;
+
+    _tiles[tileIndex]->disconnect( _synchronizer.get( ));
+    _tiles[tileIndex]->setParentItem( nullptr );
+    _tiles.erase( tileIndex );
+}
+
+void QmlWindowRenderer::_updateTile( const uint tileIndex,
+                                     const QRect& coordinates )
+{
+    if( _tiles.count( tileIndex ))
+        _tiles[tileIndex]->update( coordinates );
+}
+
+QQuickItem* QmlWindowRenderer::_createQmlItem( const QUrl& url )
 {
     QQmlComponent component( _windowContext->engine(), url );
     if( component.isError( ))

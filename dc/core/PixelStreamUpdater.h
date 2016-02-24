@@ -42,7 +42,6 @@
 
 #include "types.h"
 
-#include "Tiles.h"
 #include "SwapSyncObject.h"
 
 #include <deflect/SegmentDecoder.h>
@@ -65,13 +64,8 @@ public:
     /** Synchronize the update of the PixelStreams. */
     void synchronizeFramesSwap( WallToWallChannel& channel );
 
-    /**
-     * Get a segment by its tile-index.
-     */
+    /** Get a segment by its tile-index. */
     QImage getTileImage( uint tileIndex ) const;
-
-    /** Get the list of tiles for use by QML repeater. */
-    Tiles& getTiles();
 
     /** Update the visibility of the segements. */
     void updateVisibility( const QRectF& visibleArea );
@@ -87,20 +81,27 @@ signals:
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
 
+    /** Notify the window to add a tile. */
+    void addTile( TilePtr tile );
+
+    /** Notify the window to remove a tile. */
+    void removeTile( uint tileId );
+
+    /** Notify to update a tile's coordinates. */
+    void updateTile( uint tileId, QRect coordinates );
+
 private:
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     SwapSyncFrame _swapSyncFrame;
 
     deflect::FramePtr _currentFrame;
 
-    Tiles _tiles;
     QRectF _visibleArea;
     bool _tilesDirty;
 
     Indices _visibleSet;
 
     void _onFrameSwapped( deflect::FramePtr frame );
-    void _decodeVisibleSegments( deflect::Segments& segments );
     Indices _computeVisibleSet( const deflect::Segments& segments ) const;
     void _updateTiles();
 };

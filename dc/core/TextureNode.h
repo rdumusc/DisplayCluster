@@ -37,36 +37,36 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef TEXTUREFACTORY_H
-#define TEXTUREFACTORY_H
+#ifndef TEXTURENODE_H
+#define TEXTURENODE_H
 
-#include "types.h"
+#include <QObject>
+#include <QSGSimpleTextureNode>
+#include <QMutex>
+#include <memory>
 
-#include <QQuickTextureFactory>
+class QQuickWindow;
 
-/**
- * A Qt Quick texture factory which provides a texture that is updated by the
- * TextureUploader as instructed by the respective ContentProvider that requests
- * this factory.
- */
-class TextureFactory : public QQuickTextureFactory
+/** A node with a double texture buffer. */
+class TextureNode : public QObject, public QSGSimpleTextureNode
 {
-     Q_OBJECT
+    Q_OBJECT
 
 public:
-    TextureFactory( Tile& tile );
+    TextureNode( const QSize& size, QQuickWindow* window );
 
-signals:
-    /** Emitted after Qt Quick called createTexture() from the render thread. */
-    void textureCreated( uint textureID ) const;
+    uint getBackGlTexture() const;
+
+    void swap();
 
 private:
-    QSGTexture* createTexture( QQuickWindow* window ) const final;
-    QSize textureSize() const final;
-    int textureByteCount() const final;
+    QSize _size;
 
-    Tile& _tile;
-    const QSize _textureSize;
+    typedef std::unique_ptr<QSGTexture> QSGTexturePtr;
+    QSGTexturePtr _frontTexture;
+    QSGTexturePtr _backTexture;
+
+    QSGTexturePtr _createTexture( QQuickWindow* window ) const;
 };
 
 #endif

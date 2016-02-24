@@ -111,19 +111,10 @@ public:
     QString getTileFilename( uint tileIndex ) const;
 
     /**
-     * @return the image for the requested tile index, or empty image if not
-     * loaded yet.
+     * @return the image for the requested tile index.
+     * @threadsafe
      */
     QImage getTileImage( uint tileIndex ) const;
-
-    /** Trigger loading the image for the given tile asynchronously. */
-    void triggerTileLoad( Tile* tile );
-
-    /** Cancel outstanding loads of tiles from triggerTileLoad(). */
-    void cancelPendingTileLoads();
-
-    /** @return true if there pending tile loads from triggerTileLoad(). */
-    bool hasPendingTileLoads() const;
 
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
@@ -133,12 +124,8 @@ public:
     bool generateImagePyramid( const QString& outputFolder );
 
 private:
-    void _loadTile( Tile* tile );
-
     mutable QMutex _tilesCacheMutex;
-    QHash<uint, QImage> _tilesCache;
-
-    mutable QFutureSynchronizer< void > _pendingLoadFutures;
+    mutable QHash<uint, QImage> _tilesCache;
 
     /* for root only: */
 

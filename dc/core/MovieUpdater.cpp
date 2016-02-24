@@ -43,7 +43,6 @@
 #include "FFMPEGMovie.h"
 #include "FFMPEGPicture.h"
 #include "MovieContent.h"
-#include "TextureFactory.h"
 #include "WallToWallChannel.h"
 
 #include "log.h"

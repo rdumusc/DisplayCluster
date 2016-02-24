@@ -61,10 +61,12 @@ public:
     /**
      * Constructor.
      * @param parentWindow the window to render the scene contents to
+     * @param provider the provider of data for the windows
      * @param screenRect the rectangle this renderers is rendering wrt global
      *                   screen setup
      */
-    DisplayGroupRenderer( WallWindow& parentWindow, const QRect& screenRect );
+    DisplayGroupRenderer( WallWindow& parentWindow, DataProvider& provider,
+                          const QRect& screenRect );
 
     /** Set different options used for rendering. */
     void setRenderingOptions( OptionsPtr options );
@@ -93,6 +95,7 @@ private:
     Q_DISABLE_COPY( DisplayGroupRenderer )
 
     QQmlEngine& _engine;
+    DataProvider& _provider;
     DisplayGroupPtr _displayGroup;
     QQuickItem* _displayGroupItem;
 

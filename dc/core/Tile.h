@@ -40,90 +40,59 @@
 #ifndef TILE_H
 #define TILE_H
 
-#include <QObject>
-#include <QRect>
-#include <QSet>
+#include "types.h"
+
+#include <QQuickItem>
+#include <memory> // std::enable_shared_from_this
+
+class TextureNode;
 
 /**
- * Qml parameters for an image tile.
+ * Qml item to render an image tile with texture double-buffering.
  */
-class Tile : public QObject
+class Tile : public QQuickItem, public std::enable_shared_from_this<Tile>
 {
     Q_OBJECT
     Q_DISABLE_COPY( Tile )
 
     Q_PROPERTY( uint index READ getIndex CONSTANT )
-    Q_PROPERTY( QRect coord READ getCoord NOTIFY coordChanged )
-    Q_PROPERTY( bool visible READ isVisible NOTIFY visibilityChanged )
 
 public:
-    // false-positive on qt signals for Q_PROPERTY notifiers
-    // cppcheck-suppress uninitMemberVar
-    Tile( const uint index, const QRect& rect, const bool visible )
-        : _index( index )
-        , _rect( rect )
-        , _visible( visible )
-    {}
+    Tile( const uint index, const QRect& rect );
 
-    const QRect& getCoord() const
-    {
-        return _rect;
-    }
+    uint getIndex() const;
 
-    bool isVisible() const
-    {
-        return _visible;
-    }
+    void update( const QRect& rect );
 
-    void setVisible( const bool visible )
-    {
-        if( _visible == visible )
-            return;
+    QRect getCoord() const;
 
-        _visible = visible;
-        emit visibilityChanged();
-    }
-
-    uint getIndex() const
-    {
-        return _index;
-    }
-
-    void update( const QRect& rect )
-    {
-        if( _rect == rect )
-            return;
-
-        _rect = rect;
-        emit coordChanged();
-    }
-
-public slots:
-    void associateGlTexture( const uint id )
-    {
-        if( _glTextures.contains( id ))
-            return;
-
-        _glTextures.insert( id );
-        if( _glTextures.size() == 1 )
-            emit requestTextureUpdate();
-    }
+    uint getBackGlTexture() const;
 
 signals:
-    void coordChanged();
-    void visibilityChanged();
-
-
-    void requestTextureUpdate();
+    /** Notifies when the texture has been created on the render thread. */
+    void textureInitialized( TilePtr tile );
 
     /** Notifier for the DoubleBufferedImage to swap the texture/image. */
+    void readyToSwap( TilePtr tile );
+
+public slots:
+    /** Swap the front and back texture. */
     void swapImage();
+
+    /** Indicate that the back GL texture has been updated. */
+    void markBackTextureUpdated();
+
+protected:
+    /** Called on the render thread to update the scene graph. */
+    QSGNode* updatePaintNode( QSGNode* oldNode, UpdatePaintNodeData* ) override;
 
 private:
     uint _index;
     QRect _rect;
-    bool _visible;
-    QSet<uint> _glTextures;
+
+    TextureNode* _node;
+    bool _swap;
+    uint _backGlTexture;
 };
 
 #endif

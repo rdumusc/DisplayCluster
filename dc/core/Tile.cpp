@@ -37,27 +37,77 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DATALOADER_H
-#define DATALOADER_H
+#include "Tile.h"
 
-#include "types.h"
+#include "TextureNode.h"
 
-#include <QFuture>
-
-/**
- * Load image data in parallel.
- */
-class DataLoader
+// false-positive on qt signals for Q_PROPERTY notifiers
+// cppcheck-suppress uninitMemberVar
+Tile::Tile( const uint index, const QRect& rect )
+    : _index( index )
+    , _swap( false )
+    , _backGlTexture( 0 )
 {
-public:
-    DataLoader();
-    ~DataLoader();
+    setFlag( ItemHasContents, true );
+    setVisible( false );
+    update( rect );
+}
 
-    QFuture<ImagePtr> load( ContentSynchronizerSharedPtr source,
-                             QList<uint> tileIndices );
+uint Tile::getIndex() const
+{
+    return _index;
+}
 
-private:
+void Tile::update( const QRect& rect )
+{
+    setImplicitSize( rect.width(), rect.height( ));
+    setSize( rect.size( ));
+    setPosition( rect.topLeft( ));
+}
 
-};
+QRect Tile::getCoord() const
+{
+    return QRect( x(), y(), width(), height( ));
+}
 
-#endif // DATALOADER_H
+uint Tile::getBackGlTexture() const
+{
+    return _backGlTexture;
+}
+
+void Tile::swapImage()
+{
+    _swap = true;
+    if( !isVisible( ))
+        setVisible( true );
+    QQuickItem::update();
+}
+
+void Tile::markBackTextureUpdated()
+{
+    emit readyToSwap( shared_from_this( ));
+}
+
+QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
+                                QQuickItem::UpdatePaintNodeData* )
+{
+    TextureNode* node = static_cast<TextureNode*>( oldNode );
+
+    if( !node )
+    {
+        node = new TextureNode( QSize( width( ), height( )), window( ));
+        _backGlTexture = node->getBackGlTexture();
+        emit textureInitialized( shared_from_this( ));
+    }
+
+    node->setRect( boundingRect( ));
+
+    if( _swap )
+    {
+        node->swap();
+        _backGlTexture = node->getBackGlTexture();
+        _swap = false;
+    }
+
+    return node;
+}

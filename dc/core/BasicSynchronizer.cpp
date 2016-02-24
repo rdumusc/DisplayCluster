@@ -39,21 +39,18 @@
 
 #include "BasicSynchronizer.h"
 
+#include "ContentWindow.h"
 #include "Tile.h"
 
 BasicSynchronizer::BasicSynchronizer()
+    : _tileAdded( false )
 {}
 
 void BasicSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
-    Q_UNUSED( window );
-
-
-    // Don't switch visibility on / off because each cycle triggers an
-    // unnecessary image request from the provider
     if( !visibleArea.isEmpty( ))
-        showTile();
+        showTile( window.getContent()->getDimensions( ));
 }
 
 void BasicSynchronizer::synchronize( WallToWallChannel& channel )
@@ -71,11 +68,6 @@ bool BasicSynchronizer::allowsTextureCaching() const
     return true;
 }
 
-Tiles& BasicSynchronizer::getTiles()
-{
-    return _tiles;
-}
-
 QSize BasicSynchronizer::getTilesArea() const
 {
     return QSize();
@@ -86,8 +78,16 @@ QString BasicSynchronizer::getStatistics() const
     return QString();
 }
 
-void BasicSynchronizer::showTile()
+void BasicSynchronizer::onSwapReady( TilePtr tile )
 {
-    if( !_tiles.rowCount( ))
-        _tiles.add( make_unique<Tile>( 0, QRect(), true ));
+    tile->swapImage();
+}
+
+void BasicSynchronizer::showTile( const QSize& size )
+{
+    if( !_tileAdded )
+    {
+        _tileAdded = true;
+        emit addTile( std::make_shared<Tile>( 0, QRect( QPoint( 0,0 ), size )));
+    }
 }

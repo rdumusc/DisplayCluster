@@ -43,6 +43,7 @@
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
+#include <cmath>
 
 #include <QDir>
 #include <QImageReader>
@@ -90,8 +91,6 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent_,
         else
             readFullImageMetadata(_uri);
     }
-
-    _pendingLoadFutures.setCancelOnWait( true );
 }
 
 bool DynamicTexture::isRoot() const
@@ -381,51 +380,8 @@ QImage DynamicTexture::getTileImage( const uint tileIndex ) const
 {
     QMutexLocker lock( &_tilesCacheMutex );
     if( !_tilesCache.count( tileIndex ))
-        return QImage();
+        _tilesCache[tileIndex] = QImage( getTileFilename( tileIndex ));
     return _tilesCache[tileIndex];
-}
-
-void DynamicTexture::triggerTileLoad( Tile* tile )
-{
-    QMutexLocker lock( &_tilesCacheMutex );
-    if( _tilesCache.count( tile->getIndex( )))
-    {
-        tile->setVisible( true );
-        return;
-    }
-
-    _pendingLoadFutures.addFuture(
-                           QtConcurrent::run( [&,tile] { _loadTile( tile ); }));
-}
-
-void DynamicTexture::cancelPendingTileLoads()
-{
-    _pendingLoadFutures.waitForFinished();
-    _pendingLoadFutures.clearFutures();
-}
-
-bool DynamicTexture::hasPendingTileLoads() const
-{
-    for( const auto& future : _pendingLoadFutures.futures( ))
-    {
-        if( !future.isFinished( ))
-            return true;
-    }
-    // finished futures are never removed from the future synchronizer, so
-    // we do it here when all are done as we are called here as long there are
-    // pending futures.
-    _pendingLoadFutures.clearFutures();
-    return false;
-}
-
-void DynamicTexture::_loadTile( Tile* tile )
-{
-    QImage tileImage( getTileFilename( tile->getIndex( )));
-    {
-        QMutexLocker lock( &_tilesCacheMutex );
-        _tilesCache[tile->getIndex()] = tileImage;
-    }
-    tile->setVisible( true );
 }
 
 int DynamicTexture::getFirstTileIndex( const uint lod ) const

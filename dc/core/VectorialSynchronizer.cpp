@@ -47,11 +47,8 @@ void VectorialSynchronizer::update( const ContentWindow& window,
     // Legacy solution. A list of tiles with different LODs might bring
     // better interactive performances and allow for texture caching.
     ContentPtr content = window.getContent();
-    if( _contentZoom != content->getZoomRect() )
-    {
+    if( _contentZoom != content->getZoomRect( ))
         _contentZoom = content->getZoomRect();
-//        emit sourceParamsChanged();
-    }
 
     BasicSynchronizer::update( window, visibleArea );
 }

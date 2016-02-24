@@ -51,7 +51,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   ContentFactory.h
   ContentLoader.h
   ContentType.h
-  DataLoader.h
   DynamicTextureContent.h
   ElapsedTimer.h
   FFMPEGFrame.h
@@ -73,7 +72,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   MPIContext.h
   MPINospin.h
   PixelStreamContent.h
-  QmlWindowRenderer.h
   qmlUtils.h
   QtImage.h
   SessionCommandHandler.h
@@ -115,6 +113,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   ContentWindow.h
   ContentWindowController.h
   Coordinates.h
+  DataProvider.h
   DisplayGroup.h
   DisplayGroupRenderer.h
   DynamicTexture.h
@@ -133,14 +132,13 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   PixelStreamWindowManager.h
   QuickRenderer.h
   QmlControlPanel.h
+  QmlWindowRenderer.h
   RenderController.h
   SVGSynchronizer.h
   SVGTextureFactory.h
-  TextureProvider.h
-  TextureFactory.h
+  TextureNode.h
   TextureUploader.h
   Tile.h
-  Tiles.h
   VectorialSynchronizer.h
   WallFromMasterChannel.h
   WallWindow.h
@@ -173,7 +171,7 @@ list(APPEND DCCORE_SOURCES
   ContentWindow.cpp
   ContentWindowController.cpp
   Coordinates.cpp
-  DataLoader.cpp
+  DataProvider.cpp
   DisplayGroup.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
@@ -221,10 +219,9 @@ list(APPEND DCCORE_SOURCES
   SVGSynchronizer.cpp
   TestPattern.cpp
   TextureContent.cpp
-  TextureFactory.cpp
-  TextureProvider.cpp
+  TextureNode.cpp
   TextureUploader.cpp
-  Tiles.cpp
+  Tile.cpp
   VectorialSynchronizer.cpp
   VisibilityHelper.cpp
   WallFromMasterChannel.cpp

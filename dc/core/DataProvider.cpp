@@ -37,25 +37,62 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DataLoader.h"
+#include "DataProvider.h"
 
-#include <ContentSynchronizer.h>
+#include "ContentSynchronizer.h"
+#include "PixelStreamSynchronizer.h"
+#include "Tile.h"
 
+#include <deflect/Frame.h>
 #include <QtConcurrent>
 
-DataLoader::DataLoader() {}
+DataProvider::DataProvider() {}
 
-DataLoader::~DataLoader() {}
-
-QFuture<ImagePtr>
-DataLoader::load( ContentSynchronizerSharedPtr source, QList<uint> tileIndices )
+DataProvider::~DataProvider()
 {
-    auto loadTileFn = std::function<ImagePtr(uint)>([&source]( const uint tileIndex ) -> ImagePtr {
-       return source->getTileImage( tileIndex );
-    });
-
-    auto future = QtConcurrent::mapped< QList<uint> >( tileIndices, loadTileFn );
-
-    return future;
+    for( auto watcher : _watchers )
+    {
+        watcher->disconnect( this );
+        watcher->waitForFinished();
+        delete watcher;
+    }
 }
 
+void DataProvider::loadAsync( ContentSynchronizerSharedPtr source,
+                              TileWeakPtr tile )
+{
+    Watcher* watcher = new Watcher;
+    _watchers.append( watcher );
+    connect( watcher, &Watcher::finished,
+             this, &DataProvider::_handleFinished );
+    watcher->setFuture( QtConcurrent::run( [source,tile,this] {
+        _load( source, tile );
+    } ));
+}
+
+void DataProvider::setNewFrame( deflect::FramePtr frame )
+{
+    if( !_synchronizers.count( frame->uri ))
+        return;
+
+    _synchronizers[frame->uri]->updatePixelStream( frame );
+}
+
+void DataProvider::_load( ContentSynchronizerSharedPtr source,
+                          TileWeakPtr tile_ )
+{
+    TilePtr tile = tile_.lock();
+    if( !tile )
+        return;
+    ImagePtr image = source->getTileImage( tile->getIndex( ));
+    if( !image )
+        return;
+    emit imageLoaded( image, tile_ );
+}
+
+void DataProvider::_handleFinished()
+{
+    Watcher* watcher = static_cast<Watcher*>( sender( ));
+    _watchers.removeOne( watcher );
+    watcher->deleteLater();
+}
