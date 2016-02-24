@@ -89,7 +89,7 @@ BaseContentWindow {
     WindowControls {
     }
 
-    WindowBorders {
+    ResizeCircles {
     }
 
     ParallelAnimation {

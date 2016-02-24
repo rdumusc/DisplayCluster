@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import DisplayCluster 1.0
-import "qrc:/qml/core/style.js" as Style
+import "style.js" as Style
 
 Rectangle {
     width: Style.controlPanelWidth
@@ -16,7 +16,7 @@ Rectangle {
     }
 
     border.color: Style.controlsFocusedColor
-    border.width: Style.borderWidth
+    border.width: Style.resizeCircleRadius
     color: Style.controlPanelBackground
 
     ListView {

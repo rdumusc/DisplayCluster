@@ -28,26 +28,26 @@
         <file>selectboxit/selectboxit.css</file>
     </qresource>
     <qresource prefix="/qml/core">
-        <file>DisplayGroup.qml</file>
-        <file>WindowControls.qml</file>
-        <file>WallContentWindow.qml</file>
-        <file>ControlButton.qml</file>
-        <file>WindowBorders.qml</file>
-        <file>BorderRectangle.qml</file>
-        <file>CloseControlButton.qml</file>
-        <file>FullscreenControlButton.qml</file>
-        <file>WindowControlsDelegate.qml</file>
-        <file>style.js</file>
-        <file>ZoomContext.qml</file>
-        <file>BaseContentWindow.qml</file>
-        <file>OneToOneControlButton.qml</file>
-        <file>FocusControlButton.qml</file>
-        <file>ControlPanel.qml</file>
-        <file>ControlPanelDelegate.qml</file>
-        <file>WallDisplayGroup.qml</file>
         <file>Background.qml</file>
+        <file>BaseContentWindow.qml</file>
+        <file>CloseControlButton.qml</file>
+        <file>ControlButton.qml</file>
+        <file>ControlPanelDelegate.qml</file>
+        <file>ControlPanel.qml</file>
+        <file>DisplayGroup.qml</file>
         <file>DoubleBufferedImage.qml</file>
+        <file>FocusControlButton.qml</file>
+        <file>FullscreenControlButton.qml</file>
+        <file>OneToOneControlButton.qml</file>
+        <file>ResizeCircle.qml</file>
+        <file>ResizeCircles.qml</file>
+        <file>style.js</file>
         <file>TouchPointMarker.qml</file>
+        <file>WallContentWindow.qml</file>
+        <file>WallDisplayGroup.qml</file>
+        <file>WindowControlsDelegate.qml</file>
+        <file>WindowControls.qml</file>
+        <file>ZoomContext.qml</file>
     </qresource>
     <qresource prefix="/clock">
         <file>Clock.qml</file>

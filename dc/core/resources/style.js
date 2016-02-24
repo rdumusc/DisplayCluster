@@ -8,10 +8,10 @@ var focusBackgroundZorder = 98;
 var unfocusZorder = 99;
 var focusZorder = 100;
 
-var borderWidth = 50
-var activeBorderColor = "#FCEE21";
-var inactiveBorderColor = "#F0F2F2F2";
-var borderOpacity = 0.4;
+var resizeCircleRadius = 50
+var activeResizeCircleColor = "#FCEE21";
+var inactiveResizeCircleColor = "#F0F2F2F2";
+var resizeCircleOpacity = 0.6;
 
 var controlsDefaultColor = "#F2F2F2";
 var controlsFocusedColor = "#FCEE21";
@@ -32,7 +32,7 @@ var segmentBorderColor = "lightgreen";
 
 var windowTitleFontSize = 45;
 var windowTitleHeight = 100;
-var windowBorderWidth = 24;
+var windowBorderWidth = 12;
 var windowBorderDefaultColor = "#F2F2F2";
 var windowBorderSelectedColor = "#FCEE21";
 var windowBorderMovingColor= "#F2F2F2";
