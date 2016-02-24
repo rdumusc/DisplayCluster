@@ -85,12 +85,12 @@ BaseContentWindow {
         onKeyRelease: contentwindow.delegate.keyRelease(key, modifiers, text)
     }
 
-    WindowBorders {
-        borderDelegate: touchBorderDelegate
+    ResizeCircles {
+        resizeCirclesDelegate: touchBorderDelegate
 
         Component {
             id: touchBorderDelegate
-            BorderRectangle {
+            ResizeCircle {
                 TouchArea {
                     tapAndHoldEnabled: false
                     doubleTapEnabled: false

@@ -14,7 +14,6 @@ Rectangle {
     radius: Style.controlsRadius
     anchors.right: parent.left
     anchors.top: parent.top
-    anchors.topMargin: options.showWindowBorders ? -Style.windowBorderWidth / 2 : 0
     anchors.rightMargin: Style.controlsLeftMargin
     visible: opacity > 0
     opacity: 0
