@@ -27,6 +27,16 @@ BaseContentWindow {
             displaygroup.focus(contentwindow.id)
     }
 
+    focus: contentwindow.state === ContentWindow.SELECTED
+    Keys.onPressed: {
+        contentwindow.delegate.keyPress(event.key, event.modifiers, event.text)
+        event.accepted = true;
+    }
+    Keys.onReleased: {
+        contentwindow.delegate.keyRelease(event.key, event.modifiers, event.text)
+        event.accepted = true;
+    }
+
     TouchMouseArea {
         id: windowMoveAndResizeArea
 
@@ -52,7 +62,6 @@ BaseContentWindow {
         id: contentInteractionArea
 
         visible: contentwindow.state === ContentWindow.SELECTED
-        focus: true // to receive key events
 
         anchors.bottom: parent.bottom
         anchors.bottomMargin: windowRect.border.width
