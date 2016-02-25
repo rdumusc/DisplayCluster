@@ -59,6 +59,9 @@ public:
      */
     PixelStreamSynchronizer();
 
+    /** Set the source of data for the stream. */
+    void setDataSource( PixelStreamUpdaterSharedPtr updater );
+
     /** @copydoc ContentSynchronizer::update */
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
@@ -84,19 +87,24 @@ public:
     /** @copydoc ContentSynchronizer::onSwapReady */
     void onSwapReady( TilePtr tile ) override;
 
-    /** Update the appropriate PixelStream with the given frame. */
-    void updatePixelStream( deflect::FramePtr frame );
-
-signals:
-    /** Emitted to request a new frame after a successful swap. */
-    void requestFrame( QString uri );
+//signals:
+//    /** Emitted to request a new frame after a successful swap. */
+//    void requestFrame( QString uri );
 
 private:
     PixelStreamUpdaterSharedPtr _updater;
     uint _frameIndex;
     FpsCounter _fpsCounter;
+    std::set<TilePtr> _tilesReadyToSwap;
+    IndicesSet _tilesReadySet;
+
+    QRectF _visibleTilesArea;
+    IndicesSet _visibleSet;
+    bool _tilesDirty;
+    bool _updateExistingTiles;
 
     void _onPictureUpdated();
+    void _updateTiles( bool updateExistingTiles );
 };
 
 #endif

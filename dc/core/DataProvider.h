@@ -46,8 +46,6 @@
 #include <QList>
 #include <QFutureWatcher>
 
-class PixelStreamSynchronizer;
-
 /**
  * Load image data in parallel.
  */
@@ -59,6 +57,12 @@ class DataProvider : public QObject
 public:
     DataProvider();
     ~DataProvider();
+
+    /** Get the data source for the given stream uri. */
+    PixelStreamUpdaterSharedPtr getStreamDataSource( const QString& uri );
+
+    /** Update the contents, using the channel to synchronize processes. */
+    void synchronize( WallToWallChannel& channel );
 
 public slots:
     /** Load an image asynchronously. */
@@ -78,8 +82,7 @@ private:
     typedef QFutureWatcher<void> Watcher;
     QList<Watcher*> _watchers;
 
-    typedef std::shared_ptr<PixelStreamSynchronizer> PixelStreamSynchronizerPtr;
-    std::map< QString, PixelStreamSynchronizerPtr > _synchronizers;
+    std::map< QString, PixelStreamUpdaterWeakPtr > _streamUpdaters;
 
     void _load( ContentSynchronizerSharedPtr source, TileWeakPtr tile );
     void _handleFinished();

@@ -43,24 +43,25 @@
 #include "PixelStreamUpdater.h"
 #include "QtImage.h"
 #include "Tile.h"
+#include "WallToWallChannel.h"
 #include "ZoomHelper.h"
 
 PixelStreamSynchronizer::PixelStreamSynchronizer()
-    : _updater( new PixelStreamUpdater )
-    , _frameIndex( 0 )
+    : _frameIndex( 0 )
+    , _tilesDirty( true )
+    , _updateExistingTiles( false )
+{}
+
+void
+PixelStreamSynchronizer::setDataSource( PixelStreamUpdaterSharedPtr updater )
 {
+    if( _updater )
+        _updater->disconnect( this );
+
+    _updater = updater;
+
     connect( _updater.get(), &PixelStreamUpdater::pictureUpdated,
              this, &PixelStreamSynchronizer::_onPictureUpdated );
-    connect( _updater.get(), &PixelStreamUpdater::requestFrame,
-             this, &PixelStreamSynchronizer::requestFrame );
-
-    // Forward tiles signal
-    connect( _updater.get(), &PixelStreamUpdater::addTile,
-             this, &PixelStreamSynchronizer::addTile );
-    connect( _updater.get(), &PixelStreamUpdater::removeTile,
-             this, &PixelStreamSynchronizer::removeTile );
-    connect( _updater.get(), &PixelStreamUpdater::updateTile,
-             this, &PixelStreamSynchronizer::updateTile );
 }
 
 void PixelStreamSynchronizer::update( const ContentWindow& window,
@@ -70,12 +71,40 @@ void PixelStreamSynchronizer::update( const ContentWindow& window,
     const QSize tilesSurface = window.getContent()->getDimensions();
 
     ZoomHelper helper( window );
-    _updater->updateVisibility( helper.toTilesArea( visibleArea, tilesSurface ));
+    const QRectF visibleTilesArea = helper.toTilesArea( visibleArea,
+                                                        tilesSurface );
+
+    if( _visibleTilesArea == visibleTilesArea )
+        return;
+
+    _visibleTilesArea = visibleTilesArea;
+    _tilesDirty = true;
+
+//    _updateTiles( true );
 }
 
 void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    _updater->synchronizeFramesSwap( channel );
+    if( !_updater )
+        return;
+
+    const bool swap = !_tilesReadySet.empty() &&
+                      set_difference( _tilesReadySet, _visibleSet ).empty();
+
+    if( channel.allReady( swap ))
+    {
+        for( auto& tile : _tilesReadyToSwap )
+            tile->swapImage();
+        _tilesReadyToSwap.clear();
+        _tilesReadySet.clear();
+
+        ++_frameIndex;
+        _fpsCounter.tick();
+        emit statisticsChanged();
+    }
+
+    if( _tilesDirty )
+        _updateTiles( _updateExistingTiles );
 }
 
 bool PixelStreamSynchronizer::needRedraw() const
@@ -98,26 +127,52 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-void PixelStreamSynchronizer::onSwapReady( TilePtr tile )
-{
-    tile->swapImage();
-}
-
-void PixelStreamSynchronizer::updatePixelStream( deflect::FramePtr frame )
-{
-    _updater->updatePixelStream( frame );
-}
-
 ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const
 {
+    if( !_updater )
+        return ImagePtr();
+
     return std::make_shared<QtImage>( _updater->getTileImage( tileIndex ));
+}
+
+void PixelStreamSynchronizer::onSwapReady( TilePtr tile )
+{
+    _tilesReadyToSwap.insert( tile );
+    _tilesReadySet.insert( tile->getIndex( ));
 }
 
 void PixelStreamSynchronizer::_onPictureUpdated()
 {
-    ++_frameIndex;
-    //emit sourceParamsChanged();
-
-    _fpsCounter.tick();
-    emit statisticsChanged();
+    _tilesDirty = true;
+    _updateExistingTiles = true;
+//    _updateTiles( true );
 }
+
+void PixelStreamSynchronizer::_updateTiles( const bool updateExistingTiles )
+{
+    if( !_updater )
+        return;
+
+    const IndicesSet visibleSet = _updater->computeVisibleSet( _visibleTilesArea );
+
+    const IndicesSet addedTiles = set_difference( visibleSet, _visibleSet );
+    const IndicesSet removedTiles = set_difference( _visibleSet, visibleSet );
+    const IndicesSet currentTiles = set_difference( _visibleSet, removedTiles );
+
+    for( auto i : removedTiles )
+        emit removeTile( i );
+
+    for( auto i : addedTiles )
+        emit addTile( std::make_shared<Tile>( i, _updater->getTileRect( i )));
+
+    if( updateExistingTiles )
+    {
+        for( auto i : currentTiles )
+            emit updateTile( i, _updater->getTileRect( i ));
+    }
+
+    _visibleSet = visibleSet;
+    _tilesDirty = false;
+    _updateExistingTiles = false;
+}
+

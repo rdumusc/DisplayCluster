@@ -40,7 +40,7 @@
 #include "DataProvider.h"
 
 #include "ContentSynchronizer.h"
-#include "PixelStreamSynchronizer.h"
+#include "PixelStreamUpdater.h"
 #include "Tile.h"
 
 #include <deflect/Frame.h>
@@ -58,6 +58,38 @@ DataProvider::~DataProvider()
     }
 }
 
+PixelStreamUpdaterSharedPtr
+DataProvider::getStreamDataSource( const QString& uri )
+{
+    PixelStreamUpdaterSharedPtr updater;
+    if( _streamUpdaters.count( uri ))
+        updater = _streamUpdaters[uri].lock();
+
+    if( !updater )
+    {
+        updater = std::make_shared<PixelStreamUpdater>();
+        connect( updater.get(), &PixelStreamUpdater::requestFrame,
+                 this, &DataProvider::requestFrame );
+        _streamUpdaters[uri] = PixelStreamUpdaterWeakPtr( updater );
+    }
+
+    return updater;
+}
+
+void DataProvider::synchronize( WallToWallChannel& channel )
+{
+    auto it = _streamUpdaters.begin();
+    while( it != _streamUpdaters.end( )) {
+        if( auto updater = it->second.lock( ))
+        {
+            updater->synchronizeFramesSwap( channel );
+            ++it;
+        }
+        else
+            it = _streamUpdaters.erase( it );
+    }
+}
+
 void DataProvider::loadAsync( ContentSynchronizerSharedPtr source,
                               TileWeakPtr tile )
 {
@@ -72,10 +104,13 @@ void DataProvider::loadAsync( ContentSynchronizerSharedPtr source,
 
 void DataProvider::setNewFrame( deflect::FramePtr frame )
 {
-    if( !_synchronizers.count( frame->uri ))
+    if( !_streamUpdaters.count( frame->uri ))
         return;
 
-    _synchronizers[frame->uri]->updatePixelStream( frame );
+    if( auto updater = _streamUpdaters[frame->uri].lock() )
+        updater->updatePixelStream( frame );
+    else
+        _streamUpdaters.erase( frame->uri );
 }
 
 void DataProvider::_load( ContentSynchronizerSharedPtr source,

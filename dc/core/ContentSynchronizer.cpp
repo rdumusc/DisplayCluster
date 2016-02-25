@@ -81,5 +81,5 @@ ContentSynchronizerPtr ContentSynchronizer::create( ContentPtr content )
 
 void ContentSynchronizer::onTextureInitialized( TilePtr tile )
 {
-    emit requestUpdate( shared_from_this(), TileWeakPtr( tile ));
+    emit requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
 }

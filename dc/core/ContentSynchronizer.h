@@ -122,9 +122,12 @@ signals:
     /** Notify to update a tile's coordinates. */
     void updateTile( uint tileId, QRect coordinates );
 
-    /** Request an update of the tile. */
-    void requestUpdate( ContentSynchronizerSharedPtr synchronizer,
-                        TileWeakPtr tile );
+    /** Request an update of a specific tile. */
+    void requestTileUpdate( ContentSynchronizerSharedPtr synchronizer,
+                            TileWeakPtr tile );
+
+    /** Request an update of all tiles that are currently visible. */
+    void requestUpdateAllTiles();
 };
 
 #endif // CONTENTSYNCHRONIZER_H

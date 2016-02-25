@@ -39,8 +39,9 @@
 
 #include "QtImage.h"
 
-QtImage::QtImage( const QImage& image )
+QtImage::QtImage(const QImage& image, const int64_t timestamp )
     : _image( image )
+    , _timestamp( timestamp )
 {}
 
 int QtImage::getWidth() const
@@ -60,5 +61,5 @@ const uint8_t* QtImage::getData() const
 
 int64_t QtImage::getTimestamp() const
 {
-    return 0;
+    return _timestamp;
 }

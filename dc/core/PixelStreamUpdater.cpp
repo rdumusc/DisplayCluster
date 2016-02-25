@@ -39,16 +39,15 @@
 
 #include "PixelStreamUpdater.h"
 
-#include "Tile.h"
 #include "WallToWallChannel.h"
 
 #include <deflect/Frame.h>
+#include <deflect/SegmentDecoder.h>
 #include <boost/bind.hpp>
 #include <QImage>
 #include <QThreadStorage>
 
 PixelStreamUpdater::PixelStreamUpdater()
-    : _tilesDirty( false )
 {
     _swapSyncFrame.setCallback( boost::bind(
                                     &PixelStreamUpdater::_onFrameSwapped,
@@ -61,10 +60,16 @@ void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
         boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
 
     _swapSyncFrame.sync( versionCheckFunc );
+}
 
-    // If the frame was not swapped, refresh tiles caused by a visibility update
-    if( _tilesDirty )
-        _updateTiles();
+QRect toRect( const deflect::SegmentParameters& params )
+{
+    return QRect( params.x, params.y, params.width, params.height );
+}
+
+QRect PixelStreamUpdater::getTileRect( uint tileIndex ) const
+{
+    return toRect( _currentFrame->segments[tileIndex].parameters );
 }
 
 QImage PixelStreamUpdater::getTileImage( const uint tileIndex ) const
@@ -86,23 +91,24 @@ QImage PixelStreamUpdater::getTileImage( const uint tileIndex ) const
                    QImage::Format_RGBX8888 );
 }
 
+IndicesSet PixelStreamUpdater::computeVisibleSet( const QRectF& visibleArea ) const
+{
+    IndicesSet visibleSet;
+
+    if( !_currentFrame || visibleArea.isEmpty( ))
+        return visibleSet;
+
+    for( size_t i = 0; i < _currentFrame->segments.size(); ++i )
+    {
+        if( visibleArea.intersects( toRect( _currentFrame->segments[i].parameters )))
+            visibleSet.insert( i );
+    }
+    return visibleSet;
+}
+
 void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 {
     _swapSyncFrame.update( frame );
-}
-
-void PixelStreamUpdater::updateVisibility( const QRectF& visibleArea )
-{
-    if( _visibleArea == visibleArea )
-        return;
-
-    _visibleArea = visibleArea;
-
-    if( !_currentFrame )
-        return;
-
-    if( _visibleSet != _computeVisibleSet( _currentFrame->segments ))
-        _tilesDirty = true;
 }
 
 void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
@@ -115,59 +121,7 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
         } );
 
     _currentFrame = frame;
-    _updateTiles();
 
     emit pictureUpdated();
-    emit requestFrame( frame->uri );
-}
-
-QRect toRect( const deflect::SegmentParameters& params )
-{
-    return QRect( params.x, params.y, params.width, params.height );
-}
-
-Indices
-PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments) const
-{
-    Indices visibleSet;
-
-    if( _visibleArea.isEmpty( ))
-        return visibleSet;
-
-    for( size_t i = 0; i < segments.size(); ++i )
-    {
-        if( _visibleArea.intersects( toRect( segments[i].parameters )))
-            visibleSet.push_back( i );
-    }
-    return visibleSet;
-}
-
-void PixelStreamUpdater::_updateTiles()
-{
-    if( !_currentFrame )
-        return;
-
-    const Indices visibleSet = _computeVisibleSet( _currentFrame->segments );
-
-    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
-    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
-    const Indices currentTiles = set_difference( _visibleSet, removedTiles );
-
-    // Remove tiles
-    for( auto i : removedTiles )
-        emit removeTile( i );
-
-    // Add tiles
-    for( auto i : addedTiles )
-    {
-        const auto tileRect = toRect( _currentFrame->segments[i].parameters );
-        emit addTile( std::make_shared<Tile>( i, tileRect ));
-    }
-
-    // Update existing segments
-    for( auto i : currentTiles )
-        emit updateTile( i, toRect( _currentFrame->segments[i].parameters ));
-
-    _visibleSet = visibleSet;
-    _tilesDirty = false;
+    emit requestFrame( _currentFrame->uri );
 }

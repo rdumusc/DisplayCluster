@@ -88,7 +88,6 @@ protected:
 
 private:
     uint _index;
-    QRect _rect;
 
     TextureNode* _node;
     bool _swap;

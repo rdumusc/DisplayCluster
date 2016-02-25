@@ -51,7 +51,7 @@ class QtImage : public Image
 {
 public:
     /** Constructor, stores the given QImage. */
-    QtImage( const QImage& image );
+    QtImage( const QImage& image, int64_t timestamp = 0 );
 
     /** @copydoc Image::getWidth */
     int getWidth() const override;
@@ -67,6 +67,7 @@ public:
 
 private:
     const QImage _image;
+    const int64_t _timestamp;
 };
 
 #endif // QTIMAGE_H

@@ -43,8 +43,9 @@
 
 TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
     : _size( size )
-    , _frontTexture( _createTexture( window ))
-    , _backTexture( _createTexture( window ))
+    , _window( window )
+    , _frontTexture( _window->createTextureFromId( 0, QSize( 1, 1 )))
+    , _backTexture( _createTexture( size ))
 {
     setTexture( _frontTexture.get( ));
     setFiltering( QSGTexture::Nearest );
@@ -58,12 +59,30 @@ uint TextureNode::getBackGlTexture() const
 void TextureNode::swap()
 {
     std::swap( _frontTexture, _backTexture );
+
     setTexture( _frontTexture.get( ));
     markDirty( DirtyMaterial );
+
+    if( _frontTexture->textureSize( ) != rect().size( ))
+    {
+        setRect( QRectF( QPointF( 0, 0 ), _frontTexture->textureSize( )));
+        markDirty( DirtyGeometry );
+    }
+
+    if( _backTexture->textureSize() != _size )
+        _backTexture = _createTexture( _size );
+}
+
+void TextureNode::resize( const QSize& size )
+{
+    if( size == _size )
+        return;
+
+    _size = size;
 }
 
 TextureNode::QSGTexturePtr
-TextureNode::_createTexture( QQuickWindow* window ) const
+TextureNode::_createTexture( const QSize& size ) const
 {
     uint textureID;
     glActiveTexture( GL_TEXTURE0 );
@@ -73,13 +92,13 @@ TextureNode::_createTexture( QQuickWindow* window ) const
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, _size.width(), _size.height(),
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, size.width(), size.height(),
                   0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
     const auto textureFlags = QQuickWindow::CreateTextureOptions(
                                   QQuickWindow::TextureHasAlphaChannel |
                                   QQuickWindow::TextureOwnsGLTexture );
-    return QSGTexturePtr( window->createTextureFromId( textureID, _size,
-                                                       textureFlags ));
+    return QSGTexturePtr( _window->createTextureFromId( textureID, size,
+                                                        textureFlags ));
 }

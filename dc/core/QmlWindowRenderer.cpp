@@ -40,6 +40,7 @@
 #include "QmlWindowRenderer.h"
 
 #include "ContentSynchronizer.h"
+#include "PixelStreamSynchronizer.h"
 #include "ContentWindow.h"
 #include "DataProvider.h"
 #include "Tile.h"
@@ -70,8 +71,13 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
     connect( _synchronizer.get(), &ContentSynchronizer::updateTile,
              this, &QmlWindowRenderer::_updateTile );
 
-    connect( _synchronizer.get(), &ContentSynchronizer::requestUpdate,
+    connect( _synchronizer.get(), &ContentSynchronizer::requestTileUpdate,
              &_provider, &DataProvider::loadAsync );
+    connect( _synchronizer.get(), &ContentSynchronizer::requestUpdateAllTiles,
+             this, &QmlWindowRenderer::_onRequestUpdateAll );
+
+    if( auto sync = std::dynamic_pointer_cast<PixelStreamSynchronizer>( _synchronizer ))
+        sync->setDataSource( _provider.getStreamDataSource( contentWindow->getContent()->getURI( )));
 
     _windowContext->setContextProperty( "contentwindow", _contentWindow.get( ));
     _windowContext->setContextProperty( "contentsync", _synchronizer.get( ));
@@ -134,6 +140,12 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
     tile->setParentItem( item );
 }
 
+void QmlWindowRenderer::_onRequestUpdateAll()
+{
+    for( auto& tile : _tiles )
+        _provider.loadAsync( _synchronizer, TileWeakPtr( tile.second ));
+}
+
 void QmlWindowRenderer::_removeTile( const uint tileIndex )
 {
     if( !_tiles.count( tileIndex ))
@@ -148,7 +160,10 @@ void QmlWindowRenderer::_updateTile( const uint tileIndex,
                                      const QRect& coordinates )
 {
     if( _tiles.count( tileIndex ))
+    {
         _tiles[tileIndex]->update( coordinates );
+        _provider.loadAsync( _synchronizer, TileWeakPtr( _tiles[tileIndex] ));
+    }
 }
 
 QQuickItem* QmlWindowRenderer::_createQmlItem( const QUrl& url )

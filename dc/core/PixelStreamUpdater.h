@@ -44,10 +44,7 @@
 
 #include "SwapSyncObject.h"
 
-#include <deflect/SegmentDecoder.h>
-
 #include <QObject>
-#include <deque>
 
 /**
  * Synchronize the update of PixelStreams and send new frame requests.
@@ -67,8 +64,11 @@ public:
     /** Get a segment by its tile-index. */
     QImage getTileImage( uint tileIndex ) const;
 
-    /** Update the visibility of the segements. */
-    void updateVisibility( const QRectF& visibleArea );
+    /** Get the coordinates of a tile. */
+    QRect getTileRect( uint tileIndex ) const;
+
+    /** Compute the indices of the tiles which are visible in the given area. */
+    IndicesSet computeVisibleSet( const QRectF& visibleArea ) const;
 
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
@@ -81,29 +81,12 @@ signals:
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
 
-    /** Notify the window to add a tile. */
-    void addTile( TilePtr tile );
-
-    /** Notify the window to remove a tile. */
-    void removeTile( uint tileId );
-
-    /** Notify to update a tile's coordinates. */
-    void updateTile( uint tileId, QRect coordinates );
-
 private:
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     SwapSyncFrame _swapSyncFrame;
-
     deflect::FramePtr _currentFrame;
 
-    QRectF _visibleArea;
-    bool _tilesDirty;
-
-    Indices _visibleSet;
-
     void _onFrameSwapped( deflect::FramePtr frame );
-    Indices _computeVisibleSet( const deflect::Segments& segments ) const;
-    void _updateTiles();
 };
 
 #endif

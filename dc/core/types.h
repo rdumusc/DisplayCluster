@@ -100,6 +100,7 @@ typedef boost::shared_ptr< Markers > MarkersPtr;
 typedef boost::shared_ptr< MPIChannel > MPIChannelPtr;
 typedef std::shared_ptr< MovieUpdater > MovieUpdaterSharedPtr;
 typedef boost::shared_ptr< Options > OptionsPtr;
+typedef std::weak_ptr< PixelStreamUpdater > PixelStreamUpdaterWeakPtr;
 typedef std::shared_ptr< PixelStreamUpdater > PixelStreamUpdaterSharedPtr;
 typedef boost::shared_ptr< QmlWindowRenderer > QmlWindowPtr;
 typedef boost::shared_ptr< Renderable > RenderablePtr;
@@ -113,6 +114,7 @@ typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
 typedef std::vector<TilePtr> Tiles;
 typedef std::vector<size_t> Indices;
+typedef std::set<size_t> IndicesSet;
 typedef QList<ImagePtr> ImagePtrs;
 
 static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );

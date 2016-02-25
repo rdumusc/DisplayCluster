@@ -60,9 +60,18 @@ uint Tile::getIndex() const
 
 void Tile::update( const QRect& rect )
 {
-    setImplicitSize( rect.width(), rect.height( ));
-    setSize( rect.size( ));
+    if( rect == getCoord( ))
+        return;
+
+    setVisible( false );
     setPosition( rect.topLeft( ));
+
+    if( rect.size() != QSize( width(), height( )))
+    {
+        setImplicitSize( rect.width(), rect.height( ));
+        setSize( rect.size( ));
+        QQuickItem::update();
+    }
 }
 
 QRect Tile::getCoord() const
@@ -95,12 +104,12 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
 
     if( !node )
     {
-        node = new TextureNode( QSize( width( ), height( )), window( ));
+        node = new TextureNode( QSize( width(), height( )), window( ));
         _backGlTexture = node->getBackGlTexture();
         emit textureInitialized( shared_from_this( ));
     }
 
-    node->setRect( boundingRect( ));
+    node->resize( QSize( width(), height( )));
 
     if( _swap )
     {

@@ -59,14 +59,17 @@ public:
 
     void swap();
 
+    void resize( const QSize& size );
+
 private:
     QSize _size;
+    QQuickWindow* _window;
 
     typedef std::unique_ptr<QSGTexture> QSGTexturePtr;
     QSGTexturePtr _frontTexture;
     QSGTexturePtr _backTexture;
 
-    QSGTexturePtr _createTexture( QQuickWindow* window ) const;
+    QSGTexturePtr _createTexture( const QSize& size ) const;
 };
 
 #endif
