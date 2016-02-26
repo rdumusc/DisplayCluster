@@ -41,6 +41,8 @@
 
 #include "WallToWallChannel.h"
 
+#include "log.h"
+
 #include <deflect/Frame.h>
 #include <deflect/SegmentDecoder.h>
 #include <boost/bind.hpp>
@@ -85,7 +87,11 @@ QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
 
     const QReadLocker lock( &_mutex );
     if( timestamp != _frameIndex )
+    {
+        put_flog( LOG_DEBUG, "incorrect timestamp: %d, current frameIndex: %d",
+                  timestamp, _frameIndex );
         return QImage();
+    }
 
     auto& segment = _currentFrame->segments.at( tileIndex );
     if( segment.parameters.compressed )
@@ -101,9 +107,9 @@ QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
                    QImage::Format_RGBX8888 );
 }
 
-IndicesSet PixelStreamUpdater::computeVisibleSet( const QRectF& visibleArea ) const
+Indices PixelStreamUpdater::computeVisibleSet( const QRectF& visibleArea ) const
 {
-    IndicesSet visibleSet;
+    Indices visibleSet;
 
     if( !_currentFrame || visibleArea.isEmpty( ))
         return visibleSet;

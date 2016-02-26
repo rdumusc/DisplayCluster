@@ -69,7 +69,7 @@ public:
     QRect getTileRect( uint tileIndex ) const;
 
     /** Compute the indices of the tiles which are visible in the given area. */
-    IndicesSet computeVisibleSet( const QRectF& visibleArea ) const;
+    Indices computeVisibleSet( const QRectF& visibleArea ) const;
 
     void getNextFrame();
 

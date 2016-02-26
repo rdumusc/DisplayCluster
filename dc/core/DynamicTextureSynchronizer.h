@@ -84,16 +84,10 @@ public:
 private:
     DynamicTexturePtr _reader;
     uint _lod;
-    QRectF _visibleArea;
+    QRectF _visibleTilesArea;
+    Indices _visibleSet;
 
-    IndicesSet _visibleSet;
-    typedef std::map<size_t, Tiles> LodTilesMap;
-    LodTilesMap _lodTilesMap;
-
-    void _updateTiles( const QRectF& visibleArea, uint lod );
-    Tiles _gatherAllTiles( const uint lod ) const;
-    IndicesSet _computeVisibleSet( const QRectF& visibleArea,
-                                   const Tiles& tiles ) const;
+    void _updateTiles();
 };
 
 #endif

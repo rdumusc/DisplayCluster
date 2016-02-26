@@ -93,11 +93,11 @@ private:
     PixelStreamUpdaterSharedPtr _updater;
     FpsCounter _fpsCounter;
     std::set<TilePtr> _tilesReadyToSwap;
-    IndicesSet _tilesReadySet;
-    IndicesSet _syncSet;
+    Indices _tilesReadySet;
+    Indices _syncSet;
 
     QRectF _visibleTilesArea;
-    IndicesSet _visibleSet;
+    Indices _visibleSet;
     uint64_t _frameIndex;
     bool _tilesDirty;
     bool _updateExistingTiles;

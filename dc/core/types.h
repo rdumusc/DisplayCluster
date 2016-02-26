@@ -113,8 +113,7 @@ typedef std::set< ContentWindowPtr > ContentWindowSet;
 typedef std::vector< ContentWindowPtr > ContentWindowPtrs;
 typedef std::vector< WallWindowPtr > WallWindowPtrs;
 typedef std::vector<TilePtr> Tiles;
-typedef std::vector<size_t> Indices;
-typedef std::set<size_t> IndicesSet;
+typedef std::set<size_t> Indices;
 typedef QList<ImagePtr> ImagePtrs;
 
 static const QRectF UNIT_RECTF( 0.0, 0.0, 1.0, 1.0 );

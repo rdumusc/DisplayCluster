@@ -107,6 +107,9 @@ public:
     /** Get the coordinates in pixels of a specific tile. */
     QRect getTileCoord( uint lod, uint x, uint y ) const;
 
+    /** Get the coordinates in pixels of a specific tile. */
+    QRect getTileCoord( uint tileIndex ) const;
+
     /** Get the tile filename for a given tile index. */
     QString getTileFilename( uint tileIndex ) const;
 
@@ -123,9 +126,31 @@ public:
      */
     bool generateImagePyramid( const QString& outputFolder );
 
+    /** Compute the indices of the tiles which are visible in the given area. */
+    Indices computeVisibleSet( const QRectF& visibleArea,
+                                const uint lod ) const;
+
 private:
     mutable QMutex _tilesCacheMutex;
     mutable QHash<uint, QImage> _tilesCache;
+
+    struct TileCoord {
+        uint index;
+        QRect coord;
+    };
+
+    typedef std::vector<TileCoord> TileCoords;
+    typedef std::map<size_t, TileCoords> LodTilesMap;
+    mutable LodTilesMap _lodTilesMapCache;
+
+    struct TileIndex {
+        uint x;
+        uint y;
+        uint lod;
+    };
+
+    TileIndex _getTileIndex( uint tileIndex ) const;
+    TileCoords _gatherAllTiles( const uint lod ) const;
 
     /* for root only: */
 
@@ -136,8 +161,6 @@ private:
     bool _useImagePyramid;
 
     QImage fullscaleImage_;
-
-    QRectF zoomRect_;
 
     /* for children only: */
 

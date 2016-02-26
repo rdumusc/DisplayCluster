@@ -104,7 +104,11 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
     }
 
     if( _tilesDirty )
+    {
         _updateTiles();
+        _tilesDirty = false;
+        _updateExistingTiles = false;
+    }
 }
 
 bool PixelStreamSynchronizer::needRedraw() const
@@ -160,14 +164,10 @@ void PixelStreamSynchronizer::_onPictureUpdated( const uint64_t frameIndex )
 
 void PixelStreamSynchronizer::_updateTiles()
 {
-    if( !_updater )
-        return;
+    const Indices visibleSet = _updater->computeVisibleSet( _visibleTilesArea );
 
-    const IndicesSet visibleSet = _updater->computeVisibleSet( _visibleTilesArea );
-
-    const IndicesSet addedTiles = set_difference( visibleSet, _visibleSet );
-    const IndicesSet removedTiles = set_difference( _visibleSet, visibleSet );
-    const IndicesSet currentTiles = set_difference( _visibleSet, removedTiles );
+    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
+    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
 
     for( auto i : removedTiles )
         emit removeTile( i );
@@ -177,6 +177,7 @@ void PixelStreamSynchronizer::_updateTiles()
 
     if( _updateExistingTiles )
     {
+        const Indices currentTiles = set_difference( _visibleSet, removedTiles);
         for( auto i : currentTiles )
             emit updateTile( i, _updater->getTileRect( i ));
         _syncSet = visibleSet;
@@ -185,7 +186,4 @@ void PixelStreamSynchronizer::_updateTiles()
         _syncSet = set_difference( _syncSet, removedTiles );
 
     _visibleSet = visibleSet;
-    _tilesDirty = false;
-    _updateExistingTiles = false;
 }
-

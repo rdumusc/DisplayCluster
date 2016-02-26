@@ -57,7 +57,23 @@ void DynamicTextureSynchronizer::update( const ContentWindow& window,
     const ZoomHelper helper( window );
     const uint lod = _reader->getLod( helper.getContentRect().size().toSize( ));
     const QSize tilesSurface = _reader->getTilesArea( lod );
-    _updateTiles( helper.toTilesArea( visibleArea, tilesSurface ), lod );
+    const QRectF visibleTilesArea = helper.toTilesArea( visibleArea,
+                                                        tilesSurface );
+
+    if( visibleTilesArea == _visibleTilesArea && lod == _lod )
+        return;
+
+    _visibleTilesArea = visibleTilesArea;
+
+    if( lod != _lod )
+    {
+        _lod = lod;
+
+        emit statisticsChanged();
+        emit tilesAreaChanged();
+    }
+
+    _updateTiles();
 }
 
 void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
@@ -106,80 +122,19 @@ void DynamicTextureSynchronizer::onSwapReady( TilePtr tile )
     tile->swapImage();
 }
 
-void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
-                                               const uint lod )
+void DynamicTextureSynchronizer::_updateTiles()
 {
-    if( visibleArea == _visibleArea && lod == _lod )
-        return;
+    const Indices visibleSet = _reader->computeVisibleSet( _visibleTilesArea,
+                                                           _lod );
 
-    _visibleArea = visibleArea;
-
-    if( lod != _lod )
-    {
-        if( !_lodTilesMap.count( lod ))
-            _lodTilesMap[ lod ] = _gatherAllTiles( lod );
-
-        _lod = lod;
-
-        emit statisticsChanged();
-        emit tilesAreaChanged();
-    }
-
-    const Tiles& tiles = _lodTilesMap[ lod ];
-
-    const IndicesSet visibleSet = _computeVisibleSet( visibleArea, tiles );
-
-    const IndicesSet addedTiles = set_difference( visibleSet, _visibleSet );
-    const IndicesSet removedTiles = set_difference( _visibleSet, visibleSet );
+    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
+    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
 
     for( auto i : removedTiles )
         emit removeTile( i );
 
-    const size_t lodStartIndex = _reader->getFirstTileIndex( lod );
     for( auto i : addedTiles )
-    {
-        const auto& tile = tiles[i-lodStartIndex];
-        emit addTile( std::make_shared<Tile>( i, tile->getCoord( )));
-    }
+        emit addTile( std::make_shared<Tile>( i, _reader->getTileCoord( i )));
 
     _visibleSet = visibleSet;
-}
-
-Tiles DynamicTextureSynchronizer::_gatherAllTiles( const uint lod ) const
-{
-    Tiles tiles;
-
-    const QSize tilesCount = _reader->getTilesCount( lod );
-    uint tileIndex = _reader->getFirstTileIndex( lod );
-    for( int y = 0; y < tilesCount.height(); ++y )
-    {
-        for( int x = 0; x < tilesCount.width(); ++x )
-        {
-            const QRect& coord = _reader->getTileCoord( lod, x, y );
-            tiles.push_back( std::make_shared<Tile>( tileIndex, coord ));
-            ++tileIndex;
-        }
-    }
-
-    return tiles;
-}
-
-IndicesSet
-DynamicTextureSynchronizer::_computeVisibleSet( const QRectF& visibleArea,
-                                                const Tiles& tiles ) const
-{
-    IndicesSet visibleTiles;
-
-    if( visibleArea.isEmpty( ))
-        return visibleTiles;
-
-    const QRect rectArea = visibleArea.toRect();
-
-    for( const auto& tile : tiles )
-    {
-        if( tile->getCoord().intersects( rectArea ))
-            visibleTiles.insert( tile->getIndex( ));
-    }
-
-    return visibleTiles;
 }

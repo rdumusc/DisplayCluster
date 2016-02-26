@@ -39,7 +39,6 @@
 #include "DynamicTexture.h"
 
 #include "log.h"
-#include "Tile.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
@@ -343,33 +342,24 @@ uint DynamicTexture::getLod( const QSize& targetDisplaySize ) const
 
 QString DynamicTexture::getTileFilename( const uint tileIndex ) const
 {
-    uint lod = 0;
-    uint firstTileIndex = getFirstTileIndex( lod );
-    while( tileIndex < firstTileIndex )
-        firstTileIndex = getFirstTileIndex( ++lod );
-
-    const int index = tileIndex - firstTileIndex;
-    const QSize tilesCount = getTilesCount( lod );
-
-    int x = index % tilesCount.width();
-    int y = index / tilesCount.width();
+    TileIndex idx = _getTileIndex( tileIndex );
 
     QString filename = QString( ".%1" ).arg( _imageExtension );
 
     const uint maxLod = getMaxLod();
-    while( ++lod <= maxLod )
+    while( ++idx.lod <= maxLod )
     {
         // The indices go in the order: 0-1
         //                              3-2
         int i = 0;
-        if( y % 2 )
-            i = 3 - x % 2;
+        if( idx.y % 2 )
+            i = 3 - idx.x % 2;
         else
-            i = x % 2;
+            i = idx.x % 2;
 
         filename.prepend( QString::number( i )).prepend( '-' );
-        x = x >> 1;
-        y = y >> 1;
+        idx.x = idx.x >> 1;
+        idx.y = idx.y >> 1;
     }
     filename.prepend( '0' );
     filename.prepend( _imagePyramidPath );
@@ -405,6 +395,12 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
     const QSize size = _imageSize.scaled( TEXTURE_SIZE, TEXTURE_SIZE,
                                           Qt::KeepAspectRatio );
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
+}
+
+QRect DynamicTexture::getTileCoord( const uint tileIndex ) const
+{
+    const TileIndex idx = _getTileIndex( tileIndex );
+    return getTileCoord( idx.lod, idx.x, idx.y );
 }
 
 QSize DynamicTexture::getTilesCount( const uint lod ) const
@@ -514,3 +510,65 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
         return parentTex->getImageFromParent(getImageRegionInParentImage(imageRegion), start);
     }
 }
+
+Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
+                                           const uint lod ) const
+{
+    if( !_lodTilesMapCache.count( lod ))
+        _lodTilesMapCache[ lod ] = _gatherAllTiles( lod );
+
+    const TileCoords& tiles = _lodTilesMapCache[ lod ];
+
+    Indices visibleTiles;
+
+    if( visibleArea.isEmpty( ))
+        return visibleTiles;
+
+    const QRect rectArea = visibleArea.toRect();
+
+    for( const auto& tile : tiles )
+    {
+        if( tile.coord.intersects( rectArea ))
+            visibleTiles.insert( tile.index );
+    }
+
+    return visibleTiles;
+}
+
+DynamicTexture::TileIndex
+DynamicTexture::_getTileIndex( const uint tileIndex ) const
+{
+    uint lod = 0;
+    uint firstTileIndex = getFirstTileIndex( lod );
+    while( tileIndex < firstTileIndex )
+        firstTileIndex = getFirstTileIndex( ++lod );
+
+    const int index = tileIndex - firstTileIndex;
+    const QSize tilesCount = getTilesCount( lod );
+
+    const uint x = index % tilesCount.width();
+    const uint y = index / tilesCount.width();
+
+    return TileIndex{ x, y, lod };
+}
+
+DynamicTexture::TileCoords
+DynamicTexture::_gatherAllTiles( const uint lod ) const
+{
+    TileCoords tiles;
+
+    const QSize tilesCount = getTilesCount( lod );
+    uint tileIndex = getFirstTileIndex( lod );
+    for( int y = 0; y < tilesCount.height(); ++y )
+    {
+        for( int x = 0; x < tilesCount.width(); ++x )
+        {
+            const QRect& coord = getTileCoord( lod, x, y );
+            tiles.push_back( TileCoord{ tileIndex, coord });
+            ++tileIndex;
+        }
+    }
+
+    return tiles;
+}
+
