@@ -384,14 +384,14 @@ QImage DynamicTexture::getTileImage( const uint tileIndex ) const
     return _tilesCache[tileIndex];
 }
 
-int DynamicTexture::getFirstTileIndex( const uint lod ) const
+size_t DynamicTexture::getFirstTileIndex( const uint lod ) const
 {
-    const uint maxLod = getMaxLod();
+    const size_t maxLod = getMaxLod();
 
     if( lod == maxLod )
         return 0;
 
-    const int nextLod = lod + 1;
+    const size_t nextLod = lod + 1;
     return std::pow( 4, maxLod - nextLod ) + getFirstTileIndex( nextLod );
 }
 

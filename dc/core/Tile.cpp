@@ -52,7 +52,6 @@ Tile::Tile( const uint index, const QRect& rect )
     , _backGlTexture( 0 )
 {
     setFlag( ItemHasContents, true );
-    setVisible( false );
     setPosition( rect.topLeft( ));
     setSize( rect.size( ));
     update( rect );
@@ -72,7 +71,7 @@ void Tile::update( const QRect& rect )
 {
     _updateBackTexture = true;
 
-    if( rect != getCoord( ))
+    if( rect != _nextCoord )
     {
         _resize = true;
         _nextCoord = rect;
@@ -94,8 +93,6 @@ QSize Tile::getBackGlTextureSize() const
 void Tile::swapImage()
 {
     _swap = true;
-    if( !isVisible( ))
-        setVisible( true );
 
     setPosition( _nextCoord.topLeft( ));
     setSize( _nextCoord.size( ));

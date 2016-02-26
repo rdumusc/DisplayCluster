@@ -45,7 +45,7 @@
 
 TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
     : _window( window )
-    , _frontTexture( _createTexture( size ))
+    , _frontTexture( window->createTextureFromId( 0 , QSize( 1 ,1 )))
     , _backTexture( _createTexture( size ))
 {
     setRect( QRectF( QPointF( 0, 0 ), size ));

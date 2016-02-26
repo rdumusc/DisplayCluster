@@ -128,9 +128,6 @@ signals:
     /** Request an update of a specific tile. */
     void requestTileUpdate( ContentSynchronizerSharedPtr synchronizer,
                             TileWeakPtr tile );
-
-    /** Request an update of all tiles that are currently visible. */
-    void requestUpdateAllTiles();
 };
 
 #endif // CONTENTSYNCHRONIZER_H

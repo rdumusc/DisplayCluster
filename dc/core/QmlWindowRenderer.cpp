@@ -73,8 +73,6 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
 
     connect( _synchronizer.get(), &ContentSynchronizer::requestTileUpdate,
              &_provider, &DataProvider::loadAsync );
-    connect( _synchronizer.get(), &ContentSynchronizer::requestUpdateAllTiles,
-             this, &QmlWindowRenderer::_onRequestUpdateAll );
 
     if( auto sync = std::dynamic_pointer_cast<PixelStreamSynchronizer>( _synchronizer ))
         sync->setDataSource( _provider.getStreamDataSource( contentWindow->getContent()->getURI( )));
@@ -138,12 +136,6 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
 
     auto item = _windowItem->findChild<QQuickItem*>( TILES_PARENT_OBJECT_NAME );
     tile->setParentItem( item );
-}
-
-void QmlWindowRenderer::_onRequestUpdateAll()
-{
-    for( auto& tile : _tiles )
-        _provider.loadAsync( _synchronizer, TileWeakPtr( tile.second ));
 }
 
 void QmlWindowRenderer::_removeTile( const uint tileIndex )

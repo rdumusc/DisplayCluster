@@ -102,7 +102,7 @@ public:
     QSize getTilesArea( uint lod ) const;
 
     /** Get the index of the first tile of the given lod. */
-    int getFirstTileIndex( uint lod ) const;
+    size_t getFirstTileIndex( uint lod ) const;
 
     /** Get the coordinates in pixels of a specific tile. */
     QRect getTileCoord( uint lod, uint x, uint y ) const;

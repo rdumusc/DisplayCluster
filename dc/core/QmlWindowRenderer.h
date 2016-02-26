@@ -83,7 +83,6 @@ private slots:
     void _addTile( TilePtr tile );
     void _removeTile( uint tileIndex );
     void _updateTile( uint tileIndex, const QRect& coordinates );
-    void _onRequestUpdateAll();
 
 private:
     DataProvider& _provider;

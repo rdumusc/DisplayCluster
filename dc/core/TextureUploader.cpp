@@ -156,6 +156,9 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
     _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
     _gl->glBindTexture( GL_TEXTURE_2D, 0 );
 
+    // Ensure the texture upload is complete before the render thread uses it
+    glFinish();
+
     // notify tile that its texture has been updated
     QMetaObject::invokeMethod( tile.get(), "markBackTextureUpdated",
                                Qt::QueuedConnection );

@@ -67,7 +67,7 @@ void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
 
 bool DynamicTextureSynchronizer::needRedraw() const
 {
-    return false/*_reader->hasPendingTileLoads()*/;
+    return false;
 }
 
 bool DynamicTextureSynchronizer::allowsTextureCaching() const
@@ -120,7 +120,6 @@ void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
             _lodTilesMap[ lod ] = _gatherAllTiles( lod );
 
         _lod = lod;
-        _visibleSet.clear();
 
         emit statisticsChanged();
         emit tilesAreaChanged();
@@ -128,18 +127,20 @@ void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
 
     const Tiles& tiles = _lodTilesMap[ lod ];
 
-    const Indices visibleSet = _computeVisibleSet( visibleArea, tiles );
+    const IndicesSet visibleSet = _computeVisibleSet( visibleArea, tiles );
 
-    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
-    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
+    const IndicesSet addedTiles = set_difference( visibleSet, _visibleSet );
+    const IndicesSet removedTiles = set_difference( _visibleSet, visibleSet );
 
-    // Remove tiles
     for( auto i : removedTiles )
-        emit removeTile( tiles[i]->getIndex( ));
+        emit removeTile( i );
 
-    // Add tiles
+    const size_t lodStartIndex = _reader->getFirstTileIndex( lod );
     for( auto i : addedTiles )
-        emit addTile( tiles[i] );
+    {
+        const auto& tile = tiles[i-lodStartIndex];
+        emit addTile( std::make_shared<Tile>( i, tile->getCoord( )));
+    }
 
     _visibleSet = visibleSet;
 }
@@ -163,23 +164,21 @@ Tiles DynamicTextureSynchronizer::_gatherAllTiles( const uint lod ) const
     return tiles;
 }
 
-Indices
+IndicesSet
 DynamicTextureSynchronizer::_computeVisibleSet( const QRectF& visibleArea,
                                                 const Tiles& tiles ) const
 {
-    Indices visibleTiles;
+    IndicesSet visibleTiles;
 
     if( visibleArea.isEmpty( ))
         return visibleTiles;
 
     const QRect rectArea = visibleArea.toRect();
 
-    int i = 0;
     for( const auto& tile : tiles )
     {
         if( tile->getCoord().intersects( rectArea ))
-            visibleTiles.push_back( i );
-        ++i;
+            visibleTiles.insert( tile->getIndex( ));
     }
 
     return visibleTiles;
