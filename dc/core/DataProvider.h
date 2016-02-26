@@ -84,7 +84,8 @@ private:
 
     std::map< QString, PixelStreamUpdaterWeakPtr > _streamUpdaters;
 
-    void _load( ContentSynchronizerSharedPtr source, TileWeakPtr tile );
+    void _load( ContentSynchronizerSharedPtr source, TileWeakPtr tile,
+                uint64_t timestamp );
     void _handleFinished();
 };
 

@@ -61,12 +61,12 @@ public:
     Tile( const uint index, const QRect& rect );
 
     uint getIndex() const;
+    QRect getCoord() const;
 
     void update( const QRect& rect );
 
-    QRect getCoord() const;
-
     uint getBackGlTexture() const;
+    QSize getBackGlTextureSize() const;
 
 signals:
     /** Notifies when the texture has been created on the render thread. */
@@ -89,8 +89,10 @@ protected:
 private:
     uint _index;
 
-    TextureNode* _node;
     bool _swap;
+    bool _resize;
+    QRect _nextCoord;
+    bool _updateBackTexture;
     uint _backGlTexture;
 };
 

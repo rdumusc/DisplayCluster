@@ -61,9 +61,11 @@ void PDFSynchronizer::update( const ContentWindow& window,
     VectorialSynchronizer::update( window, visibleArea );
 }
 
-ImagePtr PDFSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr PDFSynchronizer::getTileImage( const uint tileIndex,
+                                        const uint64_t timestamp ) const
 {
     Q_UNUSED( tileIndex );
+    Q_UNUSED( timestamp );
     return std::make_shared<QtImage>( _pdf.renderToImage( _renderSize,
                                                           _contentZoom ));
 }

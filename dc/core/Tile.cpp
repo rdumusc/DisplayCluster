@@ -40,16 +40,21 @@
 #include "Tile.h"
 
 #include "TextureNode.h"
+#include "log.h"
 
 // false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
 Tile::Tile( const uint index, const QRect& rect )
     : _index( index )
     , _swap( false )
+    , _resize( false )
+    , _nextCoord( rect )
     , _backGlTexture( 0 )
 {
     setFlag( ItemHasContents, true );
     setVisible( false );
+    setPosition( rect.topLeft( ));
+    setSize( rect.size( ));
     update( rect );
 }
 
@@ -58,25 +63,22 @@ uint Tile::getIndex() const
     return _index;
 }
 
-void Tile::update( const QRect& rect )
-{
-    if( rect == getCoord( ))
-        return;
-
-    setVisible( false );
-    setPosition( rect.topLeft( ));
-
-    if( rect.size() != QSize( width(), height( )))
-    {
-        setImplicitSize( rect.width(), rect.height( ));
-        setSize( rect.size( ));
-        QQuickItem::update();
-    }
-}
-
 QRect Tile::getCoord() const
 {
     return QRect( x(), y(), width(), height( ));
+}
+
+void Tile::update( const QRect& rect )
+{
+    _updateBackTexture = true;
+
+    if( rect != getCoord( ))
+    {
+        _resize = true;
+        _nextCoord = rect;
+    }
+
+    QQuickItem::update();
 }
 
 uint Tile::getBackGlTexture() const
@@ -84,11 +86,20 @@ uint Tile::getBackGlTexture() const
     return _backGlTexture;
 }
 
+QSize Tile::getBackGlTextureSize() const
+{
+    return _nextCoord.size();
+}
+
 void Tile::swapImage()
 {
     _swap = true;
     if( !isVisible( ))
         setVisible( true );
+
+    setPosition( _nextCoord.topLeft( ));
+    setSize( _nextCoord.size( ));
+
     QQuickItem::update();
 }
 
@@ -100,22 +111,31 @@ void Tile::markBackTextureUpdated()
 QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
                                 QQuickItem::UpdatePaintNodeData* )
 {
+    //if( !isVisible( ))
+    //    qDebug() << "updating without visible: " << getIndex();
+
     TextureNode* node = static_cast<TextureNode*>( oldNode );
-
     if( !node )
-    {
         node = new TextureNode( QSize( width(), height( )), window( ));
-        _backGlTexture = node->getBackGlTexture();
-        emit textureInitialized( shared_from_this( ));
-    }
-
-    node->resize( QSize( width(), height( )));
 
     if( _swap )
     {
         node->swap();
-        _backGlTexture = node->getBackGlTexture();
         _swap = false;
+    }
+
+    if( _resize )
+    {
+        node->resize( _nextCoord.size( ));
+        _resize = false;
+    }
+
+    _backGlTexture = node->getBackGlTexture();
+
+    if( _updateBackTexture )
+    {
+        _updateBackTexture = false;
+        emit textureInitialized( shared_from_this( ));
     }
 
     return node;

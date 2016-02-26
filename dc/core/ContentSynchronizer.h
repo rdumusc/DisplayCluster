@@ -89,8 +89,11 @@ public:
     /** Get statistics about this Content. */
     virtual QString getStatistics() const = 0;
 
-    /** Get the image for a given tile index. */
-    virtual ImagePtr getTileImage( uint tileIndex ) const = 0;
+    /** Get the image for a given tile index. @threadsafe */
+    virtual ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const = 0;
+
+    /** Get the timestamp at the time of requesting a new tile texture. */
+    virtual uint64_t getCurrentTimestamp() const { return 0; }
 
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content );

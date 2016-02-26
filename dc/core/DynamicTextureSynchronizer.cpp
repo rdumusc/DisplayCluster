@@ -90,9 +90,15 @@ QString DynamicTextureSynchronizer::getStatistics() const
     return stats;
 }
 
-ImagePtr DynamicTextureSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr DynamicTextureSynchronizer::getTileImage( const uint tileIndex,
+                                                   const uint64_t timestamp ) const
 {
-    return std::make_shared<QtImage>( _reader->getTileImage( tileIndex ));
+    Q_UNUSED( timestamp );
+
+    const QImage image = _reader->getTileImage( tileIndex );
+    if( image.isNull( ))
+        return ImagePtr();
+    return std::make_shared<QtImage>( image );
 }
 
 void DynamicTextureSynchronizer::onSwapReady( TilePtr tile )

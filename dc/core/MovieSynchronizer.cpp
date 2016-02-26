@@ -77,9 +77,11 @@ QString MovieSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex,
+                                          const uint64_t timestamp ) const
 {
     Q_UNUSED( tileIndex );
+    Q_UNUSED( timestamp );
     return _updater->getImage();
 }
 

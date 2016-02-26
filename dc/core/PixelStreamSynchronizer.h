@@ -82,29 +82,28 @@ public:
     QString getStatistics() const override;
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex ) const override;
+    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 
     /** @copydoc ContentSynchronizer::onSwapReady */
     void onSwapReady( TilePtr tile ) override;
 
-//signals:
-//    /** Emitted to request a new frame after a successful swap. */
-//    void requestFrame( QString uri );
+    uint64_t getCurrentTimestamp() const override { return _frameIndex; }
 
 private:
     PixelStreamUpdaterSharedPtr _updater;
-    uint _frameIndex;
     FpsCounter _fpsCounter;
     std::set<TilePtr> _tilesReadyToSwap;
     IndicesSet _tilesReadySet;
+    IndicesSet _syncSet;
 
     QRectF _visibleTilesArea;
     IndicesSet _visibleSet;
+    uint64_t _frameIndex;
     bool _tilesDirty;
     bool _updateExistingTiles;
 
-    void _onPictureUpdated();
-    void _updateTiles( bool updateExistingTiles );
+    void _onPictureUpdated( uint64_t frameIndex );
+    void _updateTiles();
 };
 
 #endif

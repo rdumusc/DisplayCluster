@@ -45,6 +45,7 @@
 #include "SwapSyncObject.h"
 
 #include <QObject>
+#include <QReadWriteLock>
 
 /**
  * Synchronize the update of PixelStreams and send new frame requests.
@@ -61,8 +62,8 @@ public:
     /** Synchronize the update of the PixelStreams. */
     void synchronizeFramesSwap( WallToWallChannel& channel );
 
-    /** Get a segment by its tile-index. */
-    QImage getTileImage( uint tileIndex ) const;
+    /** Get a segment by its tile-index. @threadsafe */
+    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const;
 
     /** Get the coordinates of a tile. */
     QRect getTileRect( uint tileIndex ) const;
@@ -70,13 +71,15 @@ public:
     /** Compute the indices of the tiles which are visible in the given area. */
     IndicesSet computeVisibleSet( const QRectF& visibleArea ) const;
 
+    void getNextFrame();
+
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
     void updatePixelStream( deflect::FramePtr frame );
 
 signals:
     /** Emitted when a new picture has become available. */
-    void pictureUpdated();
+    void pictureUpdated( uint64_t frameIndex );
 
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
@@ -85,6 +88,9 @@ private:
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     SwapSyncFrame _swapSyncFrame;
     deflect::FramePtr _currentFrame;
+    mutable QReadWriteLock _mutex;
+    uint64_t _frameIndex;
+    bool _readyToSwap;
 
     void _onFrameSwapped( deflect::FramePtr frame );
 };

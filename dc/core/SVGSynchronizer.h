@@ -59,7 +59,7 @@ public:
                  const QRectF& visibleArea ) override;
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex ) const override;
+    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 };
 
 #endif

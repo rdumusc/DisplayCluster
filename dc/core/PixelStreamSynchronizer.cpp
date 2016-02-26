@@ -79,8 +79,6 @@ void PixelStreamSynchronizer::update( const ContentWindow& window,
 
     _visibleTilesArea = visibleTilesArea;
     _tilesDirty = true;
-
-//    _updateTiles( true );
 }
 
 void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
@@ -88,8 +86,8 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
     if( !_updater )
         return;
 
-    const bool swap = !_tilesReadySet.empty() &&
-                      set_difference( _tilesReadySet, _visibleSet ).empty();
+    const bool swap = !_syncSet.empty() &&
+                      set_difference( _syncSet, _tilesReadySet ).empty();
 
     if( channel.allReady( swap ))
     {
@@ -97,14 +95,16 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
             tile->swapImage();
         _tilesReadyToSwap.clear();
         _tilesReadySet.clear();
+        _syncSet.clear();
 
-        ++_frameIndex;
         _fpsCounter.tick();
         emit statisticsChanged();
+
+        _updater->getNextFrame();
     }
 
     if( _tilesDirty )
-        _updateTiles( _updateExistingTiles );
+        _updateTiles();
 }
 
 bool PixelStreamSynchronizer::needRedraw() const
@@ -127,28 +127,38 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex,
+                                                const uint64_t timestamp ) const
 {
     if( !_updater )
         return ImagePtr();
 
-    return std::make_shared<QtImage>( _updater->getTileImage( tileIndex ));
+    const QImage image = _updater->getTileImage( tileIndex, timestamp );
+    if( image.isNull( ))
+        return ImagePtr();
+
+    return std::make_shared<QtImage>( image );
 }
 
 void PixelStreamSynchronizer::onSwapReady( TilePtr tile )
 {
-    _tilesReadyToSwap.insert( tile );
-    _tilesReadySet.insert( tile->getIndex( ));
+    if( _syncSet.find( tile->getIndex( )) != _syncSet.end( ))
+    {
+        _tilesReadyToSwap.insert( tile );
+        _tilesReadySet.insert( tile->getIndex( ));
+    }
+    else
+        tile->swapImage();
 }
 
-void PixelStreamSynchronizer::_onPictureUpdated()
+void PixelStreamSynchronizer::_onPictureUpdated( const uint64_t frameIndex )
 {
+    _frameIndex = frameIndex;
     _tilesDirty = true;
     _updateExistingTiles = true;
-//    _updateTiles( true );
 }
 
-void PixelStreamSynchronizer::_updateTiles( const bool updateExistingTiles )
+void PixelStreamSynchronizer::_updateTiles()
 {
     if( !_updater )
         return;
@@ -165,11 +175,14 @@ void PixelStreamSynchronizer::_updateTiles( const bool updateExistingTiles )
     for( auto i : addedTiles )
         emit addTile( std::make_shared<Tile>( i, _updater->getTileRect( i )));
 
-    if( updateExistingTiles )
+    if( _updateExistingTiles )
     {
         for( auto i : currentTiles )
             emit updateTile( i, _updater->getTileRect( i ));
+        _syncSet = visibleSet;
     }
+    else
+        _syncSet = set_difference( _syncSet, removedTiles );
 
     _visibleSet = visibleSet;
     _tilesDirty = false;

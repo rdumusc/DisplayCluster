@@ -43,6 +43,8 @@
 #include "Image.h"
 #include "Tile.h"
 
+#include "log.h"
+
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
@@ -89,18 +91,34 @@ void TextureUploader::_onStop()
     delete _glContext;
 }
 
-void TextureUploader::uploadTexture( const ImagePtr image, TileWeakPtr tile_ )
+void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
 {
     if( !image )
+    {
+        put_flog( LOG_DEBUG, "Invalid image" );
         return;
+    }
 
     TilePtr tile = tile_.lock();
     if( !tile )
+    {
+        put_flog( LOG_DEBUG, "Tile expired" );
         return;
+    }
+
+    if( image->getWidth() != tile->getBackGlTextureSize().width() ||
+        image->getHeight() != tile->getBackGlTextureSize().height( ))
+    {
+        put_flog( LOG_DEBUG, "Incompatible image dimensions!" );
+        return;
+    }
 
     const uint textureID = tile->getBackGlTexture();
     if( !textureID )
+    {
+        put_flog( LOG_DEBUG, "Tile has no backTextureID" );
         return;
+    }
 
     _glContext->makeCurrent( _offscreenSurface );
 

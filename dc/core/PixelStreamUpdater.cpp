@@ -48,6 +48,8 @@
 #include <QThreadStorage>
 
 PixelStreamUpdater::PixelStreamUpdater()
+    : _frameIndex( 0 )
+    , _readyToSwap( true )
 {
     _swapSyncFrame.setCallback( boost::bind(
                                     &PixelStreamUpdater::_onFrameSwapped,
@@ -56,6 +58,9 @@ PixelStreamUpdater::PixelStreamUpdater()
 
 void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
 {
+    if( !_readyToSwap )
+        return;
+
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
 
@@ -69,13 +74,18 @@ QRect toRect( const deflect::SegmentParameters& params )
 
 QRect PixelStreamUpdater::getTileRect( uint tileIndex ) const
 {
-    return toRect( _currentFrame->segments[tileIndex].parameters );
+    return toRect( _currentFrame->segments.at( tileIndex ).parameters );
 }
 
-QImage PixelStreamUpdater::getTileImage( const uint tileIndex ) const
+QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
+                                         const uint64_t timestamp ) const
 {
     if( !_currentFrame )
         throw std::runtime_error( "No frames yet" );
+
+    const QReadLocker lock( &_mutex );
+    if( timestamp != _frameIndex )
+        return QImage();
 
     auto& segment = _currentFrame->segments.at( tileIndex );
     if( segment.parameters.compressed )
@@ -106,6 +116,12 @@ IndicesSet PixelStreamUpdater::computeVisibleSet( const QRectF& visibleArea ) co
     return visibleSet;
 }
 
+void PixelStreamUpdater::getNextFrame()
+{
+    //emit requestFrame( _currentFrame->uri );
+    _readyToSwap = true;
+}
+
 void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 {
     _swapSyncFrame.update( frame );
@@ -113,15 +129,22 @@ void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
 
 void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
 {
+    _readyToSwap = false;
+
     std::sort( frame->segments.begin(), frame->segments.end(),
                []( const deflect::Segment& s1, const deflect::Segment& s2 )
         {
-            return ( s1.parameters.y < s2.parameters.y ||
-                     s1.parameters.x < s2.parameters.x );
+            return ( s1.parameters.y == s2.parameters.y ?
+                         s1.parameters.x < s2.parameters.x :
+                         s1.parameters.y < s2.parameters.y );
         } );
 
-    _currentFrame = frame;
+    {
+        const QWriteLocker lock( &_mutex );
+        ++_frameIndex;
+        _currentFrame = frame;
+    }
 
-    emit pictureUpdated();
+    emit pictureUpdated( _frameIndex );
     emit requestFrame( _currentFrame->uri );
 }

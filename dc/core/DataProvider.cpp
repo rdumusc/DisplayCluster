@@ -43,6 +43,8 @@
 #include "PixelStreamUpdater.h"
 #include "Tile.h"
 
+#include "log.h"
+
 #include <deflect/Frame.h>
 #include <QtConcurrent>
 
@@ -97,8 +99,9 @@ void DataProvider::loadAsync( ContentSynchronizerSharedPtr source,
     _watchers.append( watcher );
     connect( watcher, &Watcher::finished,
              this, &DataProvider::_handleFinished );
-    watcher->setFuture( QtConcurrent::run( [source,tile,this] {
-        _load( source, tile );
+    const uint64_t timestamp = source->getCurrentTimestamp();
+    watcher->setFuture( QtConcurrent::run( [source,tile,timestamp,this] {
+        _load( source, tile, timestamp );
     } ));
 }
 
@@ -114,14 +117,21 @@ void DataProvider::setNewFrame( deflect::FramePtr frame )
 }
 
 void DataProvider::_load( ContentSynchronizerSharedPtr source,
-                          TileWeakPtr tile_ )
+                          TileWeakPtr tile_, const uint64_t timestamp )
 {
     TilePtr tile = tile_.lock();
     if( !tile )
+    {
+        put_flog( LOG_DEBUG, "Tile expired");
         return;
-    ImagePtr image = source->getTileImage( tile->getIndex( ));
+    }
+    ImagePtr image = source->getTileImage( tile->getIndex(), timestamp );
     if( !image )
+    {
+        put_flog( LOG_DEBUG, "Empty image for tile: %d, index: %d",
+                  tile->getIndex(), timestamp );
         return;
+    }
     emit imageLoaded( image, tile_ );
 }
 

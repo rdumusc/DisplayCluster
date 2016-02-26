@@ -62,7 +62,6 @@ public:
     void resize( const QSize& size );
 
 private:
-    QSize _size;
     QQuickWindow* _window;
 
     typedef std::unique_ptr<QSGTexture> QSGTexturePtr;

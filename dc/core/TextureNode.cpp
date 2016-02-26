@@ -39,16 +39,18 @@
 
 #include "TextureNode.h"
 
+#include "log.h"
+
 #include <QQuickWindow>
 
 TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
-    : _size( size )
-    , _window( window )
-    , _frontTexture( _window->createTextureFromId( 0, QSize( 1, 1 )))
+    : _window( window )
+    , _frontTexture( _createTexture( size ))
     , _backTexture( _createTexture( size ))
 {
+    setRect( QRectF( QPointF( 0, 0 ), size ));
     setTexture( _frontTexture.get( ));
-    setFiltering( QSGTexture::Nearest );
+    setFiltering( QSGTexture::Linear );
 }
 
 uint TextureNode::getBackGlTexture() const
@@ -63,22 +65,23 @@ void TextureNode::swap()
     setTexture( _frontTexture.get( ));
     markDirty( DirtyMaterial );
 
-    if( _frontTexture->textureSize( ) != rect().size( ))
-    {
-        setRect( QRectF( QPointF( 0, 0 ), _frontTexture->textureSize( )));
-        markDirty( DirtyGeometry );
-    }
+    setRect( QRectF( QPointF( 0, 0 ), _frontTexture->textureSize( )));
 
-    if( _backTexture->textureSize() != _size )
-        _backTexture = _createTexture( _size );
+    if( _backTexture->textureSize() != _frontTexture->textureSize( ))
+        _backTexture = _createTexture( _frontTexture->textureSize( ));
 }
 
 void TextureNode::resize( const QSize& size )
 {
-    if( size == _size )
+    if( size == _backTexture->textureSize( ))
         return;
 
-    _size = size;
+    put_flog( LOG_DEBUG, "resize _backTexture: (%d,%d)->(%d,%d)",
+              _backTexture->textureSize( ).width(),
+              _backTexture->textureSize( ).height(),
+              size.width(), size.height( ));
+
+    _backTexture = _createTexture( size );
 }
 
 TextureNode::QSGTexturePtr
@@ -98,6 +101,7 @@ TextureNode::_createTexture( const QSize& size ) const
 
     const auto textureFlags = QQuickWindow::CreateTextureOptions(
                                   QQuickWindow::TextureHasAlphaChannel |
+                                  QQuickWindow::TextureHasMipmaps |
                                   QQuickWindow::TextureOwnsGLTexture );
     return QSGTexturePtr( _window->createTextureFromId( textureID, size,
                                                         textureFlags ));

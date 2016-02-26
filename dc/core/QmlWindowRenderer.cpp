@@ -160,10 +160,7 @@ void QmlWindowRenderer::_updateTile( const uint tileIndex,
                                      const QRect& coordinates )
 {
     if( _tiles.count( tileIndex ))
-    {
         _tiles[tileIndex]->update( coordinates );
-        _provider.loadAsync( _synchronizer, TileWeakPtr( _tiles[tileIndex] ));
-    }
 }
 
 QQuickItem* QmlWindowRenderer::_createQmlItem( const QUrl& url )

@@ -47,8 +47,14 @@ ImageSynchronizer::ImageSynchronizer( const QString& uri )
     : _uri( uri )
 {}
 
-ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex ) const
+ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex,
+                                          const uint64_t timestamp ) const
 {
     Q_UNUSED( tileIndex );
-    return std::make_shared<QtImage>( QImage( _uri ));
+    Q_UNUSED( timestamp );
+
+    const QImage image( _uri );
+    if( image.isNull( ))
+        return ImagePtr();
+    return std::make_shared<QtImage>( image );
 }
