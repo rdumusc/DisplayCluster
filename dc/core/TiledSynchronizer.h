@@ -101,6 +101,9 @@ private:
     std::set<TilePtr> _tilesReadyToSwap;
     Indices _tilesReadySet;
     Indices _syncSet;
+    Indices _removeLaterSet;
+
+    void _removeTile( size_t tileIndex );
 };
 
 #endif

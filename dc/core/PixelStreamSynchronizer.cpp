@@ -92,15 +92,15 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
         _fpsCounter.tick();
         emit statisticsChanged();
 
+        _tilesArea = _updater->getTilesArea( 0 );
+        emit tilesAreaChanged();
+
         _updater->getNextFrame();
     }
 
     if( _tilesDirty )
     {
         TiledSynchronizer::updateTiles( *_updater, _updateExistingTiles );
-        if( _updateExistingTiles )
-            emit tilesAreaChanged();
-
         _tilesDirty = false;
         _updateExistingTiles = false;
     }
@@ -108,7 +108,7 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
 
 QSize PixelStreamSynchronizer::getTilesArea() const
 {
-    return _updater->getTilesArea( 0 );
+    return _tilesArea;
 }
 
 QString PixelStreamSynchronizer::getStatistics() const

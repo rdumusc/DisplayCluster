@@ -45,6 +45,7 @@
 
 #include <QHash>
 #include <QImage>
+#include <QMutex>
 
 /**
  * A dynamically loaded large scale image.

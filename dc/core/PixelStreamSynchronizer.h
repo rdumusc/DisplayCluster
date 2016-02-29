@@ -87,6 +87,7 @@ private:
 
     bool _tilesDirty;
     bool _updateExistingTiles;
+    QSize _tilesArea;
 
     void _onPictureUpdated( uint64_t frameIndex );
 };

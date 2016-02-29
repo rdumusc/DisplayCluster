@@ -75,9 +75,6 @@ void TiledSynchronizer::updateTiles( const DataSource& source,
     const Indices addedTiles = set_difference( visibleSet, _visibleSet );
     const Indices removedTiles = set_difference( _visibleSet, visibleSet );
 
-    for( auto i : removedTiles )
-        emit removeTile( i );
-
     for( auto i : addedTiles )
         emit addTile( std::make_shared<Tile>( i, source.getTileRect( i )));
 
@@ -99,6 +96,10 @@ void TiledSynchronizer::updateTiles( const DataSource& source,
             _syncSet = set_difference( _syncSet, removedTiles );
     }
 
+    for( auto i : removedTiles )
+        _removeTile( i );
+    _removeLaterSet = set_difference( _removeLaterSet, addedTiles );
+
     _visibleSet = visibleSet;
 }
 
@@ -111,6 +112,10 @@ bool TiledSynchronizer::swapTiles( WallToWallChannel& channel )
     if( !channel.allReady( swap ))
         return false;
 
+    for( auto i : _removeLaterSet )
+        emit removeTile( i );
+    _removeLaterSet.clear();
+
     for( auto& tile : _tilesReadyToSwap )
         tile->swapImage();
     _tilesReadyToSwap.clear();
@@ -119,4 +124,12 @@ bool TiledSynchronizer::swapTiles( WallToWallChannel& channel )
 
     _syncSwapPending = false;
     return true;
+}
+
+void TiledSynchronizer::_removeTile( const size_t tileIndex )
+{
+    if( _policy == SwapTilesSynchronously && _syncSwapPending )
+        _removeLaterSet.insert( tileIndex );
+    else
+        emit removeTile( tileIndex );
 }
