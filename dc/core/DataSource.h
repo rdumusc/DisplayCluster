@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,71 +37,34 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DynamicTextureSynchronizer.h"
+#ifndef DATASOURCE_H
+#define DATASOURCE_H
 
-#include "Tile.h"
-#include "QtImage.h"
-#include "ZoomHelper.h"
+#include "types.h"
 
-#include <QTextStream>
+class QImage;
 
-DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
-    : TiledSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _reader( new DynamicTexture( uri ))
-{}
-
-void DynamicTextureSynchronizer::update( const ContentWindow& window,
-                                         const QRectF& visibleArea )
+/**
+ * Base interface for shared data sources.
+ */
+class DataSource
 {
-    const ZoomHelper helper( window );
-    const uint lod = _reader->getLod( helper.getContentRect().size().toSize( ));
-    const QSize tilesSurface = _reader->getTilesArea( lod );
-    const QRectF visibleTilesArea = helper.toTilesArea( visibleArea,
-                                                        tilesSurface );
+public:
+    virtual ~DataSource() {}
 
-    if( visibleTilesArea == _visibleTilesArea && lod == _lod )
-        return;
+    /** Get a segment by its tile-index. @threadsafe */
+    virtual QImage getTileImage( uint tileIndex, uint64_t timestamp ) const = 0;
 
-    _visibleTilesArea = visibleTilesArea;
+    /** Get the coordinates of a tile. */
+    virtual QRect getTileRect( uint tileIndex ) const = 0;
 
-    if( lod != _lod )
-    {
-        _lod = lod;
+    /** @return the image size for the requested lod. */
+    virtual QSize getTilesArea( uint lod ) const = 0;
 
-        emit statisticsChanged();
-        emit tilesAreaChanged();
-    }
+    /** Compute the indices of the tiles which are visible in the given area. */
+    virtual Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                                       uint lod ) const = 0;
 
-    TiledSynchronizer::updateTiles( *_reader, false );
-}
+};
 
-void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
-{
-    Q_UNUSED( channel );
-}
-
-QSize DynamicTextureSynchronizer::getTilesArea() const
-{
-    return _reader->getTilesArea( _lod );
-}
-
-QString DynamicTextureSynchronizer::getStatistics() const
-{
-    QString stats;
-    QTextStream stream( &stats );
-    stream << "LOD:  " << _lod << "/" << _reader->getMaxLod();
-    const QSize& area = getTilesArea();
-    stream << "  res: " << area.width() << "x" << area.height();
-    return stats;
-}
-
-ImagePtr DynamicTextureSynchronizer::getTileImage( const uint tileIndex,
-                                                   const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
-
-    const QImage image = _reader->getTileImage( tileIndex, 0 );
-    if( image.isNull( ))
-        return ImagePtr();
-    return std::make_shared<QtImage>( image );
-}
+#endif

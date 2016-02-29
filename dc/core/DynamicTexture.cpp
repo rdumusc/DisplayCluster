@@ -46,7 +46,6 @@
 
 #include <QDir>
 #include <QImageReader>
-#include <QtConcurrentRun>
 
 #define TEXTURE_SIZE 512
 
@@ -366,14 +365,6 @@ QString DynamicTexture::getTileFilename( const uint tileIndex ) const
     return filename;
 }
 
-QImage DynamicTexture::getTileImage( const uint tileIndex ) const
-{
-    QMutexLocker lock( &_tilesCacheMutex );
-    if( !_tilesCache.count( tileIndex ))
-        _tilesCache[tileIndex] = QImage( getTileFilename( tileIndex ));
-    return _tilesCache[tileIndex];
-}
-
 size_t DynamicTexture::getFirstTileIndex( const uint lod ) const
 {
     const size_t maxLod = getMaxLod();
@@ -397,10 +388,50 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
 }
 
-QRect DynamicTexture::getTileCoord( const uint tileIndex ) const
+QImage DynamicTexture::getTileImage( const uint tileIndex,
+                                     const uint64_t timestamp ) const
+{
+    Q_UNUSED( timestamp );
+
+    QMutexLocker lock( &_tilesCacheMutex );
+    if( !_tilesCache.count( tileIndex ))
+        _tilesCache[tileIndex] = QImage( getTileFilename( tileIndex ));
+    return _tilesCache[tileIndex];
+}
+
+Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
+                                           const uint lod ) const
+{
+    if( !_lodTilesMapCache.count( lod ))
+        _lodTilesMapCache[ lod ] = _gatherAllTiles( lod );
+
+    const TileCoords& tiles = _lodTilesMapCache[ lod ];
+
+    Indices visibleTiles;
+
+    if( visibleArea.isEmpty( ))
+        return visibleTiles;
+
+    const QRect rectArea = visibleArea.toRect();
+
+    for( const auto& tile : tiles )
+    {
+        if( tile.coord.intersects( rectArea ))
+            visibleTiles.insert( tile.index );
+    }
+
+    return visibleTiles;
+}
+
+QRect DynamicTexture::getTileRect( const uint tileIndex ) const
 {
     const TileIndex idx = _getTileIndex( tileIndex );
     return getTileCoord( idx.lod, idx.x, idx.y );
+}
+
+QSize DynamicTexture::getTilesArea( const uint lod ) const
+{
+    return QSize( _imageSize.width() >> lod, _imageSize.height() >> lod );
 }
 
 QSize DynamicTexture::getTilesCount( const uint lod ) const
@@ -408,11 +439,6 @@ QSize DynamicTexture::getTilesCount( const uint lod ) const
     const int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
     const int tiles = std::ceil( (float)(maxDim >> lod) / TEXTURE_SIZE );
     return QSize( tiles, tiles );
-}
-
-QSize DynamicTexture::getTilesArea( const uint lod ) const
-{
-    return QSize( _imageSize.width() >> lod, _imageSize.height() >> lod );
 }
 
 bool DynamicTexture::_canHaveChildren()
@@ -509,30 +535,6 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
         DynamicTexturePtr parentTex = _parent.lock();
         return parentTex->getImageFromParent(getImageRegionInParentImage(imageRegion), start);
     }
-}
-
-Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
-                                           const uint lod ) const
-{
-    if( !_lodTilesMapCache.count( lod ))
-        _lodTilesMapCache[ lod ] = _gatherAllTiles( lod );
-
-    const TileCoords& tiles = _lodTilesMapCache[ lod ];
-
-    Indices visibleTiles;
-
-    if( visibleArea.isEmpty( ))
-        return visibleTiles;
-
-    const QRect rectArea = visibleArea.toRect();
-
-    for( const auto& tile : tiles )
-    {
-        if( tile.coord.intersects( rectArea ))
-            visibleTiles.insert( tile.index );
-    }
-
-    return visibleTiles;
 }
 
 DynamicTexture::TileIndex

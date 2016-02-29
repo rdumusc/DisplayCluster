@@ -67,11 +67,6 @@ bool MovieSynchronizer::needRedraw() const
     return !_updater->isPaused();
 }
 
-bool MovieSynchronizer::allowsTextureCaching() const
-{
-    return false;
-}
-
 QString MovieSynchronizer::getStatistics() const
 {
     return _fpsCounter.toString();

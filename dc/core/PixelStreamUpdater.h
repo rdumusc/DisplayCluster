@@ -42,6 +42,7 @@
 
 #include "types.h"
 
+#include "DataSource.h"
 #include "SwapSyncObject.h"
 
 #include <QObject>
@@ -50,7 +51,7 @@
 /**
  * Synchronize the update of PixelStreams and send new frame requests.
  */
-class PixelStreamUpdater : public QObject
+class PixelStreamUpdater : public QObject, public DataSource
 {
     Q_OBJECT
     Q_DISABLE_COPY( PixelStreamUpdater )
@@ -59,18 +60,26 @@ public:
     /** Constructor. */
     PixelStreamUpdater();
 
+    /**
+     * @copydoc DataSource::getTileImage
+     * @threadsafe
+     */
+    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const final;
+
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileIndex ) const final;
+
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
+
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
+
     /** Synchronize the update of the PixelStreams. */
     void synchronizeFramesSwap( WallToWallChannel& channel );
 
-    /** Get a segment by its tile-index. @threadsafe */
-    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const;
-
-    /** Get the coordinates of a tile. */
-    QRect getTileRect( uint tileIndex ) const;
-
-    /** Compute the indices of the tiles which are visible in the given area. */
-    Indices computeVisibleSet( const QRectF& visibleArea ) const;
-
+    /** Allow the updater to request next frame (flow control). */
     void getNextFrame();
 
 public slots:

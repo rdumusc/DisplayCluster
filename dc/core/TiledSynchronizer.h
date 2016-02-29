@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,71 +37,70 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "DynamicTextureSynchronizer.h"
+#ifndef TILEDSYNCHRONIZER_H
+#define TILEDSYNCHRONIZER_H
 
-#include "Tile.h"
-#include "QtImage.h"
-#include "ZoomHelper.h"
+#include "ContentSynchronizer.h"
 
-#include <QTextStream>
+#include <QObject>
 
-DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
-    : TiledSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _reader( new DynamicTexture( uri ))
-{}
-
-void DynamicTextureSynchronizer::update( const ContentWindow& window,
-                                         const QRectF& visibleArea )
+/**
+ * A base synchronizer used for tiled content types with optional LOD.
+ */
+class TiledSynchronizer : public ContentSynchronizer
 {
-    const ZoomHelper helper( window );
-    const uint lod = _reader->getLod( helper.getContentRect().size().toSize( ));
-    const QSize tilesSurface = _reader->getTilesArea( lod );
-    const QRectF visibleTilesArea = helper.toTilesArea( visibleArea,
-                                                        tilesSurface );
+    Q_OBJECT
+    Q_DISABLE_COPY( TiledSynchronizer )
 
-    if( visibleTilesArea == _visibleTilesArea && lod == _lod )
-        return;
+public:
+    enum TileSwapPolicy {
+        SwapTilesIndependently,
+        SwapTilesSynchronously
+    };
 
-    _visibleTilesArea = visibleTilesArea;
+    /** Constructor */
+    explicit TiledSynchronizer( TileSwapPolicy policy );
 
-    if( lod != _lod )
-    {
-        _lod = lod;
+    /** @copydoc ContentSynchronizer::needRedraw */
+    bool needRedraw() const override;
 
-        emit statisticsChanged();
-        emit tilesAreaChanged();
-    }
+    /** @copydoc ContentSynchronizer::onSwapReady */
+    void onSwapReady( TilePtr tile ) override;
 
-    TiledSynchronizer::updateTiles( *_reader, false );
-}
+protected:
+    uint _lod;
+    QRectF _visibleTilesArea;
 
-void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
-{
-    Q_UNUSED( channel );
-}
+    /**
+     * Update the tiles, adding or removing them from the view.
+     *
+     * @param source the DataSource use to retrieve the tile coordinates.
+     * @param updateExistingTiles also update the texture and coordinates of the
+     *        tiles which are already visible. If TileSwapPolicy is
+     *        SwapTilesSynchronously, the updated textures will only be shown
+     *        after a successful call to swapTiles().
+     */
+    void updateTiles( const DataSource& source, bool updateExistingTiles );
 
-QSize DynamicTextureSynchronizer::getTilesArea() const
-{
-    return _reader->getTilesArea( _lod );
-}
+    /**
+     * Perform a synchronized tile swap across all processes.
+     *
+     * Does nothing if TileSwapPolicy is SwapTilesIndependently, if any
+     * tile is not ready on any of the processes.
+     * @param channel used to check if other processes have all the tiles ready
+     * @return true if tiles were swapped
+     */
+    bool swapTiles( WallToWallChannel& channel );
 
-QString DynamicTextureSynchronizer::getStatistics() const
-{
-    QString stats;
-    QTextStream stream( &stats );
-    stream << "LOD:  " << _lod << "/" << _reader->getMaxLod();
-    const QSize& area = getTilesArea();
-    stream << "  res: " << area.width() << "x" << area.height();
-    return stats;
-}
+private:
+    TileSwapPolicy _policy;
 
-ImagePtr DynamicTextureSynchronizer::getTileImage( const uint tileIndex,
-                                                   const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
+    Indices _visibleSet;
 
-    const QImage image = _reader->getTileImage( tileIndex, 0 );
-    if( image.isNull( ))
-        return ImagePtr();
-    return std::make_shared<QtImage>( image );
-}
+    bool _syncSwapPending;
+    std::set<TilePtr> _tilesReadyToSwap;
+    Indices _tilesReadySet;
+    Indices _syncSet;
+};
+
+#endif

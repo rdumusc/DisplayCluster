@@ -49,12 +49,11 @@ Tile::Tile( const uint index, const QRect& rect )
     , _swap( false )
     , _resize( false )
     , _nextCoord( rect )
+    , _updateBackTexture( true )
     , _backGlTexture( 0 )
 {
     setFlag( ItemHasContents, true );
-    setPosition( rect.topLeft( ));
-    setSize( rect.size( ));
-    update( rect );
+    setVisible( false );
 }
 
 uint Tile::getIndex() const
@@ -62,21 +61,15 @@ uint Tile::getIndex() const
     return _index;
 }
 
-QRect Tile::getCoord() const
-{
-    return QRect( x(), y(), width(), height( ));
-}
-
 void Tile::update( const QRect& rect )
 {
-    _updateBackTexture = true;
-
     if( rect != _nextCoord )
     {
         _resize = true;
         _nextCoord = rect;
     }
 
+    _updateBackTexture = true;
     QQuickItem::update();
 }
 
@@ -94,6 +87,8 @@ void Tile::swapImage()
 {
     _swap = true;
 
+    if( !isVisible( ))
+        setVisible( true );
     setPosition( _nextCoord.topLeft( ));
     setSize( _nextCoord.size( ));
 
@@ -102,18 +97,15 @@ void Tile::swapImage()
 
 void Tile::markBackTextureUpdated()
 {
-    emit readyToSwap( shared_from_this( ));
+    emit textureUpdated( shared_from_this( ));
 }
 
 QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
                                 QQuickItem::UpdatePaintNodeData* )
 {
-    //if( !isVisible( ))
-    //    qDebug() << "updating without visible: " << getIndex();
-
     TextureNode* node = static_cast<TextureNode*>( oldNode );
     if( !node )
-        node = new TextureNode( QSize( width(), height( )), window( ));
+        node = new TextureNode( _nextCoord.size(), window( ));
 
     if( _swap )
     {
@@ -132,7 +124,7 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
     if( _updateBackTexture )
     {
         _updateBackTexture = false;
-        emit textureInitialized( shared_from_this( ));
+        emit textureReady( shared_from_this( ));
     }
 
     return node;

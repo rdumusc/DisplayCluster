@@ -54,6 +54,7 @@ class ContentSynchronizer;
 class ContentWindow;
 class ContentWindowController;
 class DataProvider;
+class DataSource;
 class DisplayGroup;
 class DisplayGroupAdapter;
 class DisplayGroupRenderer;

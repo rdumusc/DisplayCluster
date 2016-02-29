@@ -47,7 +47,8 @@
 #include "ZoomHelper.h"
 
 PixelStreamSynchronizer::PixelStreamSynchronizer()
-    : _frameIndex( 0 )
+    : TiledSynchronizer( TileSwapPolicy::SwapTilesSynchronously )
+    , _frameIndex( 0 )
     , _tilesDirty( true )
     , _updateExistingTiles( false )
 {}
@@ -86,17 +87,8 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
     if( !_updater )
         return;
 
-    const bool swap = !_syncSet.empty() &&
-                      set_difference( _syncSet, _tilesReadySet ).empty();
-
-    if( channel.allReady( swap ))
+    if( TiledSynchronizer::swapTiles( channel ))
     {
-        for( auto& tile : _tilesReadyToSwap )
-            tile->swapImage();
-        _tilesReadyToSwap.clear();
-        _tilesReadySet.clear();
-        _syncSet.clear();
-
         _fpsCounter.tick();
         emit statisticsChanged();
 
@@ -105,25 +97,18 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
 
     if( _tilesDirty )
     {
-        _updateTiles();
+        TiledSynchronizer::updateTiles( *_updater, _updateExistingTiles );
+        if( _updateExistingTiles )
+            emit tilesAreaChanged();
+
         _tilesDirty = false;
         _updateExistingTiles = false;
     }
 }
 
-bool PixelStreamSynchronizer::needRedraw() const
-{
-    return false;
-}
-
-bool PixelStreamSynchronizer::allowsTextureCaching() const
-{
-    return false;
-}
-
 QSize PixelStreamSynchronizer::getTilesArea() const
 {
-    return QSize();
+    return _updater->getTilesArea( 0 );
 }
 
 QString PixelStreamSynchronizer::getStatistics() const
@@ -144,46 +129,9 @@ ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex,
     return std::make_shared<QtImage>( image );
 }
 
-void PixelStreamSynchronizer::onSwapReady( TilePtr tile )
-{
-    if( _syncSet.find( tile->getIndex( )) != _syncSet.end( ))
-    {
-        _tilesReadyToSwap.insert( tile );
-        _tilesReadySet.insert( tile->getIndex( ));
-    }
-    else
-        tile->swapImage();
-}
-
 void PixelStreamSynchronizer::_onPictureUpdated( const uint64_t frameIndex )
 {
     _frameIndex = frameIndex;
     _tilesDirty = true;
     _updateExistingTiles = true;
-}
-
-void PixelStreamSynchronizer::_updateTiles()
-{
-    const Indices visibleSet = _updater->computeVisibleSet( _visibleTilesArea );
-
-    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
-    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
-
-    for( auto i : removedTiles )
-        emit removeTile( i );
-
-    for( auto i : addedTiles )
-        emit addTile( std::make_shared<Tile>( i, _updater->getTileRect( i )));
-
-    if( _updateExistingTiles )
-    {
-        const Indices currentTiles = set_difference( _visibleSet, removedTiles);
-        for( auto i : currentTiles )
-            emit updateTile( i, _updater->getTileRect( i ));
-        _syncSet = visibleSet;
-    }
-    else
-        _syncSet = set_difference( _syncSet, removedTiles );
-
-    _visibleSet = visibleSet;
 }

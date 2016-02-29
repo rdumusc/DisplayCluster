@@ -41,10 +41,10 @@
 
 #include "types.h"
 
-#include <QFutureSynchronizer>
+#include "DataSource.h"
+
 #include <QHash>
 #include <QImage>
-#include <QObject>
 
 /**
  * A dynamically loaded large scale image.
@@ -54,11 +54,9 @@
  * (2) Direct reading from a large image
  * @see generateImagePyramid()
  */
-class DynamicTexture : public QObject,
+class DynamicTexture : public DataSource,
         public std::enable_shared_from_this<DynamicTexture>
 {
-    Q_OBJECT
-
 public:
     /**
      * Constructor
@@ -98,26 +96,32 @@ public:
     /** Get the number of tile at the given lod. */
     QSize getTilesCount( uint lod ) const;
 
-    /** @return the image size for the requested lod. */
-    QSize getTilesArea( uint lod ) const;
-
     /** Get the index of the first tile of the given lod. */
     size_t getFirstTileIndex( uint lod ) const;
 
     /** Get the coordinates in pixels of a specific tile. */
     QRect getTileCoord( uint lod, uint x, uint y ) const;
 
-    /** Get the coordinates in pixels of a specific tile. */
-    QRect getTileCoord( uint tileIndex ) const;
-
     /** Get the tile filename for a given tile index. */
     QString getTileFilename( uint tileIndex ) const;
 
+
     /**
-     * @return the image for the requested tile index.
+     * @copydoc DataSource::getTileImage
      * @threadsafe
      */
-    QImage getTileImage( uint tileIndex ) const;
+    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const final;
+
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileIndex ) const final;
+
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
+
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
+
 
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
@@ -125,10 +129,6 @@ public:
      *        will be created.
      */
     bool generateImagePyramid( const QString& outputFolder );
-
-    /** Compute the indices of the tiles which are visible in the given area. */
-    Indices computeVisibleSet( const QRectF& visibleArea,
-                                const uint lod ) const;
 
 private:
     mutable QMutex _tilesCacheMutex;

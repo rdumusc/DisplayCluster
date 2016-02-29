@@ -63,11 +63,6 @@ bool BasicSynchronizer::needRedraw() const
     return false;
 }
 
-bool BasicSynchronizer::allowsTextureCaching() const
-{
-    return true;
-}
-
 QSize BasicSynchronizer::getTilesArea() const
 {
     return QSize();

@@ -74,9 +74,17 @@ QRect toRect( const deflect::SegmentParameters& params )
     return QRect( params.x, params.y, params.width, params.height );
 }
 
-QRect PixelStreamUpdater::getTileRect( uint tileIndex ) const
+QRect PixelStreamUpdater::getTileRect( const uint tileIndex ) const
 {
     return toRect( _currentFrame->segments.at( tileIndex ).parameters );
+}
+
+QSize PixelStreamUpdater::getTilesArea( const uint lod ) const
+{
+    Q_UNUSED( lod );
+    if( !_currentFrame )
+        return QSize();
+    return _currentFrame->computeDimensions();
 }
 
 QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
@@ -107,16 +115,19 @@ QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
                    QImage::Format_RGBX8888 );
 }
 
-Indices PixelStreamUpdater::computeVisibleSet( const QRectF& visibleArea ) const
+Indices PixelStreamUpdater::computeVisibleSet( const QRectF& visibleTilesArea,
+                                               const uint lod ) const
 {
+    Q_UNUSED( lod );
+
     Indices visibleSet;
 
-    if( !_currentFrame || visibleArea.isEmpty( ))
+    if( !_currentFrame || visibleTilesArea.isEmpty( ))
         return visibleSet;
 
     for( size_t i = 0; i < _currentFrame->segments.size(); ++i )
     {
-        if( visibleArea.intersects( toRect( _currentFrame->segments[i].parameters )))
+        if( visibleTilesArea.intersects( toRect( _currentFrame->segments[i].parameters )))
             visibleSet.insert( i );
     }
     return visibleSet;

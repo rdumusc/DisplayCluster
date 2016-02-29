@@ -68,9 +68,6 @@ public:
     /** @copydoc ContentSynchronizer::needRedraw */
     bool needRedraw() const override;
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;
 

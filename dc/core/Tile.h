@@ -61,7 +61,6 @@ public:
     Tile( const uint index, const QRect& rect );
 
     uint getIndex() const;
-    QRect getCoord() const;
 
     void update( const QRect& rect );
 
@@ -69,17 +68,21 @@ public:
     QSize getBackGlTextureSize() const;
 
 signals:
-    /** Notifies when the texture has been created on the render thread. */
-    void textureInitialized( TilePtr tile );
+    /**
+     * Notifies that the back texture is ready to be updated.
+     * It is emitted after the texture has been created on the render thread,
+     * or after a call to update().
+     */
+    void textureReady( TilePtr tile );
 
     /** Notifier for the DoubleBufferedImage to swap the texture/image. */
-    void readyToSwap( TilePtr tile );
+    void textureUpdated( TilePtr tile );
 
 public slots:
     /** Swap the front and back texture. */
     void swapImage();
 
-    /** Indicate that the back GL texture has been updated. */
+    /** Indicate that the back GL texture has been externally updated. */
     void markBackTextureUpdated();
 
 protected:

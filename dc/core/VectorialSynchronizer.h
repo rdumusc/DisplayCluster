@@ -58,9 +58,6 @@ public:
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
 protected:
     QRectF _contentZoom;
 };

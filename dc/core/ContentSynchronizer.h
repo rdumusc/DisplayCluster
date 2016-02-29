@@ -58,7 +58,6 @@ class ContentSynchronizer : public QObject,
 {
     Q_OBJECT
     Q_DISABLE_COPY( ContentSynchronizer )
-    Q_PROPERTY( bool allowsTextureCaching READ allowsTextureCaching CONSTANT )
     Q_PROPERTY( QSize tilesArea READ getTilesArea NOTIFY tilesAreaChanged )
     Q_PROPERTY( QString statistics READ getStatistics NOTIFY statisticsChanged )
 
@@ -78,10 +77,6 @@ public:
 
     /** return true if a redraw is needed because of pending tiles. */
     virtual bool needRedraw() const = 0;
-
-    /** @return true if the content allows texture caching for rendering. */
-    virtual bool allowsTextureCaching() const = 0;
-
 
     /** The total area covered by the tiles (may depend on current LOD). */
     virtual QSize getTilesArea() const = 0;
@@ -107,7 +102,7 @@ public slots:
     virtual void onSwapReady( TilePtr tile ) = 0;
 
     /** Called when a tile has finished initializing; re-emits requestUpdate */
-    void onTextureInitialized( TilePtr tile );
+    void onTextureReady( TilePtr tile );
 
 signals:
     /** Notifier for the tiles area property. */

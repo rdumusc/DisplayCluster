@@ -64,9 +64,6 @@ public:
     /** @copydoc ContentSynchronizer::needRedraw */
     bool needRedraw() const override;
 
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 

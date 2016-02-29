@@ -39,8 +39,6 @@
 
 #include "TextureNode.h"
 
-#include "log.h"
-
 #include <QQuickWindow>
 
 TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
@@ -75,11 +73,6 @@ void TextureNode::resize( const QSize& size )
 {
     if( size == _backTexture->textureSize( ))
         return;
-
-    put_flog( LOG_DEBUG, "resize _backTexture: (%d,%d)->(%d,%d)",
-              _backTexture->textureSize( ).width(),
-              _backTexture->textureSize( ).height(),
-              size.width(), size.height( ));
 
     _backTexture = _createTexture( size );
 }

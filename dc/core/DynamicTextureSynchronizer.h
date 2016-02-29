@@ -40,14 +40,14 @@
 #ifndef DYNAMICTEXTURESYNCHRONIZER_H
 #define DYNAMICTEXTURESYNCHRONIZER_H
 
-#include "ContentSynchronizer.h"
+#include "TiledSynchronizer.h"
 
 #include "DynamicTexture.h" // member
 
 /**
  * A synchronizer which provides the list of Tiles for DynamicTextures.
  */
-class DynamicTextureSynchronizer : public ContentSynchronizer
+class DynamicTextureSynchronizer : public TiledSynchronizer
 {
     Q_OBJECT
     Q_DISABLE_COPY( DynamicTextureSynchronizer )
@@ -63,12 +63,6 @@ public:
     /** @copydoc ContentSynchronizer::synchronize */
     void synchronize( WallToWallChannel& channel ) override;
 
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
-
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 
@@ -78,16 +72,8 @@ public:
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 
-    /** @copydoc ContentSynchronizer::onSwapReady */
-    void onSwapReady( TilePtr tile ) override;
-
 private:
     DynamicTexturePtr _reader;
-    uint _lod;
-    QRectF _visibleTilesArea;
-    Indices _visibleSet;
-
-    void _updateTiles();
 };
 
 #endif

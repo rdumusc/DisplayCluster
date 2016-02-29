@@ -52,8 +52,3 @@ void VectorialSynchronizer::update( const ContentWindow& window,
 
     BasicSynchronizer::update( window, visibleArea );
 }
-
-bool VectorialSynchronizer::allowsTextureCaching() const
-{
-    return false;
-}

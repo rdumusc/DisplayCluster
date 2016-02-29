@@ -40,7 +40,7 @@
 #ifndef PIXELSTREAMSYNCHRONIZER_H
 #define PIXELSTREAMSYNCHRONIZER_H
 
-#include "ContentSynchronizer.h"
+#include "TiledSynchronizer.h"
 #include "FpsCounter.h"
 
 #include <QObject>
@@ -48,7 +48,7 @@
 /**
  * Synchronizes a PixelStream between different QML windows.
  */
-class PixelStreamSynchronizer : public ContentSynchronizer
+class PixelStreamSynchronizer : public TiledSynchronizer
 {
     Q_OBJECT
     Q_DISABLE_COPY( PixelStreamSynchronizer )
@@ -69,12 +69,6 @@ public:
     /** @copydoc ContentSynchronizer::synchronize */
     void synchronize( WallToWallChannel& channel ) override;
 
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
-
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 
@@ -84,26 +78,17 @@ public:
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 
-    /** @copydoc ContentSynchronizer::onSwapReady */
-    void onSwapReady( TilePtr tile ) override;
-
     uint64_t getCurrentTimestamp() const override { return _frameIndex; }
 
 private:
     PixelStreamUpdaterSharedPtr _updater;
     FpsCounter _fpsCounter;
-    std::set<TilePtr> _tilesReadyToSwap;
-    Indices _tilesReadySet;
-    Indices _syncSet;
-
-    QRectF _visibleTilesArea;
-    Indices _visibleSet;
     uint64_t _frameIndex;
+
     bool _tilesDirty;
     bool _updateExistingTiles;
 
     void _onPictureUpdated( uint64_t frameIndex );
-    void _updateTiles();
 };
 
 #endif

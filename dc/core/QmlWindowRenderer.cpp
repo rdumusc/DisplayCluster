@@ -125,11 +125,11 @@ ContentWindowPtr QmlWindowRenderer::getContentWindow()
 
 void QmlWindowRenderer::_addTile( TilePtr tile )
 {
-    connect( tile.get(), &Tile::readyToSwap,
+    connect( tile.get(), &Tile::textureUpdated,
              _synchronizer.get(), &ContentSynchronizer::onSwapReady );
 
-    connect( tile.get(), &Tile::textureInitialized,
-             _synchronizer.get(), &ContentSynchronizer::onTextureInitialized,
+    connect( tile.get(), &Tile::textureReady,
+             _synchronizer.get(), &ContentSynchronizer::onTextureReady,
              Qt::QueuedConnection );
 
     _tiles[tile->getIndex()] = tile;
