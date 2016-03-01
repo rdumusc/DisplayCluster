@@ -56,6 +56,8 @@ bool TiledSynchronizer::needRedraw() const
 
 void TiledSynchronizer::onSwapReady( TilePtr tile )
 {
+    const QMutexLocker lock( &_mutex );
+
     if( _policy == SwapTilesSynchronously &&
             _syncSet.find( tile->getIndex( )) != _syncSet.end( ))
     {
@@ -102,15 +104,24 @@ void TiledSynchronizer::updateTiles( const DataSource& source,
 
     _visibleSet = visibleSet;
 }
-
+#include <QDebug>
 bool TiledSynchronizer::swapTiles( WallToWallChannel& channel )
 {
     if( !_syncSwapPending )
+    {
+        qDebug() << "no _syncSwapPending";
         return false;
+    }
+
+    const QMutexLocker lock( &_mutex );
 
     const bool swap = set_difference( _syncSet, _tilesReadySet ).empty();
     if( !channel.allReady( swap ))
+    {
+        qDebug() << "Missing tiles: " << _tilesReadySet .size() << "/" << _syncSet.size();
+
         return false;
+    }
 
     for( auto i : _removeLaterSet )
         emit removeTile( i );

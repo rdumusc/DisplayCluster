@@ -49,6 +49,9 @@
 #include <QImage>
 #include <QThreadStorage>
 
+#include "FpsCounter.h"
+#include <QDebug>
+
 PixelStreamUpdater::PixelStreamUpdater()
     : _frameIndex( 0 )
     , _readyToSwap( true )
@@ -58,15 +61,22 @@ PixelStreamUpdater::PixelStreamUpdater()
                                     this, _1 ));
 }
 
-void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
+bool PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
 {
+    static FpsCounter counter;
+    counter.tick();
+    qDebug() << counter.toString();
+
     if( !_readyToSwap )
-        return;
+    {
+        qDebug() << "not ready to swap";
+        return false;
+    }
 
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
 
-    _swapSyncFrame.sync( versionCheckFunc );
+    return _swapSyncFrame.sync( versionCheckFunc );
 }
 
 QRect toRect( const deflect::SegmentParameters& params )

@@ -43,7 +43,7 @@
 #include "ContentSynchronizer.h"
 
 #include <QObject>
-
+#include <QMutex>
 /**
  * A base synchronizer used for tiled content types with optional LOD.
  */
@@ -102,6 +102,8 @@ private:
     Indices _tilesReadySet;
     Indices _syncSet;
     Indices _removeLaterSet;
+
+    QMutex _mutex;
 
     void _removeTile( size_t tileIndex );
 };

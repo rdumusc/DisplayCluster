@@ -161,5 +161,5 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
 
     // notify tile that its texture has been updated
     QMetaObject::invokeMethod( tile.get(), "markBackTextureUpdated",
-                               Qt::QueuedConnection );
+                               Qt::DirectConnection );
 }

@@ -77,7 +77,7 @@ public:
                                uint lod ) const final;
 
     /** Synchronize the update of the PixelStreams. */
-    void synchronizeFramesSwap( WallToWallChannel& channel );
+    bool synchronizeFramesSwap( WallToWallChannel& channel );
 
     /** Allow the updater to request next frame (flow control). */
     void getNextFrame();

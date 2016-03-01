@@ -97,8 +97,11 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
 
         _updater->getNextFrame();
     }
-
-    _updater->synchronizeFramesSwap( channel );
+    // Try to update the frame immediately if it is available
+    if( _updater->synchronizeFramesSwap( channel ))
+        qDebug() << "success";
+    else
+        qDebug() << "failed";
 
     if( _tilesDirty )
     {
