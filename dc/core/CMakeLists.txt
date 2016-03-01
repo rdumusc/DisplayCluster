@@ -32,6 +32,9 @@ if(ENABLE_TUIO_TOUCH_LISTENER)
 endif()
 
 if(ENABLE_PDF_SUPPORT)
+  list(APPEND DCCORE_PUBLIC_HEADERS
+    PDFTiler.h
+  )
   list(APPEND DCCORE_MOC_PUBLIC_HEADERS
     PDFContent.h
     PDFSynchronizer.h
@@ -40,6 +43,7 @@ if(ENABLE_PDF_SUPPORT)
     PDF.cpp
     PDFContent.cpp
     PDFSynchronizer.cpp
+    PDFTiler.cpp
     PDFInteractionDelegate.cpp
     thumbnail/PDFThumbnailGenerator.cpp
   )
@@ -70,6 +74,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   LayoutEngine.h
   Image.h
   log.h
+  LodTools.h
   MPIChannel.h
   MPIContext.h
   MPINospin.h
@@ -120,6 +125,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   DisplayGroupRenderer.h
   DynamicTextureSynchronizer.h
   ImageSynchronizer.h
+  LodSynchronizer.h
   Markers.h
   MasterFromWallChannel.h
   MasterToWallChannel.h
@@ -190,6 +196,8 @@ list(APPEND DCCORE_SOURCES
   LayoutEngine.cpp
   ImageSynchronizer.cpp
   log.cpp
+  LodSynchronizer.cpp
+  LodTools.cpp
   Markers.cpp
   MasterFromWallChannel.cpp
   MasterToWallChannel.cpp

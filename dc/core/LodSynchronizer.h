@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,31 +37,49 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DYNAMICTEXTURESYNCHRONIZER_H
-#define DYNAMICTEXTURESYNCHRONIZER_H
+#ifndef LODSYNCHRONIZER_H
+#define LODSYNCHRONIZER_H
 
-#include "LodSynchronizer.h"
+#include "TiledSynchronizer.h"
+
+#include "PDFTiler.h" // member
 
 /**
- * A synchronizer which provides the list of Tiles for DynamicTextures.
+ * Base synchronizer for tiled contents with multiple levels of detail.
  */
-class DynamicTextureSynchronizer : public LodSynchronizer
+class LodSynchronizer : public TiledSynchronizer
 {
     Q_OBJECT
-    Q_DISABLE_COPY( DynamicTextureSynchronizer )
+    Q_DISABLE_COPY( LodSynchronizer )
 
 public:
-    /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri );
+    /** Constructor. */
+    LodSynchronizer( TileSwapPolicy policy );
 
-    /** @copydoc ContentSynchronizer::synchronize */
-    void synchronize( WallToWallChannel& channel ) final;
+    /** @copydoc ContentSynchronizer::updateTiles */
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) override;
 
-private:
-    DynamicTexturePtr _reader;
+    /** @copydoc ContentSynchronizer::getTilesArea */
+    QSize getTilesArea() const override;
 
-    /** @copydoc LodSynchronizer::getDataSource */
-    const DataSource& getDataSource() const final;
+    /** @copydoc ContentSynchronizer::getStatistics */
+    QString getStatistics() const override;
+
+    /** @copydoc ContentSynchronizer::getTileImage */
+    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
+
+protected:
+    /**
+     * Get the appropriate LOD for a given display size.
+     * @param targetDisplaySize The size at which the content will be displayed.
+     */
+    uint getLod( const QSize& targetDisplaySize ) const;
+
+    /**
+     * Derived classes must implement this method to return their data source.
+     */
+    virtual const DataSource& getDataSource() const = 0;
 };
 
 #endif

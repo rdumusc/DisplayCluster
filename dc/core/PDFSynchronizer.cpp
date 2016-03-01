@@ -41,12 +41,11 @@
 
 #include "ContentWindow.h"
 #include "PDFContent.h"
-#include "QtImage.h"
-#include "ZoomHelper.h"
 
 PDFSynchronizer::PDFSynchronizer( const QString& uri )
-    : _pdf( uri )
-    , _renderSize( _pdf.getSize( ))
+    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
+    , _pdf( uri )
+    , _tileSource( _pdf )
 {}
 
 void PDFSynchronizer::update( const ContentWindow& window,
@@ -54,18 +53,17 @@ void PDFSynchronizer::update( const ContentWindow& window,
 {
     auto content = window.getContent();
     const PDFContent& pdfContent = dynamic_cast<const PDFContent&>( *content );
-
     _pdf.setPage( pdfContent.getPage( ));
-    _renderSize = ZoomHelper( window ).getContentRect().toRect().size();
 
-    VectorialSynchronizer::update( window, visibleArea );
+    LodSynchronizer::update( window, visibleArea );
 }
 
-ImagePtr PDFSynchronizer::getTileImage( const uint tileIndex,
-                                        const uint64_t timestamp ) const
+void PDFSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    Q_UNUSED( tileIndex );
-    Q_UNUSED( timestamp );
-    return std::make_shared<QtImage>( _pdf.renderToImage( _renderSize,
-                                                          _contentZoom ));
+    Q_UNUSED( channel );
+}
+
+const DataSource& PDFSynchronizer::getDataSource() const
+{
+    return _tileSource;
 }

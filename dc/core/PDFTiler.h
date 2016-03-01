@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,31 +37,47 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DYNAMICTEXTURESYNCHRONIZER_H
-#define DYNAMICTEXTURESYNCHRONIZER_H
+#ifndef PDFTILER_H
+#define PDFTILER_H
 
-#include "LodSynchronizer.h"
+#include "DataSource.h"
+
+#include "PDF.h" // member
+#include "LodTools.h" // member
 
 /**
- * A synchronizer which provides the list of Tiles for DynamicTextures.
+ * Reprensent a PDF document as a multi-LOD tiled data source.
  */
-class DynamicTextureSynchronizer : public LodSynchronizer
+class PDFTiler : public DataSource
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( DynamicTextureSynchronizer )
-
 public:
-    /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri );
+    /** Constructor. */
+    explicit PDFTiler( PDF& pdf );
 
-    /** @copydoc ContentSynchronizer::synchronize */
-    void synchronize( WallToWallChannel& channel ) final;
+    /**
+     * @copydoc DataSource::getTileImage
+     * @threadsafe
+     */
+    QImage getTileImage( uint tileId, uint64_t timestamp ) const final;
+
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileId ) const final;
+
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
+
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
+
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
 
 private:
-    DynamicTexturePtr _reader;
+    PDF& _pdf;
+    LodTools _lodTool;
 
-    /** @copydoc LodSynchronizer::getDataSource */
-    const DataSource& getDataSource() const final;
+    QRectF _getNormalizedTileRect( uint tileId ) const;
 };
 
 #endif

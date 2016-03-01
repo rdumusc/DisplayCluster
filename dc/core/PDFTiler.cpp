@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,31 +37,58 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DYNAMICTEXTURESYNCHRONIZER_H
-#define DYNAMICTEXTURESYNCHRONIZER_H
+#include "PDFTiler.h"
 
-#include "LodSynchronizer.h"
+#include "LodTools.h"
 
-/**
- * A synchronizer which provides the list of Tiles for DynamicTextures.
- */
-class DynamicTextureSynchronizer : public LodSynchronizer
+namespace
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( DynamicTextureSynchronizer )
+const uint tileSize = 512;
+const qreal maxScaleFactor = 5;
+}
 
-public:
-    /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri );
+PDFTiler::PDFTiler( PDF& pdf )
+    : _pdf( pdf )
+    , _lodTool( _pdf.getSize() * maxScaleFactor, tileSize )
+{}
 
-    /** @copydoc ContentSynchronizer::synchronize */
-    void synchronize( WallToWallChannel& channel ) final;
+QImage PDFTiler::getTileImage( const uint tileId,
+                               const uint64_t timestamp ) const
+{
+    Q_UNUSED( timestamp );
 
-private:
-    DynamicTexturePtr _reader;
+    const QRect tile = getTileRect( tileId );
+    return _pdf.renderToImage( tile.size(), _getNormalizedTileRect( tileId ));
+}
 
-    /** @copydoc LodSynchronizer::getDataSource */
-    const DataSource& getDataSource() const final;
-};
+QRect PDFTiler::getTileRect( const uint tileId ) const
+{
+    return _lodTool.getTileCoord( tileId );
+}
 
-#endif
+QSize PDFTiler::getTilesArea( const uint lod ) const
+{
+    return _lodTool.getTilesArea( lod );
+}
+
+Indices PDFTiler::computeVisibleSet( const QRectF& visibleTilesArea,
+                                     const uint lod ) const
+{
+    return _lodTool.getVisibleTiles( visibleTilesArea, lod );
+}
+
+uint PDFTiler::getMaxLod() const
+{
+    return _lodTool.getMaxLod();
+}
+
+QRectF PDFTiler::_getNormalizedTileRect( const uint tileId ) const
+{
+    const QRectF tile( getTileRect( tileId ));
+    const uint lod = _lodTool.getTileIndex( tileId ).lod;
+    const QSize area = getTilesArea( lod );
+
+    const auto t = QTransform::fromScale( 1.0 / area.width(),
+                                          1.0 / area.height( ));
+    return t.mapRect( tile );
+}

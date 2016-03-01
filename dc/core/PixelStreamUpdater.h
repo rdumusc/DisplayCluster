@@ -76,6 +76,9 @@ public:
     Indices computeVisibleSet( const QRectF& visibleTilesArea,
                                uint lod ) const final;
 
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
+
     /** Synchronize the update of the PixelStreams. */
     void synchronizeFramesSwap( WallToWallChannel& channel );
 

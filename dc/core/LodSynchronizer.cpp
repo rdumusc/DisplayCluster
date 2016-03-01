@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,31 +37,79 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DYNAMICTEXTURESYNCHRONIZER_H
-#define DYNAMICTEXTURESYNCHRONIZER_H
-
 #include "LodSynchronizer.h"
 
-/**
- * A synchronizer which provides the list of Tiles for DynamicTextures.
- */
-class DynamicTextureSynchronizer : public LodSynchronizer
+#include "ContentWindow.h"
+#include "QtImage.h"
+#include "ZoomHelper.h"
+
+#include <QTextStream>
+
+LodSynchronizer::LodSynchronizer( const TileSwapPolicy policy )
+    : TiledSynchronizer( policy )
+{}
+
+void LodSynchronizer::update( const ContentWindow& window,
+                              const QRectF& visibleArea )
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( DynamicTextureSynchronizer )
+    const ZoomHelper helper( window );
+    const uint lod = getLod( helper.getContentRect().size().toSize( ));
+    const QSize tilesSurface = getDataSource().getTilesArea( lod );
+    const QRectF visibleTilesArea = helper.toTilesArea( visibleArea,
+                                                        tilesSurface );
 
-public:
-    /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri );
+    if( visibleTilesArea == _visibleTilesArea && lod == _lod )
+        return;
 
-    /** @copydoc ContentSynchronizer::synchronize */
-    void synchronize( WallToWallChannel& channel ) final;
+    _visibleTilesArea = visibleTilesArea;
 
-private:
-    DynamicTexturePtr _reader;
+    if( lod != _lod )
+    {
+        _lod = lod;
 
-    /** @copydoc LodSynchronizer::getDataSource */
-    const DataSource& getDataSource() const final;
-};
+        emit statisticsChanged();
+        emit tilesAreaChanged();
+    }
 
-#endif
+    TiledSynchronizer::updateTiles( getDataSource(), false );
+}
+
+QSize LodSynchronizer::getTilesArea() const
+{
+    return getDataSource().getTilesArea( _lod );
+}
+
+QString LodSynchronizer::getStatistics() const
+{
+    QString stats;
+    QTextStream stream( &stats );
+    stream << "LOD:  " << _lod << "/" << getDataSource().getMaxLod();
+    const QSize& area = getTilesArea();
+    stream << "  res: " << area.width() << "x" << area.height();
+    return stats;
+}
+
+ImagePtr LodSynchronizer::getTileImage( const uint tileIndex,
+                                        const uint64_t timestamp ) const
+{
+    Q_UNUSED( timestamp );
+
+    const QImage image = getDataSource().getTileImage( tileIndex, 0 );
+    if( image.isNull( ))
+        return ImagePtr();
+    return std::make_shared<QtImage>( image );
+}
+
+uint LodSynchronizer::getLod( const QSize& targetDisplaySize ) const
+{
+    uint lod = 0;
+    QSize nextLOD = getDataSource().getTilesArea( 1 );
+    const uint maxLod = getDataSource().getMaxLod();
+    while( targetDisplaySize.width() < nextLOD.width() &&
+           targetDisplaySize.height() < nextLOD.height( ) &&
+           lod < maxLod )
+    {
+        nextLOD = getDataSource().getTilesArea( ++lod + 1 );
+    }
+    return lod;
+}

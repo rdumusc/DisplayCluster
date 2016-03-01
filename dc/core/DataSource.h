@@ -53,10 +53,10 @@ public:
     virtual ~DataSource() {}
 
     /** Get a segment by its tile-index. @threadsafe */
-    virtual QImage getTileImage( uint tileIndex, uint64_t timestamp ) const = 0;
+    virtual QImage getTileImage( uint tileId, uint64_t timestamp ) const = 0;
 
     /** Get the coordinates of a tile. */
-    virtual QRect getTileRect( uint tileIndex ) const = 0;
+    virtual QRect getTileRect( uint tileId ) const = 0;
 
     /** @return the image size for the requested lod. */
     virtual QSize getTilesArea( uint lod ) const = 0;
@@ -65,6 +65,8 @@ public:
     virtual Indices computeVisibleSet( const QRectF& visibleTilesArea,
                                        uint lod ) const = 0;
 
+    /** @return the max LOD level (top of pyramid, lowest resolution). */
+    virtual uint getMaxLod() const = 0;
 };
 
 #endif

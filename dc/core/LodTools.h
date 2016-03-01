@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2015, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,31 +37,73 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef DYNAMICTEXTURESYNCHRONIZER_H
-#define DYNAMICTEXTURESYNCHRONIZER_H
+#ifndef LODTOOLS_H
+#define LODTOOLS_H
 
-#include "LodSynchronizer.h"
+#include "types.h"
+
+#include <map>
 
 /**
- * A synchronizer which provides the list of Tiles for DynamicTextures.
+ * Tools to compute LOD pyramid data for a 2D tiled image.
  */
-class DynamicTextureSynchronizer : public LodSynchronizer
+class LodTools
 {
-    Q_OBJECT
-    Q_DISABLE_COPY( DynamicTextureSynchronizer )
-
 public:
-    /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri );
+    struct TileIndex
+    {
+        uint x;
+        uint y;
+        uint lod;
+    };
 
-    /** @copydoc ContentSynchronizer::synchronize */
-    void synchronize( WallToWallChannel& channel ) final;
+    struct TileInfo
+    {
+        uint id;
+        QRect coord;
+    };
+    typedef std::vector<LodTools::TileInfo> TileInfos;
+
+    /**
+     * Constructor
+     * @param contentSize the size of the full resolution content
+     * @param tileSize the size of the tiles to subdivide the content
+     */
+    LodTools( const QSize& contentSize, uint tileSize );
+
+    /** @return the max LOD level (top of pyramid, lowest resolution) */
+    uint getMaxLod() const;
+
+    /** @return the area covered by the tiles at the given lod. */
+    QSize getTilesArea( uint lod ) const;
+
+    /** @return the number of tiles for the given lod. */
+    QSize getTilesCount( uint lod ) const;
+
+    /** @return the index of the first tile of the given lod. */
+    uint getFirstTileId( uint lod ) const;
+
+    /** @return the index of the given tile. */
+    TileIndex getTileIndex( uint tileId ) const;
+
+    /** @return the coordinates of the given tile. */
+    QRect getTileCoord( uint tileId ) const;
+
+    /** @return all the tile coordinates for the given lod. */
+    const TileInfos& getAllTileInfos( uint lod ) const;
+
+    /** @return the IDs of the tiles of the given LOD visible in the area. */
+    Indices getVisibleTiles( const QRectF& area, uint lod ) const;
 
 private:
-    DynamicTexturePtr _reader;
+    const QSize _contentSize;
+    const uint _tileSize;
+    const uint _maxLod;
 
-    /** @copydoc LodSynchronizer::getDataSource */
-    const DataSource& getDataSource() const final;
+    typedef std::map<size_t, LodTools::TileInfos> LodTilesMap;
+    mutable LodTilesMap _lodTilesMapCache;
+
+    uint _computeMaxLod() const;
 };
 
 #endif

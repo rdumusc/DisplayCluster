@@ -42,6 +42,7 @@
 #include "types.h"
 
 #include "DataSource.h"
+#include "LodTools.h"
 
 #include <QHash>
 #include <QImage>
@@ -85,36 +86,28 @@ public:
     /** Get the root image of the pyramid. */
     QImage getRootImage() const;
 
-    /** Get the max LOD level (top of pyramid, lowest resolution). */
-    uint getMaxLod() const;
-
-    /**
-     * Get the appropriate LOD for a given display size.
-     * @param targetDisplaySize The size at which the content will be displayed.
-     */
-    uint getLod( const QSize& targetDisplaySize ) const;
 
     /** Get the number of tile at the given lod. */
     QSize getTilesCount( uint lod ) const;
 
     /** Get the index of the first tile of the given lod. */
-    size_t getFirstTileIndex( uint lod ) const;
+    size_t getFirstTileId( uint lod ) const;
 
     /** Get the coordinates in pixels of a specific tile. */
     QRect getTileCoord( uint lod, uint x, uint y ) const;
 
     /** Get the tile filename for a given tile index. */
-    QString getTileFilename( uint tileIndex ) const;
+    QString getTileFilename( uint tileId ) const;
 
 
     /**
      * @copydoc DataSource::getTileImage
      * @threadsafe
      */
-    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const final;
+    QImage getTileImage( uint tileId, uint64_t timestamp ) const final;
 
     /** @copydoc DataSource::getTileRect */
-    QRect getTileRect( uint tileIndex ) const final;
+    QRect getTileRect( uint tileId ) const final;
 
     /** @copydoc DataSource::getTilesArea */
     QSize getTilesArea( uint lod ) const final;
@@ -122,6 +115,9 @@ public:
     /** @copydoc DataSource::computeVisibleSet */
     Indices computeVisibleSet( const QRectF& visibleTilesArea,
                                uint lod ) const final;
+
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
 
 
     /**
@@ -135,23 +131,11 @@ private:
     mutable QMutex _tilesCacheMutex;
     mutable QHash<uint, QImage> _tilesCache;
 
-    struct TileCoord {
-        uint index;
-        QRect coord;
-    };
-
-    typedef std::vector<TileCoord> TileCoords;
-    typedef std::map<size_t, TileCoords> LodTilesMap;
+    typedef std::map<size_t, LodTools::TileInfos> LodTilesMap;
     mutable LodTilesMap _lodTilesMapCache;
 
-    struct TileIndex {
-        uint x;
-        uint y;
-        uint lod;
-    };
-
-    TileIndex _getTileIndex( uint tileIndex ) const;
-    TileCoords _gatherAllTiles( const uint lod ) const;
+    LodTools::TileIndex _getTileIndex( uint tileId ) const;
+    LodTools::TileInfos _gatherAllTiles( uint lod ) const;
 
     /* for root only: */
 

@@ -133,6 +133,11 @@ Indices PixelStreamUpdater::computeVisibleSet( const QRectF& visibleTilesArea,
     return visibleSet;
 }
 
+uint PixelStreamUpdater::getMaxLod() const
+{
+    return 0;
+}
+
 void PixelStreamUpdater::getNextFrame()
 {
     //emit requestFrame( _currentFrame->uri );

@@ -43,7 +43,7 @@
 #include "Tile.h"
 #include "WallToWallChannel.h"
 
-TiledSynchronizer::TiledSynchronizer( TileSwapPolicy policy )
+TiledSynchronizer::TiledSynchronizer( const TileSwapPolicy policy )
     : _lod( 0 )
     , _policy( policy )
     , _syncSwapPending( false )

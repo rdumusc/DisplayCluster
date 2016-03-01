@@ -39,69 +39,19 @@
 
 #include "DynamicTextureSynchronizer.h"
 
-#include "Tile.h"
-#include "QtImage.h"
-#include "ZoomHelper.h"
-
-#include <QTextStream>
+#include "DynamicTexture.h"
 
 DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
-    : TiledSynchronizer( TileSwapPolicy::SwapTilesIndependently )
+    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
     , _reader( new DynamicTexture( uri ))
 {}
-
-void DynamicTextureSynchronizer::update( const ContentWindow& window,
-                                         const QRectF& visibleArea )
-{
-    const ZoomHelper helper( window );
-    const uint lod = _reader->getLod( helper.getContentRect().size().toSize( ));
-    const QSize tilesSurface = _reader->getTilesArea( lod );
-    const QRectF visibleTilesArea = helper.toTilesArea( visibleArea,
-                                                        tilesSurface );
-
-    if( visibleTilesArea == _visibleTilesArea && lod == _lod )
-        return;
-
-    _visibleTilesArea = visibleTilesArea;
-
-    if( lod != _lod )
-    {
-        _lod = lod;
-
-        emit statisticsChanged();
-        emit tilesAreaChanged();
-    }
-
-    TiledSynchronizer::updateTiles( *_reader, false );
-}
 
 void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
 {
     Q_UNUSED( channel );
 }
 
-QSize DynamicTextureSynchronizer::getTilesArea() const
+const DataSource& DynamicTextureSynchronizer::getDataSource() const
 {
-    return _reader->getTilesArea( _lod );
-}
-
-QString DynamicTextureSynchronizer::getStatistics() const
-{
-    QString stats;
-    QTextStream stream( &stats );
-    stream << "LOD:  " << _lod << "/" << _reader->getMaxLod();
-    const QSize& area = getTilesArea();
-    stream << "  res: " << area.width() << "x" << area.height();
-    return stats;
-}
-
-ImagePtr DynamicTextureSynchronizer::getTileImage( const uint tileIndex,
-                                                   const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
-
-    const QImage image = _reader->getTileImage( tileIndex, 0 );
-    if( image.isNull( ))
-        return ImagePtr();
-    return std::make_shared<QtImage>( image );
+    return *_reader;
 }

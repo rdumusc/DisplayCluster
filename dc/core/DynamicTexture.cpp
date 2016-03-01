@@ -38,6 +38,7 @@
 
 #include "DynamicTexture.h"
 
+#include "LodTools.h"
 #include "log.h"
 
 #include <fstream>
@@ -314,34 +315,12 @@ QImage DynamicTexture::getRootImage() const
 
 uint DynamicTexture::getMaxLod() const
 {
-    uint maxLod = 0;
-    int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
-    while( maxDim > TEXTURE_SIZE )
-    {
-        maxDim = maxDim >> 1;
-        ++maxLod;
-    }
-    return maxLod;
+    return LodTools( _imageSize, TEXTURE_SIZE ).getMaxLod();
 }
 
-uint DynamicTexture::getLod( const QSize& targetDisplaySize ) const
+QString DynamicTexture::getTileFilename( const uint tileId ) const
 {
-    uint lod = 0;
-    QSize nextLOD = _imageSize / 2;
-    const uint maxLod = getMaxLod();
-    while( targetDisplaySize.width() < nextLOD.width() &&
-           targetDisplaySize.height() < nextLOD.height( ) &&
-           lod < maxLod )
-    {
-        nextLOD = nextLOD / 2;
-        ++lod;
-    }
-    return lod;
-}
-
-QString DynamicTexture::getTileFilename( const uint tileIndex ) const
-{
-    TileIndex idx = _getTileIndex( tileIndex );
+    LodTools::TileIndex idx = _getTileIndex( tileId );
 
     QString filename = QString( ".%1" ).arg( _imageExtension );
 
@@ -365,7 +344,7 @@ QString DynamicTexture::getTileFilename( const uint tileIndex ) const
     return filename;
 }
 
-size_t DynamicTexture::getFirstTileIndex( const uint lod ) const
+size_t DynamicTexture::getFirstTileId( const uint lod ) const
 {
     const size_t maxLod = getMaxLod();
 
@@ -373,7 +352,7 @@ size_t DynamicTexture::getFirstTileIndex( const uint lod ) const
         return 0;
 
     const size_t nextLod = lod + 1;
-    return std::pow( 4, maxLod - nextLod ) + getFirstTileIndex( nextLod );
+    return std::pow( 4, maxLod - nextLod ) + getFirstTileId( nextLod );
 }
 
 QRect
@@ -388,15 +367,15 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
 }
 
-QImage DynamicTexture::getTileImage( const uint tileIndex,
+QImage DynamicTexture::getTileImage( const uint tileId,
                                      const uint64_t timestamp ) const
 {
     Q_UNUSED( timestamp );
 
     QMutexLocker lock( &_tilesCacheMutex );
-    if( !_tilesCache.count( tileIndex ))
-        _tilesCache[tileIndex] = QImage( getTileFilename( tileIndex ));
-    return _tilesCache[tileIndex];
+    if( !_tilesCache.count( tileId ))
+        _tilesCache[tileId] = QImage( getTileFilename( tileId ));
+    return _tilesCache[tileId];
 }
 
 Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
@@ -405,7 +384,7 @@ Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
     if( !_lodTilesMapCache.count( lod ))
         _lodTilesMapCache[ lod ] = _gatherAllTiles( lod );
 
-    const TileCoords& tiles = _lodTilesMapCache[ lod ];
+    const LodTools::TileInfos& tiles = _lodTilesMapCache[ lod ];
 
     Indices visibleTiles;
 
@@ -417,15 +396,15 @@ Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
     for( const auto& tile : tiles )
     {
         if( tile.coord.intersects( rectArea ))
-            visibleTiles.insert( tile.index );
+            visibleTiles.insert( tile.id );
     }
 
     return visibleTiles;
 }
 
-QRect DynamicTexture::getTileRect( const uint tileIndex ) const
+QRect DynamicTexture::getTileRect( const uint tileId ) const
 {
-    const TileIndex idx = _getTileIndex( tileIndex );
+    const auto idx = _getTileIndex( tileId );
     return getTileCoord( idx.lod, idx.x, idx.y );
 }
 
@@ -537,37 +516,35 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
     }
 }
 
-DynamicTexture::TileIndex
-DynamicTexture::_getTileIndex( const uint tileIndex ) const
+LodTools::TileIndex DynamicTexture::_getTileIndex( const uint tileId ) const
 {
     uint lod = 0;
-    uint firstTileIndex = getFirstTileIndex( lod );
-    while( tileIndex < firstTileIndex )
-        firstTileIndex = getFirstTileIndex( ++lod );
+    uint firstTileId = getFirstTileId( lod );
+    while( tileId < firstTileId )
+        firstTileId = getFirstTileId( ++lod );
 
-    const int index = tileIndex - firstTileIndex;
+    const int index = tileId - firstTileId;
     const QSize tilesCount = getTilesCount( lod );
 
     const uint x = index % tilesCount.width();
     const uint y = index / tilesCount.width();
 
-    return TileIndex{ x, y, lod };
+    return LodTools::TileIndex{ x, y, lod };
 }
 
-DynamicTexture::TileCoords
-DynamicTexture::_gatherAllTiles( const uint lod ) const
+LodTools::TileInfos DynamicTexture::_gatherAllTiles( const uint lod ) const
 {
-    TileCoords tiles;
+    LodTools::TileInfos tiles;
 
     const QSize tilesCount = getTilesCount( lod );
-    uint tileIndex = getFirstTileIndex( lod );
+    uint tileId = getFirstTileId( lod );
     for( int y = 0; y < tilesCount.height(); ++y )
     {
         for( int x = 0; x < tilesCount.width(); ++x )
         {
             const QRect& coord = getTileCoord( lod, x, y );
-            tiles.push_back( TileCoord{ tileIndex, coord });
-            ++tileIndex;
+            tiles.push_back( LodTools::TileInfo{ tileId, coord });
+            ++tileId;
         }
     }
 

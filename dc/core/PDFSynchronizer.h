@@ -40,31 +40,35 @@
 #ifndef PDFSYNCHRONIZER_H
 #define PDFSYNCHRONIZER_H
 
-#include "VectorialSynchronizer.h"
+#include "LodSynchronizer.h"
 
-#include "PDF.h" // member
+#include "PDFTiler.h" // member
 
 /**
  * Synchronize PDF content.
  */
-class PDFSynchronizer : public VectorialSynchronizer
+class PDFSynchronizer : public LodSynchronizer
 {
     Q_OBJECT
     Q_DISABLE_COPY( PDFSynchronizer )
 
 public:
+    /** Constructor. */
     PDFSynchronizer( const QString& uri );
 
-    /** @copydoc ContentSynchronizer::update */
+    /** @copydoc ContentSynchronizer::updateTiles */
     void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
+                 const QRectF& visibleArea ) final;
 
-    /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) final;
 
 private:
     PDF _pdf;
-    QSize _renderSize;
+    PDFTiler _tileSource;
+
+    /** @copydoc LodSynchronizer::getDataSource */
+    const DataSource& getDataSource() const final;
 };
 
 #endif
