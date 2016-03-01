@@ -62,13 +62,8 @@ extern "C"
 }
 
 #include "types.h"
-#include <deflect/MTQueue.h>
 
 #include <QString>
-
-#include <atomic>
-#include <future>
-#include <thread>
 
 /**
  * Read and play movies using the FFMPEG library.
@@ -97,62 +92,24 @@ public:
     /** Get the current time position in seconds. */
     double getPosition() const;
 
-    /** True when the EOF was reached and no more frames can be obtained. */
-    bool isAtEOF() const;
-
     /** Get the movie duration in seconds. May be unavailable for some movies. */
     double getDuration() const;
-
-    /** Get the duration of a frame in seconds. */
-    double getFrameDuration() const;
-
-    /** Start decoding the movie from the given position. */
-    void startDecoding();
-
-    /** Stop decoding the movie. */
-    void stopDecoding();
-
-    /** Check if the movie is currently decoding. */
-    bool isDecoding() const;
 
     /**
      * Get a frame at the given position in seconds.
      *
-     * If the movie is decoding, any pending future returned by a previous call
-     * to this method will be invalidated. If the movie is not decoding, the
-     * user is responsible to wait on the completion of the returned future
-     * before calling this method again.
+     * @param posInSeconds request position in seconds; clamped if out-of-bounds
+     * @return the decoded movie image that was closest to posInSeconds, nullptr
+     *         otherwise
      */
-    std::future<PicturePtr> getFrame( double posInSeconds );
+    PicturePtr getFrame( double posInSeconds );
 
 private:
     AVFormatContext* _avFormatContext;
-    std::unique_ptr<FFMPEGVideoStream> _videoStream;
+    std::unique_ptr< FFMPEGVideoStream > _videoStream;
 
-    double _ptsPosition;
     double _streamPosition;
     bool _isValid;
-    std::atomic<bool> _isAtEOF;
-
-    deflect::MTQueue<PicturePtr> _queue;
-    std::promise<PicturePtr> _promise;
-
-    std::thread _decodeThread;
-    std::atomic<bool> _stopDecoding;
-
-    std::thread _consumeThread;
-    std::atomic<bool> _stopConsuming;
-
-    std::mutex _seekMutex;
-    bool _seek;
-    double _seekPosition;
-    std::condition_variable _seekRequested;
-    std::condition_variable _seekFinished;
-
-    std::mutex _targetMutex;
-    double _targetTimestamp;
-    bool _targetChangedSent;
-    std::condition_variable _targetChanged;
 
     /** Init the global FFMPEG context. */
     static void initGlobalState();
@@ -160,17 +117,6 @@ private:
     bool _open( const QString& uri );
     bool _createAvFormatContext( const QString& uri );
     void _releaseAvFormatContext();
-
-    void _decode();
-    void _decodeOneFrame();
-
-    double _getPtsDelta() const;
-    void _consume();
-    bool _seekTo( double timePosInSeconds );
-
-    bool _readVideoFrame();
-    bool _seekFileTo( double timePosInSeconds );
-    PicturePtr _grabSingleFrame( const double posInSeconds );
 };
 
 #endif // FFMPEGMOVIE_H

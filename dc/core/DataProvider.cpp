@@ -85,9 +85,8 @@ void DataProvider::loadAsync( ContentSynchronizerSharedPtr source,
     _watchers.append( watcher );
     connect( watcher, &Watcher::finished,
              this, &DataProvider::_handleFinished );
-    const uint64_t timestamp = source->getCurrentTimestamp();
-    watcher->setFuture( QtConcurrent::run( [source,tile,timestamp,this] {
-        _load( source, tile, timestamp );
+    watcher->setFuture( QtConcurrent::run( [source,tile,this] {
+        _load( source, tile );
     } ));
 }
 
@@ -103,19 +102,18 @@ void DataProvider::setNewFrame( deflect::FramePtr frame )
 }
 
 void DataProvider::_load( ContentSynchronizerSharedPtr source,
-                          TileWeakPtr tile_, const uint64_t timestamp )
+                          TileWeakPtr tile_ )
 {
     TilePtr tile = tile_.lock();
     if( !tile )
     {
-        put_flog( LOG_DEBUG, "Tile expired");
+        put_flog( LOG_DEBUG, "Tile expired" );
         return;
     }
-    ImagePtr image = source->getTileImage( tile->getId(), timestamp );
+    ImagePtr image = source->getTileImage( tile->getId( ));
     if( !image )
     {
-        put_flog( LOG_DEBUG, "Empty image for tile: %d, index: %d",
-                  tile->getId(), timestamp );
+        put_flog( LOG_DEBUG, "Empty image for tile: %d", tile->getId( ));
         return;
     }
     emit imageLoaded( image, tile_ );

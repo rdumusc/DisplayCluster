@@ -42,6 +42,7 @@
 #include "WallToWallChannel.h"
 
 #include "log.h"
+#include "StreamImage.h"
 
 #include <deflect/Frame.h>
 #include <deflect/SegmentDecoder.h>
@@ -50,8 +51,7 @@
 #include <QThreadStorage>
 
 PixelStreamUpdater::PixelStreamUpdater()
-    : _frameIndex( 0 )
-    , _readyToSwap( true )
+    : _readyToSwap( true )
 {
     _swapSyncFrame.setCallback( boost::bind(
                                     &PixelStreamUpdater::_onFrameSwapped,
@@ -87,19 +87,12 @@ QSize PixelStreamUpdater::getTilesArea( const uint lod ) const
     return _currentFrame->computeDimensions();
 }
 
-QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
-                                         const uint64_t timestamp ) const
+ImagePtr PixelStreamUpdater::getTileImage( const uint tileIndex ) const
 {
     if( !_currentFrame )
         throw std::runtime_error( "No frames yet" );
 
     const QReadLocker lock( &_mutex );
-    if( timestamp != _frameIndex )
-    {
-        put_flog( LOG_DEBUG, "incorrect timestamp: %d, current frameIndex: %d",
-                  timestamp, _frameIndex );
-        return QImage();
-    }
 
     auto& segment = _currentFrame->segments.at( tileIndex );
     if( segment.parameters.compressed )
@@ -110,9 +103,7 @@ QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
         decoder.localData().decode( segment );
     }
 
-    return QImage( (const uchar*)segment.imageData.constData(),
-                   segment.parameters.width, segment.parameters.height,
-                   QImage::Format_RGBX8888 );
+    return std::make_shared<StreamImage>( _currentFrame, tileIndex );
 }
 
 Indices PixelStreamUpdater::computeVisibleSet( const QRectF& visibleTilesArea,
@@ -140,7 +131,6 @@ uint PixelStreamUpdater::getMaxLod() const
 
 void PixelStreamUpdater::getNextFrame()
 {
-    //emit requestFrame( _currentFrame->uri );
     _readyToSwap = true;
 }
 
@@ -163,10 +153,9 @@ void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
 
     {
         const QWriteLocker lock( &_mutex );
-        ++_frameIndex;
         _currentFrame = frame;
     }
 
-    emit pictureUpdated( _frameIndex );
+    emit pictureUpdated();
     emit requestFrame( _currentFrame->uri );
 }

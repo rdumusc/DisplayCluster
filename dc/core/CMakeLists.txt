@@ -67,6 +67,8 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   log.h
   LodTiler.h
   LodTools.h
+  MovieSynchronizer.h
+  MovieUpdater.h
   MPIChannel.h
   MPIContext.h
   MPINospin.h
@@ -78,8 +80,10 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   State.h
   StatePreview.h
   StateSerializationHelper.h
+  StreamImage.h
   SVGContent.h
   SVGImage.h
+  SVGTextureFactory.h
   SVGTiler.h
   TestPattern.h
   TextureContent.h
@@ -126,8 +130,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   MasterFromWallChannel.h
   MasterToWallChannel.h
   MovieContent.h
-  MovieSynchronizer.h
-  MovieUpdater.h
   MultitouchArea.h
   Options.h
   PixelStreamInteractionDelegate.h
@@ -139,7 +141,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   QmlWindowRenderer.h
   RenderController.h
   SVGSynchronizer.h
-  SVGTextureFactory.h
   TextureUploader.h
   Tile.h
   TiledSynchronizer.h
@@ -225,6 +226,7 @@ list(APPEND DCCORE_SOURCES
   State.cpp
   StatePreview.cpp
   StateSerializationHelper.cpp
+  StreamImage.cpp
   SVGContent.cpp
   SVGImage.cpp
   SVGTextureFactory.cpp

@@ -53,7 +53,7 @@ class CachedDataSource : public DataSource
 {
 public:
     /** @copydoc DataSource::getTileImage @threadsafe */
-    QImage getTileImage( uint tileId, uint64_t timestamp ) const final;
+    ImagePtr getTileImage( uint tileId ) const final;
 
     /** Check if the cache contains an image for a tile. */
     bool contains( uint tileId ) const;

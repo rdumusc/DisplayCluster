@@ -41,43 +41,46 @@
 #define MOVIEUPDATER_H
 
 #include "ElapsedTimer.h"
-#include "SwapSyncObject.h"
 #include "types.h"
 
-#include <QObject>
+#include "DataSource.h"
 
 /**
- * Updates Movies synchronously accross different processes.
+ * Updates Movies synchronously across different processes.
  *
  * A single movie is designed to provide images to multiple windows on each
  * process.
  */
-class MovieUpdater : public QObject
+class MovieUpdater : public DataSource
 {
-    Q_OBJECT
-
 public:
     explicit MovieUpdater( const QString& uri );
     ~MovieUpdater();
 
-    bool isVisible() const;
-    void setVisible( bool visible );
+    /**
+     * @copydoc DataSource::getTileImage
+     * @threadsafe
+     */
+    ImagePtr getTileImage( uint tileIndex ) const final;
 
-    bool isPaused() const;
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileIndex ) const final;
 
-    void update( const MovieContent& movie );
-    void sync( WallToWallChannel& channel );
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
 
-    ImagePtr getImage() const;
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices
+    computeVisibleSet( const QRectF& visibleTilesArea, uint lod ) const final;
 
-//    TextureFactory* createTextureFactory();
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
 
-signals:
-    void textureUploaded();
-    void uploadTexture( ImagePtr image, uint textureID );
+    /** Update this datasource according to visibility and movie content. */
+    void update( const MovieContent& movie, bool visible );
 
-public slots:
-//    void onTextureUploaded( ImagePtr image, uint textureID );
+    /** Increment and synchronize movie timestamp across all wall processes. */
+    bool synchronizeTimestamp( WallToWallChannel& channel );
 
 private:
     MoviePtr _ffmpegMovie;
@@ -88,19 +91,7 @@ private:
 
     ElapsedTimer _timer;
     double _sharedTimestamp;
-    std::future<PicturePtr> _futurePicture;
-//    std::deque< uint > _textures;
-
-    typedef SwapSyncObject< int64_t > SyncSwapImage;
-    SyncSwapImage _syncSwapImage;
-
-    PicturePtr _image;
-
-//    uint _popTextureID();
-    double _getDelay() const;
-    void _updateTimestamp( WallToWallChannel& channel );
-    void _synchronizeTimestamp( WallToWallChannel& channel );
-    void _rewind();
+    mutable double _lastTimestamp;
 };
 
-#endif // MOVIEUPDATER_H
+#endif

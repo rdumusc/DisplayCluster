@@ -39,15 +39,14 @@
 
 #include "CachedDataSource.h"
 
-QImage CachedDataSource::getTileImage( const uint tileId,
-                                       const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
+#include "QtImage.h"
 
+ImagePtr CachedDataSource::getTileImage( const uint tileId ) const
+{
     {
         const QMutexLocker lock( &_mutex );
         if( _cache.contains( tileId ))
-            return _cache[tileId];
+            return std::make_shared< QtImage >( _cache[tileId] );
     }
 
     const QImage image = getCachableTileImage( tileId );
@@ -56,7 +55,7 @@ QImage CachedDataSource::getTileImage( const uint tileId,
         const QMutexLocker lock( &_mutex );
         _cache.insert( tileId, image );
     }
-    return image;
+    return std::make_shared< QtImage >( image );
 }
 
 bool CachedDataSource::contains( const uint tileId ) const

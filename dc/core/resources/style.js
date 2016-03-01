@@ -37,9 +37,10 @@ var windowBorderMovingColor= "#F2F2F2";
 var windowBorderResizingColor = "#F2F2F2";
 
 var zoomContextBorderColor = "white";
-var zoomContextBorderWidth = 10;
+var zoomContextBackgroundColor = "black"
+var zoomContextBorderWidth = 5;
 var zoomContextSelectionColor = "#6B9794";
-var zoomContextSelectionWidth = 5;
+var zoomContextSelectionWidth = 3;
 var zoomContextSizeRatio = 0.25
 var zoomContextMaxSizeRatio = 0.75
 var zoomContextRelMargin = 0.25

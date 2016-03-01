@@ -78,6 +78,9 @@ signals:
      */
     void stop();
 
+    /** Emitted after a texture was successfully uploaded. */
+    void uploaded();
+
 private:
     void _onInit( QOpenGLContext* shareContext );
     void _onStop();

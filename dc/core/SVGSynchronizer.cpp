@@ -51,16 +51,12 @@ void SVGSynchronizer::synchronize( WallToWallChannel& channel )
     Q_UNUSED( channel );
 }
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
+ImagePtr SVGSynchronizer::getTileImage( const uint tileId ) const
 {
-    Q_UNUSED( timestamp );
-
     if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
+        return LodSynchronizer::getTileImage( tileId );
 
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
+    return std::make_shared<SVGImage>( _dataSource, tileId );
 }
 
 const DataSource& SVGSynchronizer::getDataSource() const

@@ -39,6 +39,7 @@
 
 #include "FFMPEGFrame.h"
 
+#include <QOpenGLFunctions>
 #include "log.h"
 
 FFMPEGFrame::FFMPEGFrame()
@@ -75,6 +76,11 @@ const AVFrame& FFMPEGFrame::getAVFrame() const
 const uint8_t* FFMPEGFrame::getData() const
 {
     return _avFrame->data[0];
+}
+
+uint FFMPEGFrame::getFormat() const
+{
+    return GL_RGBA;
 }
 
 int FFMPEGFrame::getWidth() const

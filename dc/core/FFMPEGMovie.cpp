@@ -45,26 +45,14 @@
 #include "log.h"
 
 #define MIN_SEEK_DELTA_SEC  0.5
-#define VIDEO_QUEUE_SIZE    4
-#define UNDEFINED_PTS      -1.0
-#define DUMMY_TIMESTAMP    -1
 
 #pragma clang diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 FFMPEGMovie::FFMPEGMovie( const QString& uri )
     : _avFormatContext( 0 )
-    , _ptsPosition( UNDEFINED_PTS )
     , _streamPosition( 0.0 )
     , _isValid( false )
-    , _isAtEOF( false )
-    , _queue( VIDEO_QUEUE_SIZE )
-    , _stopDecoding( true )
-    , _stopConsuming( false )
-    , _seek( false )
-    , _seekPosition( 0.0 )
-    , _targetTimestamp( 0.0 )
-    , _targetChangedSent( false )
 {
     FFMPEGMovie::initGlobalState();
     _isValid = _open( uri );
@@ -72,7 +60,6 @@ FFMPEGMovie::FFMPEGMovie( const QString& uri )
 
 FFMPEGMovie::~FFMPEGMovie()
 {
-    stopDecoding();
     _videoStream.reset();
     _releaseAvFormatContext();
 }
@@ -155,12 +142,7 @@ unsigned int FFMPEGMovie::getHeight() const
 
 double FFMPEGMovie::getPosition() const
 {
-    return _ptsPosition;
-}
-
-bool FFMPEGMovie::isAtEOF() const
-{
-    return _isAtEOF && _queue.empty();
+    return _streamPosition;
 }
 
 double FFMPEGMovie::getDuration() const
@@ -168,208 +150,39 @@ double FFMPEGMovie::getDuration() const
     return _videoStream->getDuration();
 }
 
-double FFMPEGMovie::getFrameDuration() const
-{
-    return _videoStream->getFrameDuration();
-}
-
-void FFMPEGMovie::startDecoding()
-{
-    stopDecoding();
-    _stopDecoding = false;
-    _stopConsuming = false;
-    _consumeThread = std::thread( &FFMPEGMovie::_consume, this );
-    _decodeThread = std::thread( &FFMPEGMovie::_decode, this );
-}
-
-void FFMPEGMovie::stopDecoding()
-{
-    _stopDecoding = true;
-    _stopConsuming = true;
-    _queue.clear();
-    if( _isAtEOF )
-        _seekRequested.notify_one();
-    if( _decodeThread.joinable( ))
-        _decodeThread.join();
-    if( _consumeThread.joinable( ))
-    {
-        _queue.enqueue( std::make_shared<FFMPEGPicture>( 1, 1, PIX_FMT_RGBA,
-                                                         DUMMY_TIMESTAMP ));
-        {
-            std::lock_guard<std::mutex> lock( _targetMutex );
-            _targetChangedSent = true;
-        }
-        _targetChanged.notify_one();
-        _consumeThread.join();
-    }
-    _queue.clear();
-}
-
-bool FFMPEGMovie::isDecoding() const
-{
-    return !_stopDecoding;
-}
-
-std::future<PicturePtr> FFMPEGMovie::getFrame( const double posInSeconds )
-{
-    if( !isDecoding( ))
-        return std::async( std::launch::async, &FFMPEGMovie::_grabSingleFrame,
-                           this, posInSeconds );
-
-    std::lock_guard<std::mutex> lock( _targetMutex );
-    _promise = std::promise<PicturePtr>();
-    _targetTimestamp = posInSeconds;
-    _targetChangedSent = true;
-    _targetChanged.notify_one();
-    return _promise.get_future();
-}
-
-void FFMPEGMovie::_decode()
-{
-    while( !_stopDecoding )
-        _decodeOneFrame();
-}
-
-void FFMPEGMovie::_decodeOneFrame()
-{
-    {
-        std::unique_lock<std::mutex> lock( _seekMutex );
-        if( _seek )
-        {
-            _seekFileTo( _seekPosition );
-            _seekPosition = 0.0;
-            _seek = false;
-            _seekFinished.notify_one();
-            return;
-        }
-        if( _isAtEOF && isDecoding( ))
-        {
-            _seekRequested.wait( lock );
-            return;
-        }
-    }
-    _readVideoFrame();
-}
-
-double FFMPEGMovie::_getPtsDelta() const
-{
-    return _targetTimestamp - getPosition();
-}
-
-void FFMPEGMovie::_consume()
-{
-    while( !_stopConsuming )
-    {
-        {
-            std::unique_lock<std::mutex> lock( _targetMutex );
-            while( !_targetChangedSent )
-                _targetChanged.wait( lock );
-            _targetChangedSent = false;
-
-            if( _stopConsuming )
-                return;
-
-            if( _seekTo( _targetTimestamp ))
-                _ptsPosition = UNDEFINED_PTS; // Reset position after seeking
-        }
-
-        PicturePtr frame;
-        while( !_stopConsuming && _getPtsDelta() >= getFrameDuration() && !isAtEOF( ))
-        {
-            frame = _queue.dequeue();
-            _ptsPosition = _videoStream->getPositionInSec( frame->getTimestamp( ));
-        }
-
-        if( !frame )
-        {
-            auto exception = std::runtime_error( "Frame unavailable error" );
-            _promise.set_exception( std::make_exception_ptr( exception ));
-            return;
-        }
-
-        _promise.set_value( frame );
-    }
-}
-
-bool FFMPEGMovie::_seekTo( double posInSeconds )
+PicturePtr FFMPEGMovie::getFrame( double posInSeconds )
 {
     posInSeconds = std::max( 0.0, std::min( posInSeconds, getDuration( )));
 
-    const double ptsDelta = posInSeconds - getPosition();
-    const double streamDelta = fabs( posInSeconds - _streamPosition );
-
     // Don't seek forward if the delta is small. Always seek backwards.
-    if( ptsDelta >= 0.0 && streamDelta < MIN_SEEK_DELTA_SEC )
-        return false;
-
-    std::unique_lock<std::mutex> lock( _seekMutex );
-    _queue.clear();
-    _seekPosition = posInSeconds;
-    _seek = true;
-    _seekRequested.notify_one();
-    while( _seek )
-        _seekFinished.wait( lock );
-    return true;
-}
-
-bool FFMPEGMovie::_readVideoFrame()
-{
-    int avReadStatus = 0;
-
-    AVPacket packet;
-    av_init_packet( &packet );
-
-    // keep reading frames until we decode a valid video frame
-    while( (avReadStatus = av_read_frame( _avFormatContext, &packet )) >= 0 )
+    const double streamDelta = std::abs( posInSeconds - _streamPosition );
+    if( streamDelta > MIN_SEEK_DELTA_SEC )
     {
-        auto picture = _videoStream->decode( packet );
-        if( picture )
-        {
-            _queue.enqueue( picture );
-            _streamPosition = _videoStream->getPositionInSec( picture->getTimestamp( ));
-
-            // free the packet that was allocated by av_read_frame
-            av_free_packet( &packet );
-            break;
-        }
-        // free the packet that was allocated by av_read_frame
-        av_free_packet( &packet );
+        const double frameDuration = _videoStream->getFrameDuration();
+        const double target = std::max( 0.0, posInSeconds - frameDuration );
+        const int64_t frameIndex = _videoStream->getFrameIndex( target );
+        if( !_videoStream->seekToNearestFullframe( frameIndex ))
+            return PicturePtr();
     }
 
-    // False if file read error or EOF reached
-    _isAtEOF = (avReadStatus < 0);
-    return !_isAtEOF;
-}
-
-bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
-{
-    const int64_t frameIndex = _videoStream->getFrameIndex( timePosInSeconds );
-    if( !_videoStream->seekToNearestFullframe( frameIndex ))
-        return false;
-
-    // Read frames until we reach the correct timestamp
-    int avReadStatus = 0;
+    PicturePtr picture;
+    const int64_t targetTimestamp = _videoStream->getTimestamp( posInSeconds );
 
     AVPacket packet;
     av_init_packet( &packet );
 
-    const double frameDuration = _videoStream->getFrameDuration();
-    const double target = std::max( 0.0, timePosInSeconds - frameDuration );
-    const int64_t targetTimestamp = _videoStream->getTimestamp( target );
-
+    int avReadStatus = 0;
     while( (avReadStatus = av_read_frame( _avFormatContext, &packet )) >= 0 )
     {
         const int64_t timestamp = _videoStream->decodeTimestamp( packet );
         if( timestamp >= targetTimestamp )
         {
-            auto picture = _videoStream->decodePictureForLastPacket();
+            picture = _videoStream->decodePictureForLastPacket();
             // This validity check is to prevent against rare decoding errors
             // and is not inherently part of the seeking process.
             if( picture )
             {
                 _streamPosition = _videoStream->getPositionInSec( timestamp );
-                _queue.clear();
-                _queue.enqueue( picture );
 
                 // free the packet that was allocated by av_read_frame
                 av_free_packet( &packet );
@@ -380,14 +193,5 @@ bool FFMPEGMovie::_seekFileTo( const double timePosInSeconds )
         av_free_packet( &packet );
     }
 
-    _isAtEOF = (avReadStatus < 0);
-    return !_isAtEOF;
-}
-
-PicturePtr FFMPEGMovie::_grabSingleFrame( const double posInSeconds )
-{
-    _seekFileTo( posInSeconds );
-    if( _queue.empty( ))
-        throw std::runtime_error( "Frame unavailable error" );
-    return _queue.dequeue();
+    return picture;
 }

@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2016, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,41 +37,33 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGImage.h"
+#include "StreamImage.h"
 
-SVGImage::SVGImage( const SVGTiler& dataSource, const uint tileId )
-    : _dataSource( dataSource )
-    , _tileId( tileId )
+#include <deflect/Frame.h>
+#include <QOpenGLFunctions>
+
+StreamImage::StreamImage( deflect::FramePtr frame, uint tileIndex )
+    : _frame( frame )
+    , _tileIndex( tileIndex )
 {}
 
-int SVGImage::getWidth() const
+int StreamImage::getWidth() const
 {
-    return _image->getWidth();
+    return _frame->segments.at( _tileIndex ).parameters.width;
 }
 
-int SVGImage::getHeight() const
+int StreamImage::getHeight() const
 {
-    return _image->getHeight();
+    return _frame->segments.at( _tileIndex ).parameters.height;
 }
 
-const uint8_t* SVGImage::getData() const
+const uint8_t* StreamImage::getData() const
 {
-    return _image->getData();
+    return reinterpret_cast< const uint8_t* >(
+                _frame->segments.at( _tileIndex ).imageData.constData( ));
 }
 
-uint SVGImage::getFormat() const
+uint StreamImage::getFormat() const
 {
-    return _image->getFormat();
-}
-
-bool SVGImage::isGpuImage() const
-{
-    return true;
-}
-
-bool SVGImage::generateGpuImage()
-{
-    // Call getTileImage so that the image gets cached for the next request
-    _image = _dataSource.getTileImage( _tileId );
-    return true;
+    return GL_RGBA;
 }

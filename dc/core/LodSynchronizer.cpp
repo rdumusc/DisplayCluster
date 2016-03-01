@@ -93,15 +93,9 @@ QString LodSynchronizer::getStatistics() const
     return stats;
 }
 
-ImagePtr LodSynchronizer::getTileImage( const uint tileIndex,
-                                        const uint64_t timestamp ) const
+ImagePtr LodSynchronizer::getTileImage( const uint tileIndex ) const
 {
-    Q_UNUSED( timestamp );
-
-    const QImage image = getDataSource().getTileImage( tileIndex, 0 );
-    if( image.isNull( ))
-        return ImagePtr();
-    return std::make_shared<QtImage>( image );
+    return getDataSource().getTileImage( tileIndex );
 }
 
 TilePtr LodSynchronizer::getZoomContextTile() const

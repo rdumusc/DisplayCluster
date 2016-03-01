@@ -75,9 +75,6 @@ public:
     /** Synchronize content advance accross processes.*/
     virtual void synchronize( WallToWallChannel& channel ) = 0;
 
-    /** return true if a redraw is needed because of pending tiles. */
-    virtual bool needRedraw() const = 0;
-
     /** The total area covered by the tiles (may depend on current LOD). */
     virtual QSize getTilesArea() const = 0;
 
@@ -85,10 +82,7 @@ public:
     virtual QString getStatistics() const = 0;
 
     /** Get the image for a given tile index. @threadsafe */
-    virtual ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const = 0;
-
-    /** Get the timestamp at the time of requesting a new tile texture. */
-    virtual uint64_t getCurrentTimestamp() const { return 0; }
+    virtual ImagePtr getTileImage( uint tileIndex ) const = 0;
 
     /** Notify the window to add a tile for the zoom context. */
     virtual TilePtr getZoomContextTile() const { return TilePtr(); }

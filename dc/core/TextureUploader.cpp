@@ -136,6 +136,9 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
     // notify tile that its texture has been updated
     QMetaObject::invokeMethod( tile.get(), "markBackTextureUpdated",
                                Qt::QueuedConnection );
+
+    // notify RenderController for redraw
+    emit uploaded();
 }
 
 void TextureUploader::_upload( const Image& image, const uint textureID )
@@ -168,7 +171,8 @@ void TextureUploader::_upload( const Image& image, const uint textureID )
    _gl->glActiveTexture( GL_TEXTURE0 );
    _gl->glBindTexture( GL_TEXTURE_2D, textureID );
    _gl->glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, image.getWidth(),
-                         image.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+                         image.getHeight(), image.getFormat(),
+                         GL_UNSIGNED_BYTE, 0 );
 
    // unbind texture & PBO
    _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );

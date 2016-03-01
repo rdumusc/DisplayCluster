@@ -41,14 +41,12 @@
 
 #include "ContentWindow.h"
 #include "PixelStreamUpdater.h"
-#include "QtImage.h"
 #include "Tile.h"
 #include "WallToWallChannel.h"
 #include "ZoomHelper.h"
 
 PixelStreamSynchronizer::PixelStreamSynchronizer()
     : TiledSynchronizer( TileSwapPolicy::SwapTilesSynchronously )
-    , _frameIndex( 0 )
     , _tilesDirty( true )
     , _updateExistingTiles( false )
 {}
@@ -118,22 +116,16 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex,
-                                                const uint64_t timestamp ) const
+ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const
 {
     if( !_updater )
         return ImagePtr();
 
-    const QImage image = _updater->getTileImage( tileIndex, timestamp );
-    if( image.isNull( ))
-        return ImagePtr();
-
-    return std::make_shared<QtImage>( image );
+    return _updater->getTileImage( tileIndex );
 }
 
-void PixelStreamSynchronizer::_onPictureUpdated( const uint64_t frameIndex )
+void PixelStreamSynchronizer::_onPictureUpdated()
 {
-    _frameIndex = frameIndex;
     _tilesDirty = true;
     _updateExistingTiles = true;
 }

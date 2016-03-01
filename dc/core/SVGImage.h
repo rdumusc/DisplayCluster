@@ -44,8 +44,6 @@
 
 #include "SVGTiler.h"
 
-#include <QImage>
-
 /**
  * Image wrapper for an SVG tile.
  *
@@ -56,7 +54,7 @@ class SVGImage : public Image
 {
 public:
     /** Constructor. */
-    SVGImage( SVGTiler& dataSource, uint tileId );
+    SVGImage( const SVGTiler& dataSource, uint tileId );
 
     /** @copydoc Image::getWidth */
     int getWidth() const override;
@@ -67,8 +65,8 @@ public:
     /** @copydoc Image::getData */
     const uint8_t* getData() const override;
 
-    /** @copydoc Image::getTimestamp */
-    int64_t getTimestamp() const override;
+    /** @copydoc Image::getFormat */
+    uint getFormat() const override;
 
     /** @copydoc Image::isGpuImage */
     bool isGpuImage() const final;
@@ -77,9 +75,9 @@ public:
     bool generateGpuImage() final;
 
 private:
-    SVGTiler& _dataSource;
+    const SVGTiler& _dataSource;
     const uint _tileId;
-    QImage _image;
+    ImagePtr _image;
 };
 
 #endif

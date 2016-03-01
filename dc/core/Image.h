@@ -60,8 +60,8 @@ public:
     /** @return the pointer to the pixels. */
     virtual const uint8_t* getData() const = 0;
 
-    /** @return the timestamp this image was created for. */
-    virtual int64_t getTimestamp() const = 0;
+    /** @return the OpenGL pixel format of the image data. */
+    virtual uint getFormat() const = 0;
 
     /** @return true if the image is a GPU image and need special processing. */
     virtual bool isGpuImage() const { return false; }

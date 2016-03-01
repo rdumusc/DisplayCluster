@@ -39,9 +39,10 @@
 
 #include "QtImage.h"
 
-QtImage::QtImage(const QImage& image, const int64_t timestamp )
+#include <QOpenGLFunctions>
+
+QtImage::QtImage( const QImage& image )
     : _image( image )
-    , _timestamp( timestamp )
 {}
 
 int QtImage::getWidth() const
@@ -59,7 +60,7 @@ const uint8_t* QtImage::getData() const
     return _image.constBits();
 }
 
-int64_t QtImage::getTimestamp() const
+uint QtImage::getFormat() const
 {
-    return _timestamp;
+    return GL_BGRA;
 }

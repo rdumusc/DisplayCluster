@@ -114,11 +114,6 @@ void QmlWindowRenderer::synchronize( WallToWallChannel& channel )
     _synchronizer->synchronize( channel );
 }
 
-bool QmlWindowRenderer::needRedraw() const
-{
-    return _synchronizer->needRedraw();
-}
-
 QQuickItem* QmlWindowRenderer::getQuickItem()
 {
     return _windowItem;

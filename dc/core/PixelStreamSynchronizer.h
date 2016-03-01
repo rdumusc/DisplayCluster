@@ -76,20 +76,17 @@ public:
     QString getStatistics() const override;
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
-
-    uint64_t getCurrentTimestamp() const override { return _frameIndex; }
+    ImagePtr getTileImage( uint tileIndex ) const override;
 
 private:
     PixelStreamUpdaterSharedPtr _updater;
     FpsCounter _fpsCounter;
-    uint64_t _frameIndex;
 
     bool _tilesDirty;
     bool _updateExistingTiles;
     QSize _tilesArea;
 
-    void _onPictureUpdated( uint64_t frameIndex );
+    void _onPictureUpdated();
 };
 
 #endif

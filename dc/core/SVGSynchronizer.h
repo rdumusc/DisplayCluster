@@ -60,7 +60,7 @@ public:
     void synchronize( WallToWallChannel& channel ) final;
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileId, uint64_t timestamp ) const final;
+    ImagePtr getTileImage( uint tileId ) const final;
 
 private:
     SVGTiler _dataSource;
