@@ -367,15 +367,9 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
 }
 
-QImage DynamicTexture::getTileImage( const uint tileId,
-                                     const uint64_t timestamp ) const
+QImage DynamicTexture::getCachableTileImage( const uint tileId ) const
 {
-    Q_UNUSED( timestamp );
-
-    QMutexLocker lock( &_tilesCacheMutex );
-    if( !_tilesCache.count( tileId ))
-        _tilesCache[tileId] = QImage( getTileFilename( tileId ));
-    return _tilesCache[tileId];
+    return QImage( getTileFilename( tileId ));
 }
 
 Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,

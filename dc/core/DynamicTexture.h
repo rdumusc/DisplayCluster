@@ -41,12 +41,10 @@
 
 #include "types.h"
 
-#include "DataSource.h"
+#include "CachedDataSource.h"
 #include "LodTools.h"
 
-#include <QHash>
 #include <QImage>
-#include <QMutex>
 
 /**
  * A dynamically loaded large scale image.
@@ -56,7 +54,7 @@
  * (2) Direct reading from a large image
  * @see generateImagePyramid()
  */
-class DynamicTexture : public DataSource,
+class DynamicTexture : public CachedDataSource,
         public std::enable_shared_from_this<DynamicTexture>
 {
 public:
@@ -101,10 +99,10 @@ public:
 
 
     /**
-     * @copydoc DataSource::getTileImage
+     * @copydoc CachedDataSource::getCachableTileImage
      * @threadsafe
      */
-    QImage getTileImage( uint tileId, uint64_t timestamp ) const final;
+    QImage getCachableTileImage( uint tileId ) const final;
 
     /** @copydoc DataSource::getTileRect */
     QRect getTileRect( uint tileId ) const final;
@@ -128,9 +126,6 @@ public:
     bool generateImagePyramid( const QString& outputFolder );
 
 private:
-    mutable QMutex _tilesCacheMutex;
-    mutable QHash<uint, QImage> _tilesCache;
-
     typedef std::map<size_t, LodTools::TileInfos> LodTilesMap;
     mutable LodTilesMap _lodTilesMapCache;
 

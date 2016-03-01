@@ -52,6 +52,7 @@ endif()
 
 list(APPEND DCCORE_PUBLIC_HEADERS
   types.h
+  CachedDataSource.h
   ContentFactory.h
   ContentLoader.h
   ContentType.h
@@ -168,6 +169,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
 
 list(APPEND DCCORE_SOURCES
   BasicSynchronizer.cpp
+  CachedDataSource.cpp
   Content.cpp
   ContentAction.cpp
   ContentActionsModel.cpp

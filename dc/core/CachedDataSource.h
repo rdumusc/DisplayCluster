@@ -37,55 +37,31 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFTiler.h"
+#ifndef CACHEDDATASOURCE_H
+#define CACHEDDATASOURCE_H
 
-#include "LodTools.h"
+#include "DataSource.h"
 
-namespace
+#include <QImage>
+#include <QMap>
+#include <QMutex>
+
+/**
+ * A data source which maintains a cache of the requested tiles.
+ */
+class CachedDataSource : public DataSource
 {
-const uint tileSize = 512;
-const qreal maxScaleFactor = 5;
-}
+public:
+    /** @copydoc DataSource::getTileImage @threadsafe */
+    QImage getTileImage( uint tileId, uint64_t timestamp ) const final;
 
-PDFTiler::PDFTiler( PDF& pdf )
-    : _pdf( pdf )
-    , _lodTool( _pdf.getSize() * maxScaleFactor, tileSize )
-{}
+protected:
+    /** Get a tile image which will be cached. @threadsafe */
+    virtual QImage getCachableTileImage( uint tileId ) const = 0;
 
-QImage PDFTiler::getCachableTileImage( const uint tileId ) const
-{
-    const QRect tile = getTileRect( tileId );
-    return _pdf.renderToImage( tile.size(), _getNormalizedTileRect( tileId ));
-}
+private:
+    mutable QMutex _mutex;
+    mutable QMap<uint,QImage> _cache;
+};
 
-QRect PDFTiler::getTileRect( const uint tileId ) const
-{
-    return _lodTool.getTileCoord( tileId );
-}
-
-QSize PDFTiler::getTilesArea( const uint lod ) const
-{
-    return _lodTool.getTilesArea( lod );
-}
-
-Indices PDFTiler::computeVisibleSet( const QRectF& visibleTilesArea,
-                                     const uint lod ) const
-{
-    return _lodTool.getVisibleTiles( visibleTilesArea, lod );
-}
-
-uint PDFTiler::getMaxLod() const
-{
-    return _lodTool.getMaxLod();
-}
-
-QRectF PDFTiler::_getNormalizedTileRect( const uint tileId ) const
-{
-    const QRectF tile( getTileRect( tileId ));
-    const uint lod = _lodTool.getTileIndex( tileId ).lod;
-    const QSize area = getTilesArea( lod );
-
-    const auto t = QTransform::fromScale( 1.0 / area.width(),
-                                          1.0 / area.height( ));
-    return t.mapRect( tile );
-}
+#endif

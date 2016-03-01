@@ -52,7 +52,7 @@ class DataSource
 public:
     virtual ~DataSource() {}
 
-    /** Get a segment by its tile-index. @threadsafe */
+    /** Get a tile image by its id. @threadsafe */
     virtual QImage getTileImage( uint tileId, uint64_t timestamp ) const = 0;
 
     /** Get the coordinates of a tile. */

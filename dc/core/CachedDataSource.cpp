@@ -37,55 +37,15 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "PDFTiler.h"
+#include "CachedDataSource.h"
 
-#include "LodTools.h"
-
-namespace
+QImage CachedDataSource::getTileImage( const uint tileId,
+                                       const uint64_t timestamp ) const
 {
-const uint tileSize = 512;
-const qreal maxScaleFactor = 5;
-}
+    Q_UNUSED( timestamp );
 
-PDFTiler::PDFTiler( PDF& pdf )
-    : _pdf( pdf )
-    , _lodTool( _pdf.getSize() * maxScaleFactor, tileSize )
-{}
-
-QImage PDFTiler::getCachableTileImage( const uint tileId ) const
-{
-    const QRect tile = getTileRect( tileId );
-    return _pdf.renderToImage( tile.size(), _getNormalizedTileRect( tileId ));
-}
-
-QRect PDFTiler::getTileRect( const uint tileId ) const
-{
-    return _lodTool.getTileCoord( tileId );
-}
-
-QSize PDFTiler::getTilesArea( const uint lod ) const
-{
-    return _lodTool.getTilesArea( lod );
-}
-
-Indices PDFTiler::computeVisibleSet( const QRectF& visibleTilesArea,
-                                     const uint lod ) const
-{
-    return _lodTool.getVisibleTiles( visibleTilesArea, lod );
-}
-
-uint PDFTiler::getMaxLod() const
-{
-    return _lodTool.getMaxLod();
-}
-
-QRectF PDFTiler::_getNormalizedTileRect( const uint tileId ) const
-{
-    const QRectF tile( getTileRect( tileId ));
-    const uint lod = _lodTool.getTileIndex( tileId ).lod;
-    const QSize area = getTilesArea( lod );
-
-    const auto t = QTransform::fromScale( 1.0 / area.width(),
-                                          1.0 / area.height( ));
-    return t.mapRect( tile );
+    const QMutexLocker lock( &_mutex );
+    if( !_cache.contains( tileId ))
+        _cache.insert( tileId, getCachableTileImage( tileId ));
+    return _cache[tileId];
 }
