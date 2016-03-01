@@ -141,10 +141,6 @@ void WallWindow::exposeEvent( QExposeEvent* )
         _glContext->moveToThread( _quickRendererThread );
         _quickRenderer->moveToThread( _quickRendererThread );
 
-        connect( _quickRenderer, &QuickRenderer::frameSwapped,
-                 _displayGroupRenderer,
-                 &DisplayGroupRenderer::updateRenderedFrames );
-
         _quickRendererThread->setObjectName( "Render" );
         _quickRendererThread->start();
 
@@ -176,6 +172,10 @@ void WallWindow::startQuick( const WallConfiguration& config )
     const QRect& screenRect = config.getScreenRect( screenIndex );
     _displayGroupRenderer = new DisplayGroupRenderer( *this, *_provider,
                                                       screenRect );
+    connect( _quickRenderer, &QuickRenderer::frameSwapped,
+             _displayGroupRenderer,
+             &DisplayGroupRenderer::updateRenderedFrames );
+
     _testPattern = new TestPattern( config, _rootItem );
     _testPattern->setPosition( -screenRect.topLeft( ));
 }
