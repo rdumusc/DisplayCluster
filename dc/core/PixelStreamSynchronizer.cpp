@@ -98,6 +98,8 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
         _updater->getNextFrame();
     }
 
+    _updater->synchronizeFramesSwap( channel );
+
     if( _tilesDirty )
     {
         TiledSynchronizer::updateTiles( *_updater, _updateExistingTiles );

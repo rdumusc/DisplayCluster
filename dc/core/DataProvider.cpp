@@ -78,20 +78,6 @@ DataProvider::getStreamDataSource( const QString& uri )
     return updater;
 }
 
-void DataProvider::synchronize( WallToWallChannel& channel )
-{
-    auto it = _streamUpdaters.begin();
-    while( it != _streamUpdaters.end( )) {
-        if( auto updater = it->second.lock( ))
-        {
-            updater->synchronizeFramesSwap( channel );
-            ++it;
-        }
-        else
-            it = _streamUpdaters.erase( it );
-    }
-}
-
 void DataProvider::loadAsync( ContentSynchronizerSharedPtr source,
                               TileWeakPtr tile )
 {

@@ -61,9 +61,6 @@ public:
     /** Get the data source for the given stream uri. */
     PixelStreamUpdaterSharedPtr getStreamDataSource( const QString& uri );
 
-    /** Update the contents, using the channel to synchronize processes. */
-    void synchronize( WallToWallChannel& channel );
-
 public slots:
     /** Load an image asynchronously. */
     void loadAsync( ContentSynchronizerSharedPtr source, TileWeakPtr tile );

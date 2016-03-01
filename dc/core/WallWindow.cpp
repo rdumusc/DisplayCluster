@@ -191,7 +191,6 @@ bool WallWindow::syncAndRender()
         return true;
 
     _wallChannel.synchronizeClock();
-    _provider->synchronize( _wallChannel );
     _displayGroupRenderer->synchronize( _wallChannel );
 
     _renderControl->polishItems();
