@@ -56,20 +56,47 @@ class Tile : public QQuickItem, public std::enable_shared_from_this<Tile>
     Q_OBJECT
     Q_DISABLE_COPY( Tile )
 
-    Q_PROPERTY( uint index READ getIndex CONSTANT )
+    Q_PROPERTY( uint id READ getId CONSTANT )
     Q_PROPERTY( bool showBorder READ getShowBorder WRITE setShowBorder
                 NOTIFY showBorderChanged )
 
 public:
-    Tile( const uint index, const QRect& rect );
+    enum SizePolicy
+    {
+        AdjustToTexture,
+        FillParent
+    };
 
-    uint getIndex() const;
+    /**
+     * Constructor
+     * @param id the unique identifier for this tile
+     * @param rect the nominal size of the tile's texture
+     */
+    Tile( uint id, const QRect& rect );
+
+    /** @return the unique identifier for this tile. */
+    uint getId() const;
+
+    /** @return true if this tile displays its borders. */
     bool getShowBorder() const;
 
+    /**
+     * Request an update of the back texture, resing it if necessary.
+     * @param rect the new size for the back texture.
+     */
     void update( const QRect& rect );
 
+    /** @return the back texture's identifier. */
     uint getBackGlTexture() const;
+
+    /** @return the dimensions of the back texture. */
     QSize getBackGlTextureSize() const;
+
+    /**
+     * Set the size policy.
+     * @param policy defines how the tile should resize and position itself
+     */
+    void setSizePolicy( SizePolicy policy );
 
 signals:
     /** Notifier for the showBorder property. */
@@ -82,7 +109,7 @@ signals:
      */
     void textureReady( TilePtr tile );
 
-    /** Notifier for the DoubleBufferedImage to swap the texture/image. */
+    /** Notify that the back texture has been updated and it can be swapped. */
     void textureUpdated( TilePtr tile );
 
 public slots:
@@ -100,7 +127,8 @@ protected:
     QSGNode* updatePaintNode( QSGNode* oldNode, UpdatePaintNodeData* ) override;
 
 private:
-    uint _index;
+    const uint _tileId;
+    SizePolicy _policy;
 
     bool _swap;
     bool _resize;
@@ -112,6 +140,7 @@ private:
     QuadLineNode* _border;
 
     void _updateBorderNode( TextureNode* parentNode );
+    void _onParentChanged( QQuickItem* newParent );
 };
 
 #endif

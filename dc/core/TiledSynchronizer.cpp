@@ -57,10 +57,10 @@ bool TiledSynchronizer::needRedraw() const
 void TiledSynchronizer::onSwapReady( TilePtr tile )
 {
     if( _policy == SwapTilesSynchronously &&
-            _syncSet.find( tile->getIndex( )) != _syncSet.end( ))
+            _syncSet.find( tile->getId( )) != _syncSet.end( ))
     {
         _tilesReadyToSwap.insert( tile );
-        _tilesReadySet.insert( tile->getIndex( ));
+        _tilesReadySet.insert( tile->getId( ));
     }
     else
         tile->swapImage();

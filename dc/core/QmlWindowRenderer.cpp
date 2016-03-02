@@ -51,6 +51,7 @@ namespace
 {
 const QUrl QML_WINDOW_URL( "qrc:/qml/core/WallContentWindow.qml" );
 const QString TILES_PARENT_OBJECT_NAME( "TilesParent" );
+const QString ZOOM_CONTEXT_PARENT_OBJECT_NAME( "ZoomContextParent" );
 }
 
 QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
@@ -83,6 +84,8 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
     _windowItem = _createQmlItem( QML_WINDOW_URL );
     _windowItem->setParentItem( &parentItem );
     _windowItem->setProperty( "isBackground", isBackground );
+
+    _addZoomContextTile();
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
@@ -132,7 +135,7 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
              _synchronizer.get(), &ContentSynchronizer::onTextureReady,
              Qt::QueuedConnection );
 
-    _tiles[tile->getIndex()] = tile;
+    _tiles[tile->getId()] = tile;
 
     auto item = _windowItem->findChild<QQuickItem*>( TILES_PARENT_OBJECT_NAME );
     tile->setParentItem( item );
@@ -140,6 +143,28 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
     connect( item, SIGNAL( showTilesBordersValueChanged( bool )),
              tile.get(), SLOT( setShowBorder( bool )));
     tile->setShowBorder( item->property( "showTilesBorder" ).toBool( ));
+}
+
+void QmlWindowRenderer::_addZoomContextTile()
+{
+    TilePtr tile = _synchronizer->getZoomContextTile();
+    if( !tile )
+        return;
+
+    tile->setSizePolicy( Tile::FillParent );
+
+    // Swap immediately, without going through the synchronizer
+    connect( tile.get(), &Tile::textureUpdated,
+             tile.get(), &Tile::swapImage );
+
+    connect( tile.get(), &Tile::textureReady,
+             _synchronizer.get(), &ContentSynchronizer::onTextureReady,
+             Qt::QueuedConnection );
+
+    _zoomContextTile = tile;
+
+    auto item = _windowItem->findChild<QQuickItem*>( ZOOM_CONTEXT_PARENT_OBJECT_NAME );
+    tile->setParentItem( item );
 }
 
 void QmlWindowRenderer::_removeTile( const uint tileIndex )

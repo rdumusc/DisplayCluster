@@ -51,8 +51,9 @@ const QColor borderColor( "lightgreen" );
 
 // false-positive on qt signals for Q_PROPERTY notifiers
 // cppcheck-suppress uninitMemberVar
-Tile::Tile( const uint index, const QRect& rect )
-    : _index( index )
+Tile::Tile( const uint id, const QRect& rect )
+    : _tileId( id )
+    , _policy( AdjustToTexture )
     , _swap( false )
     , _resize( false )
     , _nextCoord( rect )
@@ -63,11 +64,13 @@ Tile::Tile( const uint index, const QRect& rect )
 {
     setFlag( ItemHasContents, true );
     setVisible( false );
+
+    connect( this, &QQuickItem::parentChanged, this, &Tile::_onParentChanged );
 }
 
-uint Tile::getIndex() const
+uint Tile::getId() const
 {
-    return _index;
+    return _tileId;
 }
 
 bool Tile::getShowBorder() const
@@ -107,14 +110,23 @@ QSize Tile::getBackGlTextureSize() const
     return _nextCoord.size();
 }
 
+void Tile::setSizePolicy( const Tile::SizePolicy policy )
+{
+    _policy = policy;
+}
+
 void Tile::swapImage()
 {
     _swap = true;
 
     if( !isVisible( ))
         setVisible( true );
-    setPosition( _nextCoord.topLeft( ));
-    setSize( _nextCoord.size( ));
+
+    if( _policy == AdjustToTexture )
+    {
+        setPosition( _nextCoord.topLeft( ));
+        setSize( _nextCoord.size( ));
+    }
 
     QQuickItem::update();
 }
@@ -139,7 +151,7 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
 
     if( _resize )
     {
-        node->resize( _nextCoord.size( ));
+        node->resizeBackTexture( _nextCoord.size( ));
         _resize = false;
     }
 
@@ -150,6 +162,8 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
         _updateBackTexture = false;
         emit textureReady( shared_from_this( ));
     }
+
+    node->setRect( boundingRect( ));
 
     _updateBorderNode( node );
 
@@ -175,4 +189,20 @@ void Tile::_updateBorderNode( TextureNode* parentNode )
         delete _border;
         _border = nullptr;
     }
+}
+
+void Tile::_onParentChanged( QQuickItem* newParent )
+{
+    if( !newParent || _policy != FillParent )
+        return;
+
+    setWidth( newParent->width( ));
+    setHeight( newParent->height( ));
+
+    connect( newParent, &QQuickItem::widthChanged, [this]() {
+        setWidth( parentItem()->width( ));
+    } );
+    connect( newParent, &QQuickItem::heightChanged, [this]() {
+        setHeight( parentItem()->height( ));
+    } );
 }

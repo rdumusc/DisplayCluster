@@ -55,7 +55,7 @@ public:
 
     void swap();
 
-    void resize( const QSize& size );
+    void resizeBackTexture( const QSize& size );
 
 private:
     QQuickWindow* _window;

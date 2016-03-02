@@ -48,11 +48,8 @@ BaseContentWindow {
         }
     }
 
-//    ZoomContext {
-//        id: zoomContext
-//        image.source: visible ? imagesource : ""
-//        image.cache: contentsync.allowsTextureCaching
-//    }
+    ZoomContext {
+    }
 
     Text {
         id: statistics

@@ -69,6 +69,9 @@ public:
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 
+    /** @copydoc ContentSynchronizer::getZoomContextTile */
+    TilePtr getZoomContextTile() const override;
+
 protected:
     /**
      * Get the appropriate LOD for a given display size.

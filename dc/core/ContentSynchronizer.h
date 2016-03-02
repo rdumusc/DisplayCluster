@@ -90,6 +90,9 @@ public:
     /** Get the timestamp at the time of requesting a new tile texture. */
     virtual uint64_t getCurrentTimestamp() const { return 0; }
 
+    /** Notify the window to add a tile for the zoom context. */
+    virtual TilePtr getZoomContextTile() const { return TilePtr(); }
+
     /** @return a ContentSynchronizer for the given content. */
     static ContentSynchronizerPtr create( ContentPtr content );
 

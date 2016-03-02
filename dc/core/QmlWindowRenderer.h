@@ -81,6 +81,7 @@ public:
 
 private slots:
     void _addTile( TilePtr tile );
+    void _addZoomContextTile();
     void _removeTile( uint tileIndex );
     void _updateTile( uint tileIndex, const QRect& coordinates );
 
@@ -93,6 +94,8 @@ private:
 
     typedef std::map<uint,TilePtr> TilesMap;
     TilesMap _tiles;
+
+    TilePtr _zoomContextTile;
 
     QQuickItem* _createQmlItem( const QUrl& url );
 };

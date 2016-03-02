@@ -111,11 +111,11 @@ void DataProvider::_load( ContentSynchronizerSharedPtr source,
         put_flog( LOG_DEBUG, "Tile expired");
         return;
     }
-    ImagePtr image = source->getTileImage( tile->getIndex(), timestamp );
+    ImagePtr image = source->getTileImage( tile->getId(), timestamp );
     if( !image )
     {
         put_flog( LOG_DEBUG, "Empty image for tile: %d, index: %d",
-                  tile->getIndex(), timestamp );
+                  tile->getId(), timestamp );
         return;
     }
     emit imageLoaded( image, tile_ );

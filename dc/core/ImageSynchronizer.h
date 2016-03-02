@@ -57,6 +57,9 @@ public:
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 
+    /** @copydoc ContentSynchronizer::getZoomContextTile */
+    TilePtr getZoomContextTile() const;
+
 private:
     QString _uri;
 };

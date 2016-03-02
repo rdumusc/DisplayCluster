@@ -46,7 +46,6 @@ TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
     , _frontTexture( window->createTextureFromId( 0 , QSize( 1 ,1 )))
     , _backTexture( _createTexture( size ))
 {
-    setRect( QRectF( QPointF( 0, 0 ), size ));
     setTexture( _frontTexture.get( ));
     setFiltering( QSGTexture::Linear );
 }
@@ -63,13 +62,11 @@ void TextureNode::swap()
     setTexture( _frontTexture.get( ));
     markDirty( DirtyMaterial );
 
-    setRect( QRectF( QPointF( 0, 0 ), _frontTexture->textureSize( )));
-
     if( _backTexture->textureSize() != _frontTexture->textureSize( ))
         _backTexture = _createTexture( _frontTexture->textureSize( ));
 }
 
-void TextureNode::resize( const QSize& size )
+void TextureNode::resizeBackTexture( const QSize& size )
 {
     if( size == _backTexture->textureSize( ))
         return;

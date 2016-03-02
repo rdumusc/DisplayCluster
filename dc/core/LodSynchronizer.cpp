@@ -41,6 +41,7 @@
 
 #include "ContentWindow.h"
 #include "QtImage.h"
+#include "Tile.h"
 #include "ZoomHelper.h"
 
 #include <QTextStream>
@@ -98,6 +99,12 @@ ImagePtr LodSynchronizer::getTileImage( const uint tileIndex,
     if( image.isNull( ))
         return ImagePtr();
     return std::make_shared<QtImage>( image );
+}
+
+TilePtr LodSynchronizer::getZoomContextTile() const
+{
+    const auto rect = getDataSource().getTileRect( 0 );
+    return std::make_shared<Tile>( 0, rect );
 }
 
 uint LodSynchronizer::getLod( const QSize& targetDisplaySize ) const

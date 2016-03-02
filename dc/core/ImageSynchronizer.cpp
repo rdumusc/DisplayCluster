@@ -40,8 +40,10 @@
 #include "ImageSynchronizer.h"
 
 #include "QtImage.h"
+#include "Tile.h"
 
 #include <QImage>
+#include <QImageReader>
 
 ImageSynchronizer::ImageSynchronizer( const QString& uri )
     : _uri( uri )
@@ -57,4 +59,10 @@ ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex,
     if( image.isNull( ))
         return ImagePtr();
     return std::make_shared<QtImage>( image );
+}
+
+TilePtr ImageSynchronizer::getZoomContextTile() const
+{
+    const QRect rect( QPoint( 0, 0 ), QImageReader( _uri ).size( ));
+    return std::make_shared<Tile>( 0, rect );
 }
