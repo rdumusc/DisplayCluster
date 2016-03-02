@@ -28,8 +28,6 @@ var statisticsBorderMargin = 10;
 var statisticsFontSize = 24;
 var statisticsFontColor = "red";
 
-var segmentBorderColor = "lightgreen";
-
 var windowTitleFontSize = 45;
 var windowTitleHeight = 100;
 var windowBorderWidth = 12;

@@ -40,18 +40,14 @@
 #ifndef TEXTURENODE_H
 #define TEXTURENODE_H
 
-#include <QObject>
 #include <QSGSimpleTextureNode>
-#include <QMutex>
 #include <memory>
 
 class QQuickWindow;
 
 /** A node with a double texture buffer. */
-class TextureNode : public QObject, public QSGSimpleTextureNode
+class TextureNode : public QSGSimpleTextureNode
 {
-    Q_OBJECT
-
 public:
     TextureNode( const QSize& size, QQuickWindow* window );
 

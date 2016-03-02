@@ -46,6 +46,7 @@
 #include <memory> // std::enable_shared_from_this
 
 class TextureNode;
+class QuadLineNode;
 
 /**
  * Qml item to render an image tile with texture double-buffering.
@@ -56,11 +57,14 @@ class Tile : public QQuickItem, public std::enable_shared_from_this<Tile>
     Q_DISABLE_COPY( Tile )
 
     Q_PROPERTY( uint index READ getIndex CONSTANT )
+    Q_PROPERTY( bool showBorder READ getShowBorder WRITE setShowBorder
+                NOTIFY showBorderChanged )
 
 public:
     Tile( const uint index, const QRect& rect );
 
     uint getIndex() const;
+    bool getShowBorder() const;
 
     void update( const QRect& rect );
 
@@ -68,6 +72,9 @@ public:
     QSize getBackGlTextureSize() const;
 
 signals:
+    /** Notifier for the showBorder property. */
+    void showBorderChanged();
+
     /**
      * Notifies that the back texture is ready to be updated.
      * It is emitted after the texture has been created on the render thread,
@@ -79,6 +86,9 @@ signals:
     void textureUpdated( TilePtr tile );
 
 public slots:
+    /** Show a border around the tile (for debugging purposes). */
+    void setShowBorder( bool set );
+
     /** Swap the front and back texture. */
     void swapImage();
 
@@ -97,6 +107,11 @@ private:
     QRect _nextCoord;
     bool _updateBackTexture;
     uint _backGlTexture;
+
+    bool _showBorder;
+    QuadLineNode* _border;
+
+    void _updateBorderNode( TextureNode* parentNode );
 };
 
 #endif

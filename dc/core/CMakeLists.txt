@@ -82,6 +82,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   PixelStreamContent.h
   qmlUtils.h
   QtImage.h
+  QuadLineNode.h
   SessionCommandHandler.h
   State.h
   StatePreview.h
@@ -89,6 +90,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   SVGContent.h
   TestPattern.h
   TextureContent.h
+  TextureNode.h
   VisibilityHelper.h
   ZoomInteractionDelegate.h
   ZoomHelper.h
@@ -144,7 +146,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   RenderController.h
   SVGSynchronizer.h
   SVGTextureFactory.h
-  TextureNode.h
   TextureUploader.h
   Tile.h
   TiledSynchronizer.h
@@ -221,6 +222,7 @@ list(APPEND DCCORE_SOURCES
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
   QtImage.cpp
+  QuadLineNode.cpp
   RenderController.cpp
   SessionCommandHandler.cpp
   State.cpp

@@ -136,6 +136,10 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
 
     auto item = _windowItem->findChild<QQuickItem*>( TILES_PARENT_OBJECT_NAME );
     tile->setParentItem( item );
+
+    connect( item, SIGNAL( showTilesBordersValueChanged( bool )),
+             tile.get(), SLOT( setShowBorder( bool )));
+    tile->setShowBorder( item->property( "showTilesBorder" ).toBool( ));
 }
 
 void QmlWindowRenderer::_removeTile( const uint tileIndex )

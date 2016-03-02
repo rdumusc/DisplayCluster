@@ -39,6 +39,8 @@
 
 #include "LodTools.h"
 
+#include <cmath>
+
 LodTools::LodTools( const QSize& contentSize, const uint tileSize )
     : _contentSize( contentSize )
     , _tileSize( tileSize )

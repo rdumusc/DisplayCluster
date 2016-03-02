@@ -23,16 +23,12 @@ BaseContentWindow {
             id: contentItem
             objectName: "TilesParent"
 
-//            Repeater {
-//                model: contentsync.tiles
-//                    Rectangle {
-//                        visible: options.showContentTiles
-//                        anchors.fill: parent
-//                        border.color: Style.segmentBorderColor
-//                        color: "transparent"
-//                    }
-//                }
-//            }
+            // Tiles bind to this signal from c++ to toggle borders visibility
+            property bool showTilesBorder: options.showContentTiles
+            // The auto-generated notifier does not emit the new value, do it
+            signal showTilesBordersValueChanged(bool value)
+            onShowTilesBorderChanged: showTilesBordersValueChanged(showTilesBorder)
+
             transform: [
                 // Adjust tiles to content area
                 Scale {

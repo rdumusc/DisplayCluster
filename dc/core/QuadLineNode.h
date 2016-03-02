@@ -37,142 +37,28 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "Tile.h"
+#ifndef QUADLINENODE_H
+#define QUADLINENODE_H
 
-#include "QuadLineNode.h"
-#include "TextureNode.h"
-#include "log.h"
+#include <QSGGeometryNode>
 
-namespace
+/**
+ * A line quad to draw rectangle borders.
+ */
+class QuadLineNode : public QSGGeometryNode
 {
-const qreal borderWidth = 10.0;
-const QColor borderColor( "lightgreen" );
-}
+public:
+    /** Constructor. */
+    QuadLineNode( const QRectF& rect, qreal lineWidth );
 
-// false-positive on qt signals for Q_PROPERTY notifiers
-// cppcheck-suppress uninitMemberVar
-Tile::Tile( const uint index, const QRect& rect )
-    : _index( index )
-    , _swap( false )
-    , _resize( false )
-    , _nextCoord( rect )
-    , _updateBackTexture( true )
-    , _backGlTexture( 0 )
-    , _showBorder( false )
-    , _border( nullptr )
-{
-    setFlag( ItemHasContents, true );
-    setVisible( false );
-}
+    /** Set the geometry. */
+    void setRect( const QRectF& rect );
 
-uint Tile::getIndex() const
-{
-    return _index;
-}
+    /** Set the line width. */
+    void setLineWidth( qreal width );
 
-bool Tile::getShowBorder() const
-{
-    return _showBorder;
-}
+    /** Set the color of the lines. */
+    void setColor( const QColor& color );
+};
 
-void Tile::setShowBorder( const bool set )
-{
-    if( _showBorder == set )
-        return;
-
-    _showBorder = set;
-    emit showBorderChanged();
-    QQuickItem::update();
-}
-
-void Tile::update( const QRect& rect )
-{
-    if( rect != _nextCoord )
-    {
-        _resize = true;
-        _nextCoord = rect;
-    }
-
-    _updateBackTexture = true;
-    QQuickItem::update();
-}
-
-uint Tile::getBackGlTexture() const
-{
-    return _backGlTexture;
-}
-
-QSize Tile::getBackGlTextureSize() const
-{
-    return _nextCoord.size();
-}
-
-void Tile::swapImage()
-{
-    _swap = true;
-
-    if( !isVisible( ))
-        setVisible( true );
-    setPosition( _nextCoord.topLeft( ));
-    setSize( _nextCoord.size( ));
-
-    QQuickItem::update();
-}
-
-void Tile::markBackTextureUpdated()
-{
-    emit textureUpdated( shared_from_this( ));
-}
-
-QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
-                                QQuickItem::UpdatePaintNodeData* )
-{
-    TextureNode* node = static_cast<TextureNode*>( oldNode );
-    if( !node )
-        node = new TextureNode( _nextCoord.size(), window( ));
-
-    if( _swap )
-    {
-        node->swap();
-        _swap = false;
-    }
-
-    if( _resize )
-    {
-        node->resize( _nextCoord.size( ));
-        _resize = false;
-    }
-
-    _backGlTexture = node->getBackGlTexture();
-
-    if( _updateBackTexture )
-    {
-        _updateBackTexture = false;
-        emit textureReady( shared_from_this( ));
-    }
-
-    _updateBorderNode( node );
-
-    return node;
-}
-
-void Tile::_updateBorderNode( TextureNode* parentNode )
-{
-    if( _showBorder )
-    {
-        if( !_border )
-        {
-            _border = new QuadLineNode( parentNode->rect(), borderWidth );
-            _border->setColor( borderColor );
-            parentNode->appendChildNode( _border );
-        }
-        else
-            _border->setRect( parentNode->rect( ));
-    }
-    else if( _border )
-    {
-        parentNode->removeChildNode( _border );
-        delete _border;
-        _border = nullptr;
-    }
-}
+#endif
