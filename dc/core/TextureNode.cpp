@@ -61,14 +61,11 @@ void TextureNode::swap()
 
     setTexture( _frontTexture.get( ));
     markDirty( DirtyMaterial );
-
-    if( _backTexture->textureSize() != _frontTexture->textureSize( ))
-        _backTexture = _createTexture( _frontTexture->textureSize( ));
 }
 
-void TextureNode::resizeBackTexture( const QSize& size )
+void TextureNode::setBackTextureSize( const QSize& size )
 {
-    if( size == _backTexture->textureSize( ))
+    if( _backTexture->textureSize() == size )
         return;
 
     _backTexture = _createTexture( size );

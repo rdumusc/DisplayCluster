@@ -54,10 +54,9 @@ const QColor borderColor( "lightgreen" );
 Tile::Tile( const uint id, const QRect& rect )
     : _tileId( id )
     , _policy( AdjustToTexture )
-    , _swap( false )
-    , _resize( false )
+    , _swapRequested( false )
+    , _updateTextureRequested( true )
     , _nextCoord( rect )
-    , _updateBackTexture( true )
     , _backGlTexture( 0 )
     , _showBorder( false )
     , _border( nullptr )
@@ -90,13 +89,8 @@ void Tile::setShowBorder( const bool set )
 
 void Tile::update( const QRect& rect )
 {
-    if( rect != _nextCoord )
-    {
-        _resize = true;
-        _nextCoord = rect;
-    }
-
-    _updateBackTexture = true;
+    _updateTextureRequested = true;
+    _nextCoord = rect;
     QQuickItem::update();
 }
 
@@ -117,7 +111,7 @@ void Tile::setSizePolicy( const Tile::SizePolicy policy )
 
 void Tile::swapImage()
 {
-    _swap = true;
+    _swapRequested = true;
 
     if( !isVisible( ))
         setVisible( true );
@@ -143,23 +137,18 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
     if( !node )
         node = new TextureNode( _nextCoord.size(), window( ));
 
-    if( _swap )
+    if( _swapRequested )
     {
         node->swap();
-        _swap = false;
+        _backGlTexture = node->getBackGlTexture();
+        _swapRequested = false;
     }
 
-    if( _resize )
+    if( _updateTextureRequested )
     {
-        node->resizeBackTexture( _nextCoord.size( ));
-        _resize = false;
-    }
-
-    _backGlTexture = node->getBackGlTexture();
-
-    if( _updateBackTexture )
-    {
-        _updateBackTexture = false;
+        node->setBackTextureSize( _nextCoord.size( ));
+        _backGlTexture = node->getBackGlTexture();
+        _updateTextureRequested = false;
         emit textureReady( shared_from_this( ));
     }
 

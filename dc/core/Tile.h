@@ -130,10 +130,10 @@ private:
     const uint _tileId;
     SizePolicy _policy;
 
-    bool _swap;
-    bool _resize;
+    bool _swapRequested;
+    bool _updateTextureRequested;
     QRect _nextCoord;
-    bool _updateBackTexture;
+
     uint _backGlTexture;
 
     bool _showBorder;

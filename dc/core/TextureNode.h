@@ -45,17 +45,35 @@
 
 class QQuickWindow;
 
-/** A node with a double texture buffer. */
+/**
+ * A node with a double buffered texture.
+ *
+ * Initially it displays an empty black texture (id 0). Users can upload data
+ * to the back texture, querried with getBackGlTexture(), before calling swap()
+ * to display the results.
+ *
+ * The second texture is created only after a call to setBackTextureSize(), so
+ * that no memory is wasted for a second texture if the node is not going to
+ * be updated more than once.
+ */
 class TextureNode : public QSGSimpleTextureNode
 {
 public:
     TextureNode( const QSize& size, QQuickWindow* window );
 
+    /** @reture the back texture identifier, which can safely be updated. */
     uint getBackGlTexture() const;
 
+    /** Swap the front and back textures. */
     void swap();
 
-    void resizeBackTexture( const QSize& size );
+    /**
+     * Create or resize the back texture as needed.
+     * Note that the back texture identifier may change as a result of calling
+     * this function.
+     * @param size the new texture size
+     */
+    void setBackTextureSize( const QSize& size );
 
 private:
     QQuickWindow* _window;
