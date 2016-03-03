@@ -37,33 +37,30 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGSynchronizer.h"
+#ifndef SVGTILER_H
+#define SVGTILER_H
 
-#include "SVGImage.h"
+#include "LodTiler.h"
 
-SVGSynchronizer::SVGSynchronizer( const QString& uri )
-    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _dataSource( make_unique<SVGTextureFactory>( uri ))
-{}
+#include "SVGTextureFactory.h"
 
-void SVGSynchronizer::synchronize( WallToWallChannel& channel )
+/**
+ * Reprensent an SVG image as a multi-LOD tiled data source.
+ */
+class SVGTiler : public LodTiler
 {
-    Q_UNUSED( channel );
-}
+public:
+    /** Constructor. */
+    explicit SVGTiler( SVGTextureFactoryPtr factory );
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
+private:
+    /**
+     * @copydoc CachedDataSource::getCachableTileImage
+     *
+     */
+    QImage getCachableTileImage( uint tileId ) const final;
 
-    if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
+    SVGTextureFactoryPtr _factory;
+};
 
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
-}
-
-const DataSource& SVGSynchronizer::getDataSource() const
-{
-    return _dataSource;
-}
+#endif

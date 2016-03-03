@@ -43,11 +43,9 @@
 
 QuadLineNode::QuadLineNode( const QRectF& rect, const qreal lineWidth )
 {
-    QSGGeometry* geometry = new QSGGeometry(
-                QSGGeometry::defaultAttributes_Point2D(), 4 );
-    geometry->setDrawingMode( GL_LINE_LOOP );
-    geometry->setLineWidth( lineWidth );
-    setGeometry( geometry );
+    setGeometry( new QSGGeometry( QSGGeometry::defaultAttributes_Point2D(), 4));
+    geometry()->setDrawingMode( GL_LINE_LOOP );
+    geometry()->setLineWidth( lineWidth );
     setFlag( QSGNode::OwnsGeometry );
 
     setMaterial( new QSGFlatColorMaterial );

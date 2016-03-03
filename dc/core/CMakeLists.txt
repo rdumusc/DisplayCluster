@@ -75,6 +75,7 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   LayoutEngine.h
   Image.h
   log.h
+  LodTiler.h
   LodTools.h
   MPIChannel.h
   MPIContext.h
@@ -88,6 +89,8 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   StatePreview.h
   StateSerializationHelper.h
   SVGContent.h
+  SVGImage.h
+  SVGTiler.h
   TestPattern.h
   TextureContent.h
   TextureNode.h
@@ -200,6 +203,7 @@ list(APPEND DCCORE_SOURCES
   ImageSynchronizer.cpp
   log.cpp
   LodSynchronizer.cpp
+  LodTiler.cpp
   LodTools.cpp
   Markers.cpp
   MasterFromWallChannel.cpp
@@ -229,7 +233,9 @@ list(APPEND DCCORE_SOURCES
   StatePreview.cpp
   StateSerializationHelper.cpp
   SVGContent.cpp
+  SVGImage.cpp
   SVGTextureFactory.cpp
+  SVGTiler.cpp
   SVGSynchronizer.cpp
   TestPattern.cpp
   TextureContent.cpp

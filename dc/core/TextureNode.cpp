@@ -86,6 +86,12 @@ TextureNode::_createTexture( const QSize& size ) const
                   0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
+    return _createWrapper( textureID, size );
+}
+
+TextureNode::QSGTexturePtr
+TextureNode::_createWrapper( const uint textureID, const QSize& size ) const
+{
     const auto textureFlags = QQuickWindow::CreateTextureOptions(
                                   QQuickWindow::TextureHasAlphaChannel |
                                   QQuickWindow::TextureHasMipmaps |

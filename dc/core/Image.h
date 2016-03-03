@@ -40,7 +40,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include <stdint.h>
+#include "types.h"
 
 /**
  * An interface to provide necessary image information for the texture upload
@@ -62,6 +62,16 @@ public:
 
     /** @return the timestamp this image was created for. */
     virtual int64_t getTimestamp() const = 0;
+
+    /** @return true if the image is a GPU image and need special processing. */
+    virtual bool isGpuImage() const { return false; }
+
+    /**
+     * Generate the GPU image.
+     * This method will be called on a thread with an active OpenGL context if
+     * isGpuImage() is true;
+     */
+    virtual bool generateGpuImage() { return false; }
 };
 
-#endif // IMAGE_H
+#endif

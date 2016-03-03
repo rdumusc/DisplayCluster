@@ -40,15 +40,14 @@
 #ifndef PDFTILER_H
 #define PDFTILER_H
 
-#include "CachedDataSource.h"
+#include "LodTiler.h"
 
 #include "PDF.h" // member
-#include "LodTools.h" // member
 
 /**
  * Reprensent a PDF document as a multi-LOD tiled data source.
  */
-class PDFTiler : public CachedDataSource
+class PDFTiler : public LodTiler
 {
 public:
     /** Constructor. */
@@ -60,24 +59,8 @@ public:
      */
     QImage getCachableTileImage( uint tileId ) const final;
 
-    /** @copydoc DataSource::getTileRect */
-    QRect getTileRect( uint tileId ) const final;
-
-    /** @copydoc DataSource::getTilesArea */
-    QSize getTilesArea( uint lod ) const final;
-
-    /** @copydoc DataSource::computeVisibleSet */
-    Indices computeVisibleSet( const QRectF& visibleTilesArea,
-                               uint lod ) const final;
-
-    /** @copydoc DataSource::getMaxLod */
-    uint getMaxLod() const final;
-
 private:
     PDF& _pdf;
-    LodTools _lodTool;
-
-    QRectF _getNormalizedTileRect( uint tileId ) const;
 };
 
 #endif

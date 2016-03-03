@@ -55,6 +55,9 @@ public:
     /** @copydoc DataSource::getTileImage @threadsafe */
     QImage getTileImage( uint tileId, uint64_t timestamp ) const final;
 
+    /** Check if the cache contains an image for a tile. */
+    bool contains( uint tileId ) const;
+
 protected:
     /** Get a tile image which will be cached. @threadsafe */
     virtual QImage getCachableTileImage( uint tileId ) const = 0;

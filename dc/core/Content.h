@@ -74,7 +74,6 @@ class Content : public QObject
     Q_PROPERTY( qreal aspectRatio READ getAspectRatio CONSTANT )
     Q_PROPERTY( QRectF zoomRect READ getZoomRect CONSTANT )
     Q_PROPERTY( QSize size READ getDimensions CONSTANT )
-    Q_PROPERTY( bool vectorial READ isVectorial CONSTANT )
 
 public:
     /** Constructor **/
@@ -85,9 +84,6 @@ public:
 
     /** Get the content type **/
     virtual CONTENT_TYPE getType() const = 0;
-
-    /** Check if the content is vectorial, used for zoom handling in QML. */
-    virtual bool isVectorial() const;
 
     /**
      * Read content metadata from the data source.

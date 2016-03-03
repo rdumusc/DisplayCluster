@@ -40,25 +40,28 @@
 #ifndef SVGTEXTUREFACTORY_H
 #define SVGTEXTUREFACTORY_H
 
-#include <QQuickTextureFactory>
-#include <QSvgRenderer> // member
+#include <QMutex>
+#include <QSvgRenderer>
 
 /** Renders an svg document into a texure using hardware antialiasing. */
-class SVGTextureFactory : public QQuickTextureFactory
+class SVGTextureFactory
 {
-    Q_OBJECT
-
 public:
-    SVGTextureFactory( const QString& uri, const QSize& textureSize,
-                       const QRectF& zoomRect );
+    /** Constructor */
+    SVGTextureFactory( const QString& uri );
 
-    QSGTexture* createTexture( QQuickWindow* window ) const final;
-    QSize textureSize() const final;
-    int textureByteCount() const final;
+    /** The default size for the content. */
+    QSize getDefaultSize() const;
+
+    /**
+     * Render the specified area on the GPU and downloads it into core memory.
+     * This function must be called on a thread with an active GL context.
+     */
+    QImage createTexture( const QSize& textureSize,
+                          const QRectF& zoomRect ) const;
 
 private:
-    QSize _textureSize;
-    QRectF _zoomRect;
+    mutable QMutex _mutex;
     mutable QSvgRenderer _svgRenderer; // mutable because paint() is not const
 };
 

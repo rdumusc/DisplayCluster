@@ -54,9 +54,6 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
-    /** @copydoc Content::isVectorial */
-    bool isVectorial() const final { return true; }
-
     /**
      * Read SVG metadata.
      * @return true on success, false if the URI is invalid or an error occured.

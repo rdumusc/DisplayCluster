@@ -106,6 +106,14 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
         return;
     }
 
+    _glContext->makeCurrent( _offscreenSurface );
+
+    if( image->isGpuImage() && !image->generateGpuImage( ))
+    {
+        put_flog( LOG_DEBUG, "GPU image generation failed" );
+        return;
+    }
+
     if( image->getWidth() != tile->getBackGlTextureSize().width() ||
         image->getHeight() != tile->getBackGlTextureSize().height( ))
     {
@@ -120,41 +128,7 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
         return;
     }
 
-    _glContext->makeCurrent( _offscreenSurface );
-
-     // make PBO big enough
-    _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, _pbo );
-    const size_t bufferSize = image->getWidth() * image->getHeight() * 4;
-    if( bufferSize > _bufferSize )
-    {
-        _gl->glBufferData( GL_PIXEL_UNPACK_BUFFER, bufferSize, 0,
-                           GL_DYNAMIC_DRAW );
-        _bufferSize = bufferSize;
-    }
-
-    // copy pixels from CPU mem to GPU mem
-    void* pboData = _gl->glMapBuffer( GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY );
-    std::memcpy( pboData, image->getData(), bufferSize );
-    _gl->glUnmapBuffer( GL_PIXEL_UNPACK_BUFFER );
-
-    // setup PBO and texture pixel storage
-    GLint alignment = 1;
-    if( (image->getWidth() % 4) == 0 )
-        alignment = 4;
-    else if( (image->getWidth() % 2) == 0 )
-        alignment = 2;
-    _gl->glPixelStorei( GL_UNPACK_ALIGNMENT, alignment );
-    _gl->glPixelStorei( GL_UNPACK_ROW_LENGTH, image->getWidth( ));
-
-    // update texture with pixels from PBO
-    _gl->glActiveTexture( GL_TEXTURE0 );
-    _gl->glBindTexture( GL_TEXTURE_2D, textureID );
-    _gl->glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, image->getWidth(),
-                          image->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, 0 );
-
-    // unbind texture & PBO
-    _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
-    _gl->glBindTexture( GL_TEXTURE_2D, 0 );
+    _upload( *image, textureID );
 
     // Ensure the texture upload is complete before the render thread uses it
     glFinish();
@@ -162,4 +136,41 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
     // notify tile that its texture has been updated
     QMetaObject::invokeMethod( tile.get(), "markBackTextureUpdated",
                                Qt::QueuedConnection );
+}
+
+void TextureUploader::_upload( const Image& image, const uint textureID )
+{
+    // make PBO big enough
+   _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, _pbo );
+   const size_t bufferSize = image.getWidth() * image.getHeight() * 4;
+   if( bufferSize > _bufferSize )
+   {
+       _gl->glBufferData( GL_PIXEL_UNPACK_BUFFER, bufferSize, 0,
+                          GL_DYNAMIC_DRAW );
+       _bufferSize = bufferSize;
+   }
+
+   // copy pixels from CPU mem to GPU mem
+   void* pboData = _gl->glMapBuffer( GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY );
+   std::memcpy( pboData, image.getData(), bufferSize );
+   _gl->glUnmapBuffer( GL_PIXEL_UNPACK_BUFFER );
+
+   // setup PBO and texture pixel storage
+   GLint alignment = 1;
+   if( (image.getWidth() % 4) == 0 )
+       alignment = 4;
+   else if( (image.getWidth() % 2) == 0 )
+       alignment = 2;
+   _gl->glPixelStorei( GL_UNPACK_ALIGNMENT, alignment );
+   _gl->glPixelStorei( GL_UNPACK_ROW_LENGTH, image.getWidth( ));
+
+   // update texture with pixels from PBO
+   _gl->glActiveTexture( GL_TEXTURE0 );
+   _gl->glBindTexture( GL_TEXTURE_2D, textureID );
+   _gl->glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, image.getWidth(),
+                         image.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+
+   // unbind texture & PBO
+   _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
+   _gl->glBindTexture( GL_TEXTURE_2D, 0 );
 }

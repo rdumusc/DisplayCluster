@@ -83,6 +83,7 @@ private:
     QSGTexturePtr _backTexture;
 
     QSGTexturePtr _createTexture( const QSize& size ) const;
+    QSGTexturePtr _createWrapper( const uint textureID, const QSize& size ) const;
 };
 
 #endif

@@ -40,12 +40,14 @@
 #ifndef SVGSYNCHRONIZER_H
 #define SVGSYNCHRONIZER_H
 
-#include "VectorialSynchronizer.h"
+#include "LodSynchronizer.h"
+
+#include "SVGTiler.h"
 
 /**
  * Synchronize SVG content.
  */
-class SVGSynchronizer : public VectorialSynchronizer
+class SVGSynchronizer : public LodSynchronizer
 {
     Q_OBJECT
     Q_DISABLE_COPY( SVGSynchronizer )
@@ -54,12 +56,17 @@ public:
     /** Constructor. */
     explicit SVGSynchronizer( const QString& uri );
 
-    /** @copydoc ContentSynchronizer::update */
-    void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) final;
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
+    ImagePtr getTileImage( uint tileId, uint64_t timestamp ) const final;
+
+private:
+    SVGTiler _dataSource;
+
+    /** @copydoc LodSynchronizer::getDataSource */
+    const DataSource& getDataSource() const final;
 };
 
 #endif

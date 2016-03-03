@@ -37,33 +37,25 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGSynchronizer.h"
+#include "SVGTiler.h"
 
-#include "SVGImage.h"
+namespace
+{
+const uint tileSize = 512;
+const qreal maxScaleFactor = 5;
+}
 
-SVGSynchronizer::SVGSynchronizer( const QString& uri )
-    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _dataSource( make_unique<SVGTextureFactory>( uri ))
+SVGTiler::SVGTiler( SVGTextureFactoryPtr factory )
+    : LodTiler( factory->getDefaultSize() * maxScaleFactor, tileSize )
+    , _factory( std::move( factory ))
 {}
 
-void SVGSynchronizer::synchronize( WallToWallChannel& channel )
+QImage SVGTiler::getCachableTileImage( const uint tileId ) const
 {
-    Q_UNUSED( channel );
-}
+    Q_UNUSED( tileId );
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
+    const QRect imageRect = getTileRect( tileId );
+    const QRectF zoomRect = getNormalizedTileRect( tileId );
 
-    if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
-
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
-}
-
-const DataSource& SVGSynchronizer::getDataSource() const
-{
-    return _dataSource;
+    return _factory->createTexture( imageRect.size(), zoomRect );
 }

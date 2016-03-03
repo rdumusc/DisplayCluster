@@ -82,6 +82,8 @@ private:
     void _onInit( QOpenGLContext* shareContext );
     void _onStop();
 
+    void _upload( const Image& image, uint textureID );
+
     QOpenGLContext* _glContext;
     QOffscreenSurface* _offscreenSurface;
     QOpenGLFunctions_2_1* _gl;

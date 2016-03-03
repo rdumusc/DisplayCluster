@@ -37,33 +37,41 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGSynchronizer.h"
-
 #include "SVGImage.h"
 
-SVGSynchronizer::SVGSynchronizer( const QString& uri )
-    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _dataSource( make_unique<SVGTextureFactory>( uri ))
+SVGImage::SVGImage( SVGTiler& dataSource, const uint tileId )
+    : _dataSource( dataSource )
+    , _tileId( tileId )
 {}
 
-void SVGSynchronizer::synchronize( WallToWallChannel& channel )
+int SVGImage::getWidth() const
 {
-    Q_UNUSED( channel );
+    return _image.width();
 }
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
+int SVGImage::getHeight() const
 {
-    Q_UNUSED( timestamp );
-
-    if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
-
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
+    return _image.height();
 }
 
-const DataSource& SVGSynchronizer::getDataSource() const
+const uint8_t* SVGImage::getData() const
 {
-    return _dataSource;
+    return _image.constBits();
+}
+
+int64_t SVGImage::getTimestamp() const
+{
+    return 0;
+}
+
+bool SVGImage::isGpuImage() const
+{
+    return true;
+}
+
+bool SVGImage::generateGpuImage()
+{
+    // Call getTileImage so that the image gets cached for the next request
+    _image = _dataSource.getTileImage( _tileId, 0 );
+    return true;
 }

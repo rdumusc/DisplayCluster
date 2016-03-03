@@ -37,33 +37,44 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGSynchronizer.h"
+#ifndef LODTILER_H
+#define LODTILER_H
 
-#include "SVGImage.h"
+#include "CachedDataSource.h"
 
-SVGSynchronizer::SVGSynchronizer( const QString& uri )
-    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _dataSource( make_unique<SVGTextureFactory>( uri ))
-{}
+#include "LodTools.h" // member
 
-void SVGSynchronizer::synchronize( WallToWallChannel& channel )
+/**
+ * Based class to provide tiles for multi-LOD tiled data source.
+ */
+class LodTiler : public CachedDataSource
 {
-    Q_UNUSED( channel );
-}
+public:
+    /**
+     * Constructor
+     * @param contentSize the size of the full resolution content
+     * @param tileSize the size of the tiles to subdivide the content
+     */
+    LodTiler( const QSize& contentSize, uint tileSize );
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileId ) const final;
 
-    if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
 
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
-}
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
 
-const DataSource& SVGSynchronizer::getDataSource() const
-{
-    return _dataSource;
-}
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
+
+    /** Get the tile rectangle in normalized coordinates. */
+    QRectF getNormalizedTileRect( uint tileId ) const;
+
+private:
+    LodTools _lodTool;
+};
+
+#endif

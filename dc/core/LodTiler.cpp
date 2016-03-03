@@ -37,33 +37,40 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGSynchronizer.h"
+#include "LodTiler.h"
 
-#include "SVGImage.h"
-
-SVGSynchronizer::SVGSynchronizer( const QString& uri )
-    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _dataSource( make_unique<SVGTextureFactory>( uri ))
+LodTiler::LodTiler( const QSize& contentSize, const uint tileSize )
+    : _lodTool( contentSize, tileSize )
 {}
 
-void SVGSynchronizer::synchronize( WallToWallChannel& channel )
+QRect LodTiler::getTileRect( const uint tileId ) const
 {
-    Q_UNUSED( channel );
+    return _lodTool.getTileCoord( tileId );
 }
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
+QSize LodTiler::getTilesArea( const uint lod ) const
 {
-    Q_UNUSED( timestamp );
-
-    if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
-
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
+    return _lodTool.getTilesArea( lod );
 }
 
-const DataSource& SVGSynchronizer::getDataSource() const
+Indices LodTiler::computeVisibleSet( const QRectF& visibleTilesArea,
+                                     const uint lod ) const
 {
-    return _dataSource;
+    return _lodTool.getVisibleTiles( visibleTilesArea, lod );
+}
+
+uint LodTiler::getMaxLod() const
+{
+    return _lodTool.getMaxLod();
+}
+
+QRectF LodTiler::getNormalizedTileRect( const uint tileId ) const
+{
+    const QRectF tile( getTileRect( tileId ));
+    const uint lod = _lodTool.getTileIndex( tileId ).lod;
+    const QSize area = getTilesArea( lod );
+
+    const auto t = QTransform::fromScale( 1.0 / area.width(),
+                                          1.0 / area.height( ));
+    return t.mapRect( tile );
 }

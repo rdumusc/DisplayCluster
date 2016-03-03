@@ -57,9 +57,6 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
-    /** @copydoc Content::isVectorial */
-    bool isVectorial() const final { return true; }
-
     /**
      * Reaad PDF informations from the source URI.
      * @return true on success, false if the URI is invalid or an error occured.

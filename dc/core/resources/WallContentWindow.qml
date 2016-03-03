@@ -35,14 +35,14 @@ BaseContentWindow {
                     xScale: contentItemArea.width / (contentsync.tilesArea.width > 0 ? contentsync.tilesArea.width : contentwindow.content.size.width)
                     yScale: contentItemArea.height / (contentsync.tilesArea.height > 0 ? contentsync.tilesArea.height : contentwindow.content.size.height)
                 },
-                // Apply content zoom (except for vectorial types)
+                // Apply content zoom
                 Translate {
-                    x: contentwindow.content.vectorial ? 0 : -contentwindow.content.zoomRect.x * contentItemArea.width
-                    y: contentwindow.content.vectorial ? 0 : -contentwindow.content.zoomRect.y * contentItemArea.height
+                    x: -contentwindow.content.zoomRect.x * contentItemArea.width
+                    y: -contentwindow.content.zoomRect.y * contentItemArea.height
                 },
                 Scale {
-                    xScale: contentwindow.content.vectorial ? 1.0 : 1.0 / contentwindow.content.zoomRect.width
-                    yScale: contentwindow.content.vectorial ? 1.0 : 1.0 / contentwindow.content.zoomRect.height
+                    xScale: 1.0 / contentwindow.content.zoomRect.width
+                    yScale: 1.0 / contentwindow.content.zoomRect.height
                 }
             ]
         }

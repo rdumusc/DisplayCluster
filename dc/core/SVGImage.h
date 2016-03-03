@@ -37,33 +37,49 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGSynchronizer.h"
+#ifndef SVGIMAGE_H
+#define SVGIMAGE_H
 
-#include "SVGImage.h"
+#include "Image.h"
 
-SVGSynchronizer::SVGSynchronizer( const QString& uri )
-    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
-    , _dataSource( make_unique<SVGTextureFactory>( uri ))
-{}
+#include "SVGTiler.h"
 
-void SVGSynchronizer::synchronize( WallToWallChannel& channel )
+#include <QImage>
+
+/**
+ * Image wrapper for an SVG tile.
+ *
+ * The actual image has to be rendered with OpenGL in the texture upload thread.
+ * Until generateGpuImage has succeeded, this image contains no image data.
+ */
+class SVGImage : public Image
 {
-    Q_UNUSED( channel );
-}
+public:
+    /** Constructor. */
+    SVGImage( SVGTiler& dataSource, uint tileId );
 
-ImagePtr SVGSynchronizer::getTileImage( const uint tileId,
-                                        const uint64_t timestamp ) const
-{
-    Q_UNUSED( timestamp );
+    /** @copydoc Image::getWidth */
+    int getWidth() const override;
 
-    if( _dataSource.contains( tileId ))
-        return LodSynchronizer::getTileImage( tileId, timestamp );
+    /** @copydoc Image::getHeight */
+    int getHeight() const override;
 
-    return std::make_shared<SVGImage>( const_cast<SVGTiler&>( _dataSource ),
-                                       tileId );
-}
+    /** @copydoc Image::getData */
+    const uint8_t* getData() const override;
 
-const DataSource& SVGSynchronizer::getDataSource() const
-{
-    return _dataSource;
-}
+    /** @copydoc Image::getTimestamp */
+    int64_t getTimestamp() const override;
+
+    /** @copydoc Image::isGpuImage */
+    bool isGpuImage() const final;
+
+    /** @copydoc Image::generateGpuImage */
+    bool generateGpuImage() final;
+
+private:
+    SVGTiler& _dataSource;
+    const uint _tileId;
+    QImage _image;
+};
+
+#endif

@@ -93,8 +93,11 @@ QRect LodTools::getTileCoord( const uint tileId ) const
 {
     const auto index = getTileIndex( tileId );
     const QSize lodSize = getTilesArea( index.lod );
-    const QSize tilesCount = getTilesCount( index.lod );
 
+    if( index.lod == getMaxLod( ))
+        return QRect( QPoint( 0, 0 ), lodSize );
+
+    const QSize tilesCount = getTilesCount( index.lod );
     const uint w = index.x < (uint)tilesCount.width() ? _tileSize :
                                                   lodSize.width() % _tileSize;
     const uint h = index.y < (uint)tilesCount.height() ? _tileSize :

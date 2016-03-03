@@ -42,28 +42,17 @@
 #include "log.h"
 #include "types.h" // for make_unique()
 
-#include <QQuickWindow>
 #include <QOpenGLPaintDevice>
 #include <QOpenGLFramebufferObject>
 #include <QPainter>
+#include <QFile>
 
 namespace
 {
 const int MULTI_SAMPLE_ANTI_ALIASING_SAMPLES = 8;
 }
 
-QRectF getViewBox( const QRectF& zoomRect, const QRectF& svgExtents )
-{
-    return QRectF( svgExtents.x() + zoomRect.x() * svgExtents.width(),
-                   svgExtents.y() + zoomRect.y() * svgExtents.height(),
-                   zoomRect.width() * svgExtents.width(),
-                   zoomRect.height() * svgExtents.height( ));
-}
-
-SVGTextureFactory::SVGTextureFactory( const QString& uri,
-                                      const QSize& textureSize_,
-                                      const QRectF& zoomRect )
-    : _textureSize( textureSize_ )
+SVGTextureFactory::SVGTextureFactory( const QString& uri )
 {
     QFile file( uri );
     if( !file.open( QIODevice::ReadOnly ))
@@ -79,11 +68,11 @@ SVGTextureFactory::SVGTextureFactory( const QString& uri,
                   uri.toLocal8Bit().constData( ));
         return;
     }
+}
 
-    if( _textureSize.isEmpty( ))
-        _textureSize = _svgRenderer.defaultSize();
-
-    _svgRenderer.setViewBox( getViewBox( zoomRect, _svgRenderer.viewBoxF( )));
+QSize SVGTextureFactory::getDefaultSize() const
+{
+    return _svgRenderer.defaultSize();
 }
 
 void _saveGLState()
@@ -120,22 +109,38 @@ _createMultisampledFBO( const QSize& size )
     return std::move( fbo );
 }
 
-QSGTexture* SVGTextureFactory::createTexture( QQuickWindow* window ) const
+QRectF _getViewBox( const QRectF& zoomRect, const QRectF& svgExtents )
 {
-    // We have the window's OpenGL context bound here
+    return QRectF( svgExtents.x() + zoomRect.x() * svgExtents.width(),
+                   svgExtents.y() + zoomRect.y() * svgExtents.height(),
+                   zoomRect.width() * svgExtents.width(),
+                   zoomRect.height() * svgExtents.height( ));
+}
+
+QImage SVGTextureFactory::createTexture( const QSize& textureSize,
+                                         const QRectF& zoomRect ) const
+{
     _saveGLState();
 
     // Use a separate multisampled FBO for anti-aliased rendering
-    auto renderFbo = _createMultisampledFBO( textureSize( ));
+    auto renderFbo = _createMultisampledFBO( textureSize );
     renderFbo->bind();
+
     // the paint device acts on the currently bound fbo
     QOpenGLPaintDevice device( renderFbo->size( ));
-    device.setPaintFlipped( true );
     QPainter painter( &device );
     painter.setRenderHints( QPainter::Antialiasing |
                             QPainter::TextAntialiasing );
-    _svgRenderer.render( &painter );
-    painter.end();
+
+    {
+        const QMutexLocker lock( &_mutex );
+        const QRectF viewBoxBackup = _svgRenderer.viewBoxF();
+        _svgRenderer.setViewBox( _getViewBox( zoomRect, viewBoxBackup ));
+        _svgRenderer.render( &painter );
+        painter.end();
+        _svgRenderer.setViewBox( viewBoxBackup );
+    }
+
     renderFbo->release();
     _restoreGLState();
 
@@ -145,19 +150,5 @@ QSGTexture* SVGTextureFactory::createTexture( QQuickWindow* window ) const
     QOpenGLFramebufferObject::blitFramebuffer( &targetFbo, blitRect,
                                                renderFbo.get(), blitRect );
 
-    const auto flags = QQuickWindow::CreateTextureOptions(
-                            QQuickWindow::TextureHasAlphaChannel |
-                            QQuickWindow::TextureOwnsGLTexture );
-    return window->createTextureFromId( targetFbo.takeTexture(),
-                                        targetFbo.size(), flags );
-}
-
-QSize SVGTextureFactory::textureSize() const
-{
-    return _textureSize;
-}
-
-int SVGTextureFactory::textureByteCount() const
-{
-    return _textureSize.width() * _textureSize.height() * 4;
+    return targetFbo.toImage();
 }
