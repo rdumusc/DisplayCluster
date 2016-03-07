@@ -42,8 +42,6 @@
 
 #include "TiledSynchronizer.h"
 
-#include "PDFTiler.h" // member
-
 /**
  * Base synchronizer for tiled contents with multiple levels of detail.
  */
@@ -83,6 +81,9 @@ protected:
      * Derived classes must implement this method to return their data source.
      */
     virtual const DataSource& getDataSource() const = 0;
+
+    /** Create the background tile to smooth the LOD change. */
+    void setBackgroundTile( uint backgroundTileId );
 };
 
 #endif

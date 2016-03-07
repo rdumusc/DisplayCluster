@@ -80,6 +80,9 @@ public:
     /** @return the number of tiles for the given lod. */
     QSize getTilesCount( uint lod ) const;
 
+    /** @return the total number of tiles in the pyramid. */
+    uint getTilesCount() const;
+
     /** @return the index of the first tile of the given lod. */
     uint getFirstTileId( uint lod ) const;
 

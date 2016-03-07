@@ -54,7 +54,7 @@ void PDFInteractionDelegate::tap( const QPointF position )
 {
     const QRectF& window = _contentWindow.getDisplayCoordinates();
 
-    if ( position.x() > window.center().x( ))
+    if( position.x() > window.center().x( ))
         _getPDFContent().nextPage();
     else
         _getPDFContent().previousPage();

@@ -126,6 +126,9 @@ signals:
     /** Request an update of a specific tile. */
     void requestTileUpdate( ContentSynchronizerSharedPtr synchronizer,
                             TileWeakPtr tile );
+
+    /** Notify that the zoom context tile has changed and must be recreated. */
+    void zoomContextTileChanged();
 };
 
 #endif // CONTENTSYNCHRONIZER_H

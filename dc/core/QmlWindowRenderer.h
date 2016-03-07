@@ -81,7 +81,7 @@ public:
 
 private slots:
     void _addTile( TilePtr tile );
-    void _addZoomContextTile();
+    void _createZoomContextTile();
     void _removeTile( uint tileIndex );
     void _updateTile( uint tileIndex, const QRect& coordinates );
 

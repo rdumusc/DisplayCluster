@@ -64,6 +64,17 @@ QSize LodTools::getTilesCount( const uint lod ) const
                   std::ceil( (qreal)size.height() / _tileSize ));
 }
 
+uint LodTools::getTilesCount() const
+{
+    uint count = 0;
+    for( uint lod = 0; lod <= getMaxLod(); ++lod )
+    {
+        const QSize tiles = getTilesCount( lod );
+        count += tiles.width() * tiles.height();
+    }
+    return count;
+}
+
 uint LodTools::getFirstTileId( const uint lod ) const
 {
     if( lod == getMaxLod( ))

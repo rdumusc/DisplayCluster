@@ -63,6 +63,9 @@ public:
     /** @copydoc ContentSynchronizer::synchronize */
     void synchronize( WallToWallChannel& channel ) final;
 
+    /** @copydoc ContentSynchronizer::getZoomContextTile */
+    TilePtr getZoomContextTile() const final;
+
 private:
     PDF _pdf;
     PDFTiler _tileSource;

@@ -55,8 +55,9 @@ public:
 
 private:
     /**
-     * @copydoc CachedDataSource::getCachableTileImage
-     *
+     * Get a tile image which will be cached.
+     * Unlike other DataSource classes, this method must be called from a thread
+     * with an OpenGL context.
      */
     QImage getCachableTileImage( uint tileId ) const final;
 

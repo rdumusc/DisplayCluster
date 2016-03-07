@@ -50,10 +50,36 @@ const qreal maxScaleFactor = 5;
 PDFTiler::PDFTiler( PDF& pdf )
     : LodTiler( pdf.getSize() * maxScaleFactor, tileSize )
     , _pdf( pdf )
+    , _tilesPerPage( _lodTool.getTilesCount( ))
 {}
 
-QImage PDFTiler::getCachableTileImage( const uint tileId ) const
+QRect PDFTiler::getTileRect( uint tileId ) const
 {
+    tileId = tileId % _tilesPerPage;
+    return LodTiler::getTileRect( tileId );
+}
+
+Indices PDFTiler::computeVisibleSet( const QRectF& visibleTilesArea,
+                                     const uint lod ) const
+{
+    const Indices visibleSet = _lodTool.getVisibleTiles( visibleTilesArea,
+                                                         lod );
+    Indices offsetSet;
+    const auto pageOffset = getPreviewTileId();
+    for( auto tileId : visibleSet )
+        offsetSet.insert( tileId + pageOffset);
+
+    return offsetSet;
+}
+
+QImage PDFTiler::getCachableTileImage( uint tileId ) const
+{
+    tileId = tileId % _tilesPerPage;
     const QRect tile = getTileRect( tileId );
     return _pdf.renderToImage( tile.size(), getNormalizedTileRect( tileId ));
+}
+
+uint PDFTiler::getPreviewTileId() const
+{
+    return _tilesPerPage * _pdf.getPage();
 }

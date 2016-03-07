@@ -86,7 +86,7 @@ void DisplayGroupRenderer::synchronize( WallToWallChannel& channel )
 
 bool DisplayGroupRenderer::needRedraw() const
 {
-    return _options->getShowStatistics();
+    return _options->getShowStatistics() || _options->getShowClock();
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )

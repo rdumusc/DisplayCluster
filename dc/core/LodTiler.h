@@ -58,14 +58,14 @@ public:
     LodTiler( const QSize& contentSize, uint tileSize );
 
     /** @copydoc DataSource::getTileRect */
-    QRect getTileRect( uint tileId ) const final;
+    QRect getTileRect( uint tileId ) const override;
 
     /** @copydoc DataSource::getTilesArea */
-    QSize getTilesArea( uint lod ) const final;
+    QSize getTilesArea( uint lod ) const override;
 
     /** @copydoc DataSource::computeVisibleSet */
     Indices computeVisibleSet( const QRectF& visibleTilesArea,
-                               uint lod ) const final;
+                               uint lod ) const override;
 
     /** @copydoc DataSource::getMaxLod */
     uint getMaxLod() const final;
@@ -73,7 +73,7 @@ public:
     /** Get the tile rectangle in normalized coordinates. */
     QRectF getNormalizedTileRect( uint tileId ) const;
 
-private:
+protected:
     LodTools _lodTool;
 };
 

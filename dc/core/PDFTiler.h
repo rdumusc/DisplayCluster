@@ -45,7 +45,7 @@
 #include "PDF.h" // member
 
 /**
- * Reprensent a PDF document as a multi-LOD tiled data source.
+ * Represent a PDF document as a multi-LOD tiled data source.
  */
 class PDFTiler : public LodTiler
 {
@@ -53,14 +53,25 @@ public:
     /** Constructor. */
     explicit PDFTiler( PDF& pdf );
 
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileId ) const final;
+
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
+
     /**
      * @copydoc CachedDataSource::getCachableTileImage
      * @threadsafe
      */
     QImage getCachableTileImage( uint tileId ) const final;
 
+    /** @return the ID of the preview (lowest res.) tile for the current page */
+    uint getPreviewTileId() const;
+
 private:
     PDF& _pdf;
+    const uint _tilesPerPage;
 };
 
 #endif

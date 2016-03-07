@@ -75,6 +75,9 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
     connect( _synchronizer.get(), &ContentSynchronizer::requestTileUpdate,
              &_provider, &DataProvider::loadAsync );
 
+    connect( _synchronizer.get(), &ContentSynchronizer::zoomContextTileChanged,
+             this, &QmlWindowRenderer::_createZoomContextTile );
+
     if( auto sync = std::dynamic_pointer_cast<PixelStreamSynchronizer>( _synchronizer ))
         sync->setDataSource( _provider.getStreamDataSource( contentWindow->getContent()->getURI( )));
 
@@ -85,7 +88,7 @@ QmlWindowRenderer::QmlWindowRenderer( QQmlEngine& engine,
     _windowItem->setParentItem( &parentItem );
     _windowItem->setProperty( "isBackground", isBackground );
 
-    _addZoomContextTile();
+    _createZoomContextTile();
 }
 
 QmlWindowRenderer::~QmlWindowRenderer()
@@ -145,8 +148,14 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
     tile->setShowBorder( item->property( "showTilesBorder" ).toBool( ));
 }
 
-void QmlWindowRenderer::_addZoomContextTile()
+void QmlWindowRenderer::_createZoomContextTile()
 {
+    if( _zoomContextTile )
+    {
+        _zoomContextTile->setParentItem( nullptr );
+        _zoomContextTile.reset();
+    }
+
     TilePtr tile = _synchronizer->getZoomContextTile();
     if( !tile )
         return;

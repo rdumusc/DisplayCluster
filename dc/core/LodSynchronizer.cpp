@@ -40,6 +40,7 @@
 #include "LodSynchronizer.h"
 
 #include "ContentWindow.h"
+#include "DataSource.h"
 #include "QtImage.h"
 #include "Tile.h"
 #include "ZoomHelper.h"
@@ -72,16 +73,7 @@ void LodSynchronizer::update( const ContentWindow& window,
         emit tilesAreaChanged();
     }
 
-    // Add an lod-0 tile always visible in the background to smooth LOD
-    // transitions. TODO: implement a finer control to switch tiles after the
-    // new LOD is ready [DISCL-345].
-    if( _ignoreSet.empty( ))
-    {
-        _ignoreSet.insert( 0 );
-        auto tile = std::make_shared<Tile>( 0,getDataSource().getTileRect( 0 ));
-        tile->setSizePolicy( Tile::FillParent );
-        emit addTile( tile );
-    }
+    setBackgroundTile( 0 );
 
     TiledSynchronizer::updateTiles( getDataSource(), false );
 }
@@ -130,4 +122,27 @@ uint LodSynchronizer::getLod( const QSize& targetDisplaySize ) const
         nextLOD = getDataSource().getTilesArea( ++lod + 1 );
     }
     return lod;
+}
+
+void LodSynchronizer::setBackgroundTile( const uint tileId )
+{
+    // Add an lod-0 tile always visible in the background to smooth LOD
+    // transitions. TODO: implement a finer control to switch tiles after the
+    // new LOD is ready [DISCL-345].
+
+    if( !_ignoreSet.count( tileId ))
+    {
+        for( auto tile : _ignoreSet )
+            emit removeTile( tile );
+        _ignoreSet.clear();
+    }
+
+    if( _ignoreSet.empty( ))
+    {
+        _ignoreSet.insert( tileId );
+        auto tile = std::make_shared<Tile>(
+                        tileId, getDataSource().getTileRect( tileId ));
+        tile->setSizePolicy( Tile::FillParent );
+        emit addTile( tile );
+    }
 }
