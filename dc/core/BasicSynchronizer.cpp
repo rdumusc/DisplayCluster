@@ -49,8 +49,14 @@ BasicSynchronizer::BasicSynchronizer()
 void BasicSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
-    if( !visibleArea.isEmpty( ))
-        showTile( window.getContent()->getDimensions( ));
+    if( !_tileAdded && !visibleArea.isEmpty( ))
+    {
+        _tileAdded = true;
+        _tileSize = window.getContent()->getDimensions();
+        emit addTile( std::make_shared<Tile>( 0, QRect( QPoint( 0, 0 ),
+                                                        _tileSize )));
+        emit tilesAreaChanged();
+    }
 }
 
 void BasicSynchronizer::synchronize( WallToWallChannel& channel )
@@ -65,7 +71,7 @@ bool BasicSynchronizer::needRedraw() const
 
 QSize BasicSynchronizer::getTilesArea() const
 {
-    return QSize();
+    return _tileSize;
 }
 
 QString BasicSynchronizer::getStatistics() const
@@ -76,13 +82,4 @@ QString BasicSynchronizer::getStatistics() const
 void BasicSynchronizer::onSwapReady( TilePtr tile )
 {
     tile->swapImage();
-}
-
-void BasicSynchronizer::showTile( const QSize& size )
-{
-    if( !_tileAdded )
-    {
-        _tileAdded = true;
-        emit addTile( std::make_shared<Tile>( 0, QRect( QPoint( 0,0 ), size )));
-    }
 }

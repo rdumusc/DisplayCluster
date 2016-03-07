@@ -70,6 +70,7 @@ public:
 protected:
     uint _lod;
     QRectF _visibleTilesArea;
+    Indices _ignoreSet;
 
     /**
      * Update the tiles, adding or removing them from the view.

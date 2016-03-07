@@ -72,6 +72,17 @@ void LodSynchronizer::update( const ContentWindow& window,
         emit tilesAreaChanged();
     }
 
+    // Add an lod-0 tile always visible in the background to smooth LOD
+    // transitions. TODO: implement a finer control to switch tiles after the
+    // new LOD is ready [DISCL-345].
+    if( _ignoreSet.empty( ))
+    {
+        _ignoreSet.insert( 0 );
+        auto tile = std::make_shared<Tile>( 0,getDataSource().getTileRect( 0 ));
+        tile->setSizePolicy( Tile::FillParent );
+        emit addTile( tile );
+    }
+
     TiledSynchronizer::updateTiles( getDataSource(), false );
 }
 

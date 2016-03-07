@@ -73,11 +73,9 @@ public:
     /** @copydoc ContentSynchronizer::onSwapReady */
     void onSwapReady( TilePtr tile ) override;
 
-protected:
-    void showTile( const QSize& size );
-
 private:
     bool _tileAdded;
+    QSize _tileSize;
 };
 
 #endif // BASICSYNCHRONIZER_H

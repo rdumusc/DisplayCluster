@@ -23,6 +23,10 @@ BaseContentWindow {
             id: contentItem
             objectName: "TilesParent"
 
+            // Used to let a background tile fill its parent
+            width: contentsync.tilesArea.width
+            height: contentsync.tilesArea.height
+
             // Tiles bind to this signal from c++ to toggle borders visibility
             property bool showTilesBorder: options.showContentTiles
             // The auto-generated notifier does not emit the new value, do it
@@ -32,8 +36,8 @@ BaseContentWindow {
             transform: [
                 // Adjust tiles to content area
                 Scale {
-                    xScale: contentItemArea.width / (contentsync.tilesArea.width > 0 ? contentsync.tilesArea.width : contentwindow.content.size.width)
-                    yScale: contentItemArea.height / (contentsync.tilesArea.height > 0 ? contentsync.tilesArea.height : contentwindow.content.size.height)
+                    xScale: contentItemArea.width / contentsync.tilesArea.width
+                    yScale: contentItemArea.height / contentsync.tilesArea.height
                 },
                 // Apply content zoom
                 Translate {

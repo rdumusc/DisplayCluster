@@ -69,8 +69,8 @@ void TiledSynchronizer::onSwapReady( TilePtr tile )
 void TiledSynchronizer::updateTiles( const DataSource& source,
                                      const bool updateExistingTiles )
 {
-    const Indices visibleSet = source.computeVisibleSet( _visibleTilesArea,
-                                                         _lod );
+    Indices visibleSet = source.computeVisibleSet( _visibleTilesArea, _lod );
+    visibleSet = set_difference( visibleSet, _ignoreSet );
 
     const Indices addedTiles = set_difference( visibleSet, _visibleSet );
     const Indices removedTiles = set_difference( _visibleSet, visibleSet );
