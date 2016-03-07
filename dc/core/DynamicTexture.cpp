@@ -251,13 +251,13 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
 
 bool DynamicTexture::loadFullResImage()
 {
-    if( !fullscaleImage_.load( _uri ))
+    if( !_fullscaleImage.load( _uri ))
     {
         put_flog( LOG_ERROR, "error loading: '%s'",
                   _uri.toLocal8Bit().constData( ));
         return false;
     }
-    _imageSize = fullscaleImage_.size();
+    _imageSize = _fullscaleImage.size();
     return true;
 }
 
@@ -271,8 +271,8 @@ void DynamicTexture::_loadImage()
         }
         else
         {
-            if (!fullscaleImage_.isNull() || loadFullResImage())
-                _scaledImage = fullscaleImage_.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
+            if (!_fullscaleImage.isNull() || loadFullResImage())
+                _scaledImage = _fullscaleImage.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
         }
     }
     else
@@ -362,8 +362,7 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
 
     // All tiles have the same size in the current implementation, but this is
     // likely to change in the future
-    const QSize size = _imageSize.scaled( TEXTURE_SIZE, TEXTURE_SIZE,
-                                          Qt::KeepAspectRatio );
+    const QSize size = _getTileSize();
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
 }
 
@@ -404,20 +403,28 @@ QRect DynamicTexture::getTileRect( const uint tileId ) const
 
 QSize DynamicTexture::getTilesArea( const uint lod ) const
 {
-    return QSize( _imageSize.width() >> lod, _imageSize.height() >> lod );
+    const QSize tileSize = _getTileSize();
+    const size_t lodShift = getMaxLod() - lod;
+    return QSize( tileSize.width() << lodShift, tileSize.height() << lodShift );
 }
 
 QSize DynamicTexture::getTilesCount( const uint lod ) const
 {
-    const int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
-    const int tiles = std::ceil( (float)(maxDim >> lod) / TEXTURE_SIZE );
-    return QSize( tiles, tiles );
+    const QSize lodSize = getTilesArea( lod );
+    const QSize tileSize = _getTileSize();
+    return QSize( lodSize.width() / tileSize.width(),
+                  lodSize.height() / tileSize.height( ));
 }
 
 bool DynamicTexture::_canHaveChildren()
 {
     return (getRoot()->_imageSize.width() / (1 << _depth) > TEXTURE_SIZE ||
             getRoot()->_imageSize.height() / (1 << _depth) > TEXTURE_SIZE);
+}
+
+QSize DynamicTexture::_getTileSize() const
+{
+    return _imageSize.scaled( TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio );
 }
 
 bool DynamicTexture::makeFolder( const QString& folder )
@@ -489,13 +496,13 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
                     getImageRegionInParentImage( imageRegion ), this );
     }
 
-    if(!fullscaleImage_.isNull())
+    if(!_fullscaleImage.isNull())
     {
         // we have a valid image, return the clipped image
-        return fullscaleImage_.copy(imageRegion.x()*fullscaleImage_.width(),
-                                    imageRegion.y()*fullscaleImage_.height(),
-                                    imageRegion.width()*fullscaleImage_.width(),
-                                    imageRegion.height()*fullscaleImage_.height());
+        return _fullscaleImage.copy(imageRegion.x()*_fullscaleImage.width(),
+                                    imageRegion.y()*_fullscaleImage.height(),
+                                    imageRegion.width()*_fullscaleImage.width(),
+                                    imageRegion.height()*_fullscaleImage.height());
     }
     else
     {

@@ -140,7 +140,7 @@ private:
     QString _imagePyramidPath;
     bool _useImagePyramid;
 
-    QImage fullscaleImage_;
+    QImage _fullscaleImage;
 
     /* for children only: */
 
@@ -153,10 +153,11 @@ private:
     int _depth; // The depth of the object in the image pyramid
 
     QSize _imageSize; // full scale image dimensions
-    QImage _scaledImage; // for texture upload to GPU
+    QImage _scaledImage; // for creating the image pyramid
 
     void _loadImage();
     bool _canHaveChildren();
+    QSize _getTileSize() const;
 
     /** Is this object the root element. */
     bool isRoot() const;  // @All
