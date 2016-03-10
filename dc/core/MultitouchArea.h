@@ -80,7 +80,7 @@ signals:
 
     void tapAndHold( QPointF pos );
 
-    void panStarted();
+    void panStarted( QPointF pos );
     void pan( QPointF pos, QPointF delta );
     void panEnded();
 
@@ -103,7 +103,7 @@ private:
 
     void _handleSinglePoint( const QTouchEvent::TouchPoint& point );
 
-    void _startPanGesture();
+    void _startPanGesture( const QPointF& pos );
     void _cancelPanGesture();
 
     void _startTapAndHoldGesture();
@@ -121,6 +121,8 @@ private:
     QPointF _mousePrevPos;
 
     bool _panning;
+    QPointF _lastPanPos;
+
     bool _pinchDetectionStarted;
     bool _pinching;
     qreal _lastPinchDist;

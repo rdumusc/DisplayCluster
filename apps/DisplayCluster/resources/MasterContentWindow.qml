@@ -61,9 +61,7 @@ BaseContentWindow {
 
         onPinch: {
             contentwindow.state = ContentWindow.RESIZING
-            var offsetY = displaygroup.showWindowBorders ? Style.windowBorderWidth : 0
-            offsetY = displaygroup.showWindowTitles ? Style.windowTitleHeight : offsetY
-            contentwindow.controller.scale(Qt.point(contentwindow.x + pos.x,contentwindow.y + pos.y - offsetY), pixelDelta)
+            contentwindow.controller.scale(pos, pixelDelta)
         }
     }
 
