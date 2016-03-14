@@ -141,6 +141,9 @@ private:
 
     void _updateBorderNode( TextureNode* parentNode );
     void _onParentChanged( QQuickItem* newParent );
+
+    QMetaObject::Connection _widthConn;
+    QMetaObject::Connection _heightConn;
 };
 
 #endif

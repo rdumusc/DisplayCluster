@@ -45,9 +45,13 @@ QImage CachedDataSource::getTileImage( const uint tileId,
     Q_UNUSED( timestamp );
 
     const QMutexLocker lock( &_mutex );
-    if( !_cache.contains( tileId ))
-        _cache.insert( tileId, getCachableTileImage( tileId ));
-    return _cache[tileId];
+    if( _cache.contains( tileId ))
+        return _cache[tileId];
+
+    const QImage image = getCachableTileImage( tileId );
+    if( !image.isNull( ))
+        _cache.insert( tileId, image );
+    return image;
 }
 
 bool CachedDataSource::contains( const uint tileId ) const

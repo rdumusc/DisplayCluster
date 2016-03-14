@@ -150,7 +150,8 @@ void MultitouchArea::mouseDoubleClickEvent( QMouseEvent* mouse )
 
 void MultitouchArea::wheelEvent( QWheelEvent* wheel )
 {
-    emit pinch( wheel->posF(), wheel->angleDelta().y() * wheelFactor );
+    emit pinch( _getScenePos( wheel->posF( )),
+                wheel->angleDelta().y() * wheelFactor );
 }
 
 void MultitouchArea::touchEvent( QTouchEvent* touch )

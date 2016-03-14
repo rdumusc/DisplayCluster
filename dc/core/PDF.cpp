@@ -61,6 +61,11 @@ PDF::~PDF()
     _closeDocument();
 }
 
+const QString& PDF::getFilename() const
+{
+    return _filename;
+}
+
 bool PDF::isValid() const
 {
     return ( _pdfDoc != 0 );
@@ -130,7 +135,7 @@ void PDF::_openDocument( const QString& filename )
     if ( !_pdfDoc || _pdfDoc->isLocked( ))
     {
         put_flog( LOG_DEBUG, "Could not open document: '%s'",
-                  _filename.toLocal8Bit().constData( ));
+                  filename.toLocal8Bit().constData( ));
         _closeDocument();
         return;
     }

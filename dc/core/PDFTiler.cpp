@@ -41,6 +41,8 @@
 
 #include "LodTools.h"
 
+#include <QThread>
+
 namespace
 {
 const uint tileSize = 512;
@@ -67,16 +69,27 @@ Indices PDFTiler::computeVisibleSet( const QRectF& visibleTilesArea,
     Indices offsetSet;
     const auto pageOffset = getPreviewTileId();
     for( auto tileId : visibleSet )
-        offsetSet.insert( tileId + pageOffset);
+        offsetSet.insert( tileId + pageOffset );
 
     return offsetSet;
 }
 
 QImage PDFTiler::getCachableTileImage( uint tileId ) const
 {
+    const auto id = QThread::currentThreadId();
+
+    PDF* pdf = nullptr;
+    {
+        QMutexLocker lock( &_threadMapMutex );
+        if( !_perThreadPDF.count( id ))
+            _perThreadPDF[id] = make_unique<PDF>( _pdf.getFilename( ));
+        pdf = _perThreadPDF[id].get();
+    }
+    pdf->setPage( tileId / _tilesPerPage );
+
     tileId = tileId % _tilesPerPage;
     const QRect tile = getTileRect( tileId );
-    return _pdf.renderToImage( tile.size(), getNormalizedTileRect( tileId ));
+    return pdf->renderToImage( tile.size(), getNormalizedTileRect( tileId ));
 }
 
 uint PDFTiler::getPreviewTileId() const
