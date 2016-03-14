@@ -56,6 +56,8 @@ public:
     PDF( const QString& uri );
     ~PDF();
 
+    const QString& getFilename() const;
+
     bool isValid() const;
 
     QSize getSize() const;

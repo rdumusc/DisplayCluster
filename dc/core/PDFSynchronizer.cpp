@@ -68,16 +68,17 @@ void PDFSynchronizer::update( const ContentWindow& window,
     if( !pageChanged && visibleTilesArea == _visibleTilesArea && lod == _lod )
         return;
 
+    _visibleTilesArea = visibleTilesArea;
+
     if( pageChanged )
         emit zoomContextTileChanged();
 
-    _visibleTilesArea = visibleTilesArea;
+    if( pageChanged || lod != _lod )
+        emit statisticsChanged();
 
     if( lod != _lod )
     {
         _lod = lod;
-
-        emit statisticsChanged();
         emit tilesAreaChanged();
     }
 
@@ -89,6 +90,14 @@ void PDFSynchronizer::update( const ContentWindow& window,
 void PDFSynchronizer::synchronize( WallToWallChannel& channel )
 {
     Q_UNUSED( channel );
+}
+
+QString PDFSynchronizer::getStatistics() const
+{
+    const QString page = QString( " page %1/%2" ).arg(
+                             _pdf.getPage() + 1 ).arg(
+                             _pdf.getPageCount( ));
+    return LodSynchronizer::getStatistics() + page;
 }
 
 TilePtr PDFSynchronizer::getZoomContextTile() const

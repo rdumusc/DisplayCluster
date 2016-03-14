@@ -72,6 +72,10 @@ public:
 private:
     PDF& _pdf;
     const uint _tilesPerPage;
+
+    mutable QMutex _threadMapMutex;
+    typedef std::unique_ptr<PDF> PDFPtr;
+    mutable std::map<Qt::HANDLE, PDFPtr> _perThreadPDF;
 };
 
 #endif
