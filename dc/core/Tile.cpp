@@ -182,16 +182,23 @@ void Tile::_updateBorderNode( TextureNode* parentNode )
 
 void Tile::_onParentChanged( QQuickItem* newParent )
 {
-    if( !newParent || _policy != FillParent )
+    if( !newParent )
+    {
+        disconnect( _widthConn );
+        disconnect( _heightConn );
+        return;
+    }
+
+    if( _policy != FillParent )
         return;
 
     setWidth( newParent->width( ));
     setHeight( newParent->height( ));
 
-    connect( newParent, &QQuickItem::widthChanged, [this]() {
+    _widthConn = connect( newParent, &QQuickItem::widthChanged, [this]() {
         setWidth( parentItem()->width( ));
     } );
-    connect( newParent, &QQuickItem::heightChanged, [this]() {
+    _heightConn = connect( newParent, &QQuickItem::heightChanged, [this]() {
         setHeight( parentItem()->height( ));
     } );
 }
