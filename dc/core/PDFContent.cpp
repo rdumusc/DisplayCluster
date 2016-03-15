@@ -85,11 +85,6 @@ bool PDFContent::readMetadata()
     return true;
 }
 
-QSize PDFContent::getMaxDimensions() const
-{
-    return UNDEFINED_SIZE;
-}
-
 const QStringList& PDFContent::getSupportedExtensions()
 {
     static QStringList extensions;

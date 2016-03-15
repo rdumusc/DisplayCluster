@@ -69,11 +69,6 @@ bool SVGContent::readMetadata()
     return true;
 }
 
-QSize SVGContent::getMaxDimensions() const
-{
-    return UNDEFINED_SIZE;
-}
-
 const QStringList& SVGContent::getSupportedExtensions()
 {
     static QStringList extensions;

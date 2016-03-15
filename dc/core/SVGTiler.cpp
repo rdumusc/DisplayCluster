@@ -39,21 +39,20 @@
 
 #include "SVGTiler.h"
 
+#include "Content.h"
+
 namespace
 {
 const uint tileSize = 512;
-const qreal maxScaleFactor = 5;
 }
 
 SVGTiler::SVGTiler( SVGTextureFactoryPtr factory )
-    : LodTiler( factory->getDefaultSize() * maxScaleFactor, tileSize )
+    : LodTiler( factory->getDefaultSize() * Content::getMaxScale(), tileSize )
     , _factory( std::move( factory ))
 {}
 
 QImage SVGTiler::getCachableTileImage( const uint tileId ) const
 {
-    Q_UNUSED( tileId );
-
     const QRect imageRect = getTileRect( tileId );
     const QRectF zoomRect = getNormalizedTileRect( tileId );
 

@@ -39,6 +39,7 @@
 
 #include "PDFTiler.h"
 
+#include "Content.h"
 #include "LodTools.h"
 
 #include <QThread>
@@ -46,11 +47,10 @@
 namespace
 {
 const uint tileSize = 512;
-const qreal maxScaleFactor = 5;
 }
 
 PDFTiler::PDFTiler( PDF& pdf )
-    : LodTiler( pdf.getSize() * maxScaleFactor, tileSize )
+    : LodTiler( pdf.getSize() * Content::getMaxScale(), tileSize )
     , _pdf( pdf )
     , _tilesPerPage( _lodTool.getTilesCount( ))
 {}

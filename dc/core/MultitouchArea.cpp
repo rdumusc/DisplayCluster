@@ -45,7 +45,6 @@
 namespace
 {
 const qreal wheelFactor = 0.3;
-const int invalidPointId = -1;
 const qreal defaultPanThreshold = 20;
 const qreal pinchThreshold = 10;
 const qreal doubleTapThreshold = 40;
