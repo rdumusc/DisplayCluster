@@ -43,6 +43,7 @@
 #include "types.h"
 
 #include <map>
+#include <QMutex>
 
 /**
  * Tools to compute LOD pyramid data for a 2D tiled image.
@@ -103,6 +104,7 @@ private:
     const uint _tileSize;
     const uint _maxLod;
 
+    mutable QMutex _lodTilesMapCacheMutex;
     typedef std::map<size_t, LodTools::TileInfos> LodTilesMap;
     mutable LodTilesMap _lodTilesMapCache;
 

@@ -111,8 +111,8 @@ QImage PDF::renderToImage( const QSize& imageSize, const QRectF& region ) const
     const qreal zoomX = 1.0 / region.width();
     const qreal zoomY = 1.0 / region.height();
 
-    const QPoint topLeft( region.x() * imageSize.width(),
-                          region.y() * imageSize.height( ));
+    const QPointF topLeft( region.x() * imageSize.width(),
+                           region.y() * imageSize.height( ));
 
     const qreal resX = PDF_RES * imageSize.width() / pageSize.width();
     const qreal resY = PDF_RES * imageSize.height() / pageSize.height();

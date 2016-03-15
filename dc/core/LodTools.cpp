@@ -80,8 +80,9 @@ uint LodTools::getFirstTileId( const uint lod ) const
     if( lod == getMaxLod( ))
         return 0;
 
-    const uint nextLod = lod + 1;
-    return getFirstTileId( nextLod ) + std::pow( 4, getMaxLod() - nextLod );
+    const QSize tiles = getTilesCount( lod + 1 );
+    const uint count = tiles.width() * tiles.height();
+    return count + getFirstTileId( lod + 1 );
 }
 
 LodTools::TileIndex LodTools::getTileIndex( const uint tileId ) const
@@ -119,6 +120,7 @@ QRect LodTools::getTileCoord( const uint tileId ) const
 
 const LodTools::TileInfos& LodTools::getAllTileInfos( const uint lod ) const
 {
+    const QMutexLocker lock( &_lodTilesMapCacheMutex );
     if( !_lodTilesMapCache.count( lod ))
     {
         LodTools::TileInfos& coords = _lodTilesMapCache[lod];

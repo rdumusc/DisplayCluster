@@ -73,14 +73,15 @@ void PDFSynchronizer::update( const ContentWindow& window,
     if( pageChanged )
         emit zoomContextTileChanged();
 
-    if( pageChanged || lod != _lod )
-        emit statisticsChanged();
-
-    if( lod != _lod )
+    const bool lodChanged = lod != _lod;
+    if( lodChanged )
     {
         _lod = lod;
         emit tilesAreaChanged();
     }
+
+    if( pageChanged || lodChanged )
+        emit statisticsChanged();
 
     setBackgroundTile( _tileSource.getPreviewTileId( ));
 
