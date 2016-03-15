@@ -1,6 +1,6 @@
 /*********************************************************************/
 /* Copyright (c) 2016, EPFL/Blue Brain Project                       */
-/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
+/*                     Daniel.Nachbaur@epfl.ch                       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -37,41 +37,37 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "SVGImage.h"
+#ifndef STREAMIMAGE_H
+#define STREAMIMAGE_H
 
-SVGImage::SVGImage( const SVGTiler& dataSource, const uint tileId )
-    : _dataSource( dataSource )
-    , _tileId( tileId )
-{}
+#include "Image.h"
 
-int SVGImage::getWidth() const
+#include <deflect/types.h>
+
+/**
+ * Image wrapper for a pixel stream image.
+ */
+class StreamImage : public Image
 {
-    return _image->getWidth();
-}
+public:
+    /** Constructor, stores the given deflect frame. */
+    StreamImage( deflect::FramePtr frame, uint tileIndex );
 
-int SVGImage::getHeight() const
-{
-    return _image->getHeight();
-}
+    /** @copydoc Image::getWidth */
+    int getWidth() const override;
 
-const uint8_t* SVGImage::getData() const
-{
-    return _image->getData();
-}
+    /** @copydoc Image::getHeight */
+    int getHeight() const override;
 
-uint SVGImage::getFormat() const
-{
-    return _image->getFormat();
-}
+    /** @copydoc Image::getData */
+    const uint8_t* getData() const override;
 
-bool SVGImage::isGpuImage() const
-{
-    return true;
-}
+    /** @copydoc Image::getFormat */
+    uint getFormat() const override;
 
-bool SVGImage::generateGpuImage()
-{
-    // Call getTileImage so that the image gets cached for the next request
-    _image = _dataSource.getTileImage( _tileId );
-    return true;
-}
+private:
+    deflect::FramePtr _frame;
+    const uint _tileIndex;
+};
+
+#endif

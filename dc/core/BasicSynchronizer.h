@@ -61,9 +61,6 @@ public:
     /** @copydoc ContentSynchronizer::synchronize */
     void synchronize( WallToWallChannel& channel ) override;
 
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
-
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
 

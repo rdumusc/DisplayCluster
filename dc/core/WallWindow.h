@@ -102,6 +102,9 @@ public:
     /** @return the Qt quick render control. */
     QQuickRenderControl& getRenderControl();
 
+    /** @return the texture uploader. */
+    TextureUploader& getUploader();
+
 private:
     void exposeEvent( QExposeEvent* exposeEvent ) final;
 

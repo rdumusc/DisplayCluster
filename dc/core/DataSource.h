@@ -53,7 +53,7 @@ public:
     virtual ~DataSource() {}
 
     /** Get a tile image by its id. @threadsafe */
-    virtual QImage getTileImage( uint tileId, uint64_t timestamp ) const = 0;
+    virtual ImagePtr getTileImage( uint tileId ) const = 0;
 
     /** Get the coordinates of a tile. */
     virtual QRect getTileRect( uint tileId ) const = 0;

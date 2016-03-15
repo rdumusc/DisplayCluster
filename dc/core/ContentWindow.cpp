@@ -283,6 +283,9 @@ void ContentWindow::createInteractionDelegate()
     case CONTENT_TYPE_PIXEL_STREAM:
         interactionDelegate_.reset( new PixelStreamInteractionDelegate( *this ));
         break;
+    case CONTENT_TYPE_MOVIE:
+        interactionDelegate_.reset( new ContentInteractionDelegate( *this ));
+        break;
 #if ENABLE_PDF_SUPPORT
     case CONTENT_TYPE_PDF:
         interactionDelegate_.reset( new PDFInteractionDelegate( *this ));

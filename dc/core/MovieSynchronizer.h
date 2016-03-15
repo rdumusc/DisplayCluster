@@ -40,15 +40,14 @@
 #ifndef MOVIESYNCHRONIZER_H
 #define MOVIESYNCHRONIZER_H
 
-#include "BasicSynchronizer.h"
+#include "TiledSynchronizer.h"
 #include "FpsCounter.h"
 
 /**
  * Synchronizes a Movie between different QML windows.
  */
-class MovieSynchronizer : public BasicSynchronizer
+class MovieSynchronizer : public TiledSynchronizer
 {
-    Q_OBJECT
     Q_DISABLE_COPY( MovieSynchronizer )
 
 public:
@@ -56,30 +55,30 @@ public:
      * Construct a synchronizer for a movie, opening it in the provider.
      * @param uri The uri of the movie to open.
      */
-    MovieSynchronizer( const QString& uri );
-
-    /** @copydoc ContentSynchronizer::update */
-    void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
+    explicit MovieSynchronizer( const QString& uri );
 
     /** Update the movies, using the channel to synchronize accross processes.*/
     void synchronize( WallToWallChannel& channel ) final;
 
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
+    /** @copydoc TiledSynchronizer::update */
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) final;
 
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
+    /** @copydoc TiledSynchronizer::getTilesArea */
+    QSize getTilesArea() const final;
 
-    /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
+    /** @copydoc TiledSynchronizer::getStatistics */
+    QString getStatistics() const final;
 
-private slots:
-    void onTextureUploaded();
+    /** @copydoc TiledSynchronizer::getTileImage */
+    ImagePtr getTileImage( uint tileIndex ) const final;
 
 private:
     MovieUpdaterSharedPtr _updater;
     FpsCounter _fpsCounter;
+
+    bool _tilesDirty;
+    bool _updateExistingTiles;
 };
 
 #endif

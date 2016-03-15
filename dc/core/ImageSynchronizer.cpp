@@ -49,11 +49,9 @@ ImageSynchronizer::ImageSynchronizer( const QString& uri )
     : _uri( uri )
 {}
 
-ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex,
-                                          const uint64_t timestamp ) const
+ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );
-    Q_UNUSED( timestamp );
 
     const QImage image( _uri );
     if( image.isNull( ))

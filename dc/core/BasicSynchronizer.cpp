@@ -64,11 +64,6 @@ void BasicSynchronizer::synchronize( WallToWallChannel& channel )
     Q_UNUSED( channel );
 }
 
-bool BasicSynchronizer::needRedraw() const
-{
-    return false;
-}
-
 QSize BasicSynchronizer::getTilesArea() const
 {
     return _tileSize;

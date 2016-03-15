@@ -71,11 +71,14 @@ public:
     /** Destructor. */
     ~FFMPEGFrame();
 
-    /** @copydoc Image::getTimestamp */
-    int64_t getTimestamp() const override;
+    /** @return the timestamp of the frame. */
+    int64_t getTimestamp() const;
 
     /** @copydoc Image::getData */
     const uint8_t* getData() const override;
+
+    /** @copydoc Image::getFormat */
+    uint getFormat() const override;
 
     /** @copydoc Image::getWidth */
     int getWidth() const override;

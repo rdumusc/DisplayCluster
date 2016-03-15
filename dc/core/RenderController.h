@@ -85,6 +85,7 @@ private:
 
     int _renderTimer;
     int _stopRenderingDelayTimer;
+    bool _needRedraw;
 };
 
 #endif // RENDERCONTROLLER_H

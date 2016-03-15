@@ -19,6 +19,7 @@ Rectangle {
                                parent.height * Style.zoomContextMaxSizeRatio * contentwindow.content.aspectRatio) :
                       Math.min(parent.height * Style.zoomContextSizeRatio * contentwindow.content.aspectRatio,
                                parent.width * Style.zoomContextMaxSizeRatio)
+    color: Style.zoomContextBackgroundColor
     height: width / contentwindow.content.aspectRatio
     anchors.bottom: parent.bottom
     anchors.left: parent.left

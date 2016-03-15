@@ -45,26 +45,51 @@
 #include "Tile.h"
 
 MovieSynchronizer::MovieSynchronizer( const QString& uri )
-    : _updater( new MovieUpdater( uri ))
-{}
+    : TiledSynchronizer( TileSwapPolicy::SwapTilesAlwaysSynchronously )
+    , _updater( new MovieUpdater( uri ))
+    , _tilesDirty( true )
+    , _updateExistingTiles( true )
+{
+}
 
 void MovieSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
-    _updater->update( static_cast<const MovieContent&>( *window.getContent( )));
-    _updater->setVisible( !visibleArea.isEmpty( ));
+    _updater->update( static_cast< const MovieContent& >( *window.getContent()),
+                      !visibleArea.isEmpty( ));
 
-    BasicSynchronizer::update( window, visibleArea );
+    if( _visibleTilesArea == visibleArea )
+        return;
+
+    _visibleTilesArea = visibleArea;
+    _tilesDirty = true;
 }
 
 void MovieSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    _updater->sync( channel );
+    if( TiledSynchronizer::swapTiles( channel ))
+    {
+        _fpsCounter.tick();
+        emit statisticsChanged();
+
+        _tilesDirty = true;
+        _updateExistingTiles = true;
+    }
+
+    _updateExistingTiles = _updater->synchronizeTimestamp( channel ) &&
+                           _updateExistingTiles;
+
+    if( _tilesDirty )
+    {
+        TiledSynchronizer::updateTiles( *_updater, _updateExistingTiles );
+        _tilesDirty = false;
+        _updateExistingTiles = false;
+    }
 }
 
-bool MovieSynchronizer::needRedraw() const
+QSize MovieSynchronizer::getTilesArea() const
 {
-    return !_updater->isPaused();
+    return _updater->getTilesArea( 0 );
 }
 
 QString MovieSynchronizer::getStatistics() const
@@ -72,18 +97,7 @@ QString MovieSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex,
-                                          const uint64_t timestamp ) const
+ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex ) const
 {
-    Q_UNUSED( tileIndex );
-    Q_UNUSED( timestamp );
-    return _updater->getImage();
-}
-
-void MovieSynchronizer::onTextureUploaded()
-{
-    _fpsCounter.tick();
-    emit statisticsChanged();
-
-//    emit swapImage();
+    return _updater->getTileImage( tileIndex );
 }

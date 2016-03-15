@@ -248,3 +248,8 @@ WallToWallChannel& WallWindow::getWallChannel()
 {
     return _wallChannel;
 }
+
+TextureUploader& WallWindow::getUploader()
+{
+    return *_uploader;
+}

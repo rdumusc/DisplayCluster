@@ -55,14 +55,12 @@ class TiledSynchronizer : public ContentSynchronizer
 public:
     enum TileSwapPolicy {
         SwapTilesIndependently,
-        SwapTilesSynchronously
+        SwapTilesSynchronously,
+        SwapTilesAlwaysSynchronously
     };
 
     /** Constructor */
     explicit TiledSynchronizer( TileSwapPolicy policy );
-
-    /** @copydoc ContentSynchronizer::needRedraw */
-    bool needRedraw() const override;
 
     /** @copydoc ContentSynchronizer::onSwapReady */
     void onSwapReady( TilePtr tile ) override;

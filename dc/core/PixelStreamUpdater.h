@@ -64,7 +64,7 @@ public:
      * @copydoc DataSource::getTileImage
      * @threadsafe
      */
-    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const final;
+    ImagePtr getTileImage( uint tileIndex ) const final;
 
     /** @copydoc DataSource::getTileRect */
     QRect getTileRect( uint tileIndex ) const final;
@@ -91,7 +91,7 @@ public slots:
 
 signals:
     /** Emitted when a new picture has become available. */
-    void pictureUpdated( uint64_t frameIndex );
+    void pictureUpdated();
 
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
@@ -101,7 +101,6 @@ private:
     SwapSyncFrame _swapSyncFrame;
     deflect::FramePtr _currentFrame;
     mutable QReadWriteLock _mutex;
-    uint64_t _frameIndex;
     bool _readyToSwap;
 
     void _onFrameSwapped( deflect::FramePtr frame );

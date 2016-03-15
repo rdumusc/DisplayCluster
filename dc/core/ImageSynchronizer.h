@@ -55,7 +55,7 @@ public:
     explicit ImageSynchronizer( const QString& uri );
 
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
+    ImagePtr getTileImage( uint tileIndex ) const override;
 
     /** @copydoc ContentSynchronizer::getZoomContextTile */
     TilePtr getZoomContextTile() const;

@@ -53,6 +53,7 @@ MovieUpdater::MovieUpdater( const QString& uri )
     , _loop( true )
     , _visible( true )
     , _sharedTimestamp( 0.0 )
+    , _lastTimestamp( 0.0 )
 {
     // Observed bug [DISCL-295]: opening a movie might fail on WallProcesses
     // despite correctly reading metadata on the MasterProcess.
@@ -61,140 +62,77 @@ MovieUpdater::MovieUpdater( const QString& uri )
     if( !_ffmpegMovie->isValid( ))
         put_flog( LOG_WARN, "Movie is invalid: %s",
                   uri.toLocal8Bit().constData( ));
-    else
-        _ffmpegMovie->startDecoding();
-
-    _syncSwapImage.setCallback( [&]( int64_t ) { emit textureUploaded(); });
 }
 
 MovieUpdater::~MovieUpdater() {}
 
-bool MovieUpdater::isVisible() const
-{
-    return _visible;
-}
-
-void MovieUpdater::setVisible( const bool visible )
-{
-    _visible = visible;
-}
-
-bool MovieUpdater::isPaused() const
-{
-    return _paused;
-}
-
-void MovieUpdater::update( const MovieContent& movie )
+void MovieUpdater::update( const MovieContent& movie, const bool visible )
 {
     _paused = movie.getControlState() & STATE_PAUSED;
     _loop = movie.getControlState() & STATE_LOOP;
+    _visible = visible;
 }
 
-void MovieUpdater::sync( WallToWallChannel& channel )
+QRect MovieUpdater::getTileRect( const uint tileIndex ) const
 {
-    if( !_ffmpegMovie->isValid( ))
-        return;
+    Q_UNUSED( tileIndex );
+    return QRect( 0, 0, _ffmpegMovie->getWidth(), _ffmpegMovie->getHeight( ));
+}
 
+QSize MovieUpdater::getTilesArea( const uint lod ) const
+{
+    Q_UNUSED( lod );
+    return getTileRect( 0 ).size();
+}
+
+ImagePtr MovieUpdater::getTileImage( const uint tileIndex ) const
+{
+    Q_UNUSED( tileIndex );
+    ImagePtr image = _ffmpegMovie->getFrame( _sharedTimestamp );
+    if( _loop && !image )
+        image = _ffmpegMovie->getFrame( 0.0 );
+    _lastTimestamp = _ffmpegMovie->getPosition();
+    return image;
+}
+
+Indices MovieUpdater::computeVisibleSet( const QRectF& visibleTilesArea,
+                                         const uint lod ) const
+{
+    Q_UNUSED( lod );
+
+    Indices visibleSet;
+
+    if( visibleTilesArea.isEmpty( ))
+        return visibleSet;
+
+    visibleSet.insert( 0 );
+    return visibleSet;
+}
+
+uint MovieUpdater::getMaxLod() const
+{
+    return 0;
+}
+
+bool MovieUpdater::synchronizeTimestamp( WallToWallChannel& channel )
+{
     _timer.setCurrentTime( channel.getTime( ));
-    if( !_paused )
-    {
-        _updateTimestamp( channel );
-        _synchronizeTimestamp( channel );
-    }
 
-    if( !_visible )
-        _syncSwapImage.update( _sharedTimestamp );
+    if( !_ffmpegMovie->isValid() || _paused )
+        return false;
 
-    const SyncFunction& versionCheckFunc =
-            std::bind( &WallToWallChannel::checkVersion, &channel,
-                       std::placeholders::_1 );
-    _syncSwapImage.sync( versionCheckFunc );
-
-    if( !_visible )
-        return;
-
-    if( _futurePicture.valid() && is_ready( _futurePicture ))
-    {
-        try
-        {
-            _image  = _futurePicture.get();
-            //emit uploadTexture( _futurePicture.get(), _popTextureID( ));
-        }
-        catch( const std::exception& e )
-        {
-            put_flog( LOG_DEBUG, "Future was cancelled: ", e.what( ));
-        }
-    }
-
-    if( _loop && ( _ffmpegMovie->isAtEOF() ||
-                   _sharedTimestamp > _ffmpegMovie->getDuration( )))
-    {
-        _sharedTimestamp = 0.0;
-    }
-
-    const bool needsFrame = _getDelay() >= _ffmpegMovie->getFrameDuration();
-    if( !_futurePicture.valid() && needsFrame /*&& !_textures.empty( )*/)
-        _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
-}
-
-ImagePtr MovieUpdater::getImage() const
-{
-    return _image;
-}
-
-//void MovieUpdater::onTextureUploaded( const ImagePtr image,
-//                                      const uint textureID )
-//{
-//    _syncSwapImage.update( image->getTimestamp( ));
-//    _textures.push_back( textureID );
-//}
-
-//uint MovieUpdater::_popTextureID()
-//{
-//    assert( !_textures.empty( ));
-//    const uint textureID = _textures.front();
-//    _textures.pop_front();
-//    return textureID;
-//}
-
-//TextureFactory* MovieUpdater::createTextureFactory()
-//{
-//    TextureFactory* factory =
-//            new TextureFactory( QSize( _ffmpegMovie->getWidth(),
-//                                       _ffmpegMovie->getHeight( )));
-
-//    connect( factory, &TextureFactory::textureCreated,
-//             [&]( const uint textureID) { _textures.push_back( textureID ); } );
-//    return factory;
-//}
-
-double MovieUpdater::_getDelay() const
-{
-    return fabs( _sharedTimestamp - _ffmpegMovie->getPosition( ));
-}
-
-void MovieUpdater::_updateTimestamp( WallToWallChannel& channel )
-{
-    // Don't increment the timestamp until all the processes have caught up
-    const bool isInSync = _getDelay() <= _ffmpegMovie->getFrameDuration();
-    if( !channel.allReady( !_visible || isInSync ))
-        return;
-
+    _sharedTimestamp = _lastTimestamp;
     _sharedTimestamp += ElapsedTimer::toSeconds( _timer.getElapsedTime( ));
-}
 
-void MovieUpdater::_synchronizeTimestamp( WallToWallChannel& channel )
-{
     // Elect a leader among processes which have decoded a frame
-    const bool isCandidate = _ffmpegMovie->isValid() && _visible;
-    const int leader = channel.electLeader( isCandidate );
-
+    const int leader = channel.electLeader( _visible );
     if( leader < 0 )
-        return;
+        return true;
 
     if( leader == channel.getRank( ))
         channel.broadcast( ElapsedTimer::toTimeDuration( _sharedTimestamp ));
     else
         _sharedTimestamp = ElapsedTimer::toSeconds(
                                    channel.receiveTimestampBroadcast( leader ));
+    return true;
 }
