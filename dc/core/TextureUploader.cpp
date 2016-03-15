@@ -134,8 +134,7 @@ void TextureUploader::uploadTexture( ImagePtr image, TileWeakPtr tile_ )
     glFinish();
 
     // notify tile that its texture has been updated
-    QMetaObject::invokeMethod( tile.get(), "markBackTextureUpdated",
-                               Qt::QueuedConnection );
+    tile->textureUpdated( tile );
 
     // notify RenderController for redraw
     emit uploaded();

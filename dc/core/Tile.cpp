@@ -125,11 +125,6 @@ void Tile::swapImage()
     QQuickItem::update();
 }
 
-void Tile::markBackTextureUpdated()
-{
-    emit textureUpdated( shared_from_this( ));
-}
-
 QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
                                 QQuickItem::UpdatePaintNodeData* )
 {
