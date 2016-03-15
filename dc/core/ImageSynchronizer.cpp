@@ -49,6 +49,19 @@ ImageSynchronizer::ImageSynchronizer( const QString& uri )
     : _uri( uri )
 {}
 
+void ImageSynchronizer::update( const ContentWindow& window,
+                                const QRectF& visibleArea )
+{
+    Q_UNUSED( window );
+
+    // The error content stores the size of the original content, which is
+    // generally different than the error image's size. But the tile must
+    // always have the same size as the texture, otherwise the texture upload
+    // fails.
+    if( !visibleArea.isEmpty( ))
+        createTile( QImageReader( _uri ).size( ));
+}
+
 ImagePtr ImageSynchronizer::getTileImage( const uint tileIndex ) const
 {
     Q_UNUSED( tileIndex );

@@ -109,7 +109,13 @@ signals:
      */
     void textureReady( TilePtr tile );
 
-    /** Notify that the back texture has been updated and it can be swapped. */
+    /**
+     * Notify that the back texture has been updated and it can be swapped.
+     *
+     * IMPORTANT:
+     * This signal is designed to be emitted from the TextureUploader thread.
+     * Only connect to it using a Qt::QueuedConnection.
+     */
     void textureUpdated( TilePtr tile );
 
 public slots:
@@ -118,9 +124,6 @@ public slots:
 
     /** Swap the front and back texture. */
     void swapImage();
-
-    /** Indicate that the back GL texture has been externally updated. */
-    void markBackTextureUpdated();
 
 protected:
     /** Called on the render thread to update the scene graph. */

@@ -70,6 +70,10 @@ public:
     /** @copydoc ContentSynchronizer::onSwapReady */
     void onSwapReady( TilePtr tile ) override;
 
+protected:
+    /** Create this content's unique tile with the given dimensions. */
+    void createTile( const QSize& size );
+
 private:
     bool _tileAdded;
     QSize _tileSize;
