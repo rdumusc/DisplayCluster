@@ -40,7 +40,6 @@
 #include "PDFContent.h"
 
 #include "PDF.h"
-#include "PDFProvider.h"
 
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
@@ -73,20 +72,6 @@ CONTENT_TYPE PDFContent::getType() const
     return CONTENT_TYPE_PDF;
 }
 
-QString PDFContent::getProviderId() const
-{
-    return PDFProvider::ID;
-}
-
-QString PDFContent::getSourceImage() const
-{
-    QString source;
-    QTextStream stream( &source );
-    stream << PDFProvider::ID << "/" << _uri;
-    stream << "#" << _pageNumber;
-    return source;
-}
-
 bool PDFContent::readMetadata()
 {
     const PDF pdf( _uri );
@@ -98,11 +83,6 @@ bool PDFContent::readMetadata()
     _pageNumber = std::min( _pageNumber, _pageCount - 1 );
 
     return true;
-}
-
-QSize PDFContent::getMaxDimensions() const
-{
-    return UNDEFINED_SIZE;
 }
 
 const QStringList& PDFContent::getSupportedExtensions()

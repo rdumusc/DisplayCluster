@@ -42,18 +42,16 @@
 
 #include "types.h"
 
-#include "Tiles.h"
+#include "DataSource.h"
 #include "SwapSyncObject.h"
 
-#include <deflect/SegmentDecoder.h>
-
 #include <QObject>
-#include <deque>
+#include <QReadWriteLock>
 
 /**
  * Synchronize the update of PixelStreams and send new frame requests.
  */
-class PixelStreamUpdater : public QObject
+class PixelStreamUpdater : public QObject, public DataSource
 {
     Q_OBJECT
     Q_DISABLE_COPY( PixelStreamUpdater )
@@ -62,19 +60,30 @@ public:
     /** Constructor. */
     PixelStreamUpdater();
 
+    /**
+     * @copydoc DataSource::getTileImage
+     * @threadsafe
+     */
+    QImage getTileImage( uint tileIndex, uint64_t timestamp ) const final;
+
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileIndex ) const final;
+
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
+
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
+
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
+
     /** Synchronize the update of the PixelStreams. */
     void synchronizeFramesSwap( WallToWallChannel& channel );
 
-    /**
-     * Get a segment by its frame- and tile-index.
-     */
-    QImage getTileImage( uint tileIndex );
-
-    /** Get the list of tiles for use by QML repeater. */
-    Tiles& getTiles();
-
-    /** Update the tiles visibility given the visible area of the window. */
-    void updateVisibility( const QRectF& visibleArea );
+    /** Allow the updater to request next frame (flow control). */
+    void getNextFrame();
 
 public slots:
     /** Update the appropriate PixelStream with the given frame. */
@@ -82,7 +91,7 @@ public slots:
 
 signals:
     /** Emitted when a new picture has become available. */
-    void pictureUpdated();
+    void pictureUpdated( uint64_t frameIndex );
 
     /** Emitted to request a new frame after a successful swap. */
     void requestFrame( QString uri );
@@ -90,19 +99,12 @@ signals:
 private:
     typedef SwapSyncObject<deflect::FramePtr> SwapSyncFrame;
     SwapSyncFrame _swapSyncFrame;
-
     deflect::FramePtr _currentFrame;
-
-    Tiles _tiles;
-    QRectF _visibleArea;
-    bool _tilesDirty;
-
-    Indices _visibleSet;
+    mutable QReadWriteLock _mutex;
+    uint64_t _frameIndex;
+    bool _readyToSwap;
 
     void _onFrameSwapped( deflect::FramePtr frame );
-    void _decodeVisibleSegments( deflect::Segments& segments );
-    Indices _computeVisibleSet( const deflect::Segments& segments ) const;
-    void _updateTiles();
 };
 
 #endif

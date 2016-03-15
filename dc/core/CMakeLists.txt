@@ -25,23 +25,19 @@ set(DCCORE_LINK_LIBRARIES
     ${FFMPEG_LIBRARIES}
 )
 
-if(ENABLE_TUIO_TOUCH_LISTENER)
-  list(APPEND DCCORE_MOC_PUBLIC_HEADERS MultiTouchListener.h)
-  list(APPEND DCCORE_SOURCES MultiTouchListener.cpp)
-  list(APPEND DCCORE_LINK_LIBRARIES PUBLIC TUIO)
-endif()
-
 if(ENABLE_PDF_SUPPORT)
-  list(APPEND DCCORE_PUBLIC_HEADER
-    PDFProvider.h
+  list(APPEND DCCORE_PUBLIC_HEADERS
+    PDFTiler.h
   )
   list(APPEND DCCORE_MOC_PUBLIC_HEADERS
     PDFContent.h
+    PDFSynchronizer.h
   )
   list(APPEND DCCORE_SOURCES
     PDF.cpp
     PDFContent.cpp
-    PDFProvider.cpp
+    PDFSynchronizer.cpp
+    PDFTiler.cpp
     PDFInteractionDelegate.cpp
     thumbnail/PDFThumbnailGenerator.cpp
   )
@@ -50,9 +46,13 @@ endif()
 
 list(APPEND DCCORE_PUBLIC_HEADERS
   types.h
+  CachedDataSource.h
   ContentFactory.h
   ContentLoader.h
   ContentType.h
+  DataSource.h
+  DynamicTexture.h
+  DisplayGroupController.h
   DynamicTextureContent.h
   ElapsedTimer.h
   FFMPEGFrame.h
@@ -62,30 +62,28 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   FFMPEGVideoStream.h
   FileCommandHandler.h
   FpsCounter.h
-  gestures/DoubleTapGestureRecognizer.h
-  gestures/PanGesture.h
-  gestures/PanGestureRecognizer.h
-  gestures/PinchGesture.h
-  gestures/PinchGestureRecognizer.h
   LayoutEngine.h
-  ImageProviderStringifier.h
+  Image.h
   log.h
-  MovieProvider.h
+  LodTiler.h
+  LodTools.h
   MPIChannel.h
   MPIContext.h
   MPINospin.h
   PixelStreamContent.h
-  QmlWindowRenderer.h
   qmlUtils.h
+  QtImage.h
+  QuadLineNode.h
   SessionCommandHandler.h
   State.h
   StatePreview.h
   StateSerializationHelper.h
   SVGContent.h
-  SVGProvider.h
+  SVGImage.h
+  SVGTiler.h
   TestPattern.h
   TextureContent.h
-  TextureProvider.h
+  TextureNode.h
   VisibilityHelper.h
   ZoomInteractionDelegate.h
   ZoomHelper.h
@@ -118,27 +116,33 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   ContentWindow.h
   ContentWindowController.h
   Coordinates.h
+  DataProvider.h
   DisplayGroup.h
   DisplayGroupRenderer.h
-  DynamicTexture.h
   DynamicTextureSynchronizer.h
+  ImageSynchronizer.h
+  LodSynchronizer.h
   Markers.h
   MasterFromWallChannel.h
   MasterToWallChannel.h
   MovieContent.h
   MovieSynchronizer.h
   MovieUpdater.h
+  MultitouchArea.h
   Options.h
   PixelStreamInteractionDelegate.h
-  PixelStreamProvider.h
   PixelStreamSynchronizer.h
   PixelStreamUpdater.h
   PixelStreamWindowManager.h
   QuickRenderer.h
   QmlControlPanel.h
+  QmlWindowRenderer.h
   RenderController.h
+  SVGSynchronizer.h
+  SVGTextureFactory.h
+  TextureUploader.h
   Tile.h
-  Tiles.h
+  TiledSynchronizer.h
   VectorialSynchronizer.h
   WallFromMasterChannel.h
   WallWindow.h
@@ -160,6 +164,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
 
 list(APPEND DCCORE_SOURCES
   BasicSynchronizer.cpp
+  CachedDataSource.cpp
   Content.cpp
   ContentAction.cpp
   ContentActionsModel.cpp
@@ -171,7 +176,9 @@ list(APPEND DCCORE_SOURCES
   ContentWindow.cpp
   ContentWindowController.cpp
   Coordinates.cpp
+  DataProvider.cpp
   DisplayGroup.cpp
+  DisplayGroupController.cpp
   DisplayGroupRenderer.cpp
   DynamicTexture.cpp
   DynamicTextureContent.cpp
@@ -185,23 +192,25 @@ list(APPEND DCCORE_SOURCES
   FileCommandHandler.cpp
   FpsCounter.cpp
   LayoutEngine.cpp
-  ImageProviderStringifier.cpp
+  ImageSynchronizer.cpp
   log.cpp
+  LodSynchronizer.cpp
+  LodTiler.cpp
+  LodTools.cpp
   Markers.cpp
   MasterFromWallChannel.cpp
   MasterToWallChannel.cpp
   MetaTypeRegistration.cpp
   MovieContent.cpp
-  MovieProvider.cpp
   MovieSynchronizer.cpp
   MovieUpdater.cpp
   MPIChannel.cpp
   MPIContext.cpp
   MPINospin.cpp
+  MultitouchArea.cpp
   Options.cpp
   PixelStreamContent.cpp
   PixelStreamInteractionDelegate.cpp
-  PixelStreamProvider.cpp
   PixelStreamSynchronizer.cpp
   PixelStreamUpdater.cpp
   PixelStreamWindowManager.cpp
@@ -209,17 +218,24 @@ list(APPEND DCCORE_SOURCES
   QmlControlPanel.cpp
   QmlWindowRenderer.cpp
   QmlTypeRegistration.cpp
+  QtImage.cpp
+  QuadLineNode.cpp
   RenderController.cpp
   SessionCommandHandler.cpp
   State.cpp
   StatePreview.cpp
   StateSerializationHelper.cpp
   SVGContent.cpp
-  SVGProvider.cpp
+  SVGImage.cpp
+  SVGTextureFactory.cpp
+  SVGTiler.cpp
+  SVGSynchronizer.cpp
   TestPattern.cpp
   TextureContent.cpp
-  TextureProvider.cpp
-  Tiles.cpp
+  TextureNode.cpp
+  TextureUploader.cpp
+  Tile.cpp
+  TiledSynchronizer.cpp
   VectorialSynchronizer.cpp
   VisibilityHelper.cpp
   WallFromMasterChannel.cpp
@@ -232,11 +248,6 @@ list(APPEND DCCORE_SOURCES
   configuration/Configuration.cpp
   configuration/MasterConfiguration.cpp
   configuration/WallConfiguration.cpp
-  gestures/DoubleTapGestureRecognizer.cpp
-  gestures/PanGesture.cpp
-  gestures/PanGestureRecognizer.cpp
-  gestures/PinchGesture.cpp
-  gestures/PinchGestureRecognizer.cpp
   localstreamer/AsyncImageLoader.cpp
   localstreamer/CommandLineOptions.cpp
   localstreamer/DockPixelStreamer.cpp

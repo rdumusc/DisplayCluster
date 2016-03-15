@@ -40,47 +40,34 @@
 #ifndef PIXELSTREAMSYNCHRONIZER_H
 #define PIXELSTREAMSYNCHRONIZER_H
 
-#include "ContentSynchronizer.h"
+#include "TiledSynchronizer.h"
 #include "FpsCounter.h"
 
 #include <QObject>
 
 /**
  * Synchronizes a PixelStream between different QML windows.
- *
- * The PixelStreamSynchronizer serves as an interface between the
- * PixelStreamProvider and the QML rendering, to inform it when new frames are
- * ready and swap them synchronously.
  */
-class PixelStreamSynchronizer : public ContentSynchronizer
+class PixelStreamSynchronizer : public TiledSynchronizer
 {
     Q_OBJECT
     Q_DISABLE_COPY( PixelStreamSynchronizer )
 
 public:
     /**
-     * Construct a synchronizer for a stream, opening it in the provider.
-     * @param uri The uri of the movie to open.
-     * @param provider The PixelStreamProvider where the stream will be opened.
+     * Construct a synchronizer for a stream.
      */
-    PixelStreamSynchronizer( const QString& uri,
-                             PixelStreamProvider& provider );
+    PixelStreamSynchronizer();
 
-    /** Destruct the synchronizer and close the stream in the provider. */
-    ~PixelStreamSynchronizer();
+    /** Set the source of data for the stream. */
+    void setDataSource( PixelStreamUpdaterSharedPtr updater );
 
     /** @copydoc ContentSynchronizer::update */
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) override;
 
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
-
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
-    /** @copydoc ContentSynchronizer::getTiles */
-    Tiles& getTiles() override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) override;
 
     /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const override;
@@ -88,14 +75,21 @@ public:
     /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const override;
 
-private:
-    const QString _uri;
-    PixelStreamProvider& _provider;
-    PixelStreamUpdaterSharedPtr _updater;
-    uint _frameIndex;
-    FpsCounter _fpsCounter;
+    /** @copydoc ContentSynchronizer::getTileImage */
+    ImagePtr getTileImage( uint tileIndex, uint64_t timestamp ) const override;
 
-    void _onPictureUpdated();
+    uint64_t getCurrentTimestamp() const override { return _frameIndex; }
+
+private:
+    PixelStreamUpdaterSharedPtr _updater;
+    FpsCounter _fpsCounter;
+    uint64_t _frameIndex;
+
+    bool _tilesDirty;
+    bool _updateExistingTiles;
+    QSize _tilesArea;
+
+    void _onPictureUpdated( uint64_t frameIndex );
 };
 
 #endif

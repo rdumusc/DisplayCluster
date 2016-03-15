@@ -70,9 +70,7 @@ void DisplayGroup::addContentWindow( ContentWindowPtr contentWindow )
 
     _contentWindows.push_back( contentWindow );
     _watchChanges( contentWindow );
-
-    contentWindow->setController(
-                make_unique<ContentWindowController>( *contentWindow, *this ));
+    _assignController( *contentWindow );
 
     emit( contentWindowAdded( contentWindow ));
     _sendDisplayGroup();
@@ -276,6 +274,11 @@ void DisplayGroup::_watchChanges( ContentWindowPtr contentWindow )
         _updateFocusedWindowsCoordinates();
         _sendDisplayGroup();
     } );
+}
+
+void DisplayGroup::_assignController( ContentWindow& window )
+{
+    window.setController( make_unique<ContentWindowController>( window, *this));
 }
 
 void DisplayGroup::_removeFocusedWindow( ContentWindowPtr window )

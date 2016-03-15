@@ -35,7 +35,6 @@
         <file>ControlPanelDelegate.qml</file>
         <file>ControlPanel.qml</file>
         <file>DisplayGroup.qml</file>
-        <file>DoubleBufferedImage.qml</file>
         <file>FocusControlButton.qml</file>
         <file>FullscreenControlButton.qml</file>
         <file>OneToOneControlButton.qml</file>

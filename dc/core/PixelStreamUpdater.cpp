@@ -39,16 +39,19 @@
 
 #include "PixelStreamUpdater.h"
 
-#include "Tile.h"
 #include "WallToWallChannel.h"
 
+#include "log.h"
+
 #include <deflect/Frame.h>
+#include <deflect/SegmentDecoder.h>
 #include <boost/bind.hpp>
 #include <QImage>
 #include <QThreadStorage>
 
 PixelStreamUpdater::PixelStreamUpdater()
-    : _tilesDirty( false )
+    : _frameIndex( 0 )
+    , _readyToSwap( true )
 {
     _swapSyncFrame.setCallback( boost::bind(
                                     &PixelStreamUpdater::_onFrameSwapped,
@@ -57,84 +60,13 @@ PixelStreamUpdater::PixelStreamUpdater()
 
 void PixelStreamUpdater::synchronizeFramesSwap( WallToWallChannel& channel )
 {
+    if( !_readyToSwap )
+        return;
+
     const SyncFunction& versionCheckFunc =
         boost::bind( &WallToWallChannel::checkVersion, &channel, _1 );
 
     _swapSyncFrame.sync( versionCheckFunc );
-
-    // If the frame was not swapped, refresh tiles caused by a visibility update
-    if( _tilesDirty )
-        _updateTiles();
-}
-
-Tiles& PixelStreamUpdater::getTiles()
-{
-    return _tiles;
-}
-
-QImage PixelStreamUpdater::getTileImage( const uint tileIndex )
-{
-    if( !_currentFrame )
-        throw std::runtime_error( "No frames yet" );
-
-    const auto& segment = _currentFrame->segments.at( tileIndex );
-
-    return QImage( (const uchar*)segment.imageData.constData(),
-                   segment.parameters.width, segment.parameters.height,
-                   QImage::Format_RGBX8888 );
-}
-
-void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
-{
-    _swapSyncFrame.update( frame );
-}
-
-void PixelStreamUpdater::updateVisibility( const QRectF& visibleArea )
-{
-    if( _visibleArea == visibleArea )
-        return;
-
-    _visibleArea = visibleArea;
-
-    if( !_currentFrame )
-        return;
-
-    if( _visibleSet != _computeVisibleSet( _currentFrame->segments ))
-        _tilesDirty = true;
-}
-
-void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
-{
-    std::sort( frame->segments.begin(), frame->segments.end(),
-               []( const deflect::Segment& s1, const deflect::Segment& s2 )
-        {
-            return ( s1.parameters.y < s2.parameters.y ||
-                     s1.parameters.x < s2.parameters.x );
-        } );
-
-    _currentFrame = frame;
-    _updateTiles();
-
-    emit pictureUpdated();
-    emit requestFrame( frame->uri );
-}
-
-void PixelStreamUpdater::_decodeVisibleSegments( deflect::Segments& segments )
-{
-#pragma omp parallel for
-    for( size_t i = 0; i < _visibleSet.size(); ++i )
-    {
-        const auto tileIndex = _visibleSet[i];
-        if( segments[tileIndex].parameters.compressed )
-        {
-            // turbojpeg handles need to be per thread
-            static QThreadStorage< deflect::SegmentDecoder > decoder;
-            decoder.localData().decode( segments[tileIndex] );
-        }
-    }
-    // Must be done after the parallel for, otherwise there are threading issues
-    for( auto tileIndex : _visibleSet )
-        _tiles.get( tileIndex )->setVisible( true );
 }
 
 QRect toRect( const deflect::SegmentParameters& params )
@@ -142,52 +74,99 @@ QRect toRect( const deflect::SegmentParameters& params )
     return QRect( params.x, params.y, params.width, params.height );
 }
 
-Indices
-PixelStreamUpdater::_computeVisibleSet( const deflect::Segments& segments) const
+QRect PixelStreamUpdater::getTileRect( const uint tileIndex ) const
 {
+    return toRect( _currentFrame->segments.at( tileIndex ).parameters );
+}
+
+QSize PixelStreamUpdater::getTilesArea( const uint lod ) const
+{
+    Q_UNUSED( lod );
+    if( !_currentFrame )
+        return QSize();
+    return _currentFrame->computeDimensions();
+}
+
+QImage PixelStreamUpdater::getTileImage( const uint tileIndex,
+                                         const uint64_t timestamp ) const
+{
+    if( !_currentFrame )
+        throw std::runtime_error( "No frames yet" );
+
+    const QReadLocker lock( &_mutex );
+    if( timestamp != _frameIndex )
+    {
+        put_flog( LOG_DEBUG, "incorrect timestamp: %d, current frameIndex: %d",
+                  timestamp, _frameIndex );
+        return QImage();
+    }
+
+    auto& segment = _currentFrame->segments.at( tileIndex );
+    if( segment.parameters.compressed )
+    {
+        // turbojpeg handles need to be per thread, and this function may be
+        // called from multiple threads
+        static QThreadStorage< deflect::SegmentDecoder > decoder;
+        decoder.localData().decode( segment );
+    }
+
+    return QImage( (const uchar*)segment.imageData.constData(),
+                   segment.parameters.width, segment.parameters.height,
+                   QImage::Format_RGBX8888 );
+}
+
+Indices PixelStreamUpdater::computeVisibleSet( const QRectF& visibleTilesArea,
+                                               const uint lod ) const
+{
+    Q_UNUSED( lod );
+
     Indices visibleSet;
 
-    if( _visibleArea.isEmpty( ))
+    if( !_currentFrame || visibleTilesArea.isEmpty( ))
         return visibleSet;
 
-    for( size_t i = 0; i < segments.size(); ++i )
+    for( size_t i = 0; i < _currentFrame->segments.size(); ++i )
     {
-        if( _visibleArea.intersects( toRect( segments[i].parameters )))
-            visibleSet.push_back( i );
+        if( visibleTilesArea.intersects( toRect( _currentFrame->segments[i].parameters )))
+            visibleSet.insert( i );
     }
     return visibleSet;
 }
 
-void PixelStreamUpdater::_updateTiles()
+uint PixelStreamUpdater::getMaxLod() const
 {
-    if( !_currentFrame )
-        return;
+    return 0;
+}
 
-    const Indices visibleSet = _computeVisibleSet( _currentFrame->segments );
+void PixelStreamUpdater::getNextFrame()
+{
+    //emit requestFrame( _currentFrame->uri );
+    _readyToSwap = true;
+}
 
-    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
-    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
-    const Indices currentTiles = set_difference( _visibleSet, removedTiles );
+void PixelStreamUpdater::updatePixelStream( deflect::FramePtr frame )
+{
+    _swapSyncFrame.update( frame );
+}
 
-    // Remove tiles
-    for( auto i : removedTiles )
-        _tiles.remove( i );
+void PixelStreamUpdater::_onFrameSwapped( deflect::FramePtr frame )
+{
+    _readyToSwap = false;
 
-    // Add tiles
-    for( auto i : addedTiles )
+    std::sort( frame->segments.begin(), frame->segments.end(),
+               []( const deflect::Segment& s1, const deflect::Segment& s2 )
+        {
+            return ( s1.parameters.y == s2.parameters.y ?
+                         s1.parameters.x < s2.parameters.x :
+                         s1.parameters.y < s2.parameters.y );
+        } );
+
     {
-        const auto tileRect = toRect( _currentFrame->segments[i].parameters );
-        _tiles.add( make_unique<Tile>( i, tileRect, false ));
+        const QWriteLocker lock( &_mutex );
+        ++_frameIndex;
+        _currentFrame = frame;
     }
 
-    // Update existing segments
-    for( auto i : currentTiles )
-        _tiles.update( i, toRect( _currentFrame->segments[i].parameters ));
-
-    _visibleSet = visibleSet;
-    _tilesDirty = false;
-
-    // decode everthing in a batch rather than doing it in the requestImage()
-    // for better performance.
-    _decodeVisibleSegments( _currentFrame->segments );
+    emit pictureUpdated( _frameIndex );
+    emit requestFrame( _currentFrame->uri );
 }

@@ -8,7 +8,7 @@ BaseContentWindow {
     // for contents with alpha channel such as SVG or PNG
     color: options.alphaBlending ? "transparent" : "black"
 
-    property string imagesource: "image://" + contentwindow.content.sourceImage
+    property string imagesource: "image://texture/" + contentwindow.content.uri
 
     Item {
         id: contentItemArea
@@ -21,56 +21,38 @@ BaseContentWindow {
 
         Item {
             id: contentItem
+            objectName: "TilesParent"
 
-            Repeater {
-                model: contentsync.tiles
+            // Used to let a background tile fill its parent
+            width: contentsync.tilesArea.width
+            height: contentsync.tilesArea.height
 
-                Image {
-                    x: model.modelData.coord.x
-                    y: model.modelData.coord.y
-                    width: model.modelData.coord.width > 0 ? model.modelData.coord.width : contentwindow.content.size.width
-                    height: model.modelData.coord.height > 0 ? model.modelData.coord.height : contentwindow.content.size.height
-                    visible: model.modelData.visible
+            // Tiles bind to this signal from c++ to toggle borders visibility
+            property bool showTilesBorder: options.showContentTiles
+            // The auto-generated notifier does not emit the new value, do it
+            signal showTilesBordersValueChanged(bool value)
+            onShowTilesBorderChanged: showTilesBordersValueChanged(showTilesBorder)
 
-                    property string tileIndex: model.modelData.index >= 0 ? "?" + model.modelData.index : ""
-                    source: model.modelData.visible ? imagesource + contentsync.sourceParams + tileIndex : ""
-
-                    cache: contentsync.allowsTextureCaching
-
-                    Rectangle {
-                        visible: options.showContentTiles
-                        anchors.fill: parent
-                        border.color: Style.segmentBorderColor
-                        color: "transparent"
-                    }
-                }
-            }
             transform: [
                 // Adjust tiles to content area
                 Scale {
-                    xScale: contentItemArea.width / (contentsync.tilesArea.width > 0 ? contentsync.tilesArea.width : contentwindow.content.size.width)
-                    yScale: contentItemArea.height / (contentsync.tilesArea.height > 0 ? contentsync.tilesArea.height : contentwindow.content.size.height)
+                    xScale: contentItemArea.width / contentsync.tilesArea.width
+                    yScale: contentItemArea.height / contentsync.tilesArea.height
                 },
-                // Apply content zoom (except for vectorial types)
+                // Apply content zoom
                 Translate {
-                    x: contentwindow.content.vectorial ? 0 : -contentwindow.content.zoomRect.x * contentItemArea.width
-                    y: contentwindow.content.vectorial ? 0 : -contentwindow.content.zoomRect.y * contentItemArea.height
+                    x: -contentwindow.content.zoomRect.x * contentItemArea.width
+                    y: -contentwindow.content.zoomRect.y * contentItemArea.height
                 },
                 Scale {
-                    xScale: contentwindow.content.vectorial ? 1.0 : 1.0 / contentwindow.content.zoomRect.width
-                    yScale: contentwindow.content.vectorial ? 1.0 : 1.0 / contentwindow.content.zoomRect.height
+                    xScale: 1.0 / contentwindow.content.zoomRect.width
+                    yScale: 1.0 / contentwindow.content.zoomRect.height
                 }
             ]
         }
     }
 
     ZoomContext {
-        id: zoomContext
-        // vectorial content types store the zoom region in
-        // contentsync.sourceParams, which must be excluded for the zoom context
-        property string sourceparams: contentwindow.content.vectorial ? "" : contentsync.sourceParams
-        image.source: visible ? imagesource + sourceparams : ""
-        image.cache: contentsync.allowsTextureCaching
     }
 
     Text {

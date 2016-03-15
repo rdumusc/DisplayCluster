@@ -76,3 +76,13 @@ const uint8_t* FFMPEGFrame::getData() const
 {
     return _avFrame->data[0];
 }
+
+int FFMPEGFrame::getWidth() const
+{
+    return _avFrame->width;
+}
+
+int FFMPEGFrame::getHeight() const
+{
+    return _avFrame->height;
+}

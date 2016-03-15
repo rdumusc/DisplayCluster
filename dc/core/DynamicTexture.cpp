@@ -38,15 +38,15 @@
 
 #include "DynamicTexture.h"
 
+#include "LodTools.h"
 #include "log.h"
-#include "Tile.h"
 
 #include <fstream>
 #include <boost/tokenizer.hpp>
+#include <cmath>
 
 #include <QDir>
 #include <QImageReader>
-#include <QtConcurrentRun>
 
 #define TEXTURE_SIZE 512
 
@@ -90,8 +90,6 @@ DynamicTexture::DynamicTexture(const QString& uri, DynamicTexturePtr parent_,
         else
             readFullImageMetadata(_uri);
     }
-
-    _pendingLoadFutures.setCancelOnWait( true );
 }
 
 bool DynamicTexture::isRoot() const
@@ -253,13 +251,13 @@ bool DynamicTexture::writePyramidImagesRecursive( const QString& pyramidFolder )
 
 bool DynamicTexture::loadFullResImage()
 {
-    if( !fullscaleImage_.load( _uri ))
+    if( !_fullscaleImage.load( _uri ))
     {
         put_flog( LOG_ERROR, "error loading: '%s'",
                   _uri.toLocal8Bit().constData( ));
         return false;
     }
-    _imageSize = fullscaleImage_.size();
+    _imageSize = _fullscaleImage.size();
     return true;
 }
 
@@ -273,8 +271,8 @@ void DynamicTexture::_loadImage()
         }
         else
         {
-            if (!fullscaleImage_.isNull() || loadFullResImage())
-                _scaledImage = fullscaleImage_.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
+            if (!_fullscaleImage.isNull() || loadFullResImage())
+                _scaledImage = _fullscaleImage.scaled(TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio);
         }
     }
     else
@@ -317,126 +315,44 @@ QImage DynamicTexture::getRootImage() const
 
 uint DynamicTexture::getMaxLod() const
 {
-    uint maxLod = 0;
-    int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
-    while( maxDim > TEXTURE_SIZE )
-    {
-        maxDim = maxDim >> 1;
-        ++maxLod;
-    }
-    return maxLod;
+    return LodTools( _imageSize, TEXTURE_SIZE ).getMaxLod();
 }
 
-uint DynamicTexture::getLod( const QSize& targetDisplaySize ) const
+QString DynamicTexture::getTileFilename( const uint tileId ) const
 {
-    uint lod = 0;
-    QSize nextLOD = _imageSize / 2;
-    const uint maxLod = getMaxLod();
-    while( targetDisplaySize.width() < nextLOD.width() &&
-           targetDisplaySize.height() < nextLOD.height( ) &&
-           lod < maxLod )
-    {
-        nextLOD = nextLOD / 2;
-        ++lod;
-    }
-    return lod;
-}
-
-QString DynamicTexture::getTileFilename( const uint tileIndex ) const
-{
-    uint lod = 0;
-    uint firstTileIndex = getFirstTileIndex( lod );
-    while( tileIndex < firstTileIndex )
-        firstTileIndex = getFirstTileIndex( ++lod );
-
-    const int index = tileIndex - firstTileIndex;
-    const QSize tilesCount = getTilesCount( lod );
-
-    int x = index % tilesCount.width();
-    int y = index / tilesCount.width();
+    LodTools::TileIndex idx = _getTileIndex( tileId );
 
     QString filename = QString( ".%1" ).arg( _imageExtension );
 
     const uint maxLod = getMaxLod();
-    while( ++lod <= maxLod )
+    while( ++idx.lod <= maxLod )
     {
         // The indices go in the order: 0-1
         //                              3-2
         int i = 0;
-        if( y % 2 )
-            i = 3 - x % 2;
+        if( idx.y % 2 )
+            i = 3 - idx.x % 2;
         else
-            i = x % 2;
+            i = idx.x % 2;
 
         filename.prepend( QString::number( i )).prepend( '-' );
-        x = x >> 1;
-        y = y >> 1;
+        idx.x = idx.x >> 1;
+        idx.y = idx.y >> 1;
     }
     filename.prepend( '0' );
     filename.prepend( _imagePyramidPath );
     return filename;
 }
 
-QImage DynamicTexture::getTileImage( const uint tileIndex ) const
+size_t DynamicTexture::getFirstTileId( const uint lod ) const
 {
-    QMutexLocker lock( &_tilesCacheMutex );
-    if( !_tilesCache.count( tileIndex ))
-        return QImage();
-    return _tilesCache[tileIndex];
-}
-
-void DynamicTexture::triggerTileLoad( Tile* tile )
-{
-    QMutexLocker lock( &_tilesCacheMutex );
-    if( _tilesCache.count( tile->getIndex( )))
-    {
-        tile->setVisible( true );
-        return;
-    }
-
-    _pendingLoadFutures.addFuture(
-                           QtConcurrent::run( [&,tile] { _loadTile( tile ); }));
-}
-
-void DynamicTexture::cancelPendingTileLoads()
-{
-    _pendingLoadFutures.waitForFinished();
-    _pendingLoadFutures.clearFutures();
-}
-
-bool DynamicTexture::hasPendingTileLoads() const
-{
-    for( const auto& future : _pendingLoadFutures.futures( ))
-    {
-        if( !future.isFinished( ))
-            return true;
-    }
-    // finished futures are never removed from the future synchronizer, so
-    // we do it here when all are done as we are called here as long there are
-    // pending futures.
-    _pendingLoadFutures.clearFutures();
-    return false;
-}
-
-void DynamicTexture::_loadTile( Tile* tile )
-{
-    QImage tileImage( getTileFilename( tile->getIndex( )));
-    {
-        QMutexLocker lock( &_tilesCacheMutex );
-        _tilesCache[tile->getIndex()] = tileImage;
-    }
-    tile->setVisible( true );
-}
-
-int DynamicTexture::getFirstTileIndex( const uint lod ) const
-{
-    const uint maxLod = getMaxLod();
+    const size_t maxLod = getMaxLod();
 
     if( lod == maxLod )
         return 0;
 
-    const int nextLod = lod + 1;
-    return std::pow( 4, maxLod - nextLod ) + getFirstTileIndex( nextLod );
+    const size_t nextLod = lod + 1;
+    return std::pow( 4, maxLod - nextLod ) + getFirstTileId( nextLod );
 }
 
 QRect
@@ -446,27 +362,69 @@ DynamicTexture::getTileCoord( const uint lod, const uint x, const uint y ) const
 
     // All tiles have the same size in the current implementation, but this is
     // likely to change in the future
-    const QSize size = _imageSize.scaled( TEXTURE_SIZE, TEXTURE_SIZE,
-                                          Qt::KeepAspectRatio );
+    const QSize size = _getTileSize();
     return QRect( QPoint( x * size.width(), y * size.height( )), size );
 }
 
-QSize DynamicTexture::getTilesCount( const uint lod ) const
+QImage DynamicTexture::getCachableTileImage( const uint tileId ) const
 {
-    const int maxDim = std::max( _imageSize.width(), _imageSize.height( ));
-    const int tiles = std::ceil( (float)(maxDim >> lod) / TEXTURE_SIZE );
-    return QSize( tiles, tiles );
+    return QImage( getTileFilename( tileId ));
+}
+
+Indices DynamicTexture::computeVisibleSet( const QRectF& visibleArea,
+                                           const uint lod ) const
+{
+    if( !_lodTilesMapCache.count( lod ))
+        _lodTilesMapCache[ lod ] = _gatherAllTiles( lod );
+
+    const LodTools::TileInfos& tiles = _lodTilesMapCache[ lod ];
+
+    Indices visibleTiles;
+
+    if( visibleArea.isEmpty( ))
+        return visibleTiles;
+
+    const QRect rectArea = visibleArea.toRect();
+
+    for( const auto& tile : tiles )
+    {
+        if( tile.coord.intersects( rectArea ))
+            visibleTiles.insert( tile.id );
+    }
+
+    return visibleTiles;
+}
+
+QRect DynamicTexture::getTileRect( const uint tileId ) const
+{
+    const auto idx = _getTileIndex( tileId );
+    return getTileCoord( idx.lod, idx.x, idx.y );
 }
 
 QSize DynamicTexture::getTilesArea( const uint lod ) const
 {
-    return QSize( _imageSize.width() >> lod, _imageSize.height() >> lod );
+    const QSize tileSize = _getTileSize();
+    const size_t lodShift = getMaxLod() - lod;
+    return QSize( tileSize.width() << lodShift, tileSize.height() << lodShift );
+}
+
+QSize DynamicTexture::getTilesCount( const uint lod ) const
+{
+    const QSize lodSize = getTilesArea( lod );
+    const QSize tileSize = _getTileSize();
+    return QSize( lodSize.width() / tileSize.width(),
+                  lodSize.height() / tileSize.height( ));
 }
 
 bool DynamicTexture::_canHaveChildren()
 {
     return (getRoot()->_imageSize.width() / (1 << _depth) > TEXTURE_SIZE ||
             getRoot()->_imageSize.height() / (1 << _depth) > TEXTURE_SIZE);
+}
+
+QSize DynamicTexture::_getTileSize() const
+{
+    return _imageSize.scaled( TEXTURE_SIZE, TEXTURE_SIZE, Qt::KeepAspectRatio );
 }
 
 bool DynamicTexture::makeFolder( const QString& folder )
@@ -538,13 +496,13 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
                     getImageRegionInParentImage( imageRegion ), this );
     }
 
-    if(!fullscaleImage_.isNull())
+    if(!_fullscaleImage.isNull())
     {
         // we have a valid image, return the clipped image
-        return fullscaleImage_.copy(imageRegion.x()*fullscaleImage_.width(),
-                                    imageRegion.y()*fullscaleImage_.height(),
-                                    imageRegion.width()*fullscaleImage_.width(),
-                                    imageRegion.height()*fullscaleImage_.height());
+        return _fullscaleImage.copy(imageRegion.x()*_fullscaleImage.width(),
+                                    imageRegion.y()*_fullscaleImage.height(),
+                                    imageRegion.width()*_fullscaleImage.width(),
+                                    imageRegion.height()*_fullscaleImage.height());
     }
     else
     {
@@ -558,3 +516,39 @@ QImage DynamicTexture::getImageFromParent( const QRectF& imageRegion,
         return parentTex->getImageFromParent(getImageRegionInParentImage(imageRegion), start);
     }
 }
+
+LodTools::TileIndex DynamicTexture::_getTileIndex( const uint tileId ) const
+{
+    uint lod = 0;
+    uint firstTileId = getFirstTileId( lod );
+    while( tileId < firstTileId )
+        firstTileId = getFirstTileId( ++lod );
+
+    const int index = tileId - firstTileId;
+    const QSize tilesCount = getTilesCount( lod );
+
+    const uint x = index % tilesCount.width();
+    const uint y = index / tilesCount.width();
+
+    return LodTools::TileIndex{ x, y, lod };
+}
+
+LodTools::TileInfos DynamicTexture::_gatherAllTiles( const uint lod ) const
+{
+    LodTools::TileInfos tiles;
+
+    const QSize tilesCount = getTilesCount( lod );
+    uint tileId = getFirstTileId( lod );
+    for( int y = 0; y < tilesCount.height(); ++y )
+    {
+        for( int x = 0; x < tilesCount.width(); ++x )
+        {
+            const QRect& coord = getTileCoord( lod, x, y );
+            tiles.push_back( LodTools::TileInfo{ tileId, coord });
+            ++tileId;
+        }
+    }
+
+    return tiles;
+}
+

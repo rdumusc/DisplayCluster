@@ -39,157 +39,19 @@
 
 #include "DynamicTextureSynchronizer.h"
 
-#include "TextureProvider.h"
-#include "Tile.h"
-#include "ZoomHelper.h"
+#include "DynamicTexture.h"
 
-#include <QTextStream>
+DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri )
+    : LodSynchronizer( TileSwapPolicy::SwapTilesIndependently )
+    , _reader( new DynamicTexture( uri ))
+{}
 
-DynamicTextureSynchronizer::DynamicTextureSynchronizer( const QString& uri,
-                                                        TextureProvider& provider )
-    : _uri( uri )
-    , _provider( provider )
-    , _reader( provider.openDynamicTexture( uri ))
-    , _lod( 0 )
+void DynamicTextureSynchronizer::synchronize( WallToWallChannel& channel )
 {
+    Q_UNUSED( channel );
 }
 
-DynamicTextureSynchronizer::~DynamicTextureSynchronizer()
+const DataSource& DynamicTextureSynchronizer::getDataSource() const
 {
-    _provider.closeDynamicTexture( _uri );
-}
-
-void DynamicTextureSynchronizer::update( const ContentWindow& window,
-                                         const QRectF& visibleArea )
-{
-    const ZoomHelper helper( window );
-    const uint lod = _reader->getLod( helper.getContentRect().size().toSize( ));
-    const QSize tilesSurface = _reader->getTilesArea( lod );
-    _updateTiles( helper.toTilesArea( visibleArea, tilesSurface ), lod );
-}
-
-QString DynamicTextureSynchronizer::getSourceParams() const
-{
-    return QString();
-}
-
-bool DynamicTextureSynchronizer::allowsTextureCaching() const
-{
-    return true;
-}
-
-Tiles& DynamicTextureSynchronizer::getTiles()
-{
-    return _tiles;
-}
-
-QSize DynamicTextureSynchronizer::getTilesArea() const
-{
-    return _reader->getTilesArea( _lod );
-}
-
-QString DynamicTextureSynchronizer::getStatistics() const
-{
-    QString stats;
-    QTextStream stream( &stats );
-    stream << "LOD:  " << _lod << "/" << _reader->getMaxLod();
-    const QSize& area = getTilesArea();
-    stream << "  res: " << area.width() << "x" << area.height();
-    return stats;
-}
-
-void DynamicTextureSynchronizer::_updateTiles( const QRectF& visibleArea,
-                                               const uint lod )
-{
-    if( visibleArea == _visibleArea && lod == _lod )
-        return;
-
-    _visibleArea = visibleArea;
-
-    if( lod != _lod )
-    {
-        _tiles.reset( TileList( ));
-        if( !_lodTilesMap.count( lod ))
-            _lodTilesMap[ lod ] = _gatherAllTiles( lod );
-
-        _lod = lod;
-        _visibleSet.clear();
-        _reader->cancelPendingTileLoads();
-
-        emit statisticsChanged();
-        emit tilesAreaChanged();
-    }
-
-    const TileList& tiles = _lodTilesMap[ lod ];
-
-    const Indices visibleSet = _computeVisibleSet( visibleArea, tiles );
-
-    const Indices addedTiles = set_difference( visibleSet, _visibleSet );
-    const Indices removedTiles = set_difference( _visibleSet, visibleSet );
-
-
-    // Remove tiles
-    if( !removedTiles.empty( ))
-    {
-        _reader->cancelPendingTileLoads();
-        for( auto i : removedTiles )
-            _tiles.remove( tiles[i]->getIndex( ));
-
-        // Retrigger tile loads which might have been canceled above
-        const Indices current = set_difference( _visibleSet, removedTiles );
-        for( auto i : current )
-            _reader->triggerTileLoad( _tiles.get( tiles[i]->getIndex( )));
-    }
-
-    // Add tiles
-    for( auto i : addedTiles )
-    {
-        auto tile = make_unique<Tile>( tiles[i]->getIndex(),
-                                       tiles[i]->getCoord(), false );
-        _reader->triggerTileLoad( tile.get( ));
-        _tiles.add( std::move( tile ));
-    }
-
-    _visibleSet = visibleSet;
-}
-
-TileList DynamicTextureSynchronizer::_gatherAllTiles( const uint lod ) const
-{
-    TileList tiles;
-
-    const QSize tilesCount = _reader->getTilesCount( lod );
-    int tileIndex = _reader->getFirstTileIndex( lod );
-    for( int y = 0; y < tilesCount.height(); ++y )
-    {
-        for( int x = 0; x < tilesCount.width(); ++x )
-        {
-            const QRect& coord = _reader->getTileCoord( lod, x, y );
-            tiles.push_back( make_unique<Tile>( tileIndex, coord, false ));
-            ++tileIndex;
-        }
-    }
-
-    return tiles;
-}
-
-Indices
-DynamicTextureSynchronizer::_computeVisibleSet( const QRectF& visibleArea,
-                                                const TileList& tiles ) const
-{
-    Indices visibleTiles;
-
-    if( visibleArea.isEmpty( ))
-        return visibleTiles;
-
-    const QRect rectArea = visibleArea.toRect();
-
-    int i = 0;
-    for( const auto& tile : tiles )
-    {
-        if( tile->getCoord().intersects( rectArea ))
-            visibleTiles.push_back( i );
-        ++i;
-    }
-
-    return visibleTiles;
+    return *_reader;
 }

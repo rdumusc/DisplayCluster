@@ -40,7 +40,6 @@
 #include "VectorialSynchronizer.h"
 
 #include "ContentWindow.h"
-#include "ImageProviderStringifier.h"
 
 void VectorialSynchronizer::update( const ContentWindow& window,
                                     const QRectF& visibleArea )
@@ -48,23 +47,8 @@ void VectorialSynchronizer::update( const ContentWindow& window,
     // Legacy solution. A list of tiles with different LODs might bring
     // better interactive performances and allow for texture caching.
     ContentPtr content = window.getContent();
-    if( _contentZoom != content->getZoomRect() )
-    {
+    if( _contentZoom != content->getZoomRect( ))
         _contentZoom = content->getZoomRect();
-        emit sourceParamsChanged();
-    }
 
     BasicSynchronizer::update( window, visibleArea );
-}
-
-QString VectorialSynchronizer::getSourceParams() const
-{
-    if( _contentZoom.isValid( ))
-        return QString( '#' ) + stringify( _contentZoom );
-    return QString();
-}
-
-bool VectorialSynchronizer::allowsTextureCaching() const
-{
-    return false;
 }

@@ -135,8 +135,9 @@ else:
 
 # Form the application parameters list
 DC_PARAMS = '--config ' + DC_CONFIG_FILE
+# Note that the "session" arg is reserved by Qt so "sessionfile" is used instead
 if args.session:
-    DC_PARAMS += ' --session ' + args.session
+    DC_PARAMS += ' --sessionfile ' + args.session
 
 # form the MPI host list
 hostlist = []

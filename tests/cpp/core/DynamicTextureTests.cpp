@@ -69,15 +69,15 @@ BOOST_AUTO_TEST_CASE( testTileCount )
     BOOST_CHECK_EQUAL( texture.getTilesCount( 0 ), QSize( 4, 4 ));
 }
 
-BOOST_AUTO_TEST_CASE( testTileIndex )
-{
-    DynamicTexture texture( TEST_FILE );
-    BOOST_REQUIRE_EQUAL( texture.getMaxLod(), 2 );
+//BOOST_AUTO_TEST_CASE( testTileIndex )
+//{
+//    DynamicTexture texture( TEST_FILE );
+//    BOOST_REQUIRE_EQUAL( texture.getMaxLod(), 2 );
 
-    BOOST_CHECK_EQUAL( texture.getFirstTileIndex( 2 ), 0 );
-    BOOST_CHECK_EQUAL( texture.getFirstTileIndex( 1 ), 1 );
-    BOOST_CHECK_EQUAL( texture.getFirstTileIndex( 0 ), 5 );
-}
+//    BOOST_CHECK_EQUAL( texture.getFirstTileIndex( 2 ), 0 );
+//    BOOST_CHECK_EQUAL( texture.getFirstTileIndex( 1 ), 1 );
+//    BOOST_CHECK_EQUAL( texture.getFirstTileIndex( 0 ), 5 );
+//}
 
 BOOST_AUTO_TEST_CASE( testTileCoord )
 {

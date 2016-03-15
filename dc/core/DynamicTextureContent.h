@@ -63,12 +63,6 @@ public:
     **/
     bool readMetadata() override;
 
-    /** @copydoc Content::getProviderId */
-    QString getProviderId() const final;
-
-    /** @copydoc Content::getSourceImage */
-    QString getSourceImage() const final;
-
     static const QStringList& getSupportedExtensions();
 
 private:

@@ -40,59 +40,28 @@
 #ifndef DYNAMICTEXTURESYNCHRONIZER_H
 #define DYNAMICTEXTURESYNCHRONIZER_H
 
-#include "ContentSynchronizer.h"
-
-#include "DynamicTexture.h" // member
+#include "LodSynchronizer.h"
 
 /**
  * A synchronizer which provides the list of Tiles for DynamicTextures.
  */
-class DynamicTextureSynchronizer : public ContentSynchronizer
+class DynamicTextureSynchronizer : public LodSynchronizer
 {
     Q_OBJECT
     Q_DISABLE_COPY( DynamicTextureSynchronizer )
 
 public:
     /** Constructor */
-    DynamicTextureSynchronizer( const QString& uri, TextureProvider& provider );
+    DynamicTextureSynchronizer( const QString& uri );
 
-    ~DynamicTextureSynchronizer();
-
-    /** @copydoc ContentSynchronizer::updateTiles */
-    void update( const ContentWindow& window,
-                 const QRectF& visibleArea ) override;
-
-    /** @copydoc ContentSynchronizer::getSourceParams */
-    QString getSourceParams() const override;
-
-    /** @copydoc ContentSynchronizer::allowsTextureCaching */
-    bool allowsTextureCaching() const override;
-
-    /** @copydoc ContentSynchronizer::getTiles */
-    Tiles& getTiles() override;
-
-    /** @copydoc ContentSynchronizer::getTilesArea */
-    QSize getTilesArea() const override;
-
-    /** @copydoc ContentSynchronizer::getStatistics */
-    QString getStatistics() const override;
+    /** @copydoc ContentSynchronizer::synchronize */
+    void synchronize( WallToWallChannel& channel ) final;
 
 private:
-    const QString _uri;
-    TextureProvider& _provider;
-    Tiles _tiles;
     DynamicTexturePtr _reader;
-    uint _lod;
-    QRectF _visibleArea;
 
-    Indices _visibleSet;
-    typedef std::map<size_t, TileList> LodTilesMap;
-    LodTilesMap _lodTilesMap;
-
-    void _updateTiles( const QRectF& visibleArea, uint lod );
-    TileList _gatherAllTiles( const uint lod ) const;
-    Indices _computeVisibleSet( const QRectF& visibleArea,
-                                const TileList& tiles ) const;
+    /** @copydoc LodSynchronizer::getDataSource */
+    const DataSource& getDataSource() const final;
 };
 
 #endif

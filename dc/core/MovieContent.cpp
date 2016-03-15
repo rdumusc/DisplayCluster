@@ -39,7 +39,6 @@
 #include "MovieContent.h"
 
 #include "FFMPEGMovie.h"
-#include "MovieProvider.h"
 
 #include <QtCore/QFileInfo>
 
@@ -68,16 +67,6 @@ MovieContent::MovieContent()
 CONTENT_TYPE MovieContent::getType() const
 {
     return CONTENT_TYPE_MOVIE;
-}
-
-QString MovieContent::getProviderId() const
-{
-    return MovieProvider::ID;
-}
-
-QString MovieContent::getSourceImage() const
-{
-    return getProviderId() + QString("/") + _uri;
 }
 
 bool MovieContent::readMetadata()

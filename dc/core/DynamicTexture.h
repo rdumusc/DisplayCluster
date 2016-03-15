@@ -41,10 +41,10 @@
 
 #include "types.h"
 
-#include <QFutureSynchronizer>
-#include <QHash>
+#include "CachedDataSource.h"
+#include "LodTools.h"
+
 #include <QImage>
-#include <QObject>
 
 /**
  * A dynamically loaded large scale image.
@@ -54,11 +54,9 @@
  * (2) Direct reading from a large image
  * @see generateImagePyramid()
  */
-class DynamicTexture : public QObject,
+class DynamicTexture : public CachedDataSource,
         public std::enable_shared_from_this<DynamicTexture>
 {
-    Q_OBJECT
-
 public:
     /**
      * Constructor
@@ -86,44 +84,39 @@ public:
     /** Get the root image of the pyramid. */
     QImage getRootImage() const;
 
-    /** Get the max LOD level (top of pyramid, lowest resolution). */
-    uint getMaxLod() const;
-
-    /**
-     * Get the appropriate LOD for a given display size.
-     * @param targetDisplaySize The size at which the content will be displayed.
-     */
-    uint getLod( const QSize& targetDisplaySize ) const;
 
     /** Get the number of tile at the given lod. */
     QSize getTilesCount( uint lod ) const;
 
-    /** @return the image size for the requested lod. */
-    QSize getTilesArea( uint lod ) const;
-
     /** Get the index of the first tile of the given lod. */
-    int getFirstTileIndex( uint lod ) const;
+    size_t getFirstTileId( uint lod ) const;
 
     /** Get the coordinates in pixels of a specific tile. */
     QRect getTileCoord( uint lod, uint x, uint y ) const;
 
     /** Get the tile filename for a given tile index. */
-    QString getTileFilename( uint tileIndex ) const;
+    QString getTileFilename( uint tileId ) const;
+
 
     /**
-     * @return the image for the requested tile index, or empty image if not
-     * loaded yet.
+     * @copydoc CachedDataSource::getCachableTileImage
+     * @threadsafe
      */
-    QImage getTileImage( uint tileIndex ) const;
+    QImage getCachableTileImage( uint tileId ) const final;
 
-    /** Trigger loading the image for the given tile asynchronously. */
-    void triggerTileLoad( Tile* tile );
+    /** @copydoc DataSource::getTileRect */
+    QRect getTileRect( uint tileId ) const final;
 
-    /** Cancel outstanding loads of tiles from triggerTileLoad(). */
-    void cancelPendingTileLoads();
+    /** @copydoc DataSource::getTilesArea */
+    QSize getTilesArea( uint lod ) const final;
 
-    /** @return true if there pending tile loads from triggerTileLoad(). */
-    bool hasPendingTileLoads() const;
+    /** @copydoc DataSource::computeVisibleSet */
+    Indices computeVisibleSet( const QRectF& visibleTilesArea,
+                               uint lod ) const final;
+
+    /** @copydoc DataSource::getMaxLod */
+    uint getMaxLod() const final;
+
 
     /**
      * Generate an image Pyramid from the current uri and save it to the disk.
@@ -133,12 +126,11 @@ public:
     bool generateImagePyramid( const QString& outputFolder );
 
 private:
-    void _loadTile( Tile* tile );
+    typedef std::map<size_t, LodTools::TileInfos> LodTilesMap;
+    mutable LodTilesMap _lodTilesMapCache;
 
-    mutable QMutex _tilesCacheMutex;
-    QHash<uint, QImage> _tilesCache;
-
-    mutable QFutureSynchronizer< void > _pendingLoadFutures;
+    LodTools::TileIndex _getTileIndex( uint tileId ) const;
+    LodTools::TileInfos _gatherAllTiles( uint lod ) const;
 
     /* for root only: */
 
@@ -148,9 +140,7 @@ private:
     QString _imagePyramidPath;
     bool _useImagePyramid;
 
-    QImage fullscaleImage_;
-
-    QRectF zoomRect_;
+    QImage _fullscaleImage;
 
     /* for children only: */
 
@@ -163,10 +153,11 @@ private:
     int _depth; // The depth of the object in the image pyramid
 
     QSize _imageSize; // full scale image dimensions
-    QImage _scaledImage; // for texture upload to GPU
+    QImage _scaledImage; // for creating the image pyramid
 
     void _loadImage();
     bool _canHaveChildren();
+    QSize _getTileSize() const;
 
     /** Is this object the root element. */
     bool isRoot() const;  // @All

@@ -40,71 +40,110 @@
 #ifndef TILE_H
 #define TILE_H
 
-#include <QObject>
-#include <QRect>
+#include "types.h"
+
+#include <QQuickItem>
+#include <memory> // std::enable_shared_from_this
+
+class TextureNode;
+class QuadLineNode;
 
 /**
- * Qml parameters for an image tile.
+ * Qml item to render an image tile with texture double-buffering.
  */
-class Tile : public QObject
+class Tile : public QQuickItem, public std::enable_shared_from_this<Tile>
 {
     Q_OBJECT
     Q_DISABLE_COPY( Tile )
 
-    Q_PROPERTY( int index READ getIndex CONSTANT )
-    Q_PROPERTY( QRect coord READ getCoord NOTIFY coordChanged )
-    Q_PROPERTY( bool visible READ isVisible NOTIFY visibilityChanged )
+    Q_PROPERTY( uint id READ getId CONSTANT )
+    Q_PROPERTY( bool showBorder READ getShowBorder WRITE setShowBorder
+                NOTIFY showBorderChanged )
 
 public:
-    // false-positive on qt signals for Q_PROPERTY notifiers
-    // cppcheck-suppress uninitMemberVar
-    Tile( const int index, const QRect& rect, const bool visible )
-        : _index( index )
-        , _rect( rect )
-        , _visible( visible )
-    {}
-
-    const QRect& getCoord() const
+    enum SizePolicy
     {
-        return _rect;
-    }
+        AdjustToTexture,
+        FillParent
+    };
 
-    bool isVisible() const
-    {
-        return _visible;
-    }
+    /**
+     * Constructor
+     * @param id the unique identifier for this tile
+     * @param rect the nominal size of the tile's texture
+     */
+    Tile( uint id, const QRect& rect );
 
-    void setVisible( const bool visible )
-    {
-        if( _visible == visible )
-            return;
+    /** @return the unique identifier for this tile. */
+    uint getId() const;
 
-        _visible = visible;
-        emit visibilityChanged();
-    }
+    /** @return true if this tile displays its borders. */
+    bool getShowBorder() const;
 
-    int getIndex() const
-    {
-        return _index;
-    }
+    /**
+     * Request an update of the back texture, resing it if necessary.
+     * @param rect the new size for the back texture.
+     */
+    void update( const QRect& rect );
 
-    void update( const QRect& rect )
-    {
-        if( _rect == rect )
-            return;
+    /** @return the back texture's identifier. */
+    uint getBackGlTexture() const;
 
-        _rect = rect;
-        emit coordChanged();
-    }
+    /** @return the dimensions of the back texture. */
+    QSize getBackGlTextureSize() const;
+
+    /**
+     * Set the size policy.
+     * @param policy defines how the tile should resize and position itself
+     */
+    void setSizePolicy( SizePolicy policy );
 
 signals:
-    void coordChanged();
-    void visibilityChanged();
+    /** Notifier for the showBorder property. */
+    void showBorderChanged();
+
+    /**
+     * Notifies that the back texture is ready to be updated.
+     * It is emitted after the texture has been created on the render thread,
+     * or after a call to update().
+     */
+    void textureReady( TilePtr tile );
+
+    /** Notify that the back texture has been updated and it can be swapped. */
+    void textureUpdated( TilePtr tile );
+
+public slots:
+    /** Show a border around the tile (for debugging purposes). */
+    void setShowBorder( bool set );
+
+    /** Swap the front and back texture. */
+    void swapImage();
+
+    /** Indicate that the back GL texture has been externally updated. */
+    void markBackTextureUpdated();
+
+protected:
+    /** Called on the render thread to update the scene graph. */
+    QSGNode* updatePaintNode( QSGNode* oldNode, UpdatePaintNodeData* ) override;
 
 private:
-    int _index;
-    QRect _rect;
-    bool _visible;
+    const uint _tileId;
+    SizePolicy _policy;
+
+    bool _swapRequested;
+    bool _updateTextureRequested;
+    QRect _nextCoord;
+
+    uint _backGlTexture;
+
+    bool _showBorder;
+    QuadLineNode* _border;
+
+    void _updateBorderNode( TextureNode* parentNode );
+    void _onParentChanged( QQuickItem* newParent );
+
+    QMetaObject::Connection _widthConn;
+    QMetaObject::Connection _heightConn;
 };
 
 #endif

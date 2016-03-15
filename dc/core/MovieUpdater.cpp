@@ -40,10 +40,11 @@
 #include "MovieUpdater.h"
 
 #include "FFMPEGFrame.h"
-#include "FFMPEGPicture.h"
 #include "FFMPEGMovie.h"
+#include "FFMPEGPicture.h"
 #include "MovieContent.h"
 #include "WallToWallChannel.h"
+
 #include "log.h"
 
 MovieUpdater::MovieUpdater( const QString& uri )
@@ -62,6 +63,8 @@ MovieUpdater::MovieUpdater( const QString& uri )
                   uri.toLocal8Bit().constData( ));
     else
         _ffmpegMovie->startDecoding();
+
+    _syncSwapImage.setCallback( [&]( int64_t ) { emit textureUploaded(); });
 }
 
 MovieUpdater::~MovieUpdater() {}
@@ -74,6 +77,11 @@ bool MovieUpdater::isVisible() const
 void MovieUpdater::setVisible( const bool visible )
 {
     _visible = visible;
+}
+
+bool MovieUpdater::isPaused() const
+{
+    return _paused;
 }
 
 void MovieUpdater::update( const MovieContent& movie )
@@ -95,37 +103,70 @@ void MovieUpdater::sync( WallToWallChannel& channel )
     }
 
     if( !_visible )
+        _syncSwapImage.update( _sharedTimestamp );
+
+    const SyncFunction& versionCheckFunc =
+            std::bind( &WallToWallChannel::checkVersion, &channel,
+                       std::placeholders::_1 );
+    _syncSwapImage.sync( versionCheckFunc );
+
+    if( !_visible )
         return;
 
     if( _futurePicture.valid() && is_ready( _futurePicture ))
     {
         try
         {
-            _currentPicture = _futurePicture.get();
-            emit pictureUpdated( _currentPicture->getTimestamp( ));
+            _image  = _futurePicture.get();
+            //emit uploadTexture( _futurePicture.get(), _popTextureID( ));
         }
         catch( const std::exception& e )
         {
-            put_flog( LOG_DEBUG, "Future was canceled: ", e.what( ));
+            put_flog( LOG_DEBUG, "Future was cancelled: ", e.what( ));
         }
     }
 
-    if( _loop && (_ffmpegMovie->isAtEOF( ) ||
-                  _sharedTimestamp > _ffmpegMovie->getDuration( )))
+    if( _loop && ( _ffmpegMovie->isAtEOF() ||
+                   _sharedTimestamp > _ffmpegMovie->getDuration( )))
+    {
         _sharedTimestamp = 0.0;
+    }
 
     const bool needsFrame = _getDelay() >= _ffmpegMovie->getFrameDuration();
-    if( !_futurePicture.valid() && needsFrame )
+    if( !_futurePicture.valid() && needsFrame /*&& !_textures.empty( )*/)
         _futurePicture = _ffmpegMovie->getFrame( _sharedTimestamp );
 }
 
-QImage MovieUpdater::getImage() const
+ImagePtr MovieUpdater::getImage() const
 {
-    if( !_currentPicture )
-        return QImage();
-
-    return _currentPicture->toQImage();
+    return _image;
 }
+
+//void MovieUpdater::onTextureUploaded( const ImagePtr image,
+//                                      const uint textureID )
+//{
+//    _syncSwapImage.update( image->getTimestamp( ));
+//    _textures.push_back( textureID );
+//}
+
+//uint MovieUpdater::_popTextureID()
+//{
+//    assert( !_textures.empty( ));
+//    const uint textureID = _textures.front();
+//    _textures.pop_front();
+//    return textureID;
+//}
+
+//TextureFactory* MovieUpdater::createTextureFactory()
+//{
+//    TextureFactory* factory =
+//            new TextureFactory( QSize( _ffmpegMovie->getWidth(),
+//                                       _ffmpegMovie->getHeight( )));
+
+//    connect( factory, &TextureFactory::textureCreated,
+//             [&]( const uint textureID) { _textures.push_back( textureID ); } );
+//    return factory;
+//}
 
 double MovieUpdater::_getDelay() const
 {

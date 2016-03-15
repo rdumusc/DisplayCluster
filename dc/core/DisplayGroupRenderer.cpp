@@ -61,8 +61,10 @@ const QUrl QML_DISPLAYGROUP_URL( "qrc:/qml/core/WallDisplayGroup.qml" );
 }
 
 DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
+                                            DataProvider& provider,
                                             const QRect& screenRect )
     : _engine( *parentWindow.engine( ))
+    , _provider( provider )
     , _displayGroup( new DisplayGroup( QSize( )))
     , _displayGroupItem( 0 )
     , _options( new Options )
@@ -76,9 +78,15 @@ DisplayGroupRenderer::DisplayGroupRenderer( WallWindow& parentWindow,
     _setBackground( _options->getBackgroundContent( ));
 }
 
+void DisplayGroupRenderer::synchronize( WallToWallChannel& channel )
+{
+    for( auto& windowRenderer : _windowItems )
+        windowRenderer->synchronize( channel );
+}
+
 bool DisplayGroupRenderer::needRedraw() const
 {
-    return _options->getShowStatistics();
+    return _options->getShowStatistics() || _options->getShowClock();
 }
 
 void DisplayGroupRenderer::setRenderingOptions( OptionsPtr options )
@@ -173,7 +181,8 @@ void DisplayGroupRenderer::_createDisplayGroupQmlItem( QQuickItem& parentItem )
 void DisplayGroupRenderer::_createWindowQmlItem( ContentWindowPtr window )
 {
     const QUuid& id = window->getID();
-    _windowItems[id].reset( new QmlWindowRenderer( _engine, *_displayGroupItem,
+    _windowItems[id].reset( new QmlWindowRenderer( _engine, _provider,
+                                                   *_displayGroupItem,
                                                    window ));
     emit windowAdded( _windowItems[id] );
 }
@@ -201,6 +210,7 @@ void DisplayGroupRenderer::_setBackground( ContentPtr content )
                make_unique<ContentWindowController>( *window, *_displayGroup ));
     window->getController()->adjustSize( SIZE_FULLSCREEN );
     _backgroundWindowItem.reset( new QmlWindowRenderer( _engine,
+                                                        _provider,
                                                         *_displayGroupItem,
                                                         window,
                                                         true ));

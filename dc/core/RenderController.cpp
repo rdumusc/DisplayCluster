@@ -45,9 +45,6 @@
 #include "WallToWallChannel.h"
 #include "WallWindow.h"
 
-#include "MovieProvider.h"
-#include "PixelStreamProvider.h"
-
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 

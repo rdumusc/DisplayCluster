@@ -41,41 +41,30 @@
 
 #include "ContentWindow.h"
 #include "MovieContent.h"
-#include "MovieProvider.h"
 #include "MovieUpdater.h"
 #include "Tile.h"
 
-MovieSynchronizer::MovieSynchronizer( const QString& uri,
-                                      MovieProvider& provider )
-    : _provider( provider )
-    , _uri( uri )
-    , _timestamp( -1.0 )
-{
-    _updater = _provider.open( uri );
-    connect( _updater.get(), SIGNAL( pictureUpdated( double )),
-             this, SLOT( onPictureUpdated( double )));
-}
-
-MovieSynchronizer::~MovieSynchronizer()
-{
-    _provider.close( _uri );
-}
+MovieSynchronizer::MovieSynchronizer( const QString& uri )
+    : _updater( new MovieUpdater( uri ))
+{}
 
 void MovieSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
     _updater->update( static_cast<const MovieContent&>( *window.getContent( )));
     _updater->setVisible( !visibleArea.isEmpty( ));
+
+    BasicSynchronizer::update( window, visibleArea );
 }
 
-QString MovieSynchronizer::getSourceParams() const
+void MovieSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    return QString( "?%1" ).arg( _timestamp );
+    _updater->sync( channel );
 }
 
-bool MovieSynchronizer::allowsTextureCaching() const
+bool MovieSynchronizer::needRedraw() const
 {
-    return false;
+    return !_updater->isPaused();
 }
 
 QString MovieSynchronizer::getStatistics() const
@@ -83,15 +72,18 @@ QString MovieSynchronizer::getStatistics() const
     return _fpsCounter.toString();
 }
 
-void MovieSynchronizer::onPictureUpdated( const double timestamp )
+ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex,
+                                          const uint64_t timestamp ) const
 {
-    // Delay making the Tile visible until first picture is ready
-    if( _timestamp < 0.0 && _updater->isVisible( ))
-        showTile();
+    Q_UNUSED( tileIndex );
+    Q_UNUSED( timestamp );
+    return _updater->getImage();
+}
 
-    _timestamp = timestamp;
-    emit sourceParamsChanged();
-
+void MovieSynchronizer::onTextureUploaded()
+{
     _fpsCounter.tick();
     emit statisticsChanged();
+
+//    emit swapImage();
 }

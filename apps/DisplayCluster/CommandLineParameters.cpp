@@ -67,7 +67,7 @@ void CommandLineParameters::initDesc()
         ("help", "produce help message")
         ("config", boost::program_options::value<std::string>()->default_value(""),
                  "path to configuration file")
-        ("session", boost::program_options::value<std::string>()->default_value(""),
+        ("sessionfile", boost::program_options::value<std::string>()->default_value(""),
                  "path to an initial session file")
     ;
 }
@@ -88,7 +88,7 @@ void CommandLineParameters::parseCommandLineArguments(int &argc, char **argv)
 
     getHelp_ = vm.count("help");
     configFilename_ = vm["config"].as<std::string>().c_str();
-    sessionFilename_ = vm["session"].as<std::string>().c_str();
+    sessionFilename_ = vm["sessionfile"].as<std::string>().c_str();
 }
 
 const QString& CommandLineParameters::getConfigFilename() const

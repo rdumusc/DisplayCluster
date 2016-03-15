@@ -61,6 +61,11 @@ PDF::~PDF()
     _closeDocument();
 }
 
+const QString& PDF::getFilename() const
+{
+    return _filename;
+}
+
 bool PDF::isValid() const
 {
     return ( _pdfDoc != 0 );
@@ -106,8 +111,8 @@ QImage PDF::renderToImage( const QSize& imageSize, const QRectF& region ) const
     const qreal zoomX = 1.0 / region.width();
     const qreal zoomY = 1.0 / region.height();
 
-    const QPoint topLeft( region.x() * imageSize.width(),
-                          region.y() * imageSize.height( ));
+    const QPointF topLeft( region.x() * imageSize.width(),
+                           region.y() * imageSize.height( ));
 
     const qreal resX = PDF_RES * imageSize.width() / pageSize.width();
     const qreal resY = PDF_RES * imageSize.height() / pageSize.height();
@@ -130,7 +135,7 @@ void PDF::_openDocument( const QString& filename )
     if ( !_pdfDoc || _pdfDoc->isLocked( ))
     {
         put_flog( LOG_DEBUG, "Could not open document: '%s'",
-                  _filename.toLocal8Bit().constData( ));
+                  filename.toLocal8Bit().constData( ));
         _closeDocument();
         return;
     }

@@ -84,8 +84,8 @@ public:
     /** Set new touchpoint's markers. */
     void setMarkers( MarkersPtr markers );
 
-    /** @return the pixel stream provider. */
-    PixelStreamProvider& getPixelStreamProvider();
+    /** @return the data provider. */
+    DataProvider& getDataProvider();
 
     /** @return the QML engine. */
     QQmlEngine* engine() const;
@@ -119,6 +119,10 @@ private:
     QQmlComponent* _qmlComponent;
     QQuickItem* _rootItem;
     bool _rendererInitialized;
+
+    QThread* _uploadThread;
+    TextureUploader* _uploader;
+    DataProvider* _provider;
 };
 
 #endif // WALLWINDOW_H

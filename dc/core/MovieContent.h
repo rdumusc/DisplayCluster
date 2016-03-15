@@ -61,12 +61,6 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const final;
 
-    /** @copydoc Content::getProviderId */
-    QString getProviderId() const final;
-
-    /** @copydoc Content::getSourceImage */
-    QString getSourceImage() const final;
-
     /**
      * Read movie informations from the source URI.
      * @return true on success, false if the URI is invalid or an error occured.

@@ -39,22 +39,14 @@
 
 #include "WallWindow.h"
 
-#include "QuickRenderer.h"
-
+#include "DataProvider.h"
 #include "DisplayGroupRenderer.h"
 #include "Options.h"
+#include "QuickRenderer.h"
 #include "TestPattern.h"
+#include "TextureUploader.h"
 
 #include "configuration/WallConfiguration.h"
-
-#include "config.h"
-#include "MovieProvider.h"
-#if ENABLE_PDF_SUPPORT
-#  include "PDFProvider.h"
-#endif
-#include "PixelStreamProvider.h"
-#include "SVGProvider.h"
-#include "TextureProvider.h"
 
 #include <QOpenGLContext>
 #include <QQmlEngine>
@@ -81,7 +73,13 @@ WallWindow::WallWindow( const WallConfiguration& config,
     , _qmlComponent( nullptr )
     , _rootItem( nullptr )
     , _rendererInitialized( false )
+    , _uploadThread( new QThread )
+    , _uploader( new TextureUploader )
+    , _provider( new DataProvider )
 {
+    connect( _provider, &DataProvider::imageLoaded,
+             _uploader, &TextureUploader::uploadTexture );
+
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
     const QPoint& windowPos = config.getWindowPos();
@@ -103,16 +101,23 @@ WallWindow::WallWindow( const WallConfiguration& config,
 
 WallWindow::~WallWindow()
 {
-    _quickRenderer->stop();
+    _uploader->stop();
+    _uploadThread->quit();
+    _uploadThread->wait();
+    delete _uploadThread;
 
+    _quickRenderer->stop();
     _quickRendererThread->quit();
     _quickRendererThread->wait();
+    delete _quickRendererThread;
 
     delete _displayGroupRenderer;
     delete _qmlComponent;
     delete _qmlEngine;
     delete _glContext;
     delete _quickRenderer;
+    delete _uploader;
+    delete _provider;
 }
 
 void WallWindow::exposeEvent( QExposeEvent* )
@@ -135,9 +140,18 @@ void WallWindow::exposeEvent( QExposeEvent* )
 
         _glContext->moveToThread( _quickRendererThread );
         _quickRenderer->moveToThread( _quickRendererThread );
+
+        _quickRendererThread->setObjectName( "Render" );
         _quickRendererThread->start();
 
         _quickRenderer->init();
+
+        _uploader->moveToThread( _uploadThread );
+        _uploadThread->setObjectName( "Upload" );
+        _uploadThread->start();
+
+        _uploader->init( _glContext );
+
         _wallChannel.globalBarrier();
         _rendererInitialized = true;
     }
@@ -154,24 +168,16 @@ void WallWindow::startQuick( const WallConfiguration& config )
     _rootItem->setWidth( width( ));
     _rootItem->setHeight( height( ));
 
-    _qmlEngine->addImageProvider( MovieProvider::ID, new MovieProvider );
-#if ENABLE_PDF_SUPPORT
-    _qmlEngine->addImageProvider( PDFProvider::ID, new PDFProvider );
-#endif
-    _qmlEngine->addImageProvider( PixelStreamProvider::ID,
-                              new PixelStreamProvider );
-    _qmlEngine->addImageProvider( SVGProvider::ID, new SVGProvider );
-    _qmlEngine->addImageProvider( TextureProvider::ID, new TextureProvider);
-
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
-    _displayGroupRenderer = new DisplayGroupRenderer( *this, screenRect );
-    _testPattern = new TestPattern( config, _rootItem );
-    _testPattern->setPosition( -screenRect.topLeft( ));
-
+    _displayGroupRenderer = new DisplayGroupRenderer( *this, *_provider,
+                                                      screenRect );
     connect( _quickRenderer, &QuickRenderer::frameSwapped,
              _displayGroupRenderer,
              &DisplayGroupRenderer::updateRenderedFrames );
+
+    _testPattern = new TestPattern( config, _rootItem );
+    _testPattern->setPosition( -screenRect.topLeft( ));
 }
 
 DisplayGroupRenderer& WallWindow::getDisplayGroupRenderer()
@@ -184,21 +190,13 @@ bool WallWindow::syncAndRender()
     if( !_rendererInitialized )
         return true;
 
-    auto movieProvider = dynamic_cast< MovieProvider* >
-            ( engine()->imageProvider( MovieProvider::ID ));
-    auto textureProvider = dynamic_cast< TextureProvider* >
-            ( engine()->imageProvider( TextureProvider::ID ));
-    auto& pixelStreamProvider = getPixelStreamProvider();
-
     _wallChannel.synchronizeClock();
-    movieProvider->synchronize( _wallChannel );
-    pixelStreamProvider.synchronize( _wallChannel );
-    bool needRedraw = textureProvider->needRedraw();
+    _displayGroupRenderer->synchronize( _wallChannel );
 
     _renderControl->polishItems();
     _quickRenderer->render();
 
-    needRedraw = needRedraw || _displayGroupRenderer->needRedraw();
+    const bool needRedraw = _displayGroupRenderer->needRedraw();
     return !_wallChannel.allReady( !needRedraw );
 }
 
@@ -221,11 +219,9 @@ void WallWindow::setMarkers( MarkersPtr markers )
     _displayGroupRenderer->setMarkers( markers );
 }
 
-PixelStreamProvider& WallWindow::getPixelStreamProvider()
+DataProvider& WallWindow::getDataProvider()
 {
-    auto pixelStreamProvider = dynamic_cast< PixelStreamProvider* >
-            ( engine()->imageProvider( PixelStreamProvider::ID ));
-    return *pixelStreamProvider;
+    return *_provider;
 }
 
 QQmlEngine* WallWindow::engine() const

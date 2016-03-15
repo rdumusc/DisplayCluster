@@ -57,23 +57,11 @@ public:
     /** Get the content type **/
     CONTENT_TYPE getType() const override;
 
-    /** @copydoc Content::getProviderId */
-    QString getProviderId() const final;
-
-    /** @copydoc Content::getSourceImage */
-    QString getSourceImage() const final;
-
-    /** @copydoc Content::isVectorial */
-    bool isVectorial() const final { return true; }
-
     /**
      * Reaad PDF informations from the source URI.
      * @return true on success, false if the URI is invalid or an error occured.
     **/
     bool readMetadata() override;
-
-    /** @return UNDEFINED_SIZE which limits resize/scale to the wall size. */
-    QSize getMaxDimensions() const override;
 
     static const QStringList& getSupportedExtensions();
 
