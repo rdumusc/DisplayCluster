@@ -51,7 +51,6 @@
 #include "PDFSynchronizer.h"
 #endif
 #include "SVGSynchronizer.h"
-#include "VectorialSynchronizer.h"
 
 ContentSynchronizer::~ContentSynchronizer() {}
 

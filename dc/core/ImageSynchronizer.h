@@ -54,11 +54,15 @@ public:
     /** Constructor. */
     explicit ImageSynchronizer( const QString& uri );
 
+    /** @copydoc ContentSynchronizer::update */
+    void update( const ContentWindow& window,
+                 const QRectF& visibleArea ) final;
+
     /** @copydoc ContentSynchronizer::getTileImage */
-    ImagePtr getTileImage( uint tileIndex ) const override;
+    ImagePtr getTileImage( uint tileIndex ) const final;
 
     /** @copydoc ContentSynchronizer::getZoomContextTile */
-    TilePtr getZoomContextTile() const;
+    TilePtr getZoomContextTile() const final;
 
 private:
     QString _uri;

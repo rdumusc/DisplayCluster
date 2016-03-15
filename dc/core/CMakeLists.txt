@@ -144,7 +144,6 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   TextureUploader.h
   Tile.h
   TiledSynchronizer.h
-  VectorialSynchronizer.h
   WallFromMasterChannel.h
   WallWindow.h
   WallToMasterChannel.h
@@ -238,7 +237,6 @@ list(APPEND DCCORE_SOURCES
   TextureUploader.cpp
   Tile.cpp
   TiledSynchronizer.cpp
-  VectorialSynchronizer.cpp
   VisibilityHelper.cpp
   WallFromMasterChannel.cpp
   WallToMasterChannel.cpp

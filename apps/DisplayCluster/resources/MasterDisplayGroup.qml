@@ -11,7 +11,17 @@ DisplayGroup {
         anchors.fill: parent
         referenceItem: dispGroup
         z: controlPanel.z - 1
-        onTapAndHold: view.backgroundTapAndHold(pos)
+
+        property bool blockTap: true
+        onTapStarted: blockTap = false
+        onTapAndHold: {
+            view.backgroundTapAndHold(pos)
+            blockTap = true;
+        }
+        onTapEnded: {
+            if( !blockTap )
+                view.backgroundTap(pos)
+        }
     }
 
     controlPanel.buttonDelegate: Component {
