@@ -57,16 +57,12 @@ QImage MovieThumbnailGenerator::generate( const QString& filename ) const
         return createErrorImage( "movie" );
 
     const double target = PREVIEW_RELATIVE_POSITION * movie.getDuration();
-    auto future = movie.getFrame( target );
-    try
+    PicturePtr picture = movie.getFrame( target );
+    if( picture )
     {
-        auto picture = future.get();
         QImage image = picture->toQImage().scaled( size_, aspectRatioMode_ );
         addMetadataToImage( image, filename );
         return image;
     }
-    catch( const std::exception& )
-    {
-        return createErrorImage( "movie" );
-    }
+    return createErrorImage( "movie" );
 }

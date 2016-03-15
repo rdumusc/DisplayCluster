@@ -113,7 +113,7 @@ QSize PixelStreamSynchronizer::getTilesArea() const
 
 QString PixelStreamSynchronizer::getStatistics() const
 {
-    return _fpsCounter.toString();
+    return _fpsCounter.toString() + " fps";
 }
 
 ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const

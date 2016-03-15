@@ -51,7 +51,7 @@ TiledSynchronizer::TiledSynchronizer( const TileSwapPolicy policy )
 
 void TiledSynchronizer::onSwapReady( TilePtr tile )
 {
-    if( _policy != SwapTilesIndependently &&
+    if( _policy == SwapTilesSynchronously &&
             _syncSet.find( tile->getId( )) != _syncSet.end( ))
     {
         _tilesReadyToSwap.insert( tile );
@@ -80,7 +80,7 @@ void TiledSynchronizer::updateTiles( const DataSource& source,
             emit updateTile( i, source.getTileRect( i ));
     }
 
-    if( _policy != SwapTilesIndependently )
+    if( _policy == SwapTilesSynchronously )
     {
         if( updateExistingTiles )
         {
@@ -89,12 +89,6 @@ void TiledSynchronizer::updateTiles( const DataSource& source,
         }
         else
             _syncSet = set_difference( _syncSet, removedTiles );
-
-        if( _policy == SwapTilesAlwaysSynchronously )
-        {
-            _syncSet.insert( addedTiles.begin(), addedTiles.end( ));
-            _syncSwapPending = true;
-        }
     }
 
     for( auto i : removedTiles )
@@ -129,7 +123,7 @@ bool TiledSynchronizer::swapTiles( WallToWallChannel& channel )
 
 void TiledSynchronizer::_removeTile( const size_t tileIndex )
 {
-    if( _policy != SwapTilesIndependently && _syncSwapPending )
+    if( _policy == SwapTilesSynchronously && _syncSwapPending )
         _removeLaterSet.insert( tileIndex );
     else
         emit removeTile( tileIndex );

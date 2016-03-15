@@ -40,13 +40,12 @@
 #ifndef MOVIESYNCHRONIZER_H
 #define MOVIESYNCHRONIZER_H
 
-#include "TiledSynchronizer.h"
-#include "FpsCounter.h"
+#include "ContentSynchronizer.h"
 
 /**
  * Synchronizes a Movie between different QML windows.
  */
-class MovieSynchronizer : public TiledSynchronizer
+class MovieSynchronizer : public ContentSynchronizer
 {
     Q_DISABLE_COPY( MovieSynchronizer )
 
@@ -60,25 +59,29 @@ public:
     /** Update the movies, using the channel to synchronize accross processes.*/
     void synchronize( WallToWallChannel& channel ) final;
 
-    /** @copydoc TiledSynchronizer::update */
+    /** @copydoc ContentSynchronizer::update */
     void update( const ContentWindow& window,
                  const QRectF& visibleArea ) final;
 
-    /** @copydoc TiledSynchronizer::getTilesArea */
+    /** @copydoc ContentSynchronizer::getTilesArea */
     QSize getTilesArea() const final;
 
-    /** @copydoc TiledSynchronizer::getStatistics */
+    /** @copydoc ContentSynchronizer::getStatistics */
     QString getStatistics() const final;
 
-    /** @copydoc TiledSynchronizer::getTileImage */
+    /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex ) const final;
+
+    /** @copydoc ContentSynchronizer::onSwapReady */
+    void onSwapReady( TilePtr tile ) final;
 
 private:
     MovieUpdaterSharedPtr _updater;
-    FpsCounter _fpsCounter;
 
-    bool _tilesDirty;
-    bool _updateExistingTiles;
+    bool _tileAdded;
+    bool _swapReady;
+    bool _visible;
+    TilePtr _tile;
 };
 
 #endif
