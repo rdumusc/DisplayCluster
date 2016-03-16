@@ -101,6 +101,8 @@ WallWindow::WallWindow( const WallConfiguration& config,
 
 WallWindow::~WallWindow()
 {
+    delete _provider;
+
     _uploader->stop();
     _uploadThread->quit();
     _uploadThread->wait();
@@ -117,7 +119,6 @@ WallWindow::~WallWindow()
     delete _glContext;
     delete _quickRenderer;
     delete _uploader;
-    delete _provider;
 }
 
 void WallWindow::exposeEvent( QExposeEvent* )
