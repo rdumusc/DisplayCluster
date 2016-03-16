@@ -81,7 +81,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   StatePreview.h
   StateSerializationHelper.h
   StreamImage.h
-  SVGContent.h
   SVGImage.h
   SVGTextureFactory.h
   SVGTiler.h
@@ -140,10 +139,12 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   QmlControlPanel.h
   QmlWindowRenderer.h
   RenderController.h
+  SVGContent.h
   SVGSynchronizer.h
   TextureUploader.h
   Tile.h
   TiledSynchronizer.h
+  VectorialContent.h
   WallFromMasterChannel.h
   WallWindow.h
   WallToMasterChannel.h
@@ -237,6 +238,7 @@ list(APPEND DCCORE_SOURCES
   TextureUploader.cpp
   Tile.cpp
   TiledSynchronizer.cpp
+  VectorialContent.cpp
   VisibilityHelper.cpp
   WallFromMasterChannel.cpp
   WallToMasterChannel.cpp

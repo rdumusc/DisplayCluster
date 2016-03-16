@@ -40,7 +40,8 @@
 /*********************************************************************/
 
 #include "Configuration.h"
-#include "ContentWindow.h"
+
+#include "VectorialContent.h"
 
 #include <QtXmlPatterns>
 
@@ -99,6 +100,10 @@ void Configuration::load()
     query.setQuery("string(/configuration/content/@maxScale)");
     if(query.evaluateTo(&queryResult))
         Content::setMaxScale( queryResult.toDouble( ));
+
+    query.setQuery("string(/configuration/content/@maxScaleVectorial)");
+    if(query.evaluateTo(&queryResult))
+        VectorialContent::setMaxScale( queryResult.toDouble( ));
 }
 
 int Configuration::getTotalScreenCountX() const

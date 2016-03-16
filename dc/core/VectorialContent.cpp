@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,46 +37,25 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef SVG_CONTENT_H
-#define SVG_CONTENT_H
-
 #include "VectorialContent.h"
-#include <boost/serialization/base_object.hpp>
 
-class SVGContent : public VectorialContent
+qreal VectorialContent::_maxScale = 6.0;
+
+VectorialContent::VectorialContent( const QString& uri )
+    : Content( uri )
+{}
+
+QSize VectorialContent::getMaxDimensions() const
 {
-    Q_OBJECT
+    return getDimensions() * getMaxScale();
+}
 
-public:
-    /**
-     * Constructor.
-     * @param uri The uri of the svg document
-     */
-    explicit SVGContent( const QString& uri );
+qreal VectorialContent::getMaxScale()
+{
+    return _maxScale;
+}
 
-    /** Get the content type **/
-    CONTENT_TYPE getType() const override;
-
-    /**
-     * Read SVG metadata.
-     * @return true on success, false if the URI is invalid or an error occured.
-    **/
-    bool readMetadata() override;
-
-    static const QStringList& getSupportedExtensions();
-
-private:
-    friend class boost::serialization::access;
-
-    // Default constructor required for boost::serialization
-    SVGContent() {}
-
-    template<class Archive>
-    void serialize( Archive & ar, const unsigned int )
-    {
-        // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-    }
-};
-
-#endif
+void VectorialContent::setMaxScale( const qreal value )
+{
+    _maxScale = value;
+}

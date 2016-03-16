@@ -39,15 +39,13 @@
 
 #include "SVGTiler.h"
 
-#include "Content.h"
-
 namespace
 {
 const uint tileSize = 512;
 }
 
 SVGTiler::SVGTiler( SVGTextureFactoryPtr factory )
-    : LodTiler( factory->getDefaultSize() * Content::getMaxScale(), tileSize )
+    : LodTiler( factory->getMaxSize(), tileSize )
     , _factory( std::move( factory ))
 {}
 

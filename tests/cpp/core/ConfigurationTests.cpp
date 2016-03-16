@@ -45,6 +45,7 @@ namespace ut = boost::unit_test;
 
 #include "configuration/MasterConfiguration.h"
 #include "configuration/WallConfiguration.h"
+#include "VectorialContent.h"
 
 #include <QDir>
 
@@ -82,13 +83,20 @@ void testBaseParameters( const Configuration& config )
 
     BOOST_CHECK_EQUAL( config.getTotalScreenCountX(), 2 );
     BOOST_CHECK_EQUAL( config.getTotalScreenCountY(), 3 );
+
+    BOOST_CHECK_EQUAL( Content::getMaxScale(), 4.0 );
+    BOOST_CHECK_EQUAL( VectorialContent::getMaxScale(), 8.0 );
 }
 
 BOOST_AUTO_TEST_CASE( test_configuration )
 {
+    // Make sure the values are modified by loading the configuation file
+    BOOST_REQUIRE_NE( Content::getMaxScale(), 4.0 );
+    BOOST_REQUIRE_NE( VectorialContent::getMaxScale(), 8.0 );
+
     Configuration config( CONFIG_TEST_FILENAME );
 
-    testBaseParameters(config);
+    testBaseParameters( config );
 }
 
 BOOST_AUTO_TEST_CASE( test_wall_configuration )
