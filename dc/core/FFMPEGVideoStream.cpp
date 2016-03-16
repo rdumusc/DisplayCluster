@@ -242,11 +242,6 @@ void FFMPEGVideoStream::_openVideoStreamDecoder()
     if( !codec )
         throw std::runtime_error( "No decoder found for video stream" );
 
-    // multi-threaded decoding is only useful for some h264 movies, according
-    // to common believe on the internet. 1 could mean 0/auto, hence all CPU threads,
-    // so we choose a 'working' minimum here.
-    _videoCodecContext->thread_count = 2;
-
     // open codec
     const int ret = avcodec_open2( _videoCodecContext, codec, NULL );
 

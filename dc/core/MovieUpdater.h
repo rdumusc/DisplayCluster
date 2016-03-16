@@ -81,20 +81,20 @@ public:
     /** Update this datasource according to visibility and movie content. */
     void update( const MovieContent& movie, bool visible );
 
-    /** Increment and synchronize movie timestamp across all wall processes. */
-    bool synchronizeTimestamp( WallToWallChannel& channel );
+    /** @return true if all processes advance to request a new movie frame. */
+    bool advanceToNextFrame( WallToWallChannel& channel );
 
     /**
-     * Allow the updater to prepare the next frame, i.e. a previous
-     * decode & swap of a movie frame is finished.
+     * @return true if after advanceToNextFrame() we need to decode a new
+     *         movie frame via getTileImage().
      */
-    void requestNextFrame();
+    bool canRequestNewFrame() const;
 
     /**
-     * @return true if after synchronizeTimestamp() the tile needs update aka
-     * decode the next movie frame.
+     * Indicates that the last requested frame was consumed and we can advance
+     * to the next frame.
      */
-    bool updateTile() const;
+    void lastFrameDone();
 
     /** @return current / max fps, movie position in percentage */
     QString getStatistics() const;
@@ -103,11 +103,11 @@ private:
     MoviePtr _ffmpegMovie;
     FpsCounter _fpsCounter;
 
-    bool _swapDone;
+    bool _lastFrameDone;
     bool _paused;
     bool _loop;
     bool _visible;
-    bool _updateTile;
+    bool _requestNewFrame;
 
     ElapsedTimer _timer;
     double _elapsedTime;

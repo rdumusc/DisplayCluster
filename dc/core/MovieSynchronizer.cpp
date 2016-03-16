@@ -82,13 +82,13 @@ void MovieSynchronizer::synchronize( WallToWallChannel& channel )
         _tile.reset();
         _swapReady = false;
 
-        _updater->requestNextFrame();
+        _updater->lastFrameDone();
         emit statisticsChanged();
     }
 
-    if( _updater->synchronizeTimestamp( channel ))
+    if( _updater->advanceToNextFrame( channel ))
     {
-        if( _updater->updateTile( ))
+        if( _updater->canRequestNewFrame( ))
             emit updateTile( 0, _updater->getTileRect( 0 ));
         else
             _swapReady = true;

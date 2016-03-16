@@ -49,11 +49,11 @@
 
 MovieUpdater::MovieUpdater( const QString& uri )
     : _ffmpegMovie( new FFMPEGMovie( uri ))
-    , _swapDone( false )
+    , _lastFrameDone( false )
     , _paused( false )
     , _loop( true )
     , _visible( true )
-    , _updateTile( false )
+    , _requestNewFrame( false )
     , _elapsedTime( 0.0 )
     , _sharedTimestamp( 0.0 )
     , _currentPosition( 0.0 )
@@ -130,17 +130,17 @@ uint MovieUpdater::getMaxLod() const
     return 0;
 }
 
-void MovieUpdater::requestNextFrame()
+void MovieUpdater::lastFrameDone()
 {
     _fpsCounter.tick();
 
-    _updateTile = false;
-    _swapDone = true;
+    _requestNewFrame = false;
+    _lastFrameDone = true;
 }
 
-bool MovieUpdater::updateTile() const
+bool MovieUpdater::canRequestNewFrame() const
 {
-    return _updateTile;
+    return _requestNewFrame;
 }
 
 QString MovieUpdater::getStatistics() const
@@ -155,14 +155,12 @@ QString MovieUpdater::getStatistics() const
                                        .arg( progress );
 }
 
-bool MovieUpdater::synchronizeTimestamp( WallToWallChannel& channel )
+bool MovieUpdater::advanceToNextFrame( WallToWallChannel& channel )
 {
-    _timer.setCurrentTime( channel.getTime( ));
-
     if( _paused )
     {
         // don't advance time if paused
-        _timer.setCurrentTime( channel.getTime( ));
+        _timer.resetTime( channel.getTime( ));
         return false;
     }
 
@@ -171,25 +169,29 @@ bool MovieUpdater::synchronizeTimestamp( WallToWallChannel& channel )
     // protect _sharedTimestamp & _currentPosition from getTileImage()
     QMutexLocker lock( &_mutex );
 
-    // If a visible updater is out-of-sync, only update this tile which causes
-    // a seek in the movie to _sharedTimestamp. The time stands still in this
-    // case to avoid seeking of all processes if this seek takes longer than
-    // frameDuration.
+    // If any visible updater is out-of-sync, only update those ones. This
+    // causes a seek in the movie to _sharedTimestamp. The time stands still in
+    // this case to avoid seeking of all processes if this seek takes longer
+    // than frameDuration.
     const bool inSync =
             std::abs( _sharedTimestamp - _currentPosition ) <= frameDuration;
-    if( !channel.allReady( !_visible || inSync ) && _swapDone )
+    _lastFrameDone = channel.allReady( _lastFrameDone );
+    if( !channel.allReady( !_visible || inSync ))
     {
-        _swapDone = false;
-        _updateTile = !inSync;
-        _timer.setCurrentTime( channel.getTime( ));
+        _timer.resetTime( channel.getTime( ));
+        if( !_lastFrameDone )
+            return false;
+        _lastFrameDone = false;
+        _requestNewFrame = !inSync;
         return true;
     }
 
-    // If everybody is in sync, to a proper increment and throttle to movie
-    // frame duration and swap/decode speed accordingly.
+    // If everybody is in sync, do a proper increment and throttle to movie
+    // frame duration and decode speed accordingly.
+    _timer.setCurrentTime( channel.getTime( ));
     const double elapsedTime = ElapsedTimer::toSeconds( _timer.getElapsedTime( ));
     _elapsedTime += elapsedTime;
-    if( !_swapDone || _elapsedTime < frameDuration )
+    if( !_lastFrameDone || _elapsedTime < frameDuration )
         return false;
 
     // advance to the next frame, keep correct elapsedTime as vsync frequency
@@ -209,7 +211,7 @@ bool MovieUpdater::synchronizeTimestamp( WallToWallChannel& channel )
                                        channel.receiveTimestampBroadcast( leader ));
     }
 
-    _swapDone = false;
-    _updateTile = _visible;
+    _lastFrameDone = false;
+    _requestNewFrame = _visible;
     return true;
 }
