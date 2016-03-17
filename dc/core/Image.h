@@ -57,6 +57,9 @@ public:
     /** @return the height of the image. */
     virtual int getHeight() const = 0;
 
+    /** @return the size of the image in bytes */
+    size_t getSize() const { return getWidth() * getHeight() * 4; }
+
     /** @return the pointer to the pixels. */
     virtual const uint8_t* getData() const = 0;
 

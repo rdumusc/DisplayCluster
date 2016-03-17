@@ -75,6 +75,9 @@ public:
      */
     void setBackTextureSize( const QSize& size );
 
+    /** @sa QSGOpaqueTextureMaterial::setMipmapFiltering */
+    void setMipmapFiltering( const QSGTexture::Filtering mipmapFiltering );
+
 private:
     QQuickWindow* _window;
 
