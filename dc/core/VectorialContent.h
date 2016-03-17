@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,46 +37,37 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef SVG_CONTENT_H
-#define SVG_CONTENT_H
+#ifndef VECTORIALCONTENT_H
+#define VECTORIALCONTENT_H
 
-#include "VectorialContent.h"
-#include <boost/serialization/base_object.hpp>
+#include "Content.h"
 
-class SVGContent : public VectorialContent
+/**
+ * Base class for vectorial content types.
+ */
+class VectorialContent : public Content
 {
     Q_OBJECT
 
 public:
-    /**
-     * Constructor.
-     * @param uri The uri of the svg document
-     */
-    explicit SVGContent( const QString& uri );
+    /** Constructor **/
+    VectorialContent( const QString& uri );
 
-    /** Get the content type **/
-    CONTENT_TYPE getType() const override;
+    /** @return the max dimensions, used to constrain resize/scale. */
+    QSize getMaxDimensions() const override;
 
-    /**
-     * Read SVG metadata.
-     * @return true on success, false if the URI is invalid or an error occured.
-    **/
-    bool readMetadata() override;
+    /** Set the maximum factor for zoom and resize; value times base size */
+    static void setMaxScale( qreal value );
 
-    static const QStringList& getSupportedExtensions();
+    /** @return the maxium scale factor for zoom and resize */
+    static qreal getMaxScale();
+
+protected:
+    // Default constructor required for boost::serialization of derived classes
+    VectorialContent() {}
 
 private:
-    friend class boost::serialization::access;
-
-    // Default constructor required for boost::serialization
-    SVGContent() {}
-
-    template<class Archive>
-    void serialize( Archive & ar, const unsigned int )
-    {
-        // serialize base class information (with NVP for xml archives)
-        ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( Content );
-    }
+    static qreal _maxScale;
 };
 
 #endif

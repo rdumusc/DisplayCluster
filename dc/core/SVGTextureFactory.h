@@ -50,8 +50,8 @@ public:
     /** Constructor */
     SVGTextureFactory( const QString& uri );
 
-    /** The default size for the content. */
-    QSize getDefaultSize() const;
+    /** The maximum size for the content. */
+    QSize getMaxSize() const;
 
     /**
      * Render the specified area on the GPU and downloads it into core memory.

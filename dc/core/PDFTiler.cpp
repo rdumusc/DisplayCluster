@@ -39,7 +39,7 @@
 
 #include "PDFTiler.h"
 
-#include "Content.h"
+#include "VectorialContent.h"
 #include "LodTools.h"
 
 #include <QThread>
@@ -50,7 +50,7 @@ const uint tileSize = 512;
 }
 
 PDFTiler::PDFTiler( PDF& pdf )
-    : LodTiler( pdf.getSize() * Content::getMaxScale(), tileSize )
+    : LodTiler( pdf.getSize() * VectorialContent::getMaxScale(), tileSize )
     , _pdf( pdf )
     , _tilesPerPage( _lodTool.getTilesCount( ))
 {}

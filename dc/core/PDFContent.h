@@ -40,10 +40,10 @@
 #ifndef PDFCONTENT_H
 #define PDFCONTENT_H
 
-#include "Content.h"
+#include "VectorialContent.h"
 #include <boost/serialization/base_object.hpp>
 
-class PDFContent : public Content
+class PDFContent : public VectorialContent
 {
     Q_OBJECT
 

@@ -48,7 +48,7 @@
 BOOST_CLASS_EXPORT_GUID( PDFContent, "PDFContent" )
 
 PDFContent::PDFContent( const QString& uri )
-    : Content( uri )
+    : VectorialContent( uri )
     , _pageNumber( 0 )
     , _pageCount( 0 )
 {

@@ -39,6 +39,7 @@
 
 #include "SVGTextureFactory.h"
 
+#include "VectorialContent.h"
 #include "log.h"
 #include "types.h" // for make_unique()
 
@@ -70,9 +71,9 @@ SVGTextureFactory::SVGTextureFactory( const QString& uri )
     }
 }
 
-QSize SVGTextureFactory::getDefaultSize() const
+QSize SVGTextureFactory::getMaxSize() const
 {
-    return _svgRenderer.defaultSize();
+    return _svgRenderer.defaultSize() * VectorialContent::getMaxScale();
 }
 
 void _saveGLState()
