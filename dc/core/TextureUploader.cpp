@@ -48,7 +48,7 @@
 #include <QOffscreenSurface>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
-#include <QOpenGLFunctions_2_1>
+#include <QOpenGLFunctions_3_0>
 
 TextureUploader::TextureUploader()
     : _glContext( nullptr )
@@ -75,7 +75,7 @@ void TextureUploader::_onInit( QOpenGLContext* shareContext )
 
     _glContext->makeCurrent( _offscreenSurface );
 
-    _gl = _glContext->versionFunctions< QOpenGLFunctions_2_1 >();
+    _gl = _glContext->versionFunctions< QOpenGLFunctions_3_0 >();
     _gl->initializeOpenGLFunctions();
 
     _gl->glGenBuffers( 1, &_pbo );
@@ -147,7 +147,7 @@ void TextureUploader::_upload( const Image& image, const uint textureID )
 #if 0
     // make PBO big enough
     _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, _pbo );
-    const size_t bufferSize = image.getWidth() * image.getHeight() * 4;
+    const size_t bufferSize = image.getSize();
     if( bufferSize > _bufferSize )
     {
         _gl->glBufferData( GL_PIXEL_UNPACK_BUFFER, bufferSize, 0,
@@ -176,9 +176,7 @@ void TextureUploader::_upload( const Image& image, const uint textureID )
                           image.getHeight(), image.getFormat(),
                           GL_UNSIGNED_BYTE, 0 );
 
-    // unbind texture & PBO
     _gl->glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
-    _gl->glBindTexture( GL_TEXTURE_2D, 0 );
 #else
     GLint alignment = 1;
     if( (image.getWidth() % 4) == 0 )
@@ -192,8 +190,10 @@ void TextureUploader::_upload( const Image& image, const uint textureID )
     _gl->glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, image.getWidth(),
                           image.getHeight(), image.getFormat(),
                           GL_UNSIGNED_BYTE, image.getData( ));
-    _gl->glBindTexture( GL_TEXTURE_2D, 0 );
 #endif
+    _gl->glGenerateMipmap( GL_TEXTURE_2D );
+
+    _gl->glBindTexture( GL_TEXTURE_2D, 0 );
 
     // Ensure the texture upload is complete before the render thread uses it
     _gl->glFinish();

@@ -48,6 +48,16 @@ TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
 {
     setTexture( _frontTexture.get( ));
     setFiltering( QSGTexture::Linear );
+    setMipmapFiltering( QSGTexture::Linear );
+}
+
+void TextureNode::setMipmapFiltering( const QSGTexture::Filtering mipmapFiltering )
+{
+    auto mat = static_cast< QSGOpaqueTextureMaterial* >( material( ));
+    auto opaqueMat = static_cast< QSGOpaqueTextureMaterial* >( opaqueMaterial( ));
+
+    mat->setMipmapFiltering( mipmapFiltering );
+    opaqueMat->setMipmapFiltering( mipmapFiltering );
 }
 
 uint TextureNode::getBackGlTexture() const
@@ -78,11 +88,7 @@ TextureNode::_createTexture( const QSize& size ) const
     glActiveTexture( GL_TEXTURE0 );
     glGenTextures( 1, &textureID );
     glBindTexture( GL_TEXTURE_2D, textureID );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, size.width(), size.height(),
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, size.width(), size.height(),
                   0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
