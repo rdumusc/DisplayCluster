@@ -150,13 +150,18 @@ double FFMPEGMovie::getDuration() const
     return _videoStream->getDuration();
 }
 
+double FFMPEGMovie::getFrameDuration() const
+{
+    return _videoStream->getFrameDuration();
+}
+
 PicturePtr FFMPEGMovie::getFrame( double posInSeconds )
 {
     posInSeconds = std::max( 0.0, std::min( posInSeconds, getDuration( )));
 
-    // Don't seek forward if the delta is small. Always seek backwards.
-    const double streamDelta = std::abs( posInSeconds - _streamPosition );
-    if( streamDelta > MIN_SEEK_DELTA_SEC )
+    // Seek back for loop or forward if too far away
+    const double streamDelta = posInSeconds - _streamPosition;
+    if( streamDelta < 0 || std::abs( streamDelta ) > MIN_SEEK_DELTA_SEC )
     {
         const double frameDuration = _videoStream->getFrameDuration();
         const double target = std::max( 0.0, posInSeconds - frameDuration );
@@ -192,6 +197,10 @@ PicturePtr FFMPEGMovie::getFrame( double posInSeconds )
         // free the packet that was allocated by av_read_frame
         av_free_packet( &packet );
     }
+
+    // handle (rare) EOF case
+    if( avReadStatus < 0 )
+        picture = PicturePtr();
 
     return picture;
 }

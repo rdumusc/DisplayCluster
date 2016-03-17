@@ -67,10 +67,5 @@ float FpsCounter::getFps() const
 
 QString FpsCounter::toString() const
 {
-    QString result;
-
-    result += QString::number(getFps(), 'g', 4);
-    result += " fps";
-
-    return result;
+    return QString::number( getFps(), 'g', 3 );
 }

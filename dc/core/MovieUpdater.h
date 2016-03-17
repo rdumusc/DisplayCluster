@@ -40,10 +40,12 @@
 #ifndef MOVIEUPDATER_H
 #define MOVIEUPDATER_H
 
+#include "DataSource.h"
 #include "ElapsedTimer.h"
+#include "FpsCounter.h"
 #include "types.h"
 
-#include "DataSource.h"
+#include <QMutex>
 
 /**
  * Updates Movies synchronously across different processes.
@@ -79,19 +81,40 @@ public:
     /** Update this datasource according to visibility and movie content. */
     void update( const MovieContent& movie, bool visible );
 
-    /** Increment and synchronize movie timestamp across all wall processes. */
-    bool synchronizeTimestamp( WallToWallChannel& channel );
+    /** @return true if all processes advance to request a new movie frame. */
+    bool advanceToNextFrame( WallToWallChannel& channel );
+
+    /**
+     * @return true if after advanceToNextFrame() we need to decode a new
+     *         movie frame via getTileImage().
+     */
+    bool canRequestNewFrame() const;
+
+    /**
+     * Indicates that the last requested frame was consumed and we can advance
+     * to the next frame.
+     */
+    void lastFrameDone();
+
+    /** @return current / max fps, movie position in percentage */
+    QString getStatistics() const;
 
 private:
     MoviePtr _ffmpegMovie;
+    FpsCounter _fpsCounter;
 
+    bool _lastFrameDone;
     bool _paused;
     bool _loop;
     bool _visible;
+    bool _requestNewFrame;
 
     ElapsedTimer _timer;
-    double _sharedTimestamp;
-    mutable double _lastTimestamp;
+    double _elapsedTime;
+
+    mutable QMutex _mutex;
+    mutable double _sharedTimestamp;
+    mutable double _currentPosition;
 };
 
 #endif

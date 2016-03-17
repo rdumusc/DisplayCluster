@@ -55,8 +55,7 @@ class TiledSynchronizer : public ContentSynchronizer
 public:
     enum TileSwapPolicy {
         SwapTilesIndependently,
-        SwapTilesSynchronously,
-        SwapTilesAlwaysSynchronously
+        SwapTilesSynchronously
     };
 
     /** Constructor */

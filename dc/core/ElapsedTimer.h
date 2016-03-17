@@ -54,7 +54,10 @@ public:
     ElapsedTimer();
 
     /** Set the current time. */
-    void setCurrentTime(boost::posix_time::ptime time);
+    void setCurrentTime( const boost::posix_time::ptime& time);
+
+    /** Reset any elapsed time. */
+    void resetTime( const boost::posix_time::ptime& time );
 
     /** Get the elapsed time between the last two calls to setCurrentTime(). */
     boost::posix_time::time_duration getElapsedTime() const;

@@ -95,6 +95,9 @@ public:
     /** Get the movie duration in seconds. May be unavailable for some movies. */
     double getDuration() const;
 
+    /** Get the duration of a frame in seconds. */
+    double getFrameDuration() const;
+
     /**
      * Get a frame at the given position in seconds.
      *

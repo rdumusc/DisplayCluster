@@ -43,47 +43,55 @@
 #include "MovieContent.h"
 #include "MovieUpdater.h"
 #include "Tile.h"
+#include "WallToWallChannel.h"
 
 MovieSynchronizer::MovieSynchronizer( const QString& uri )
-    : TiledSynchronizer( TileSwapPolicy::SwapTilesAlwaysSynchronously )
+    : ContentSynchronizer()
     , _updater( new MovieUpdater( uri ))
-    , _tilesDirty( true )
-    , _updateExistingTiles( true )
+    , _tileAdded( false )
+    , _swapReady( false )
+    , _visible( false )
 {
 }
 
 void MovieSynchronizer::update( const ContentWindow& window,
                                 const QRectF& visibleArea )
 {
+    // we only have one tile, which we add once, and we don't update it in
+    // synchronize() if it's not visible.
+    if( !_tileAdded )
+    {
+        emit addTile( std::make_shared<Tile>( 0, QRect( QPoint( 0, 0 ),
+                                                        getTilesArea( ))));
+        emit tilesAreaChanged();
+
+        _tileAdded = true;
+    }
+
+    _visible = !visibleArea.isEmpty();
     _updater->update( static_cast< const MovieContent& >( *window.getContent()),
-                      !visibleArea.isEmpty( ));
-
-    if( _visibleTilesArea == visibleArea )
-        return;
-
-    _visibleTilesArea = visibleArea;
-    _tilesDirty = true;
+                      _visible );
 }
 
 void MovieSynchronizer::synchronize( WallToWallChannel& channel )
 {
-    if( TiledSynchronizer::swapTiles( channel ))
+    if( channel.allReady( _swapReady ))
     {
-        _fpsCounter.tick();
-        emit statisticsChanged();
+        if( _tile )
+            _tile->swapImage();
+        _tile.reset();
+        _swapReady = false;
 
-        _tilesDirty = true;
-        _updateExistingTiles = true;
+        _updater->lastFrameDone();
+        emit statisticsChanged();
     }
 
-    _updateExistingTiles = _updater->synchronizeTimestamp( channel ) &&
-                           _updateExistingTiles;
-
-    if( _tilesDirty )
+    if( _updater->advanceToNextFrame( channel ))
     {
-        TiledSynchronizer::updateTiles( *_updater, _updateExistingTiles );
-        _tilesDirty = false;
-        _updateExistingTiles = false;
+        if( _updater->canRequestNewFrame( ))
+            emit updateTile( 0, _updater->getTileRect( 0 ));
+        else
+            _swapReady = true;
     }
 }
 
@@ -94,10 +102,16 @@ QSize MovieSynchronizer::getTilesArea() const
 
 QString MovieSynchronizer::getStatistics() const
 {
-    return _fpsCounter.toString();
+    return _updater->getStatistics();
 }
 
 ImagePtr MovieSynchronizer::getTileImage( const uint tileIndex ) const
 {
     return _updater->getTileImage( tileIndex );
+}
+
+void MovieSynchronizer::onSwapReady( TilePtr tile )
+{
+    _tile = tile;
+    _swapReady = true;
 }

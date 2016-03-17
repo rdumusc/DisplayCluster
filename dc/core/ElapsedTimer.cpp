@@ -43,10 +43,15 @@
 
 ElapsedTimer::ElapsedTimer() {}
 
-void ElapsedTimer::setCurrentTime( boost::posix_time::ptime time )
+void ElapsedTimer::setCurrentTime( const boost::posix_time::ptime& time )
 {
     previousTime_ = currentTime_;
     currentTime_ = time;
+}
+
+void ElapsedTimer::resetTime( const boost::posix_time::ptime& time )
+{
+    previousTime_ = currentTime_ = time;
 }
 
 boost::posix_time::time_duration ElapsedTimer::getElapsedTime() const
