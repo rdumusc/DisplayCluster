@@ -51,7 +51,8 @@ TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
     , _gl( _window->openglContext()->functions( ))
     , _frontTexture( window->createTextureFromId( 0 , QSize( 1 ,1 )))
     , _backTexture( _createTexture( size ))
-    , _pixelBuffer( QOpenGLBuffer::PixelUnpackBuffer )
+    , _backPbo( new QOpenGLBuffer( QOpenGLBuffer::PixelUnpackBuffer ))
+    , _frontPbo( new QOpenGLBuffer( QOpenGLBuffer::PixelUnpackBuffer ))
     , _readyToSwap( false )
 {
     setTexture( _frontTexture.get( ));
@@ -60,8 +61,10 @@ TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
     setFlag( QSGNode::UsePreprocess, true );
 
     _gl->initializeOpenGLFunctions();
-    _pixelBuffer.create();
-    _pixelBuffer.setUsagePattern( QOpenGLBuffer::StreamDraw );
+    _backPbo->create();
+    _backPbo->setUsagePattern( QOpenGLBuffer::StreamDraw );
+    _frontPbo.create();
+    _frontPbo.setUsagePattern( QOpenGLBuffer::StreamDraw );
 }
 
 void TextureNode::setMipmapFiltering( const QSGTexture::Filtering mipmapFiltering )
@@ -135,13 +138,13 @@ void TextureNode::_upload( const Image& image, const uint textureID )
 {
     const size_t bufferSize = image.getSize();
 
-    _pixelBuffer.bind();
-    _pixelBuffer.allocate( bufferSize ); // make PBO big enough
+    _backPbo->bind();
+    _backPbo->allocate( bufferSize ); // make PBO big enough
 
     // copy pixels from CPU mem to GPU mem
-    void* pboData = _pixelBuffer.map( QOpenGLBuffer::WriteOnly );
+    void* pboData = _backPbo->map( QOpenGLBuffer::WriteOnly );
     std::memcpy( pboData, image.getData(), bufferSize );
-    _pixelBuffer.unmap();
+    _backPbo->unmap();
 
     // setup PBO and texture pixel storage
     GLint alignment = 1;
@@ -162,7 +165,7 @@ void TextureNode::_upload( const Image& image, const uint textureID )
                           GL_UNSIGNED_BYTE, 0 );
     glPopClientAttrib();
 
-    _pixelBuffer.release();
+    _backPbo->release();
 
     _gl->glGenerateMipmap( GL_TEXTURE_2D );
     _gl->glBindTexture( GL_TEXTURE_2D, 0 );

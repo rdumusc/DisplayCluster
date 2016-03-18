@@ -101,7 +101,9 @@ private:
     QSGTexturePtr _frontTexture;
     QSGTexturePtr _backTexture;
 
-    QOpenGLBuffer _pixelBuffer;
+    typedef std::unique_ptr<QOpenGLBuffer> QOpenGLBufferPtr;
+    QOpenGLBufferPtr _backPbo;
+    QOpenGLBufferPtr _frontPbo;
     ImagePtr _image;
     bool _readyToSwap;
 

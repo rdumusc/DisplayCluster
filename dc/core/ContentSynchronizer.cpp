@@ -78,7 +78,7 @@ ContentSynchronizerPtr ContentSynchronizer::create( ContentPtr content )
     }
 }
 
-void ContentSynchronizer::onTextureReady( TilePtr tile )
+void ContentSynchronizer::onSwapped( TilePtr tile )
 {
     emit requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
 }

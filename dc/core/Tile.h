@@ -101,16 +101,12 @@ signals:
      * It is emitted after the texture has been created on the render thread,
      * or after a call to update().
      */
-    void textureReady( TilePtr tile );
+    void swapped( TilePtr tile );
 
     /**
      * Notify that the back texture has been updated and it can be swapped.
-     *
-     * IMPORTANT:
-     * This signal is designed to be emitted from the TextureUploader thread.
-     * Only connect to it using a Qt::QueuedConnection.
      */
-    void textureUpdated( TilePtr tile );
+    void readyForNextFrame( TilePtr tile );
 
 public slots:
     /** Show a border around the tile (for debugging purposes). */

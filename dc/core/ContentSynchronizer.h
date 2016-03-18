@@ -99,7 +99,7 @@ public slots:
     virtual void onSwapReady( TilePtr tile ) = 0;
 
     /** Called when a tile has finished initializing; re-emits requestUpdate */
-    virtual void onTextureReady( TilePtr tile );
+    virtual void onSwapped( TilePtr tile );
 
 signals:
     /** Notifier for the tiles area property. */

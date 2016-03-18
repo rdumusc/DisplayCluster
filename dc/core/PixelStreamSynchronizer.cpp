@@ -116,7 +116,7 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString() + " fps";
 }
 
-void PixelStreamSynchronizer::onTextureReady( TilePtr tile )
+void PixelStreamSynchronizer::onSwapped( TilePtr tile )
 {
     emit requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
 }

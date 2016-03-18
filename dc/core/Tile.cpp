@@ -132,11 +132,11 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
     {
         node = new TextureNode( _nextCoord.size(), window( ));
 
-        connect( node, &TextureNode::backTextureReady, this, [this]() {
-            emit textureUpdated( shared_from_this( ));
-        });
+//        connect( node, &TextureNode::backTextureReady, this, [this]() {
+//            emit textureUpdated( shared_from_this( ));
+//        });
 
-        emit textureReady( shared_from_this( ));
+        emit swapped( shared_from_this( ));
     }
 
 //    put_flog( LOG_DEBUG, "Swap: %i, Image: %i", _swapRequested, _image.get( ));
@@ -146,13 +146,14 @@ QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
     {
         node->swap();
         _swapRequested = false;
-        emit textureReady( shared_from_this( ));
+        emit swapped( shared_from_this( ));
     }
 
     if( _image )
     {
         node->updateBackTexture( _image );
         _image.reset();
+        emit readyForNextFrame( shared_from_this( ));
     }
 
     node->setRect( boundingRect( ));
