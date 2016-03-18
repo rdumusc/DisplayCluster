@@ -86,7 +86,6 @@ list(APPEND DCCORE_PUBLIC_HEADERS
   SVGTiler.h
   TestPattern.h
   TextureContent.h
-  TextureNode.h
   VisibilityHelper.h
   ZoomInteractionDelegate.h
   ZoomHelper.h
@@ -141,7 +140,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   RenderController.h
   SVGContent.h
   SVGSynchronizer.h
-  TextureUploader.h
+  TextureNode.h
   Tile.h
   TiledSynchronizer.h
   VectorialContent.h
@@ -235,7 +234,6 @@ list(APPEND DCCORE_SOURCES
   TestPattern.cpp
   TextureContent.cpp
   TextureNode.cpp
-  TextureUploader.cpp
   Tile.cpp
   TiledSynchronizer.cpp
   VectorialContent.cpp

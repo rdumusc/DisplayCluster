@@ -78,6 +78,9 @@ public:
     /** @copydoc ContentSynchronizer::getTileImage */
     ImagePtr getTileImage( uint tileIndex ) const override;
 
+    /** @copydoc ContentSynchronizer::onTextureReady */
+    void onTextureReady( TilePtr tile ) override;
+
 private:
     PixelStreamUpdaterSharedPtr _updater;
     FpsCounter _fpsCounter;

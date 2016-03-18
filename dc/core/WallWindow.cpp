@@ -44,9 +44,9 @@
 #include "Options.h"
 #include "QuickRenderer.h"
 #include "TestPattern.h"
-#include "TextureUploader.h"
 
 #include "configuration/WallConfiguration.h"
+#include "log.h"
 
 #include <QOpenGLContext>
 #include <QQmlEngine>
@@ -73,17 +73,16 @@ WallWindow::WallWindow( const WallConfiguration& config,
     , _qmlComponent( nullptr )
     , _rootItem( nullptr )
     , _rendererInitialized( false )
-    , _uploadThread( new QThread )
-    , _uploader( new TextureUploader )
     , _provider( new DataProvider )
 {
     connect( _provider, &DataProvider::imageLoaded,
-             _uploader, &TextureUploader::uploadTexture );
+             this, &WallWindow::updateTile );
 
     const QPoint& screenIndex = config.getGlobalScreenIndex();
     const QRect& screenRect = config.getScreenRect( screenIndex );
     const QPoint& windowPos = config.getWindowPos();
 
+    setSurfaceType( QSurface::OpenGLSurface );
     setFlags( Qt::FramelessWindowHint );
     setPosition( windowPos );
     resize( screenRect.size( ));
@@ -103,11 +102,6 @@ WallWindow::~WallWindow()
 {
     delete _provider;
 
-    _uploader->stop();
-    _uploadThread->quit();
-    _uploadThread->wait();
-    delete _uploadThread;
-
     _quickRenderer->stop();
     _quickRendererThread->quit();
     _quickRendererThread->wait();
@@ -118,7 +112,6 @@ WallWindow::~WallWindow()
     delete _qmlEngine;
     delete _glContext;
     delete _quickRenderer;
-    delete _uploader;
 }
 
 void WallWindow::exposeEvent( QExposeEvent* )
@@ -146,12 +139,6 @@ void WallWindow::exposeEvent( QExposeEvent* )
         _quickRendererThread->start();
 
         _quickRenderer->init();
-
-        _uploader->moveToThread( _uploadThread );
-        _uploadThread->setObjectName( "Upload" );
-        _uploadThread->start();
-
-        _uploader->init( _glContext );
 
         _wallChannel.globalBarrier();
         _rendererInitialized = true;
@@ -250,7 +237,16 @@ WallToWallChannel& WallWindow::getWallChannel()
     return _wallChannel;
 }
 
-TextureUploader& WallWindow::getUploader()
+#include "Tile.h"
+#include "log.h"
+
+void WallWindow::updateTile( ImagePtr image, TileWeakPtr tile_ )
 {
-    return *_uploader;
+    TilePtr tile = tile_.lock();
+    if( !tile )
+    {
+        put_flog( LOG_DEBUG, "Tile expired" );
+        return;
+    }
+    tile->updateBackTexture( image );
 }

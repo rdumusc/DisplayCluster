@@ -39,16 +39,29 @@
 
 #include "TextureNode.h"
 
+#include "Image.h"
+
 #include <QQuickWindow>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <cstring>  // memcpy
 
 TextureNode::TextureNode( const QSize& size, QQuickWindow* window )
     : _window( window )
+    , _gl( _window->openglContext()->functions( ))
     , _frontTexture( window->createTextureFromId( 0 , QSize( 1 ,1 )))
     , _backTexture( _createTexture( size ))
+    , _pixelBuffer( QOpenGLBuffer::PixelUnpackBuffer )
+    , _readyToSwap( false )
 {
     setTexture( _frontTexture.get( ));
     setFiltering( QSGTexture::Linear );
     setMipmapFiltering( QSGTexture::Linear );
+    setFlag( QSGNode::UsePreprocess, true );
+
+    _gl->initializeOpenGLFunctions();
+    _pixelBuffer.create();
+    _pixelBuffer.setUsagePattern( QOpenGLBuffer::StreamDraw );
 }
 
 void TextureNode::setMipmapFiltering( const QSGTexture::Filtering mipmapFiltering )
@@ -58,6 +71,17 @@ void TextureNode::setMipmapFiltering( const QSGTexture::Filtering mipmapFilterin
 
     mat->setMipmapFiltering( mipmapFiltering );
     opaqueMat->setMipmapFiltering( mipmapFiltering );
+}
+
+void TextureNode::updateBackTexture( ImagePtr image )
+{
+    _image = image;
+    if( _image )
+    {
+        setBackTextureSize( QSize( _image->getWidth(), _image->getHeight( )));
+        _upload( *_image, _backTexture->textureId( ));
+        _image.reset();
+    }
 }
 
 uint TextureNode::getBackGlTexture() const
@@ -71,6 +95,7 @@ void TextureNode::swap()
 
     setTexture( _frontTexture.get( ));
     markDirty( DirtyMaterial );
+    _readyToSwap = false;
 }
 
 void TextureNode::setBackTextureSize( const QSize& size )
@@ -104,4 +129,46 @@ TextureNode::_createWrapper( const uint textureID, const QSize& size ) const
                                   QQuickWindow::TextureOwnsGLTexture );
     return QSGTexturePtr( _window->createTextureFromId( textureID, size,
                                                         textureFlags ));
+}
+
+void TextureNode::_upload( const Image& image, const uint textureID )
+{
+    const size_t bufferSize = image.getSize();
+
+    _pixelBuffer.bind();
+    _pixelBuffer.allocate( bufferSize ); // make PBO big enough
+
+    // copy pixels from CPU mem to GPU mem
+    void* pboData = _pixelBuffer.map( QOpenGLBuffer::WriteOnly );
+    std::memcpy( pboData, image.getData(), bufferSize );
+    _pixelBuffer.unmap();
+
+    // setup PBO and texture pixel storage
+    GLint alignment = 1;
+    if( (image.getWidth() % 4) == 0 )
+        alignment = 4;
+    else if( (image.getWidth() % 2) == 0 )
+        alignment = 2;
+
+    glPushClientAttrib( GL_CLIENT_PIXEL_STORE_BIT );
+    _gl->glPixelStorei( GL_UNPACK_ALIGNMENT, alignment );
+    _gl->glPixelStorei( GL_UNPACK_ROW_LENGTH, image.getWidth( ));
+
+    // update texture with pixels from PBO
+    _gl->glActiveTexture( GL_TEXTURE0 );
+    _gl->glBindTexture( GL_TEXTURE_2D, textureID );
+    _gl->glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, image.getWidth(),
+                          image.getHeight(), image.getFormat(),
+                          GL_UNSIGNED_BYTE, 0 );
+    glPopClientAttrib();
+
+    _pixelBuffer.release();
+
+    _gl->glGenerateMipmap( GL_TEXTURE_2D );
+    _gl->glBindTexture( GL_TEXTURE_2D, 0 );
+
+    // Ensure the texture upload is complete before the render thread uses it
+    _gl->glFinish();
+    _readyToSwap = true;
+    emit backTextureReady();
 }

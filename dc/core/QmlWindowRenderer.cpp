@@ -128,11 +128,11 @@ void QmlWindowRenderer::_addTile( TilePtr tile )
 {
     connect( tile.get(), &Tile::textureUpdated,
              _synchronizer.get(), &ContentSynchronizer::onSwapReady,
-             Qt::QueuedConnection );
+             Qt::DirectConnection );
 
     connect( tile.get(), &Tile::textureReady,
              _synchronizer.get(), &ContentSynchronizer::onTextureReady,
-             Qt::QueuedConnection );
+             Qt::DirectConnection );
 
     _tiles[tile->getId()] = tile;
 

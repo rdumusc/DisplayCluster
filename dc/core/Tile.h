@@ -86,12 +86,6 @@ public:
      */
     void update( const QRect& rect );
 
-    /** @return the back texture's identifier. */
-    uint getBackGlTexture() const;
-
-    /** @return the dimensions of the back texture. */
-    QSize getBackGlTextureSize() const;
-
     /**
      * Set the size policy.
      * @param policy defines how the tile should resize and position itself
@@ -125,6 +119,9 @@ public slots:
     /** Swap the front and back texture. */
     void swapImage();
 
+    /** Upload the given image to the back texture. */
+    void updateBackTexture( ImagePtr image );
+
 protected:
     /** Called on the render thread to update the scene graph. */
     QSGNode* updatePaintNode( QSGNode* oldNode, UpdatePaintNodeData* ) override;
@@ -134,10 +131,9 @@ private:
     SizePolicy _policy;
 
     bool _swapRequested;
-    bool _updateTextureRequested;
     QRect _nextCoord;
 
-    uint _backGlTexture;
+    ImagePtr _image;
 
     bool _showBorder;
     QuadLineNode* _border;

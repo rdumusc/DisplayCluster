@@ -40,10 +40,15 @@
 #ifndef TEXTURENODE_H
 #define TEXTURENODE_H
 
+#include "types.h"
+
+#include <QObject>
+#include <QOpenGLBuffer>
 #include <QSGSimpleTextureNode>
 #include <memory>
 
 class QQuickWindow;
+class QOpenGLFunctions;
 
 /**
  * A node with a double buffered texture.
@@ -56,8 +61,10 @@ class QQuickWindow;
  * that no memory is wasted for a second texture if the node is not going to
  * be updated more than once.
  */
-class TextureNode : public QSGSimpleTextureNode
+class TextureNode : public QObject, public QSGSimpleTextureNode
 {
+    Q_OBJECT
+
 public:
     TextureNode( const QSize& size, QQuickWindow* window );
 
@@ -78,15 +85,29 @@ public:
     /** @sa QSGOpaqueTextureMaterial::setMipmapFiltering */
     void setMipmapFiltering( const QSGTexture::Filtering mipmapFiltering );
 
+    /** Upload the given image to the back texture. */
+    void updateBackTexture( ImagePtr image );
+
+    bool isReadyToSwap() const { return _readyToSwap; }
+
+signals:
+    void backTextureReady();
+
 private:
     QQuickWindow* _window;
+    QOpenGLFunctions* _gl;
 
     typedef std::unique_ptr<QSGTexture> QSGTexturePtr;
     QSGTexturePtr _frontTexture;
     QSGTexturePtr _backTexture;
 
+    QOpenGLBuffer _pixelBuffer;
+    ImagePtr _image;
+    bool _readyToSwap;
+
     QSGTexturePtr _createTexture( const QSize& size ) const;
     QSGTexturePtr _createWrapper( const uint textureID, const QSize& size ) const;
+    void _upload( const Image& image, const uint textureID );
 };
 
 #endif

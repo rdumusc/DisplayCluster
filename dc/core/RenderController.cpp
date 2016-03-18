@@ -44,7 +44,6 @@
 #include "Options.h"
 #include "WallToWallChannel.h"
 #include "WallWindow.h"
-#include "TextureUploader.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
@@ -65,8 +64,8 @@ RenderController::RenderController( WallWindow& window )
     _syncOptions.setCallback( boost::bind( &WallWindow::setRenderOptions,
                                            &_window, _1 ));
 
-    connect( &window.getUploader(), &TextureUploader::uploaded,
-             this, [this] { _needRedraw = true; }, Qt::QueuedConnection );
+//    connect( &window.getUploader(), &TextureUploader::uploaded,
+//             this, [this] { _needRedraw = true; }, Qt::QueuedConnection );
 }
 
 DisplayGroupPtr RenderController::getDisplayGroup() const

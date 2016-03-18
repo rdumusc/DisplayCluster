@@ -55,14 +55,12 @@ Tile::Tile( const uint id, const QRect& rect )
     : _tileId( id )
     , _policy( AdjustToTexture )
     , _swapRequested( false )
-    , _updateTextureRequested( true )
     , _nextCoord( rect )
-    , _backGlTexture( 0 )
     , _showBorder( false )
     , _border( nullptr )
 {
     setFlag( ItemHasContents, true );
-    setVisible( false );
+    setVisible( true );
 
     connect( this, &QQuickItem::parentChanged, this, &Tile::_onParentChanged );
 }
@@ -89,19 +87,8 @@ void Tile::setShowBorder( const bool set )
 
 void Tile::update( const QRect& rect )
 {
-    _updateTextureRequested = true;
     _nextCoord = rect;
     QQuickItem::update();
-}
-
-uint Tile::getBackGlTexture() const
-{
-    return _backGlTexture;
-}
-
-QSize Tile::getBackGlTextureSize() const
-{
-    return _nextCoord.size();
 }
 
 void Tile::setSizePolicy( const Tile::SizePolicy policy )
@@ -125,26 +112,47 @@ void Tile::swapImage()
     QQuickItem::update();
 }
 
+void Tile::updateBackTexture( ImagePtr image )
+{
+    if( !image )
+    {
+        put_flog( LOG_DEBUG, "Invalid image" );
+        return;
+    }
+
+    _image = image;
+    QQuickItem::update();
+}
+
 QSGNode* Tile::updatePaintNode( QSGNode* oldNode,
                                 QQuickItem::UpdatePaintNodeData* )
 {
     TextureNode* node = static_cast<TextureNode*>( oldNode );
     if( !node )
+    {
         node = new TextureNode( _nextCoord.size(), window( ));
 
-    if( _swapRequested )
-    {
-        node->swap();
-        _backGlTexture = node->getBackGlTexture();
-        _swapRequested = false;
+        connect( node, &TextureNode::backTextureReady, this, [this]() {
+            emit textureUpdated( shared_from_this( ));
+        });
+
+        emit textureReady( shared_from_this( ));
     }
 
-    if( _updateTextureRequested )
+//    put_flog( LOG_DEBUG, "Swap: %i, Image: %i", _swapRequested, _image.get( ));
+//    put_flog( LOG_DEBUG, "node->isReadyToSwap(): %i", node->isReadyToSwap( ));
+
+    if( _swapRequested && node->isReadyToSwap( ))
     {
-        node->setBackTextureSize( _nextCoord.size( ));
-        _backGlTexture = node->getBackGlTexture();
-        _updateTextureRequested = false;
+        node->swap();
+        _swapRequested = false;
         emit textureReady( shared_from_this( ));
+    }
+
+    if( _image )
+    {
+        node->updateBackTexture( _image );
+        _image.reset();
     }
 
     node->setRect( boundingRect( ));

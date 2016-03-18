@@ -102,13 +102,12 @@ public:
     /** @return the Qt quick render control. */
     QQuickRenderControl& getRenderControl();
 
-    /** @return the texture uploader. */
-    TextureUploader& getUploader();
-
 private:
     void exposeEvent( QExposeEvent* exposeEvent ) final;
 
     void startQuick( const WallConfiguration& config );
+
+    void updateTile( ImagePtr image, TileWeakPtr tile_ );
 
     DisplayGroupRenderer* _displayGroupRenderer;
     TestPattern* _testPattern;
@@ -123,8 +122,6 @@ private:
     QQuickItem* _rootItem;
     bool _rendererInitialized;
 
-    QThread* _uploadThread;
-    TextureUploader* _uploader;
     DataProvider* _provider;
 };
 
