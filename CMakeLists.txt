@@ -41,7 +41,7 @@ common_package(Qt5Widgets REQUIRED)
 common_package(Qt5XmlPatterns REQUIRED)
 common_package(Qt5Xml REQUIRED)
 
-# WAR for Ubuntu 14.04
+# WAR for Ubuntu 14.04 in CI super-project conditions
 common_package(Qt5Quick 5.4)
 if(NOT Qt5Quick_FOUND)
   message(WARNING "Qt5Quick 5.4 not found, the project will not be built")

@@ -326,9 +326,9 @@ void MasterApplication::initMPIConnection()
 #if ENABLE_TUIO_TOUCH_LISTENER
 void MasterApplication::initTouchListener()
 {
-    DisplayGroupView* targetWindow = masterWindow_->getDisplayGroupView();
+    DisplayGroupView* view = masterWindow_->getDisplayGroupView();
     touchListener_.reset( new MultiTouchListener(
-                              targetWindow, config_->getTotalSize( )));
+                              *view, config_->getTotalSize( )));
     connect( touchListener_.get(), &MultiTouchListener::touchPointAdded,
              markers_.get(), &Markers::addMarker );
     connect( touchListener_.get(), &MultiTouchListener::touchPointUpdated,

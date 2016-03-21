@@ -100,7 +100,7 @@ public:
 
     /**
      * @copydoc CachedDataSource::getCachableTileImage
-     * @threadsafe
+     * threadsafe
      */
     QImage getCachableTileImage( uint tileId ) const final;
 

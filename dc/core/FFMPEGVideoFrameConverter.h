@@ -88,7 +88,7 @@ public:
 
 private:
     SwsContext* _swsContext;           // Scaling context
-    PixelFormat _targetFormat;
+    const PixelFormat _targetFormat;
 };
 
 #endif // FFMPEGVIDEOFRAMECONVERTER_H

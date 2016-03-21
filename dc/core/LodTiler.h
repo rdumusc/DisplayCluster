@@ -45,7 +45,7 @@
 #include "LodTools.h" // member
 
 /**
- * Based class to provide tiles for multi-LOD tiled data source.
+ * Base class to provide tiles for multi-LOD tiled data source.
  */
 class LodTiler : public CachedDataSource
 {
