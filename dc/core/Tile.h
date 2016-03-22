@@ -101,12 +101,12 @@ signals:
      * It is emitted after the texture has been created on the render thread,
      * or after a call to update().
      */
-    void swapped( TilePtr tile );
+    void readyForNextFrame( TilePtr tile );
 
     /**
      * Notify that the back texture has been updated and it can be swapped.
      */
-    void readyForNextFrame( TilePtr tile );
+    void readyToSwap( TilePtr tile );
 
 public slots:
     /** Show a border around the tile (for debugging purposes). */

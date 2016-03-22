@@ -90,6 +90,8 @@ protected:
      */
     bool swapTiles( WallToWallChannel& channel );
 
+    const Indices& getVisibleSet() const { return _visibleSet; }
+
 private:
     TileSwapPolicy _policy;
 

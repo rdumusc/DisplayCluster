@@ -89,9 +89,11 @@ public:
     void updateBackTexture( ImagePtr image );
 
     bool isReadyToSwap() const { return _readyToSwap; }
+    void readyToSwapSent() { _readyToSwap = false; }
 
-signals:
-    void backTextureReady();
+    bool isReadyForNextFrame() const { return _acceptFramesCount > 0; }
+    void decrementReadyForNextFrame() { --_acceptFramesCount; }
+    int getAcceptFramesCount() const { return _acceptFramesCount; }
 
 private:
     QQuickWindow* _window;
@@ -104,12 +106,17 @@ private:
     typedef std::unique_ptr<QOpenGLBuffer> QOpenGLBufferPtr;
     QOpenGLBufferPtr _backPbo;
     QOpenGLBufferPtr _frontPbo;
-    ImagePtr _image;
+
     bool _readyToSwap;
+    int _acceptFramesCount;
+
+    uint _imageFormat;
+
 
     QSGTexturePtr _createTexture( const QSize& size ) const;
     QSGTexturePtr _createWrapper( const uint textureID, const QSize& size ) const;
-    void _upload( const Image& image, const uint textureID );
+    void _upload( const Image& image );
+    void _fillBackTexture();
 };
 
 #endif

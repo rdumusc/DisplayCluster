@@ -79,7 +79,7 @@ public:
     ImagePtr getTileImage( uint tileIndex ) const override;
 
     /** @copydoc ContentSynchronizer::onTextureReady */
-    void onSwapped( TilePtr tile ) override;
+    void onReadyForNextFrame( TilePtr tile ) override;
 
 private:
     PixelStreamUpdaterSharedPtr _updater;
@@ -88,6 +88,10 @@ private:
     bool _tilesDirty;
     bool _updateExistingTiles;
     QSize _tilesArea;
+
+    Indices _tilesReadyToUpdateSet;
+    std::set<TilePtr> _tilesReadyToUpdate;
+
 
     void _onPictureUpdated();
 };

@@ -93,7 +93,15 @@ void PixelStreamSynchronizer::synchronize( WallToWallChannel& channel )
         _tilesArea = _updater->getTilesArea( 0 );
         emit tilesAreaChanged();
 
+    }
+    const bool nextFrame = set_difference( getVisibleSet(), _tilesReadyToUpdateSet ).empty();
+    if( channel.allReady( nextFrame ))
+    {
         _updater->getNextFrame();
+        for( auto& tile : _tilesReadyToUpdate )
+            requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
+        _tilesReadyToUpdate.clear();
+        _tilesReadyToUpdateSet.clear();
     }
 
     _updater->synchronizeFramesSwap( channel );
@@ -116,9 +124,11 @@ QString PixelStreamSynchronizer::getStatistics() const
     return _fpsCounter.toString() + " fps";
 }
 
-void PixelStreamSynchronizer::onSwapped( TilePtr tile )
+void PixelStreamSynchronizer::onReadyForNextFrame( TilePtr tile )
 {
-    emit requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
+    _tilesReadyToUpdateSet.insert( tile->getId( ));
+    _tilesReadyToUpdate.insert( tile );
+    //emit requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
 }
 
 ImagePtr PixelStreamSynchronizer::getTileImage( const uint tileIndex ) const

@@ -78,7 +78,7 @@ ContentSynchronizerPtr ContentSynchronizer::create( ContentPtr content )
     }
 }
 
-void ContentSynchronizer::onSwapped( TilePtr tile )
+void ContentSynchronizer::onReadyForNextFrame( TilePtr tile )
 {
     emit requestTileUpdate( shared_from_this(), TileWeakPtr( tile ));
 }
