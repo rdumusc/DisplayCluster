@@ -1,5 +1,6 @@
 /*********************************************************************/
-/* Copyright (c) 2011 - 2012, The University of Texas at Austin.     */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
+/*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
 /* Redistribution and use in source and binary forms, with or        */
@@ -36,88 +37,63 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#include "config.h"
-#include "log.h"
-
-#include "MasterApplication.h"
-#include "MPIChannel.h"
 #include "ProcessForker.h"
-#include "WallApplication.h"
 
-#include <stdexcept>
-#include <QThreadPool>
+#include "MPIChannel.h"
+#include "log.h"
+#include "serializationHelpers.h"
 
-#if ENABLE_TUIO_TOUCH_LISTENER
-#include <X11/Xlib.h>
-#endif
+#include <QProcess>
 
-int main( int argc, char* argv[] )
+ProcessForker::ProcessForker( MPIChannelPtr mpiChannel )
+    : _mpiChannel( mpiChannel )
+    , _processMessages( true )
+{}
+
+void ProcessForker::run()
 {
-    MPIChannelPtr worldChannel( new MPIChannel( argc, argv ));
-    const int rank = worldChannel->getRank();
-    const bool isForkerProcess = rank == worldChannel->getSize() - 1;
-    if( rank == 0 )
-        logger_id = "master";
-    else if ( isForkerProcess )
-        logger_id = QString( "forker" ).toStdString();
-    else
-        logger_id = QString( "wall%1" ).arg( rank ).toStdString();
-
-    if( !worldChannel->isThreadSafe( ))
+    while( _processMessages )
     {
-        put_flog( LOG_FATAL, "MPI implementation must support at least "
-                  "MPI_THREAD_SERIALIZED. (MPI_THREAD_MULTIPLE is recommended "
-                  "for better performances)" );
-        return EXIT_FAILURE;
+        const ProbeResult result = _mpiChannel->probe();
+        if( !result.isValid( ))
+        {
+            put_flog( LOG_ERROR, "Invalid probe result size: %d", result.size );
+            continue;
+        }
+
+        _buffer.setSize( result.size );
+        _mpiChannel->receive( _buffer.data(), result.size, result.src,
+                              result.message );
+
+        switch( result.message )
+        {
+        case MPI_MESSAGE_TYPE_START_PROCESS:
+        {
+            QString string;
+            _buffer.deserialize( string );
+            QStringList args = string.split( '#' );
+            if( args.length() != 2 )
+            {
+                put_flog( LOG_WARN, "Invalid command: '%d'",
+                          string.toLocal8Bit().constData( ));
+                break;
+            }
+            _launch( args[0], args[1] );
+            break;
+        }
+        case MPI_MESSAGE_TYPE_QUIT:
+            _processMessages = false;
+            break;
+        default:
+            put_flog( LOG_WARN, "Invalid message type: '%d'", result.message );
+            break;
+        }
     }
+}
 
-    if( worldChannel->getSize() == 1 )
-    {
-        put_flog( LOG_WARN, "MPI group size 1 detected. Use startdisplaycluster"
-                            " script or check mpi configuration." );
-        return EXIT_SUCCESS;
-    }
-
-    const int color = rank > 0 && !isForkerProcess;
-    MPIChannelPtr localChannel( new MPIChannel( *worldChannel, color, rank ));
-    MPIChannelPtr mainChannel( new MPIChannel( *worldChannel, !isForkerProcess,
-                                               rank ));
-
-    if( isForkerProcess )
-    {
-        ProcessForker( localChannel ).run();
-        put_flog( LOG_DEBUG, "done." );
-        return EXIT_SUCCESS;
-    }
-
-#if ENABLE_TUIO_TOUCH_LISTENER
-    // we need X multithreading support if we're running the
-    // TouchListener thread and creating X events
-    if( rank == 0 )
-        XInitThreads();
-#endif
-
-    std::unique_ptr<QApplication> app;
-    try
-    {
-        if( rank == 0 )
-            app.reset( new MasterApplication( argc, argv, mainChannel,
-                                              localChannel ));
-        else
-            app.reset( new WallApplication( argc, argv, mainChannel,
-                                            localChannel ));
-    }
-    catch( const std::runtime_error& e )
-    {
-        put_flog( LOG_FATAL, "Could not initialize application. %s", e.what( ));
-        return EXIT_FAILURE;
-    }
-
-    app->exec(); // enter Qt event loop
-
-    put_flog( LOG_DEBUG, "waiting for threads to finish..." );
-    QThreadPool::globalInstance()->waitForDone();
-    put_flog( LOG_DEBUG, "done." );
-
-    return EXIT_SUCCESS;
+void ProcessForker::_launch( const QString& command, const QString& workingDir )
+{
+    QProcess* process = new QProcess();
+    process->setWorkingDirectory( workingDir );
+    process->startDetached( command );
 }

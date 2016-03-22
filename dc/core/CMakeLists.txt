@@ -127,6 +127,7 @@ list(APPEND DCCORE_MOC_PUBLIC_HEADERS
   LodSynchronizer.h
   Markers.h
   MasterFromWallChannel.h
+  MasterToForkerChannel.h
   MasterToWallChannel.h
   MovieContent.h
   MultitouchArea.h
@@ -200,6 +201,7 @@ list(APPEND DCCORE_SOURCES
   LodTools.cpp
   Markers.cpp
   MasterFromWallChannel.cpp
+  MasterToForkerChannel.cpp
   MasterToWallChannel.cpp
   MetaTypeRegistration.cpp
   MovieContent.cpp

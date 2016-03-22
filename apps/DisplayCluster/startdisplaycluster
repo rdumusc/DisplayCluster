@@ -187,6 +187,9 @@ try:
     rcmd = '%s %s%s %s -np 1 %s%s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, VGLRUN_BIN, DC_BIN, DC_PARAMS)
     runcommands.append(rcmd)
 
+    # add a separate 'forker' process on the same host as the master process
+    forkercmd = '%s %s%s %s -np 1 %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, DC_BIN, DC_PARAMS)
+
     # parse the wall process elements
     for elem in XML_CONFIG.findall('.//process'):
         host = elem.get("host")
@@ -211,6 +214,9 @@ try:
 
         rcmd = '%s %s%s %s -np 1 %s %s' % (MPI_SPECIAL_FLAGS, EXPORT_DISPLAY, display, node_host, DC_BIN, DC_PARAMS)
         runcommands.append(rcmd)
+
+    # the 'forker' process is the last one
+    runcommands.append(forkercmd)
 
 except Exception as e:
     print("Error processing xml configuration '%s'. (%s)" % (DC_CONFIG_FILE, e))

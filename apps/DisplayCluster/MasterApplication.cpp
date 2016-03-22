@@ -47,6 +47,7 @@
 #include "DisplayGroupView.h"
 #include "ContentFactory.h"
 #include "configuration/MasterConfiguration.h"
+#include "MasterToForkerChannel.h"
 #include "MasterToWallChannel.h"
 #include "MasterFromWallChannel.h"
 #include "Options.h"
@@ -77,8 +78,10 @@
 #include <stdexcept>
 
 MasterApplication::MasterApplication( int& argc_, char** argv_,
-                                      MPIChannelPtr worldChannel )
+                                      MPIChannelPtr worldChannel,
+                                      MPIChannelPtr forkChannel )
     : QApplication( argc_, argv_ )
+    , masterToForkerChannel_( new MasterToForkerChannel( forkChannel ))
     , masterToWallChannel_( new MasterToWallChannel( worldChannel ))
     , masterFromWallChannel_( new MasterFromWallChannel( worldChannel ))
     , markers_( new Markers )
@@ -107,6 +110,7 @@ MasterApplication::~MasterApplication()
 {
     deflectServer_.reset();
 
+    masterToForkerChannel_->sendQuit();
     masterToWallChannel_->sendQuit();
 
     mpiSendThread_.quit();
@@ -258,8 +262,12 @@ void MasterApplication::initPixelStreamLauncher()
 
 void MasterApplication::initMPIConnection()
 {
+    masterToForkerChannel_->moveToThread( &mpiSendThread_ );
     masterToWallChannel_->moveToThread( &mpiSendThread_ );
     masterFromWallChannel_->moveToThread( &mpiReceiveThread_ );
+
+    connect( pixelStreamerLauncher_.get(), &PixelStreamerLauncher::start,
+             masterToForkerChannel_.get(), &MasterToForkerChannel::sendStart );
 
     connect( displayGroup_.get(), &DisplayGroup::modified,
              masterToWallChannel_.get(),
