@@ -81,7 +81,7 @@ public:
     /** Get statistics about this Content. */
     virtual QString getStatistics() const = 0;
 
-    /** Get the image for a given tile index. @threadsafe */
+    /** Get the image for a given tile index. threadsafe */
     virtual ImagePtr getTileImage( uint tileIndex ) const = 0;
 
     /** Notify the window to add a tile for the zoom context. */

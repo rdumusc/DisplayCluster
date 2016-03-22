@@ -52,7 +52,7 @@ class DataSource
 public:
     virtual ~DataSource() {}
 
-    /** Get a tile image by its id. @threadsafe */
+    /** Get a tile image by its id. threadsafe */
     virtual ImagePtr getTileImage( uint tileId ) const = 0;
 
     /** Get the coordinates of a tile. */

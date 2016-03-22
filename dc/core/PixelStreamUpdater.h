@@ -62,7 +62,7 @@ public:
 
     /**
      * @copydoc DataSource::getTileImage
-     * @threadsafe
+     * threadsafe
      */
     ImagePtr getTileImage( uint tileIndex ) const final;
 

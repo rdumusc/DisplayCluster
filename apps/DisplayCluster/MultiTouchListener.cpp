@@ -45,16 +45,14 @@
 #include <QScreen>
 #include <QWindow>
 
-MultiTouchListener::MultiTouchListener( DisplayGroupView* targetWindow,
+MultiTouchListener::MultiTouchListener( DisplayGroupView& targetView,
                                         const QSize& wallSize )
     : TUIO::TuioListener()
-    , _targetWindow( targetWindow )
+    , _targetView( targetView )
     , _device()
     , _wallSize( wallSize )
 {
     _device.setType( QTouchDevice::TouchScreen );
-
-    assert( _targetWindow );
 
     _client.addTuioListener( this );
     _client.connect();
@@ -102,7 +100,7 @@ void MultiTouchListener::refresh( TUIO::TuioTime )
 
 QPointF MultiTouchListener::_getScreenPos( TUIO::TuioCursor* tcur ) const
 {
-    return _targetWindow->mapToWallPos( QPointF( tcur->getX(), tcur->getY( )));
+    return _targetView.mapToWallPos( QPointF( tcur->getX(), tcur->getY( )));
 }
 
 QPointF MultiTouchListener::_getWallPos( TUIO::TuioCursor* tcur ) const
@@ -143,8 +141,7 @@ void MultiTouchListener::_handleEvent( TUIO::TuioCursor* tcur,
     QTouchEvent::TouchPoint touchPoint( tcur->getCursorID( ));
     touchPoint.setPressure( 1.0 );
     touchPoint.setPos( screenPos );
-    touchPoint.setScreenPos( screenPos ); // used for QGesture::hotspot & itemAt
-
+    touchPoint.setScreenPos( screenPos );
     touchPoint.setNormalizedPos( normalizedPos );
 
     Qt::TouchPointStates touchPointStates = 0;
@@ -181,12 +178,13 @@ void MultiTouchListener::_handleEvent( TUIO::TuioCursor* tcur,
 
     QEvent::Type touchEventType = eventType;
     if( touchEventType == QEvent::TouchEnd )
-        touchEventType = _touchPointMap.isEmpty() ? QEvent::TouchEnd : QEvent::TouchUpdate;
+        touchEventType = _touchPointMap.isEmpty() ? QEvent::TouchEnd
+                                                  : QEvent::TouchUpdate;
 
     QEvent* touchEvent = new QTouchEvent( touchEventType, &_device,
                                           Qt::NoModifier, touchPointStates,
                                           _touchPointMap.values( ));
-    QCoreApplication::postEvent( _targetWindow, touchEvent );
+    QCoreApplication::postEvent( &_targetView, touchEvent );
 
     // Prepare state for next call to handle event
     if( eventType == QEvent::TouchEnd )

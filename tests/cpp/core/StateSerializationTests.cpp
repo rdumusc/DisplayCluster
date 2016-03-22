@@ -212,7 +212,7 @@ void checkWindowVersion0( ContentWindowPtr window )
     BOOST_CHECK_EQUAL( window->getCoordinates().size(),
                        QSize( expectedWidth, expectedHeight ));
 
-    // The denormalized group will be positionned inside the new group at (0,0):
+    // The denormalized group will be positioned inside the new group at (0,0):
     const qreal estimatedOldGroupWidth = 2.0 * expectedWidth;
     const qreal expectedX = 0.25 * estimatedOldGroupWidth;
     const qreal expectedY = 0.25 * wallSize.height();

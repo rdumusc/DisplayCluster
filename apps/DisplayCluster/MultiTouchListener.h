@@ -58,7 +58,7 @@ class MultiTouchListener : public QObject, public TUIO::TuioListener
     Q_OBJECT
 
 public:
-    MultiTouchListener( DisplayGroupView* targetWindow, const QSize& wallSize );
+    MultiTouchListener( DisplayGroupView& targetView, const QSize& wallSize );
     ~MultiTouchListener();
 
     void addTuioObject( TUIO::TuioObject* tobj ) override;
@@ -88,10 +88,10 @@ private:
     void _handleEvent( TUIO::TuioCursor* tcur, QEvent::Type eventType );
 
     QMap<int, QTouchEvent::TouchPoint> _touchPointMap;
-    DisplayGroupView* _targetWindow;
+    DisplayGroupView& _targetView;
     TUIO::TuioClient _client;
     QTouchDevice _device;
-    QSize _wallSize;
+    const QSize _wallSize;
 };
 
 #endif

@@ -123,14 +123,14 @@ const LodTools::TileInfos& LodTools::getAllTileInfos( const uint lod ) const
     const QMutexLocker lock( &_lodTilesMapCacheMutex );
     if( !_lodTilesMapCache.count( lod ))
     {
-        LodTools::TileInfos& coords = _lodTilesMapCache[lod];
+        LodTools::TileInfos& infos = _lodTilesMapCache[lod];
 
         const QSize tiles = getTilesCount( lod );
 
         uint id = getFirstTileId( lod );
         for( int y = 0; y < tiles.height(); ++y )
             for( int x = 0; x < tiles.width(); ++x, ++id )
-                coords.push_back( TileInfo{ id, getTileCoord( id ) } );
+                infos.push_back( TileInfo{ id, getTileCoord( id ) } );
     }
 
     return _lodTilesMapCache[lod];

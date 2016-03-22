@@ -63,7 +63,7 @@ public:
         uint id;
         QRect coord;
     };
-    typedef std::vector<LodTools::TileInfo> TileInfos;
+    typedef std::vector<TileInfo> TileInfos;
 
     /**
      * Constructor
@@ -105,7 +105,7 @@ private:
     const uint _maxLod;
 
     mutable QMutex _lodTilesMapCacheMutex;
-    typedef std::map<size_t, LodTools::TileInfos> LodTilesMap;
+    typedef std::map<size_t, TileInfos> LodTilesMap;
     mutable LodTilesMap _lodTilesMapCache;
 
     uint _computeMaxLod() const;

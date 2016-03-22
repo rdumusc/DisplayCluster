@@ -60,7 +60,7 @@ const QString WALL_OBJECT_NAME( "Wall" );
 
 DisplayGroupView::DisplayGroupView( OptionsPtr options,
                                     const MasterConfiguration& config )
-    : displayGroupItem_( 0 )
+    : displayGroupItem_( nullptr )
 {
     setResizeMode( QQuickView::SizeRootObjectToView );
 

@@ -91,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE( testSingleWindow, Fixture )
     window->setCoordinates( QRectF( QPointF( 400, 0 ), size ));
     BOOST_CHECK_EQUAL( helper.getVisibleArea( *window ), QRectF( ));
 
-    // Half-inside horizonally
+    // Half-inside horizontally
     window->setCoordinates( QRectF( QPointF( 300, 0 ), size ));
     BOOST_CHECK_EQUAL( helper.getVisibleArea( *window ),
                        QRectF( QPointF( 0, 0 ), QSize( 100, 200 )));

@@ -61,7 +61,7 @@ class TextureNode : public QSGSimpleTextureNode
 public:
     TextureNode( const QSize& size, QQuickWindow* window );
 
-    /** @reture the back texture identifier, which can safely be updated. */
+    /** @return the back texture identifier, which can safely be updated. */
     uint getBackGlTexture() const;
 
     /** Swap the front and back textures. */

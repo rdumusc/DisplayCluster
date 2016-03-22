@@ -53,6 +53,9 @@ class WallToWallChannel;
 
 /**
  * The main application for Wall processes.
+ *
+ * The main loop exec() exits when the WallWindow is deleted
+ * (quitOnLastWindowClosed propery).
  */
 class WallApplication : public QApplication
 {
@@ -68,14 +71,14 @@ public:
      * @throw std::runtime_error if an error occured during initialization
      */
     WallApplication( int &argc, char **argv, MPIChannelPtr worldChannel,
-                     MPIChannelPtr wallChannel);
+                     MPIChannelPtr wallChannel );
 
     /** Destructor */
     virtual ~WallApplication();
 
 private:
     boost::scoped_ptr<WallConfiguration> _config;
-    WallWindow* _window;
+    WallWindow* _window; // deleteLater from syncQuit in RenderController
     boost::scoped_ptr<RenderController> _renderController;
 
     boost::scoped_ptr<WallFromMasterChannel> _fromMasterChannel;

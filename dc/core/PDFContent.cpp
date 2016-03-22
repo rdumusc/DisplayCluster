@@ -43,7 +43,6 @@
 
 #include "serializationHelpers.h"
 #include <boost/serialization/export.hpp>
-#include <QTextStream>
 
 BOOST_CLASS_EXPORT_GUID( PDFContent, "PDFContent" )
 

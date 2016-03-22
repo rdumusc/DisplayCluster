@@ -46,7 +46,7 @@
 
 #include <QObject>
 #include <QPointF>
-#include <QtCore/QAbstractListModel>
+#include <QAbstractListModel>
 #include <map>
 
 #include <boost/serialization/access.hpp>

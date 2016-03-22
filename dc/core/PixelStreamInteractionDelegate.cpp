@@ -133,7 +133,7 @@ void PixelStreamInteractionDelegate::swipeLeft()
 
 void PixelStreamInteractionDelegate::swipeRight()
 {
-    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_RIGHT));
+    emit notify( swipeEvent( deflect::Event::EVT_SWIPE_RIGHT ));
 }
 
 void PixelStreamInteractionDelegate::swipeUp()
