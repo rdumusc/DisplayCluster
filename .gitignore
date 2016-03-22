@@ -3,8 +3,12 @@ python/
 CMakeLists.txt.user*
 CMake/common/
 Deflect/
+FlatBuffers/
+httpxx/
 Servus/
 TUIO/
+ZeroBuf/
+zeq/
 Makefile
 .DS_Store
 *~

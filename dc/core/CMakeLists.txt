@@ -14,6 +14,8 @@ set(DCCORE_LINK_LIBRARIES
     Qt5::Widgets
     ${Boost_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
+    zeq
+    ZeroBuf
   PRIVATE
     Qt5::OpenGL
     Qt5::Svg
@@ -282,4 +284,5 @@ list(APPEND DCCORE_SOURCES
 set(DCCORE_RESOURCES resources/core.qrc)
 
 set(DCCORE_INCLUDE_NAME dc/core)
+add_subdirectory(rest)
 common_library(dccore)

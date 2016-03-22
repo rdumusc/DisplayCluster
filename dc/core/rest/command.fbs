@@ -1,0 +1,8 @@
+namespace rest;
+
+table Command {
+  key: string;
+  value: string;
+}
+
+root_type Command;

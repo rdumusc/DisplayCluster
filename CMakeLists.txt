@@ -40,6 +40,8 @@ common_package(Qt5WebKitWidgets SYSTEM REQUIRED)
 common_package(Qt5Widgets REQUIRED)
 common_package(Qt5XmlPatterns REQUIRED)
 common_package(Qt5Xml REQUIRED)
+common_package(ZeroBuf)
+common_package(zeq)
 
 # WAR for Ubuntu 14.04 in CI super-project conditions
 common_package(Qt5Quick 5.4)
