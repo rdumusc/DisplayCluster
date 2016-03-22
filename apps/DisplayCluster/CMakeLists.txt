@@ -11,6 +11,10 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include config.h")
 endif()
 
+set(DISPLAYCLUSTER_HEADERS
+  ProcessForker.h
+)
+
 set(DISPLAYCLUSTER_MOC_HEADERS
   BackgroundWidget.h
   DisplayGroupView.h
@@ -30,6 +34,7 @@ set(DISPLAYCLUSTER_SOURCES
   DisplayGroupListWidget.cpp
   MasterApplication.cpp
   MasterWindow.cpp
+  ProcessForker.cpp
   WallApplication.cpp
   WebbrowserWidget.cpp
 )

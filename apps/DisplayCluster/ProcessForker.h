@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,81 +37,56 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MASTERAPPLICATION_H
-#define MASTERAPPLICATION_H
+#ifndef PROCESSFORKER_H
+#define PROCESSFORKER_H
 
-#include "config.h"
 #include "types.h"
+#include "SerializeBuffer.h"
 
-#include <QApplication>
-#include <QThread>
-#include <boost/scoped_ptr.hpp>
+#include <map>
 
-class MasterToWallChannel;
-class MasterToForkerChannel;
-class MasterFromWallChannel;
-class MasterWindow;
-class PixelStreamerLauncher;
-class PixelStreamWindowManager;
-class WebServiceServer;
-class TextInputDispatcher;
-class MasterConfiguration;
-class MultiTouchListener;
+class QProcess;
 
 /**
- * The main application for the Master process.
+ * Run as a separate MPI process, listening to commands to fork new executables.
+ *
+ * This is required by a bug observed on RHEL 6 with openmpi (any version),
+ * where a call to fork() from the master application has a high risk of causing
+ * a segfault in malloc linked to multithreaded the MPI implementation.
+ * Executing the fork() in a standalone process without multiple threads
+ * works around the issue.
+ *
+ * Due to an incompatibility between QProcess and MPI(*), we must start the
+ * processes DETACHED.
+ * In theory they might stay alive after the main application has exited.
+ * In practice, this doesn't happen because the processes exit when their
+ * associated deflect::Stream is closed.
+ *
+ * (*) MPI captures the SIGCHLD that QProcess relies on to detect that the
+ * process has finished. Thus, the call to waitForFinished() blocks forever in
+ * QProcess destructor.
  */
-class MasterApplication : public QApplication
+class ProcessForker
 {
-    Q_OBJECT
-
 public:
     /**
      * Constructor
-     * @param argc Command line argument count (required by QApplication)
-     * @param argv Command line arguments (required by QApplication)
-     * @param worldChannel The world MPI channel
-     * @param forkChannel The MPI channel for forking processes
-     * @throw std::runtime_error if an error occured during initialization
+     * @param mpiChannel to receive commands from the master application
      */
-    MasterApplication( int &argc, char **argv, MPIChannelPtr worldChannel,
-                       MPIChannelPtr forkChannel );
+    explicit ProcessForker( MPIChannelPtr mpiChannel );
 
-    /** Destructor */
-    virtual ~MasterApplication();
+    /** Process MPI commands until a quit message is received. */
+    void run();
 
 private:
-    boost::scoped_ptr<MasterToForkerChannel> masterToForkerChannel_;
-    boost::scoped_ptr<MasterToWallChannel> masterToWallChannel_;
-    boost::scoped_ptr<MasterFromWallChannel> masterFromWallChannel_;
-    boost::scoped_ptr<MasterWindow> masterWindow_;
-    boost::scoped_ptr<MasterConfiguration> config_;
-    boost::scoped_ptr<deflect::Server> deflectServer_;
-    boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;
-    boost::scoped_ptr<PixelStreamWindowManager> pixelStreamWindowManager_;
-    boost::scoped_ptr<WebServiceServer> webServiceServer_;
-    boost::scoped_ptr<TextInputDispatcher> textInputDispatcher_;
-#if ENABLE_TUIO_TOUCH_LISTENER
-    boost::scoped_ptr<MultiTouchListener> touchListener_;
-#endif
+    MPIChannelPtr _mpiChannel;
+    SerializeBuffer _buffer;
+    bool _processMessages;
 
-    DisplayGroupPtr displayGroup_;
-    MarkersPtr markers_;
+    typedef std::map< QString, QProcess* > Processes;
+    Processes _processes;
 
-    QThread mpiSendThread_;
-    QThread mpiReceiveThread_;
-
-    void init();
-    bool createConfig( const QString& filename );
-    void startDeflectServer();
-    void startWebservice( const int webServicePort );
-    void restoreBackground();
-    void initPixelStreamLauncher();
-    void initMPIConnection();
-
-#if ENABLE_TUIO_TOUCH_LISTENER
-    void initTouchListener();
-#endif
+    void _launch( const QString& command, const QString& workingDir );
 };
 
-#endif // MASTERAPPLICATION_H
+#endif

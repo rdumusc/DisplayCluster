@@ -47,8 +47,6 @@
 #include "configuration/MasterConfiguration.h"
 
 #include <QCoreApplication>
-#include <QProcess>
-
 #include <QQuickView> // To determine the qml streamer size
 
 namespace
@@ -75,7 +73,7 @@ PixelStreamerLauncher::PixelStreamerLauncher( PixelStreamWindowManager& windowMa
     , _config( config )
 {
     connect( &_windowManager, SIGNAL( pixelStreamWindowClosed( QString )),
-             this, SLOT( dereferenceLocalStreamer( QString )),
+             this, SLOT( _dereferenceLocalStreamer( QString )),
              Qt::QueuedConnection );
 }
 
@@ -95,11 +93,10 @@ void PixelStreamerLauncher::openWebBrowser( const QPointF pos, const QSize size,
     options.setWidth( viewportSize.width( ));
     options.setHeight( viewportSize.height( ));
 
-    _processes[uri] = new QProcess( this );
-    if( !_processes[uri]->startDetached( _getLocalStreamerBin(),
-                                         options.getCommandLineArguments(),
-                                         QDir::currentPath( )))
-        put_flog( LOG_ERROR, "Webbrowser process could not be started!" );
+    _processes.insert( uri );
+    const QString command = _getLocalStreamerBin() + QString( ' ' ) +
+                            options.getCommandLineArguments().join( ' ' );
+    emit start( command, QDir::currentPath( ));
 }
 
 QSize computeDockSize( const int wallWidth )
@@ -189,13 +186,18 @@ bool PixelStreamerLauncher::openAppLauncher( const QPointF pos )
                              pos.y() + 0.5 * qmlSize.height( ));
     _windowManager.openWindow( uri, centerPos, qmlSize );
 
+    _processes.insert( uri );
+
     const auto args = QStringList() << QString( "--qml" ) << appLauncherQmlFile
                                     << QString( "--streamname") << uri;
-    _processes[uri] = new QProcess( this );
-    return _processes[uri]->startDetached( _getQmlStreamerBin( ), args );
+
+    const QString command = _getQmlStreamerBin() + QString( ' ' ) +
+                            args.join( ' ' );
+    emit start( command, QDir::currentPath( ));
+    return true;
 }
 
-void PixelStreamerLauncher::dereferenceLocalStreamer( const QString uri )
+void PixelStreamerLauncher::_dereferenceLocalStreamer( const QString uri )
 {
     _processes.erase( uri );
 }
@@ -214,10 +216,11 @@ bool PixelStreamerLauncher::_createDock( const QString& uri,
     options.setWidth( size.width( ));
     options.setHeight( size.height( ));
 
-    _processes[uri] = new QProcess( this );
-    return _processes[uri]->startDetached( _getLocalStreamerBin(),
-                                           options.getCommandLineArguments(),
-                                           QDir::currentPath( ));
+    _processes.insert( uri );
+    const QString command = _getLocalStreamerBin() + QString( ' ' ) +
+                            options.getCommandLineArguments().join( ' ' );
+    emit start( command, QDir::currentPath( ));
+    return true;
 }
 
 QString PixelStreamerLauncher::_getLocalStreamerBin() const

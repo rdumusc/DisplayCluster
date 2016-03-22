@@ -1,5 +1,5 @@
 /*********************************************************************/
-/* Copyright (c) 2014, EPFL/Blue Brain Project                       */
+/* Copyright (c) 2016, EPFL/Blue Brain Project                       */
 /*                     Raphael Dumusc <raphael.dumusc@epfl.ch>       */
 /* All rights reserved.                                              */
 /*                                                                   */
@@ -37,81 +37,41 @@
 /* or implied, of The University of Texas at Austin.                 */
 /*********************************************************************/
 
-#ifndef MASTERAPPLICATION_H
-#define MASTERAPPLICATION_H
+#ifndef MASTERTOFORKERCHANNEL_H
+#define MASTERTOFORKERCHANNEL_H
 
-#include "config.h"
 #include "types.h"
 
-#include <QApplication>
-#include <QThread>
-#include <boost/scoped_ptr.hpp>
-
-class MasterToWallChannel;
-class MasterToForkerChannel;
-class MasterFromWallChannel;
-class MasterWindow;
-class PixelStreamerLauncher;
-class PixelStreamWindowManager;
-class WebServiceServer;
-class TextInputDispatcher;
-class MasterConfiguration;
-class MultiTouchListener;
+#include <QObject>
 
 /**
- * The main application for the Master process.
+ * Sending channel from the master application to the forker process.
  */
-class MasterApplication : public QApplication
+class MasterToForkerChannel : public QObject
 {
     Q_OBJECT
 
 public:
-    /**
-     * Constructor
-     * @param argc Command line argument count (required by QApplication)
-     * @param argv Command line arguments (required by QApplication)
-     * @param worldChannel The world MPI channel
-     * @param forkChannel The MPI channel for forking processes
-     * @throw std::runtime_error if an error occured during initialization
-     */
-    MasterApplication( int &argc, char **argv, MPIChannelPtr worldChannel,
-                       MPIChannelPtr forkChannel );
+    /** Constructor */
+    MasterToForkerChannel( MPIChannelPtr mpiChannel );
 
-    /** Destructor */
-    virtual ~MasterApplication();
+public slots:
+    /**
+     * Send a request to execute a command as new process
+     * @param command The command to execute
+     * @param workingDir The working directory for the new process
+     */
+    void sendStart( QString command, QString workingDir );
+
+    /**
+     * Send quit message to the forker application
+     */
+    void sendQuit();
 
 private:
-    boost::scoped_ptr<MasterToForkerChannel> masterToForkerChannel_;
-    boost::scoped_ptr<MasterToWallChannel> masterToWallChannel_;
-    boost::scoped_ptr<MasterFromWallChannel> masterFromWallChannel_;
-    boost::scoped_ptr<MasterWindow> masterWindow_;
-    boost::scoped_ptr<MasterConfiguration> config_;
-    boost::scoped_ptr<deflect::Server> deflectServer_;
-    boost::scoped_ptr<PixelStreamerLauncher> pixelStreamerLauncher_;
-    boost::scoped_ptr<PixelStreamWindowManager> pixelStreamWindowManager_;
-    boost::scoped_ptr<WebServiceServer> webServiceServer_;
-    boost::scoped_ptr<TextInputDispatcher> textInputDispatcher_;
-#if ENABLE_TUIO_TOUCH_LISTENER
-    boost::scoped_ptr<MultiTouchListener> touchListener_;
-#endif
+    Q_DISABLE_COPY( MasterToForkerChannel )
 
-    DisplayGroupPtr displayGroup_;
-    MarkersPtr markers_;
-
-    QThread mpiSendThread_;
-    QThread mpiReceiveThread_;
-
-    void init();
-    bool createConfig( const QString& filename );
-    void startDeflectServer();
-    void startWebservice( const int webServicePort );
-    void restoreBackground();
-    void initPixelStreamLauncher();
-    void initMPIConnection();
-
-#if ENABLE_TUIO_TOUCH_LISTENER
-    void initTouchListener();
-#endif
+    MPIChannelPtr _mpiChannel;
 };
 
-#endif // MASTERAPPLICATION_H
+#endif
